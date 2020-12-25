@@ -1,0 +1,35 @@
+name: sync upstream
+
+on:
+  push:
+    branches:
+      - 'master'
+  schedule:
+    # everyday 11AM (UTC)
+    - cron: '* 9 * * *'
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup build env
+        run: |
+          git submodule init
+          git submodule update
+          sudo apt-get install ruby-dev
+          sudo gem install bundler
+      - name: Build
+        run: bin/build
+      - name: Configure git
+        run: |
+          git config --local user.email "mail@ynojima.net"
+          git config --local user.name "ynojima"
+      - name: Commit & Push
+        run: |
+          git checkout -b gh-pages
+          git add --force docs
+          git commit -m "Deploy i18n-quarkusio"
+          git push -f origin gh-pages
