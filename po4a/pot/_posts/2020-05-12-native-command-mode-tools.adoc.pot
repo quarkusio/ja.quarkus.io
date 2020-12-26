@@ -1,0 +1,440 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2020-12-26 18:44+0900\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. type: Plain text
+#: upstream/_posts/2020-05-12-native-command-mode-tools.adoc:1
+#, no-wrap
+msgid "---\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-05-12-native-command-mode-tools.adoc:8
+#, no-wrap
+msgid ""
+"layout: post\n"
+"title: 'Ideas on Quarkus command-mode, UI-based apps and releasing via "
+"Github Actions'\n"
+"date: 2020-05-12\n"
+"tags: development-tips\n"
+"synopsis: Ideas on how to use Quarkus command-mode to develop native "
+"applications with web frontends; built with Github Actions.\n"
+"author: dplatz\n"
+"---\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-05-12-native-command-mode-tools.adoc:12
+msgid ""
+"Quarkus is advertised as a cloud-native runtime for Microservices but the "
+"link:https://quarkus.io/blog/quarkus-1-4-final-released/[introduction of "
+"command-mode] might have opened up new and interesting spaces where it could "
+"find adoption."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-05-12-native-command-mode-tools.adoc:15
+msgid ""
+"In this blog post I will present a few ideas about the possible usage of "
+"command-mode in Quarkus that you might find useful to consider when "
+"developing your next tool.  If you have not heard about command-mode, I "
+"suggest to start reading "
+"link:https://quarkus.io/blog/introducing-command-mode/[this introduction] "
+"first and then come back."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-05-12-native-command-mode-tools.adoc:17
+msgid "Ready? Ok, let's continue."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_posts/2020-05-12-native-command-mode-tools.adoc:18
+#, no-wrap
+msgid "Cross-platform builds via Github Actions"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-05-12-native-command-mode-tools.adoc:22
+msgid ""
+"Command-line tools like `kubectl` are often written in languages like C, Go "
+"or Rust and compiled to native executables for various target platforms.  "
+"This is great because you don't need to rely on Java installed; or being "
+"installed in a wrong version."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-05-12-native-command-mode-tools.adoc:25
+msgid ""
+"With GraalVM native-images, this argument against Java does not hold "
+"anymore. Quarkus supports the build of native executables via GraalVM; "
+"mainly for building natively for Linux containers but there is experimental "
+"support for OS X and Windows as well.  Using the native build in combination "
+"with command-mode sounds like a very interesting and productive choice to "
+"write command-line tools."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-05-12-native-command-mode-tools.adoc:28
+msgid ""
+"But how do you build your native executables for Linux, Mac and Windows? If "
+"you are hosting your sources as a Github project, I can tell you that it is "
+"super-simple to get started. Github offers "
+"link:https://help.github.com/en/actions/building-and-testing-code-with-continuous-integration/setting-up-continuous-integration-using-github-actions[ "
+"Actions] which is a free service like link:https://travis-ci.org/[Travis CI] "
+"but fully integrated into the Github experience. Also, it offers runners "
+"(i.e. the build agents) for Linux, Mac and Windows."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-05-12-native-command-mode-tools.adoc:30
+msgid ""
+"To provide a native release-build for linux, place the following file under "
+"`.github/workflows` in your repo:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-05-12-native-command-mode-tools.adoc:34
+#, no-wrap
+msgid "name: release-build\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-05-12-native-command-mode-tools.adoc:38
+#, no-wrap
+msgid ""
+"on:\n"
+"  release:\n"
+"    types: [created] <1>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-05-12-native-command-mode-tools.adoc:41
+#, no-wrap
+msgid ""
+"jobs:\n"
+"  build:\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-05-12-native-command-mode-tools.adoc:43
+#, no-wrap
+msgid "    runs-on: ubuntu-latest <2>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-05-12-native-command-mode-tools.adoc:66
+#, no-wrap
+msgid ""
+"    steps:\n"
+"    - uses: actions/checkout@v2\n"
+"    - name: Install graalvm\n"
+"      uses: DeLaGuardo/setup-graalvm@3\n"
+"      with:\n"
+"        graalvm-version: '20.0.0.java11'\n"
+"    - name: Install native-image\n"
+"      run: gu install native-image\n"
+"    - name: Set version\n"
+"      run: ./mvnw versions:set -DnewVersion=\"${{ "
+"github.event.release.tag_name }}\" <3>\n"
+"    - name: Build native executable\n"
+"      run: ./mvnw package -Dnative <4>\n"
+"    - name: Upload native executable\n"
+"      id: upload-native-executable\n"
+"      uses: actions/upload-release-asset@v1\n"
+"      env:\n"
+"        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}\n"
+"      with:\n"
+"        upload_url: ${{ github.event.release.upload_url }}\n"
+"        asset_path: ./target/quarkus-ls-${{ github.event.release.tag_name "
+"}}-runner <5>\n"
+"        asset_name: quarkus-ls-${{ github.event.release.tag_name }}-linux\n"
+"        asset_content_type: application/octet-stream\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-05-12-native-command-mode-tools.adoc:68
+msgid ""
+"This build-job is triggered when a new release is triggered. If your are the "
+"owner, you will have the button \"Draft a new release\" under "
+"link:https://github.com/38leinaD/quarkus-native-app-starter/releases[releases]"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-05-12-native-command-mode-tools.adoc:69
+msgid ""
+"Uses a ubuntu runner. See "
+"link:https://github.com/actions/virtual-environments[GitHub Actions Virtual "
+"Environments] for a list of all supported environments/runners."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-05-12-native-command-mode-tools.adoc:70
+msgid "Set version in `pom.xml` based on specified release version"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-05-12-native-command-mode-tools.adoc:71
+msgid "Build the native executable"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-05-12-native-command-mode-tools.adoc:72
+msgid "Upload/attach the artifact to the release"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-05-12-native-command-mode-tools.adoc:74
+msgid ""
+"Building for Mac just means to provide another job with `runs-on: "
+"macos-latest`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-05-12-native-command-mode-tools.adoc:77
+msgid ""
+"Windows is essentially the same but requires a little more attention and "
+"knowledge about the tooling. Getting it working required some investigation "
+"on how the native build depends on Visual Studio. Also,the Windows runners "
+"on Github Actions have a too small page-file by default. That needs "
+"increasing as the memory consumption is rather high when running the "
+"GraalVMs `native-image` command.  An full example of a working native-image "
+"build under windows can be found "
+"link:https://github.com/38leinaD/quarkus-native-app-starter/blob/master/.github/workflows/release-build-native-win64.yml[here]."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-05-12-native-command-mode-tools.adoc:79
+msgid ""
+"After triggering a release from the Github UI, the jobs for all target "
+"environments are triggered. The artifacts for all platforms are will be "
+"available within minutes and can be consumed by your users. Building, "
+"hosting: 100% free and no external service or registration needed."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-05-12-native-command-mode-tools.adoc:81
+msgid "image:github-actions.jpg[]"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_posts/2020-05-12-native-command-mode-tools.adoc:82
+#, no-wrap
+msgid "Command-mode for UI-based applications"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-05-12-native-command-mode-tools.adoc:86
+msgid ""
+"Another exciting thing about command-mode is that it not only allows to "
+"write nice command-line tools (using "
+"e.g. link:https://picocli.info/[Picocli], "
+"link:http://aeshell.github.io/[Aesh] or "
+"link:https://commons.apache.org/proper/commons-cli/[Apache Commons CLI]) but "
+"in general allows to have more control over the lifecycle of an "
+"application.  With the possibility to embed your HTML/Javascript frontend, "
+"we can even build link:https://www.electronjs.org/[Electron-style] desktop "
+"application with rich user interfaces for our tools. As even JSF most likely "
+"will be link:https://github.com/adminfaces/quarkus-admin-starter[coming to "
+"Quarkus], there is a great variety of choices on how to build a frontend."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-05-12-native-command-mode-tools.adoc:89
+msgid ""
+"A very simple scaffold does not require much. If you have `quarkus-resteasy` "
+"as a dependency, the embedded server will be started on port `8080` just "
+"like in any regular Quarkus backend application.  As your tools might be "
+"running on a developer system alongside other app-servers or Quarkus "
+"instances, it is a good idea to choose a different port to not run into "
+"conflicts."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-05-12-native-command-mode-tools.adoc:92
+msgid ""
+"Configuring `quarkus.http.port=0` in your `application.properties` will make "
+"Quarkus choose a random but free port.  How to know from within your "
+"application which port it is? When injecting the config-property via "
+"`@ConfigProperty(name = \"quarkus.http.port\")`, you will get the assigned "
+"port."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-05-12-native-command-mode-tools.adoc:94
+msgid ""
+"Assuming you have your front-end under "
+"`src/main/resources/META-INF/resources` (in my example it is plain HTML with "
+"Javascript) and using a very old Java API "
+"(`Desktop.getDesktop().browse(...)`), you can spin up the default browser to "
+"your app like this:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-05-12-native-command-mode-tools.adoc:103
+#, no-wrap
+msgid ""
+"import java.awt.Desktop;\n"
+"import java.net.URI;\n"
+"import org.eclipse.microprofile.config.inject.ConfigProperty;\n"
+"import io.quarkus.runtime.Quarkus;\n"
+"import io.quarkus.runtime.QuarkusApplication;\n"
+"import io.quarkus.runtime.annotations.QuarkusMain;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-05-12-native-command-mode-tools.adoc:106
+#, no-wrap
+msgid ""
+"@QuarkusMain\n"
+"public class HelloMain implements QuarkusApplication {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-05-12-native-command-mode-tools.adoc:109
+#, no-wrap
+msgid ""
+"    @ConfigProperty(name = \"quarkus.http.port\")\n"
+"    Integer assignedPort; <1>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-05-12-native-command-mode-tools.adoc:113
+#, no-wrap
+msgid ""
+"    public static void main(String[] args) {\n"
+"        Quarkus.run(HelloMain.class, args);\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-05-12-native-command-mode-tools.adoc:117
+#, no-wrap
+msgid ""
+"    @Override\n"
+"    public int run(String... args) throws Exception {\n"
+"        URI webappUri = new URI(\"http://localhost:\" + assignedPort + "
+"\"/index.html\"); <2>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-05-12-native-command-mode-tools.adoc:120
+#, no-wrap
+msgid ""
+"        Desktop.getDesktop().browse(webappUri);\n"
+"        Quarkus.waitForExit(); <3>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-05-12-native-command-mode-tools.adoc:124
+#, no-wrap
+msgid ""
+"        return 0;\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-05-12-native-command-mode-tools.adoc:126
+msgid "Get the assigned port"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-05-12-native-command-mode-tools.adoc:127
+msgid "Open the `index.html` of your webapp with the default browser."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-05-12-native-command-mode-tools.adoc:128
+msgid ""
+"Do not exit immediately but wait until the browser/tab is closed. See below "
+"for options how to do this."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-05-12-native-command-mode-tools.adoc:130
+msgid "There are some more considerations here to make it work reliably."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-05-12-native-command-mode-tools.adoc:133
+msgid ""
+"Ending the application when the browser window closes requires some "
+"feedback. There are simple ways to achieve this in a semi-reliabe way (see "
+"the usage of "
+"link:https://developer.mozilla.org/en-US/docs/Web/API/Window/unload_event[unload] "
+"in "
+"link:https://github.com/38leinaD/quarkus-native-app-starter/blob/master/src/main/resources/META-INF/resources/index.html#L89[index.html] "
+"by calling "
+"link:https://github.com/38leinaD/quarkus-native-app-starter/blob/master/src/main/java/org/acme/LsResource.java#L38[a "
+"rest endpoint]).  For Desktop-class applications, one might have to control "
+"the browser process more closely; or, like Electron, even package an own "
+"version of Chrome."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-05-12-native-command-mode-tools.adoc:135
+msgid ""
+"A problem I was facing is that `Desktop.getDesktop().browse(...)` does not "
+"seem to work reliably when run in native mode with the GraalVM version I was "
+"using (link:https://github.com/oracle/graal/issues/2430[issue]). The "
+"alternative, like already stated before, is to control the browser more "
+"directly and for example open a Chrome window via "
+"link:https://docs.oracle.com/javase/7/docs/api/java/lang/Runtime.html#exec(java.lang.String)[Runtime.exec(...)]. "
+"See the "
+"link:https://github.com/38leinaD/quarkus-native-app-starter/blob/master/src/main/java/org/acme/LsMain.java[main "
+"method] of the starter project for some possibilities to experiment with."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-05-12-native-command-mode-tools.adoc:137
+msgid "image:quarkus-native-webui.gif[]"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_posts/2020-05-12-native-command-mode-tools.adoc:138
+#, no-wrap
+msgid "Summary"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-05-12-native-command-mode-tools.adoc:142
+msgid ""
+"It will be interesting to see where people are taking command-mode. Maybe we "
+"will be seeing Electron-style Desktop applications being developed based on "
+"Quarkus? At least to me, this sounds promising and productive. No wasting of "
+"time to learn a completely different stack just to write a small "
+"tool. Instead, use the same stack and API I am familar with from backend "
+"development anyway."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-05-12-native-command-mode-tools.adoc:144
+msgid ""
+"We have seen that making a tool available in a way that is easy to consume "
+"by people can be achived with Github and Github Actions alone."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-05-12-native-command-mode-tools.adoc:145
+msgid ""
+"In case you are interested in a more complete tool where I have used the "
+"ideas presented here, check out my "
+"link:https://github.com/38leinaD/bpmn-diff[bpmn-diff] project which is a Git "
+"difftool for BPMN files. As an added benefit, it uses Gradle as opposed to "
+"Maven and thus provides additional examples on the use of Github Actions."
+msgstr ""

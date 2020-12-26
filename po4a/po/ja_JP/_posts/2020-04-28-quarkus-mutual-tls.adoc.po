@@ -1,0 +1,923 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2020-12-26 18:44+0900\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. type: Plain text
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:1
+#, no-wrap
+msgid "---\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:7
+#, no-wrap
+msgid ""
+"layout: post\n"
+"title: Learn how to do Mutual TLS in Quarkus apps\n"
+"date:   2020-04-28 00:00 +0100\n"
+"author: mmascia\n"
+"synopsis: Let's learn how to enable mutual TLS in a Quarkus app.\n"
+"---\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:13
+msgid ""
+"In this entry, we explore how to set mutual TLS encryption between two "
+"Quarkus applications manually.  Both on bare metal and Kubernetes."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:14
+#, no-wrap
+msgid "What is Mutual TLS Authentication?"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:17
+msgid ""
+"Mutual TLS authentication or two way authentication is an extension of "
+"Transport Layer Security (or “TLS”), and it ensures that traffic between the "
+"client and server is secure and trusted in both directions."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:18
+#, no-wrap
+msgid "Why Mutual TLS?"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:21
+msgid ""
+"It is an additional security layer which verifies not only the server "
+"identity but also the client one."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:22
+#, no-wrap
+msgid "How implement it?"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:25
+msgid ""
+"The best approach to implement Mutual TLS between two services is to "
+"delegate it to the infrastructure, for instance, a Service Mesh. This "
+"achieves a standard and secure way of communication and avoids that each "
+"application implements its solution. However, you are not always working on "
+"cutting edge environment."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:27
+msgid ""
+"Let's have a look at how to implement mTLS with Quarkus if you don't have a "
+"service mesh environment like Istio."
+msgstr ""
+
+#. type: Named 'alt' AttributeList argument for macro 'image'
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:28
+#, no-wrap
+msgid "MutualTLS Diagram"
+msgstr ""
+
+#. type: Target for macro image
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:28
+#, no-wrap
+msgid "mutual_tls.png"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:30
+#, no-wrap
+msgid "Bootstrapping"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:33
+msgid "Let's create both the server and client applications we will secure."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:42
+#, no-wrap
+msgid ""
+"mvn io.quarkus:quarkus-maven-plugin:1.4.1.Final:create \\\n"
+"    -DprojectGroupId=org.acme \\\n"
+"    -DprojectArtifactId=quarkus-server-mtls \\\n"
+"    -DclassName=\"org.acme.server.mtls.GreetingResource\" \\\n"
+"    -Dextensions=\"rest-client, resteasy-jsonb, kubernetes-client\" \\\n"
+"    -Dpath=\"/hello-server\"\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:52
+#, no-wrap
+msgid ""
+"mvn io.quarkus:quarkus-maven-plugin:1.4.1.Final:create \\\n"
+"    -DprojectGroupId=org.acme \\\n"
+"    -DprojectArtifactId=quarkus-client-mtls \\\n"
+"    -DclassName=\"org.acme.client.mtls.GreetingResource\" \\\n"
+"    -Dextensions=\"rest-client, resteasy-jsonb, kubernetes-client\" \\\n"
+"    -Dpath=\"/hello-client\"\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:54
+#, no-wrap
+msgid "Certificate and Truststore generation"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:57
+msgid "Of course, you need a server, client certificates and a truststore :)"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:61
+#, no-wrap
+msgid ""
+"keytool -genkeypair -storepass password -keyalg RSA -keysize 2048 -dname "
+"\"CN=server\" -alias server -ext \"SAN:c=DNS:localhost,IP:127.0.0.1\" "
+"-keystore "
+"quarkus-server-mtls/src/main/resources/META-INF/resources/server.keystore\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:63
+#, no-wrap
+msgid ""
+"keytool -genkeypair -storepass password -keyalg RSA -keysize 2048 -dname "
+"\"CN=client\" -alias client -ext \"SAN:c=DNS:localhost,IP:127.0.0.1\" "
+"-keystore "
+"quarkus-client-mtls/src/main/resources/META-INF/resources/client.keystore\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:66
+msgid "For this example, we are simulating a truststore using:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:68
+msgid "`client.keystore` as truststore for the server application."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:69
+msgid "`server.keystore` as truststore for the client application."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:73
+#, no-wrap
+msgid ""
+"cp quarkus-server-mtls/src/main/resources/META-INF/resources/server.keystore "
+"quarkus-client-mtls/src/main/resources/META-INF/resources/client.truststore\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:75
+#, no-wrap
+msgid ""
+"cp quarkus-client-mtls/src/main/resources/META-INF/resources/client.keystore "
+"quarkus-server-mtls/src/main/resources/META-INF/resources/server.truststore\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:77
+#, no-wrap
+msgid "Hello Server Application"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:80
+msgid "Let's open and configure the server `quarkus-server-mtls`"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:81
+#, no-wrap
+msgid "Enable SSL on the Hello Server Application"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:84 upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:258
+msgid ""
+"Add the following properties to enable SSL in your application "
+"`src/main/resources/application.properties`"
+msgstr ""
+
+#. type: Block title
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:85 upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:102 upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:259 upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:369 upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:380
+#, no-wrap
+msgid "application.properties"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:89 upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:269
+#, no-wrap
+msgid "quarkus.ssl.native=true\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:93
+#, no-wrap
+msgid ""
+"quarkus.http.ssl-port=8443\n"
+"quarkus.http.ssl.certificate.key-store-file=META-INF/resources/server.keystore\n"
+"quarkus.http.ssl.certificate.key-store-password=password\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:96
+#, no-wrap
+msgid ""
+"quarkus.http.port=0\n"
+"quarkus.http.test-port=0 \n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:99
+msgid ""
+"See the guide https://quarkus.io/guides/native-and-ssl[Using SSL with "
+"Native] to explore in details how SSL works in Quarkus."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:100
+#, no-wrap
+msgid "Activate client authentication"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:108
+#, no-wrap
+msgid ""
+"quarkus.http.ssl.client-auth=required\n"
+"quarkus.http.ssl.certificate.trust-store-file=META-INF/resources/server.truststore\n"
+"quarkus.http.ssl.certificate.trust-store-password=password\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:110
+#, no-wrap
+msgid "Update GreetingResource"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:113
+msgid ""
+"To better see that the response is coming from the server application, let's "
+"update the `org.acme.server.mtls.GreetingResource` class."
+msgstr ""
+
+#. type: Block title
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:114
+#, no-wrap
+msgid "org.acme.server.mtls.GreetingResource"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:119
+#, no-wrap
+msgid ""
+"@Path(\"/hello-server\")\n"
+"public class GreetingResource {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:126
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @Produces(MediaType.TEXT_PLAIN)\n"
+"    public String hello() {\n"
+"        return \"hello from server\"; // <1>\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:128
+msgid "Change the return statement in _\"hello from server\"_"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:130
+msgid "And the test class."
+msgstr ""
+
+#. type: Block title
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:131
+#, no-wrap
+msgid "org.acme.server.mtls.GreetingResourceTest"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:136 upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:231
+#, no-wrap
+msgid ""
+"@QuarkusTest\n"
+"public class GreetingResourceTest {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:145
+#, no-wrap
+msgid ""
+"    @Test\n"
+"    public void testHelloEndpoint() {\n"
+"        given()\n"
+"          .when().get(\"/hello-server\")\n"
+"          .then()\n"
+"             .statusCode(200)\n"
+"             .body(is(\"hello from server\")); <1>\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:147 upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:248
+#, no-wrap
+msgid "}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:149
+msgid "Change the matcher in _\"hello from server\"_"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:150 upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:271
+#, no-wrap
+msgid "Run it"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:155 upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:276
+#, no-wrap
+msgid "mvn quarkus:dev\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:158
+msgid ""
+"If everything is correct when you try to hit the _/hello-server_ endpoint, "
+"you should expect the following error."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:163
+#, no-wrap
+msgid ""
+"curl -k https://localhost:8443/hello-server\n"
+"curl: (35) error:1401E412:SSL routines:CONNECT_CR_FINISHED:sslv3 alert bad "
+"certificate\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:166
+msgid ""
+"This means that your client (curl) did not provide a trusted certificate "
+"when it connected to the server."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:167
+#, no-wrap
+msgid "Hello Client Application"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:170
+msgid ""
+"At this point, the server application is ready to accomplish Mutual "
+"TLS. Let's open and configure the client `quarkus-client-mtls`"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:171
+#, no-wrap
+msgid "Add Rest client for the server application"
+msgstr ""
+
+#. type: Block title
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:173
+#, no-wrap
+msgid "org.acme.client.mtls.GreetingService"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:180
+#, no-wrap
+msgid ""
+"@Path(\"/\")\n"
+"@ApplicationScoped\n"
+"@RegisterRestClient\n"
+"public interface GreetingService {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:186
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @Path(\"/hello-server\")\n"
+"    @Produces(MediaType.TEXT_PLAIN)\n"
+"    String hello();\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:189
+msgid ""
+"Inject the GreetingService rest client on "
+"`org.acme.client.mtls.GreetingResource`."
+msgstr ""
+
+#. type: Block title
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:190
+#, no-wrap
+msgid "org.acme.client.mtls.GreetingResource"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:195
+#, no-wrap
+msgid ""
+"@Path(\"/hello-client\")\n"
+"public class GreetingResource {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:199
+#, no-wrap
+msgid ""
+"    @Inject // <1>\n"
+"    @RestClient // <2>\n"
+"    GreetingService greetingService;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:206
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @Produces(MediaType.TEXT_PLAIN)\n"
+"    public String hello() {\n"
+"        return greetingService.hello(); // <3>\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:208
+msgid "CDI `@Inject` annotation."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:209
+msgid "MicroProfile `@RestClient` annotation."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:210
+msgid "Replace the return statement with the `greetingService.hello();`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:212
+msgid ""
+"See the guide https://quarkus.io/guides/rest-client[rest-client] to explore "
+"in details."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:213
+#, no-wrap
+msgid "Update the unit test"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:216
+msgid "Add `quarkus-junit5-mockito` dependency to your project."
+msgstr ""
+
+#. type: Block title
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:217
+#, no-wrap
+msgid "pom.xml"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:224
+#, no-wrap
+msgid ""
+"    <dependency>\n"
+"      <groupId>io.quarkus</groupId>\n"
+"      <artifactId>quarkus-junit5-mockito</artifactId>\n"
+"    </dependency>\n"
+msgstr ""
+
+#. type: Block title
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:226
+#, no-wrap
+msgid "org.acme.client.mtls.GreetingResourceTest"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:235
+#, no-wrap
+msgid ""
+"    @InjectMock // <1>\n"
+"    @RestClient // <2>\n"
+"    GreetingService greetingService;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:239
+#, no-wrap
+msgid ""
+"    @Test\n"
+"    public void testHelloEndpoint() {\n"
+"        Mockito.when(greetingService.hello()).thenReturn(\"hello from "
+"server\"); // <3>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:246
+#, no-wrap
+msgid ""
+"        given()\n"
+"          .when().get(\"/hello-client\")\n"
+"          .then()\n"
+"             .statusCode(200)\n"
+"             .body(is(\"hello from server\"));\n"
+"    }\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:250
+msgid "Inject the CDI bean."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:251
+msgid "RestClient type."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:252
+msgid "Mock the hello request."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:254
+msgid ""
+"See the guide https://quarkus.io/guides/getting-started-testing[Testing] to "
+"explore in details."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:255
+#, no-wrap
+msgid "Configure MicroProfile rest client for Mutual TLS"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:267
+#, no-wrap
+msgid ""
+"org.acme.client.mtls.GreetingService/mp-rest/url=https://localhost:8443\n"
+"org.acme.client.mtls.GreetingService/mp-rest/trustStore=classpath:/META-INF/resources/client.truststore\n"
+"org.acme.client.mtls.GreetingService/mp-rest/trustStorePassword=password\n"
+"org.acme.client.mtls.GreetingService/mp-rest/keyStore=classpath:/META-INF/resources/client.keystore\n"
+"org.acme.client.mtls.GreetingService/mp-rest/keyStorePassword=password\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:279
+msgid ""
+"Now let's hit the client _/hello-client_ endpoint, and you should expect the "
+"following."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:284
+#, no-wrap
+msgid ""
+"curl http://localhost:8080/hello-client\n"
+"hello from server\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:286
+#, no-wrap
+msgid "External Configuration"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:289
+msgid ""
+"You do not want to have a certificate inside your application and Quarkus "
+"allows you to use external configuration and override the runtime "
+"application properties."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:291
+msgid "Let's check how we can do in Kubernetes / OpenShift."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:293
+msgid ""
+"During the application boostrapping you added the `kubernetes-config` "
+"extensions. The extension works by reading ConfigMaps directly from the "
+"Kubernetes API."
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:297
+msgid ""
+"In case you are in a restricted environment which not allow the role to view "
+"ConfigMap to your service account, you need to mount the external `config` "
+"directory under the current working directory, for instance "
+"`<working-dir>/config/application.properties`"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:299
+msgid "The _working directory_ for:"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:301
+msgid "jvm `redhat-openjdk-18/openjdk18-openshift` image is `/deployments`"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:302
+msgid "native `ubi-quarkus-native-s2i:19.3.1-java11` image is `/home/quarkus`"
+msgstr ""
+
+#. type: Block title
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:303
+#, no-wrap
+msgid "volumeMounts sample"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:307
+#, no-wrap
+msgid "# ...\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:312
+#, no-wrap
+msgid ""
+"      volumes:\n"
+"        - name: config\n"
+"          configMap:\n"
+"              name: client\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:317
+#, no-wrap
+msgid ""
+"# ...\n"
+"          volumeMounts:\n"
+"            - name: config\n"
+"              mountPath: /deployments\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:320
+#, no-wrap
+msgid "Secret"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:323
+msgid ""
+"Create server, client and truststore secret which contains your certificates "
+"and truststore. For instance:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:328
+#, no-wrap
+msgid ""
+"kubectl create secret generic server --from-file=tls/server/\n"
+"kubectl create secret generic client --from-file=tls/client/\n"
+"kubectl create secret generic truststore --from-file=tls/ca/truststore\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:330
+#, no-wrap
+msgid "ConfigMap"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:333
+msgid "Create the server and client ConfigMap."
+msgstr ""
+
+#. type: Block title
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:334
+#, no-wrap
+msgid "server-ConfigMap.yaml"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:347
+#, no-wrap
+msgid ""
+"kind: ConfigMap\n"
+"apiVersion: v1\n"
+"metadata:\n"
+"  name: server\n"
+"data:\n"
+"  application.properties: |\n"
+"    "
+"quarkus.http.ssl.certificate.key-store-file=/deployments/tls/server.keystore\n"
+"    quarkus.http.ssl.certificate.key-store-password=password\n"
+"    "
+"quarkus.http.ssl.certificate.trust-store-file=/deployments/tls/ca/truststore\n"
+"    quarkus.http.ssl.certificate.trust-store-password=password\n"
+msgstr ""
+
+#. type: Block title
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:349
+#, no-wrap
+msgid "client-ConfigMap.yaml"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:363
+#, no-wrap
+msgid ""
+"kind: ConfigMap\n"
+"apiVersion: v1\n"
+"metadata:\n"
+"  name: client\n"
+"data:\n"
+"  application.properties: |\n"
+"    org.acme.client.mtls.GreetingService/mp-rest/url=https://server:8443\n"
+"    "
+"org.acme.client.mtls.GreetingService/mp-rest/trustStore=/deployments/tls/ca/truststore\n"
+"    "
+"org.acme.client.mtls.GreetingService/mp-rest/trustStorePassword=password\n"
+"    "
+"org.acme.client.mtls.GreetingService/mp-rest/keyStore=/deployments/tls/client.keystore\n"
+"    org.acme.client.mtls.GreetingService/mp-rest/keyStorePassword=password\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:365
+#, no-wrap
+msgid "Enable `kubernetes-config` extension on the server and client application"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:368
+msgid "Add the following properties for the server application:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:374 upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:385
+#, no-wrap
+msgid ""
+"# only when running in prod (Kubernetes environment)\n"
+"%prod.quarkus.kubernetes-config.enabled=true\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:376
+#, no-wrap
+msgid "quarkus.kubernetes-config.config-maps=server\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:379
+msgid "and the client application:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:387
+#, no-wrap
+msgid "quarkus.kubernetes-config.config-maps=client\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:390
+msgid ""
+"See the guide https://quarkus.io/guides/kubernetes-config[Kubernetes Config] "
+"to explore in details."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:391
+#, no-wrap
+msgid "Deploy Everything"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:394
+msgid "Here an example for the client application:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:433
+#, no-wrap
+msgid ""
+"kind: Deployment\n"
+"apiVersion: apps/v1\n"
+"metadata:\n"
+"  name: client\n"
+"  namespace: mtls\n"
+"spec:\n"
+"  replicas: 1\n"
+"  selector:\n"
+"    matchLabels:\n"
+"      app: client\n"
+"  template:\n"
+"    metadata:\n"
+"      labels:\n"
+"        app: client\n"
+"    spec:\n"
+"      volumes:\n"
+"        - name: client\n"
+"          secret:\n"
+"            secretName: client\n"
+"        - name: truststore\n"
+"          secret:\n"
+"            secretName: truststore\n"
+"      containers:\n"
+"        - name: client\n"
+"          image: "
+"'image-registry.openshift-image-registry.svc:5000/mtls/client:latest'\n"
+"          ports:\n"
+"            - containerPort: 8443\n"
+"              protocol: TCP\n"
+"          resources: {}\n"
+"          volumeMounts:\n"
+"            - name: client\n"
+"              readOnly: true\n"
+"              mountPath: /deployments/tls\n"
+"            - name: truststore\n"
+"              readOnly: true\n"
+"              mountPath: /deployments/tls/ca\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:436
+msgid ""
+"See this instruction "
+"https://github.com/openlab-red/quarkus-mtls-quickstart/tree/master/deploy to "
+"explore in details."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:437
+#, no-wrap
+msgid "Conclusion"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:441
+msgid ""
+"You have successfully implemented a Mutual TLS with Quarkus.  The full "
+"Quarkus Mutual TLS example is available in the github repository mentioned "
+"in the links section."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:442
+#, no-wrap
+msgid "Links"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-04-28-quarkus-mutual-tls.adoc:444
+msgid "GitHub repository: https://github.com/openlab-red/quarkus-mtls-quickstart"
+msgstr ""
