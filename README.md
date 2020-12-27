@@ -1,6 +1,8 @@
 # i18n-quarkusio
 
-Translation project for quarkusio.github.io
+[https://i18n-quarkusio.github.io/](https://i18n-quarkusio.github.io/)
+
+Translation project for [https://quarkus.io/](https://quarkus.io/)
 
 ## Build
 
