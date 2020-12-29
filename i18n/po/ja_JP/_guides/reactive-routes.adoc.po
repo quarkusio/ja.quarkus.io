@@ -1,0 +1,1476 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# 
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2020-12-29 14:10+0900\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. This guide is maintained in the main Quarkus repository
+#. and pull requests should be submitted there:
+#. https://github.com/quarkusio/quarkus/tree/master/docs/src/main/asciidoc
+#. type: Title =
+#: upstream/_guides/reactive-routes.adoc:6
+#, no-wrap
+msgid "Using Reactive Routes"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:14
+msgid ""
+"Reactive routes propose an alternative approach to implement HTTP endpoints "
+"where you declare and chain _routes_.  This approach became very popular in "
+"the JavaScript world, with frameworks like Express.Js or Hapi.  Quarkus also "
+"offers the possibility to use reactive routes.  You can implement REST API "
+"with routes only or combine them with JAX-RS resources and servlets."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:16
+msgid ""
+"The code presented in this guide is available in this {quickstarts-base-url}"
+"[Github repository] under the {quickstarts-tree-url}/reactive-routes-"
+"quickstart[`reactive-routes-quickstart` directory]"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/reactive-routes.adoc:17
+#, no-wrap
+msgid "Quarkus HTTP"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:24
+msgid ""
+"Before going further, let's have a look at the HTTP layer of Quarkus.  "
+"Quarkus HTTP support is based on a non-blocking and reactive engine (Eclipse "
+"Vert.x and Netty).  All the HTTP requests your application receive are "
+"handled by _event loops_ (IO Thread) and then are routed towards the code "
+"that manages the request.  Depending on the destination, it can invoke the "
+"code managing the request on a worker thread (Servlet, Jax-RS) or use the IO "
+"Thread (reactive route).  Note that because of this, a reactive route must "
+"be non-blocking or explicitly declare its blocking nature (which would "
+"result by being called on a worker thread)."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:26
+msgid "image:http-architecture.png[alt=Quarkus HTTP Architecture]"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/reactive-routes.adoc:27
+#, no-wrap
+msgid "Declaring reactive routes"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:31
+msgid ""
+"The first way to use reactive routes is to use the `@Route` annotation.  To "
+"have access to this annotation, you need to add the `quarkus-vertx-web` "
+"extension:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:33
+msgid "In your `pom.xml` file, add:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:40
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-vertx-web</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:43
+msgid "Then in a _bean_, you can use the `@Route` annotation as follows:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:47
+#: upstream/_guides/reactive-routes.adoc:569
+#, no-wrap
+msgid "package org.acme.reactive.routes;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:52
+#, no-wrap
+msgid ""
+"import io.quarkus.vertx.web.Route;\n"
+"import io.quarkus.vertx.web.RoutingExchange;\n"
+"import io.vertx.core.http.HttpMethod;\n"
+"import io.vertx.ext.web.RoutingContext;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:54
+#, no-wrap
+msgid "import javax.enterprise.context.ApplicationScoped;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:57
+#, no-wrap
+msgid ""
+"@ApplicationScoped <1>\n"
+"public class MyDeclarativeRoutes {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:63
+#, no-wrap
+msgid ""
+"    // neither path nor regex is set - match a path derived from the method name\n"
+"    @Route(methods = HttpMethod.GET) <2> \n"
+"    void hello(RoutingContext rc) { <3>\n"
+"        rc.response().end(\"hello\");\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:68
+#, no-wrap
+msgid ""
+"    @Route(path = \"/world\") \n"
+"    String helloWorld() { <4>\n"
+"        return \"Hello world!\";\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:74
+#, no-wrap
+msgid ""
+"    @Route(path = \"/greetings\", methods = HttpMethod.GET)\n"
+"    void greetings(RoutingExchange ex) { <5>\n"
+"        ex.ok(\"hello \" + ex.getParam(\"name\").orElse(\"world\"));\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:77
+msgid ""
+"If there is a reactive route found on a class with no scope annotation then "
+"`@javax.inject.Singleton` is added automatically."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:78
+msgid ""
+"The `@Route` annotation indicates that the method is a reactive route. "
+"Again, by default, the code contained in the method must not block."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:79
+msgid ""
+"The method gets a https://vertx.io/docs/apidocs/io/vertx/ext/web/"
+"RoutingContext.html[`RoutingContext`] as a parameter. From the "
+"`RoutingContext` you can retrieve the HTTP request (using `request()`) and "
+"write the response using `response().end(...)`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:80
+msgid ""
+"If the annotated method does not return `void` the arguments are optional."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:81
+msgid ""
+"`RoutingExchange` is a convenient wrapper of `RoutingContext` which provides "
+"some useful methods."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:83
+msgid ""
+"More details about using the `RoutingContext` is available in the https://"
+"vertx.io/docs/vertx-web/java/[Vert.x Web documentation]."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:85
+msgid "The `@Route` annotation allows you to configure:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:87
+msgid ""
+"The `path` - for routing by path, using the https://vertx.io/docs/vertx-web/"
+"java/#_capturing_path_parameters[Vert.x Web format]"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:88
+msgid ""
+"The `regex` - for routing with regular expressions, see https://vertx.io/"
+"docs/vertx-web/java/#_routing_with_regular_expressions[for more details]"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:89
+msgid ""
+"The `methods` - the HTTP verb triggering the route such as `GET`, `POST`..."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:90
+msgid ""
+"The `type` - it can be _normal_ (non-blocking), _blocking_ (method "
+"dispatched on a worker thread), or _failure_ to indicate that this route is "
+"called on failures"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:92
+msgid ""
+"The `order` - the order of the route when several routes are involved in "
+"handling the incoming request.  Must be positive for regular user routes."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:93
+msgid "The produced and consumed mime types using `produces`, and `consumes`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:95
+msgid "For instance, you can declare a blocking route as follows:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:102
+#, no-wrap
+msgid ""
+"@Route(methods = HttpMethod.POST, path = \"/post\", type = Route.HandlerType.BLOCKING)\n"
+"public void blocking(RoutingContext rc) {\n"
+"    // ...\n"
+"}\n"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_guides/reactive-routes.adoc:107
+msgid ""
+"Alternatively, you can use `@io.smallrye.common.annotation.Blocking` and "
+"omit the `type = Route.HandlerType.BLOCKING`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:114
+#, no-wrap
+msgid ""
+"@Route(methods = HttpMethod.POST, path = \"/post\")\n"
+"@Blocking\n"
+"public void blocking(RoutingContext rc) {\n"
+"    // ...\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:116
+msgid "When `@Blocking` is used, it ignores the `type` attribute of `@Route`."
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_guides/reactive-routes.adoc:119
+msgid ""
+"The `@Route` annotation is repeatable and so you can declare several routes "
+"for a single method:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:127
+#, no-wrap
+msgid ""
+"@Route(path = \"/first\") <1>\n"
+"@Route(path = \"/second\")\n"
+"public void route(RoutingContext rc) {\n"
+"    // ...\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:129
+msgid "Each route can use different paths, methods..."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:131
+msgid ""
+"If no content-type header is set then we will try to use the most acceptable "
+"content type as defined by `io.vertx.ext.web.RoutingContext."
+"getAcceptableContentType()`."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:138
+#, no-wrap
+msgid ""
+"@Route(path = \"/person\", produces = \"text/html\") <1>\n"
+"String person() {\n"
+"    // ...\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:140
+msgid ""
+"If the `accept` header matches `text/html` we set the content type "
+"automatically."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/reactive-routes.adoc:141
+#, no-wrap
+msgid "Handling conflicting routes"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:145
+msgid ""
+"You may end up with multiple routes matching a given path.  In the following "
+"example, both route matches `/accounts/me`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:152
+#, no-wrap
+msgid ""
+"@Route(path = \"/accounts/:id\", methods = HttpMethod.GET)\n"
+"void getAccount(RoutingContext ctx) {\n"
+"  ...\n"
+"}\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:157
+#, no-wrap
+msgid ""
+"@Route(path = \"/accounts/me\", methods = HttpMethod.GET)\n"
+"void getCurrentUserAccount(RoutingContext ctx) {\n"
+"  ...\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:161
+msgid ""
+"As a consequence, the result is not the expected one as the first route is "
+"called with the path parameter `id` set to `me`.  To avoid the conflict, use "
+"the `order` attribute:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:168
+#, no-wrap
+msgid ""
+"@Route(path = \"/accounts/:id\", methods = HttpMethod.GET, order = 2)\n"
+"void getAccount(RoutingContext ctx) {\n"
+"  ...\n"
+"}\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:173
+#, no-wrap
+msgid ""
+"@Route(path = \"/accounts/me\", methods = HttpMethod.GET, order = 1)\n"
+"void getCurrentUserAccount(RoutingContext ctx) {\n"
+"  ...\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:177
+msgid ""
+"By giving a lower order to the second route, it gets evaluated first.  If "
+"the request path matches, it is invoked, otherwise the other routes are "
+"evaluated."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/reactive-routes.adoc:178
+#, no-wrap
+msgid "`@RouteBase`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:181
+msgid ""
+"This annotation can be used to configure some defaults for reactive routes "
+"declared on a class."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:186
+#, no-wrap
+msgid ""
+"@RouteBase(path = \"simple\", produces = \"text/plain\") <1> <2>\n"
+"public class SimpleRoutes {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:192
+#, no-wrap
+msgid ""
+"    @Route(path = \"ping\") // the final path is /simple/ping\n"
+"    void ping(RoutingContext rc) {\n"
+"        rc.response().end(\"pong\");\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:194
+msgid ""
+"The `path` value is used as a prefix for any route method declared on the "
+"class where `Route#path()` is used."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:195
+msgid ""
+"The value of `produces()` is used for content-based routing for all routes "
+"where `Route#produces()` is empty."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/reactive-routes.adoc:197
+#, no-wrap
+msgid "Reactive Route Methods"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:202
+msgid ""
+"A route method must be a non-private non-static method of a CDI bean.  If "
+"the annotated method returns `void` then it has to accept at least one "
+"argument - see the supported types below.  If the annotated method does not "
+"return `void` then the arguments are optional."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:204
+msgid "A route method can accept arguments of the following types:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:206
+msgid "`io.vertx.ext.web.RoutingContext`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:207
+msgid "`io.vertx.reactivex.ext.web.RoutingContext`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:208
+msgid "`io.quarkus.vertx.web.RoutingExchange`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:209
+msgid "`io.vertx.core.http.HttpServerRequest`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:210
+msgid "`io.vertx.core.http.HttpServerResponse`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:211
+msgid "`io.vertx.reactivex.core.http.HttpServerRequest`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:212
+msgid "`io.vertx.reactivex.core.http.HttpServerResponse`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:214
+msgid ""
+"Furthermore, it is possible to inject the `HttpServerRequest` parameters "
+"into a method parameter annotated with `@io.quarkus.vertx.web.Param`:"
+msgstr ""
+
+#. -------------
+#. type: Table
+#: upstream/_guides/reactive-routes.adoc:222
+#, no-wrap
+msgid ""
+"|Parameter Type   | Obtained via  \n"
+"|`java.lang.String`   |`routingContext.request().getParam()`   \n"
+"|`java.util.Optional<String>`   |`routingContext.request().getParam()`   \n"
+"|`java.util.List<String>`   |`routingContext.request().params().getAll()`\n"
+msgstr ""
+
+#. type: Block title
+#: upstream/_guides/reactive-routes.adoc:224
+#, no-wrap
+msgid "Request Parameter Example"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:231
+#, no-wrap
+msgid ""
+"@Route\n"
+"String hello(@Param Optional<String> name) {\n"
+"   return \"Hello \" + name.orElse(\"world\");\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:234
+msgid ""
+"The `HttpServerRequest` headers can be injected into a method parameter "
+"annotated with `@io.quarkus.vertx.web.Header`:"
+msgstr ""
+
+#. -------------
+#. type: Table
+#: upstream/_guides/reactive-routes.adoc:242
+#, no-wrap
+msgid ""
+"|Parameter Type   | Obtained via  \n"
+"|`java.lang.String`   |`routingContext.request().getHeader()`   \n"
+"|`java.util.Optional<String>`   |`routingContext.request().getHeader()`   \n"
+"|`java.util.List<String>`   |`routingContext.request().headers().getAll()`\n"
+msgstr ""
+
+#. type: Block title
+#: upstream/_guides/reactive-routes.adoc:244
+#, no-wrap
+msgid "Request Header Example"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:251
+#, no-wrap
+msgid ""
+"@Route\n"
+"String helloFromHeader(@Header(\"My-Header\") String header) {\n"
+"   return header;\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:254
+msgid ""
+"The request body can be injected into a method parameter annotated with `@io."
+"quarkus.vertx.web.Body`."
+msgstr ""
+
+#. -------------
+#. type: Table
+#: upstream/_guides/reactive-routes.adoc:264
+#, no-wrap
+msgid ""
+"|Parameter Type   | Obtained via  \n"
+"|`java.lang.String`   |`routingContext.getBodyAsString()`   \n"
+"|`io.vertx.core.buffer.Buffer`   |`routingContext.getBody()`   \n"
+"|`io.vertx.core.json.JsonObject`   |`routingContext.getBodyAsJson()`   \n"
+"|`io.vertx.core.json.JsonArray`   |`routingContext.getBodyAsJsonArray()`   \n"
+"|any other type   |`routingContext.getBodyAsJson().mapTo(MyPojo.class)`   \n"
+msgstr ""
+
+#. type: Block title
+#: upstream/_guides/reactive-routes.adoc:266
+#, no-wrap
+msgid "Request Body Example"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:274
+#, no-wrap
+msgid ""
+"@Route(produces = \"application/json\")\n"
+"Person createPerson(@Body Person person, @Param(\"id\") Optional<String> primaryKey) {\n"
+"  person.setId(primaryKey.map(Integer::valueOf).orElse(42));\n"
+"  return person;\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:278
+msgid ""
+"A failure handler can declare a single method parameter whose type extends "
+"`Throwable`.  The type of the parameter is used to match the result of "
+"`RoutingContext#failure()`."
+msgstr ""
+
+#. type: Block title
+#: upstream/_guides/reactive-routes.adoc:279
+#, no-wrap
+msgid "Failure Handler Example"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:286
+#, no-wrap
+msgid ""
+"@Route(type = HandlerType.FAILURE)\n"
+"void unsupported(UnsupportedOperationException e, HttpServerResponse response) {\n"
+"  response.setStatusCode(501).end(e.getMessage());\n"
+"}\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/reactive-routes.adoc:288
+#, no-wrap
+msgid "Returning Unis"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:291
+msgid "In a reactive route, you can return a `Uni` directly:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:298
+#, no-wrap
+msgid ""
+"@Route(path = \"/hello\")\n"
+"Uni<String> hello(RoutingContext context) {\n"
+"    return Uni.createFrom().item(\"Hello world!\");\n"
+"}\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:303
+#, no-wrap
+msgid ""
+"@Route(path = \"/person\")\n"
+"Uni<Person> getPerson(RoutingContext context) {\n"
+"    return Uni.createFrom().item(() -> new Person(\"neo\", 12345));\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:306
+msgid "Returning `Unis` is convenient when using a reactive client:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:313
+#, no-wrap
+msgid ""
+"@Route(path = \"/mail\")\n"
+"Uni<Void> sendEmail(RoutingContext context) {\n"
+"    return mailer.send(...);\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:316
+msgid "The item produced by the returned `Uni` can be:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:318
+#: upstream/_guides/reactive-routes.adoc:344
+msgid "a string - written into the HTTP response directly"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:319
+#: upstream/_guides/reactive-routes.adoc:345
+msgid "a buffer - written into the HTTP response directly"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:321
+#: upstream/_guides/reactive-routes.adoc:347
+msgid ""
+"an object - written into the HTTP response after having been encoded into "
+"JSON.  The `content-type` header is set to `application/json` if not already "
+"set."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:323
+msgid ""
+"If the returned `Uni` produces a failure (or is `null`), an HTTP 500 "
+"response is written."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:325
+msgid "Returning a `Uni<Void>` produces a 204 response (no content)."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/reactive-routes.adoc:326
+#, no-wrap
+msgid "Returning results"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:329
+msgid "You can also return a result directly:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:336
+#, no-wrap
+msgid ""
+"@Route(path = \"/hello\")\n"
+"String helloSync(RoutingContext context) {\n"
+"    return \"Hello world\";\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:340
+msgid ""
+"Be aware, the processing must be **non-blocking** as reactive routes are "
+"invoked on the IO Thread.  Otherwise, set the `type` attribute of the "
+"`@Route` annotation to `Route.HandlerType.BLOCKING`, or use the `@io."
+"smallrye.common.annotation.Blocking` annotation."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:342
+#: upstream/_guides/reactive-routes.adoc:364
+msgid "The method can return:"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/reactive-routes.adoc:348
+#, no-wrap
+msgid "Returning Multis"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:353
+msgid ""
+"A reactive route can return a `Multi`.  The items are written one by one, in "
+"the response.  The response `Transfer-Encoding` header is set to `chunked`."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:360
+#, no-wrap
+msgid ""
+"@Route(path = \"/hello\")\n"
+"Multi<String> hellos(RoutingContext context) {\n"
+"    return Multi.createFrom().items(\"hello\", \"world\", \"!\");  // <1>\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:362
+msgid "Produces `helloworld!`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:366
+msgid ""
+"a `Multi<String>` - the items are written one by one (one per _chunk_) in "
+"the response."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:367
+msgid ""
+"a `Multi<Buffer>` - the buffers are written one by one (one per _chunk_) "
+"without any processing."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:368
+msgid ""
+"a `Multi<Object>` - the items are encoded to JSON written one by one in the "
+"response."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:379
+#, no-wrap
+msgid ""
+"@Route(path = \"/people\")\n"
+"Multi<Person> people(RoutingContext context) {\n"
+"    return Multi.createFrom().items(\n"
+"            new Person(\"superman\", 1),\n"
+"            new Person(\"batman\", 2),\n"
+"            new Person(\"spiderman\", 3));\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:382
+#: upstream/_guides/reactive-routes.adoc:410
+msgid "The previous snippet produces:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:388
+#, no-wrap
+msgid ""
+"{\"name\":\"superman\", \"id\": 1} // chunk 1\n"
+"{\"name\":\"batman\", \"id\": 2} // chunk 2\n"
+"{\"name\":\"spiderman\", \"id\": 3} // chunk 3\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/reactive-routes.adoc:390
+#, no-wrap
+msgid "Streaming JSON Array items"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:395
+msgid ""
+"You can return a `Multi` to produce a JSON Array, where every item is an "
+"item from this array.  The response is written item by item to the client.  "
+"The `content-type` is set to `application/json` if not set already."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:397
+msgid ""
+"To use this feature, you need to wrap the returned `Multi` using `io.quarkus."
+"vertx.web.ReactiveRoutes.asJsonArray`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:407
+#, no-wrap
+msgid ""
+"@Route(path = \"/people\")\n"
+"Multi<Person> people(RoutingContext context) {\n"
+"    return ReactiveRoutes.asJsonArray(Multi.createFrom().items(\n"
+"            new Person(\"superman\", 1),\n"
+"            new Person(\"batman\", 2),\n"
+"            new Person(\"spiderman\", 3)));\n"
+"}\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:418
+#, no-wrap
+msgid ""
+"[\n"
+"  {\"name\":\"superman\", \"id\": 1} // chunk 1\n"
+"  ,{\"name\":\"batman\", \"id\": 2} // chunk 2\n"
+"  ,{\"name\":\"spiderman\", \"id\": 3} // chunk 3\n"
+"]\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:424
+msgid ""
+"Only `Multi<String>`, `Multi<Object>` and `Multi<Void>` can be written into "
+"the JSON Array.  Using a `Multi<Void>` produces an empty array.  You cannot "
+"use `Multi<Buffer>`.  If you need to use `Buffer`, transform the content "
+"into a JSON or String representation first."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/reactive-routes.adoc:425
+#, no-wrap
+msgid "Event Stream and Server-Sent Event support"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:429
+msgid ""
+"You can return a `Multi` to produce an event source (stream of server sent "
+"events).  To enable this feature, you need to wrap the returned `Multi` "
+"using `io.quarkus.vertx.web.ReactiveRoutes.asEventStream`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:439
+#, no-wrap
+msgid ""
+"@Route(path = \"/people\")\n"
+"Multi<Person> people(RoutingContext context) {\n"
+"    return ReactiveRoutes.asEventStream(Multi.createFrom().items(\n"
+"            new Person(\"superman\", 1),\n"
+"            new Person(\"batman\", 2),\n"
+"            new Person(\"spiderman\", 3)));\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:442
+msgid "This method would produce:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:447
+#, no-wrap
+msgid ""
+"data: {\"name\":\"superman\", \"id\": 1}\n"
+"id: 0\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:450
+#, no-wrap
+msgid ""
+"data: {\"name\":\"batman\", \"id\": 2}\n"
+"id: 1\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:453
+#, no-wrap
+msgid ""
+"data: {\"name\":\"spiderman\", \"id\": 3}\n"
+"id: 2\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:457
+msgid ""
+"You can also implement the `io.quarkus.vertx.web.ReactiveRoutes."
+"ServerSentEvent` interface to customize the `event` and `id` section of the "
+"server sent event:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:463
+#, no-wrap
+msgid ""
+"class PersonEvent implements ReactiveRoutes.ServerSentEvent<Person> {\n"
+"    public String name;\n"
+"    public int id;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:468
+#, no-wrap
+msgid ""
+"    public PersonEvent(String name, int id) {\n"
+"        this.name = name;\n"
+"        this.id = id;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:473
+#, no-wrap
+msgid ""
+"    @Override\n"
+"    public Person data() {\n"
+"        return new Person(name, id); // Will be JSON encoded\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:478
+#, no-wrap
+msgid ""
+"    @Override\n"
+"    public long id() {\n"
+"        return id;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:484
+#, no-wrap
+msgid ""
+"    @Override\n"
+"    public String event() {\n"
+"        return \"person\";\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:487
+msgid ""
+"Using a `Multi<PersonEvent>` (wrapped using `io.quarkus.vertx.web."
+"ReactiveRoutes.asEventStream`) would produce:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:493
+#, no-wrap
+msgid ""
+"event: person\n"
+"data: {\"name\":\"superman\", \"id\": 1}\n"
+"id: 1\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:497
+#, no-wrap
+msgid ""
+"event: person\n"
+"data: {\"name\":\"batman\", \"id\": 2}\n"
+"id: 2\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:501
+#, no-wrap
+msgid ""
+"event: person\n"
+"data: {\"name\":\"spiderman\", \"id\": 3}\n"
+"id: 3\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/reactive-routes.adoc:504
+#, no-wrap
+msgid "Using Bean Validation"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:509
+msgid ""
+"You can combine reactive routes and Bean Validation.  First, don't forget to "
+"add the `quarkus-hibernate-validator` extension to your project.  Then, you "
+"can add constraints to your route parameter (annotated with `@Param` or "
+"`@Body`):"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:516
+#, no-wrap
+msgid ""
+"@Route(produces = \"application/json\")\n"
+"Person createPerson(@Body @Valid Person person, @NonNull @Param(\"id\") String primaryKey) {\n"
+"  // ...\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:520
+msgid ""
+"If the parameters do not pass the tests, it returns an HTTP 400 response.  "
+"If the request accepts JSON payload, the response follows the https://"
+"opensource.zalando.com/problem/constraint-violation/[Problem] format."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:522
+msgid ""
+"When returning an object or a `Uni`, you can also use the `@Valid` "
+"annotation:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:529
+#, no-wrap
+msgid ""
+"@Route(...)\n"
+"@Valid Uni<Person> createPerson(@Body @Valid Person person, @NonNull @Param(\"id\") String primaryKey) {\n"
+"  // ...\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:533
+msgid ""
+"If the item produced by the route does not pass the validation, it returns a "
+"HTTP 500 response.  If the request accepts JSON payload, the response "
+"follows the https://opensource.zalando.com/problem/constraint-violation/"
+"[Problem] format."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:537
+msgid ""
+"Note that only `@Valid` is supported on the return type.  The returned class "
+"can use any constraint.  In the case of `Uni`, it checks the item produced "
+"asynchronously."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/reactive-routes.adoc:538
+#, no-wrap
+msgid "Using the Vert.x Web Router"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:542
+msgid ""
+"You can also register your route directly on the _HTTP routing layer_ by "
+"registering routes directly on the `Router` object.  To retrieve the "
+"`Router` instance at startup:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:548
+#, no-wrap
+msgid ""
+"public void init(@Observes Router router) {\n"
+"    router.get(\"/my-route\").handler(rc -> rc.response().end(\"Hello from my route\"));\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:551
+msgid ""
+"Check the https://vertx.io/docs/vertx-web/java/"
+"#_basic_vert_x_web_concepts[Vert.x Web documentation] to know more about the "
+"route registration, options, and available handlers."
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_guides/reactive-routes.adoc:557
+msgid ""
+"`Router` access is provided by the `quarkus-vertx-http` extension.  If you "
+"use `quarkus-resteasy` or `quarkus-vertx-web`, the extension will be added "
+"automatically."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/reactive-routes.adoc:559
+#, no-wrap
+msgid "Intercepting HTTP requests"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:563
+msgid ""
+"You can also register filters that would intercept incoming HTTP requests.  "
+"Note that these filters are also applied for servlets, JAX-RS resources, and "
+"reactive routes."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:565
+msgid ""
+"For example, the following code snippet registers a filter adding an HTTP "
+"header:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:571
+#, no-wrap
+msgid "import io.vertx.ext.web.RoutingContext;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:573
+#, no-wrap
+msgid "public class MyFilters {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:580
+#, no-wrap
+msgid ""
+"    @RouteFilter(100) <1>\n"
+"    void myFilter(RoutingContext rc) {\n"
+"       rc.response().putHeader(\"X-Header\", \"intercepting the request\");\n"
+"       rc.next(); <2>\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:583
+msgid ""
+"The `RouteFilter#value()` defines the priority used to sort the filters - "
+"filters with higher priority are called first."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:584
+msgid ""
+"The filter is likely required to call the `next()` method to continue the "
+"chain."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/reactive-routes.adoc:585
+#, no-wrap
+msgid "Adding OpenAPI and Swagger UI"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:588
+msgid ""
+"You can add support for link:https://www.openapis.org/[OpenAPI] and link:"
+"https://swagger.io/tools/swagger-ui/[Swagger UI] by using the `quarkus-"
+"smallrye-openapi` extension."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:590
+msgid "Add the extension by running this command:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:594
+#, no-wrap
+msgid "./mvnw quarkus:add-extension -Dextensions=\"io.quarkus:quarkus-smallrye-openapi\"\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:597
+msgid "This will add the following to your `pom.xml`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:604
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-smallrye-openapi</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:607
+msgid ""
+"This is enough to generate a basic OpenAPI schema document from your Vert.x "
+"Routes:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:611
+#, no-wrap
+msgid "curl http://localhost:8080/openapi\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:614
+msgid "You will see the generated OpenAPI schema document:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:617
+#: upstream/_guides/reactive-routes.adoc:699
+#, no-wrap
+msgid "---\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:642
+#, no-wrap
+msgid ""
+"openapi: 3.0.3\n"
+"info:\n"
+"  title: Generated API\n"
+"  version: \"1.0\"\n"
+"paths:\n"
+"  /greetings:\n"
+"    get:\n"
+"      responses:\n"
+"        \"204\":\n"
+"          description: No Content\n"
+"  /hello:\n"
+"    get:\n"
+"      responses:\n"
+"        \"204\":\n"
+"          description: No Content\n"
+"  /world:\n"
+"    get:\n"
+"      responses:\n"
+"        \"200\":\n"
+"          description: OK\n"
+"          content:\n"
+"            '*/*':\n"
+"              schema:\n"
+"                type: string\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:645
+msgid "Also see link:openapi-swaggerui[the OpenAPI Guide]."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/reactive-routes.adoc:646
+#, no-wrap
+msgid "Adding MicroProfile OpenAPI Annotations"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:650
+msgid ""
+"You can use link:https://github.com/eclipse/microprofile-open-"
+"api[MicroProfile OpenAPI] to better document your schema, example, adding "
+"header info, or specifying the return type on `void` methods might be "
+"usefull :"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:667
+#, no-wrap
+msgid ""
+"@OpenAPIDefinition(<1>\n"
+"    info = @Info(\n"
+"        title=\"Greeting API\",\n"
+"        version = \"1.0.1\",\n"
+"        contact = @Contact(\n"
+"            name = \"Greeting API Support\",\n"
+"            url = \"http://exampleurl.com/contact\",\n"
+"            email = \"techsupport@example.com\"),\n"
+"        license = @License(\n"
+"            name = \"Apache 2.0\",\n"
+"            url = \"http://www.apache.org/licenses/LICENSE-2.0.html\"))\n"
+")\n"
+"@ApplicationScoped\n"
+"public class MyDeclarativeRoutes {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:676
+#, no-wrap
+msgid ""
+"    // neither path nor regex is set - match a path derived from the method name\n"
+"    @Route(methods = HttpMethod.GET)\n"
+"    @APIResponse(responseCode=\"200\", \n"
+"            description=\"Say hello\", \n"
+"            content=@Content(mediaType=\"application/json\", schema=@Schema(type=SchemaType.STRING)))<2>\n"
+"    void hello(RoutingContext rc) {\n"
+"        rc.response().end(\"hello\");\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:681
+#, no-wrap
+msgid ""
+"    @Route(path = \"/world\") \n"
+"    String helloWorld() {\n"
+"        return \"Hello world!\";\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:690
+#, no-wrap
+msgid ""
+"    @Route(path = \"/greetings\", methods = HttpMethod.GET)\n"
+"    @APIResponse(responseCode=\"200\", \n"
+"            description=\"Greeting\", \n"
+"            content=@Content(mediaType=\"application/json\", schema=@Schema(type=SchemaType.STRING)))\n"
+"    void greetings(RoutingExchange ex) {\n"
+"        ex.ok(\"hello \" + ex.getParam(\"name\").orElse(\"world\"));\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:693
+msgid "Header information about your API."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:694
+msgid "Defining the response"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:696
+msgid "This will generate this OpenAPI schema:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-routes.adoc:739
+#, no-wrap
+msgid ""
+"openapi: 3.0.3\n"
+"info:\n"
+"  title: Greeting API\n"
+"  contact:\n"
+"    name: Greeting API Support\n"
+"    url: http://exampleurl.com/contact\n"
+"    email: techsupport@example.com\n"
+"  license:\n"
+"    name: Apache 2.0\n"
+"    url: http://www.apache.org/licenses/LICENSE-2.0.html\n"
+"  version: 1.0.1\n"
+"paths:\n"
+"  /greetings:\n"
+"    get:\n"
+"      responses:\n"
+"        \"200\":\n"
+"          description: Greeting\n"
+"          content:\n"
+"            application/json:\n"
+"              schema:\n"
+"                type: string\n"
+"  /hello:\n"
+"    get:\n"
+"      responses:\n"
+"        \"200\":\n"
+"          description: Say hello\n"
+"          content:\n"
+"            application/json:\n"
+"              schema:\n"
+"                type: string\n"
+"  /world:\n"
+"    get:\n"
+"      responses:\n"
+"        \"200\":\n"
+"          description: OK\n"
+"          content:\n"
+"            '*/*':\n"
+"              schema:\n"
+"                type: string\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/reactive-routes.adoc:741
+#, no-wrap
+msgid "Using Swagger UI"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:745
+msgid ""
+"Swagger UI is included by default when running in `dev` or `test` mode, and "
+"can optionally added to `prod` mode.  See <<openapi-swaggerui.adoc#use-"
+"swagger-ui-for-development,the Swagger UI>> Guide for more details."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:747
+msgid ""
+"Navigate to link:http://localhost:8080/swagger-ui/[localhost:8080/swagger-"
+"ui/] and you will see the Swagger UI screen:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:749
+msgid "image:reactive-routes-guide-screenshot01.png[alt=Swagger UI]"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/reactive-routes.adoc:750
+#, no-wrap
+msgid "Conclusion"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-routes.adoc:753
+msgid ""
+"This guide has introduced how you can use reactive routes to define an HTTP "
+"endpoint.  It also describes the structure of the Quarkus HTTP layer and how "
+"to write filters."
+msgstr ""

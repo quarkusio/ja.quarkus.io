@@ -1,0 +1,969 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2020-12-26 18:44+0900\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. This guide is maintained in the main Quarkus repository
+#. and pull requests should be submitted there:
+#. https://github.com/quarkusio/quarkus/tree/master/docs/src/main/asciidoc
+#. type: Title =
+#: upstream/_guides/quartz.adoc:6
+#, no-wrap
+msgid "Quarkus - Scheduling Periodic Tasks with Quartz"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:13
+msgid ""
+"Modern applications often need to run specific tasks periodically.  In this "
+"guide, you learn how to schedule periodic clustered tasks using the "
+"http://www.quartz-scheduler.org/[Quartz] extension."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:17
+msgid ""
+"If you only need to run in-memory scheduler use the "
+"link:scheduler[Scheduler] extension."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/quartz.adoc:18
+#, no-wrap
+msgid "Prerequisites"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:21
+msgid "To complete this guide, you need:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:23
+msgid "less than 10 minutes"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:24
+msgid "an IDE"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:25
+msgid "JDK 1.8+ installed with `JAVA_HOME` configured appropriately"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:26
+msgid "Apache Maven {maven-version}"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:27
+msgid "Docker and Docker Compose installed on your machine"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/quartz.adoc:28
+#, no-wrap
+msgid "Architecture"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:31
+msgid ""
+"In this guide, we are going to expose one Rest API `tasks` to visualise the "
+"list of tasks created by a Quartz job running every 10 seconds."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/quartz.adoc:32
+#, no-wrap
+msgid "Solution"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:36
+msgid ""
+"We recommend that you follow the instructions in the next sections and "
+"create the application step by step.  However, you can go right to the "
+"completed example."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:38
+msgid ""
+"Clone the Git repository: `git clone {quickstarts-clone-url}`, or download "
+"an {quickstarts-archive-url}[archive]."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:40
+msgid ""
+"The solution is located in the `quartz-quickstart` "
+"{quickstarts-tree-url}/quartz-quickstart[directory]."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/quartz.adoc:41
+#, no-wrap
+msgid "Creating the Maven project"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:44
+msgid ""
+"First, we need a new project. Create a new project with the following "
+"command:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quartz.adoc:54
+#, no-wrap
+msgid ""
+"mvn io.quarkus:quarkus-maven-plugin:{quarkus-version}:create \\\n"
+"    -DprojectGroupId=org.acme \\\n"
+"    -DprojectArtifactId=quartz-quickstart \\\n"
+"    -DclassName=\"org.acme.quartz.TaskResource\" \\\n"
+"    -Dpath=\"/tasks\" \\\n"
+"    "
+"-Dextensions=\"quartz,hibernate-orm-panache,flyway,resteasy-jackson,jdbc-postgresql\"\n"
+"cd quartz-quickstart\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:57
+msgid "It generates:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:59
+msgid "the Maven structure"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:60
+msgid "a landing page accessible on `http://localhost:8080`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:61
+msgid "example `Dockerfile` files for both `native` and `jvm` modes"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:62
+msgid "the application configuration file"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:63
+msgid "an `org.acme.quartz.TaskResource` resource"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:64
+msgid "an associated test"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:66
+msgid "The Maven project also imports the Quarkus Quartz extension."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:69
+msgid ""
+"If you already have your Quarkus project configured, you can add the "
+"`quartz` extension to your project by running the following command in your "
+"project base directory:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quartz.adoc:73
+#, no-wrap
+msgid "./mvnw quarkus:add-extension -Dextensions=\"quartz\"\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:76
+msgid "This will add the following to your `pom.xml`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quartz.adoc:83
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-quartz</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_guides/quartz.adoc:88
+msgid ""
+"To use a JDBC store, the `quarkus-agroal` extension, which provides the "
+"datasource support, is also required."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/quartz.adoc:90
+#, no-wrap
+msgid "Creating the Task Entity"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:93
+msgid ""
+"In the `org.acme.quartz` package, create the `Task` class, with the "
+"following content:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quartz.adoc:97 upstream/_guides/quartz.adoc:127 upstream/_guides/quartz.adoc:158 upstream/_guides/quartz.adoc:244 upstream/_guides/quartz.adoc:268
+#, no-wrap
+msgid "package org.acme.quartz;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quartz.adoc:101
+#, no-wrap
+msgid ""
+"import javax.persistence.Entity;\n"
+"import java.time.Instant;\n"
+"import javax.persistence.Table;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quartz.adoc:103
+#, no-wrap
+msgid "import io.quarkus.hibernate.orm.panache.PanacheEntity;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quartz.adoc:108
+#, no-wrap
+msgid ""
+"@Entity\n"
+"@Table(name=\"TASKS\")\n"
+"public class Task extends PanacheEntity { <1>\n"
+"    public Instant createdAt;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quartz.adoc:112
+#, no-wrap
+msgid ""
+"    public Task() {\n"
+"        createdAt = Instant.now();\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quartz.adoc:117
+#, no-wrap
+msgid ""
+"    public Task(Instant time) {\n"
+"        this.createdAt = time;\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:119
+msgid "Declare the entity using link:hibernate-orm-panache[Panache]"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/quartz.adoc:120
+#, no-wrap
+msgid "Creating a scheduled job"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:123
+msgid ""
+"In the `org.acme.quartz` package, create the `TaskBean` class, with the "
+"following content:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quartz.adoc:129
+#, no-wrap
+msgid "import javax.enterprise.context.ApplicationScoped;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quartz.adoc:131
+#, no-wrap
+msgid "import javax.transaction.Transactional;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quartz.adoc:133
+#, no-wrap
+msgid "import io.quarkus.scheduler.Scheduled;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quartz.adoc:136
+#, no-wrap
+msgid ""
+"@ApplicationScoped <1>\n"
+"public class TaskBean {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quartz.adoc:144
+#, no-wrap
+msgid ""
+"    @Transactional\n"
+"    @Scheduled(every = \"10s\") <2>\n"
+"    void schedule() {\n"
+"        Task task = new Task(); <3>\n"
+"        task.persist(); <4>\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:146
+msgid "Declare the bean in the _application_ scope"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:147
+msgid ""
+"Use the `@Scheduled` annotation to instruct Quarkus to run this method every "
+"10 seconds."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:148
+msgid "Create a new `Task` with the current start time."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:149
+msgid ""
+"Persist the task in database using "
+"https://quarkus.io/guides/hibernate-orm-panache[Panache]."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/quartz.adoc:150
+#, no-wrap
+msgid "Scheduling Jobs Programmatically"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:154
+msgid ""
+"It is also possible to leverage the Quartz API directly.  You can inject the "
+"underlying `org.quartz.Scheduler` in any bean:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quartz.adoc:161
+#, no-wrap
+msgid ""
+"@ApplicationScoped\n"
+"public class TaskBean {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quartz.adoc:164
+#, no-wrap
+msgid ""
+"    @Inject\n"
+"    org.quartz.Scheduler quartz; <1>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quartz.adoc:179
+#, no-wrap
+msgid ""
+"    void onStart(@Observes StartupEvent event) throws SchedulerException {\n"
+"       JobDetail job = JobBuilder.newJob(MyJob.class)\n"
+"                         .withIdentity(\"myJob\", \"myGroup\")\n"
+"                         .build();\n"
+"       Trigger trigger = TriggerBuilder.newTrigger()\n"
+"                            .withIdentity(\"myTrigger\", \"myGroup\")\n"
+"                            .startNow()\n"
+"                            .withSchedule(\n"
+"                               SimpleScheduleBuilder.simpleSchedule()\n"
+"                                  .withIntervalInSeconds(10)\n"
+"                                  .repeatForever())\n"
+"                            .build();\n"
+"       quartz.scheduleJob(job, trigger); <2>\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quartz.adoc:185
+#, no-wrap
+msgid ""
+"    @Transactional\n"
+"    void performTask() {\n"
+"        Task task = new Task();\n"
+"        task.persist();\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quartz.adoc:188
+#, no-wrap
+msgid ""
+"    // A new instance of MyJob is created by Quartz for every job "
+"execution\n"
+"    public static class MyJob implements Job {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quartz.adoc:191
+#, no-wrap
+msgid ""
+"       @Inject\n"
+"       TaskBean taskBean;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quartz.adoc:195
+#, no-wrap
+msgid ""
+"       public void execute(JobExecutionContext context) throws "
+"JobExecutionException {\n"
+"          taskBean.performTask(); <3>\n"
+"       }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quartz.adoc:198
+#, no-wrap
+msgid ""
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:200
+msgid "Inject the underlying `org.quartz.Scheduler` instance."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:201
+msgid "Schedule a new job using the Quartz API."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:202
+msgid ""
+"Invoke the `TaskBean#performTask()` method from the job. Jobs are also "
+"link:cdi[container-managed] beans if they belong to a "
+"link:cdi-reference[bean archive]."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:204
+msgid ""
+"By default, the scheduler is not started unless a `@Scheduled` business "
+"method is found. You may need to force the start of the scheduler for "
+"\"pure\" programmatic scheduling. See also "
+"<<quartz-configuration-reference>>."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/quartz.adoc:205
+#, no-wrap
+msgid "Updating the application configuration file"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:208
+msgid "Edit the `application.properties` file and add the below configuration:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quartz.adoc:213
+#, no-wrap
+msgid ""
+"# Quartz configuration\n"
+"quarkus.quartz.clustered=true <1>\n"
+"quarkus.quartz.store-type=jdbc-cmt <2>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quartz.adoc:219
+#, no-wrap
+msgid ""
+"# Datasource configuration.\n"
+"quarkus.datasource.db-kind=postgresql\n"
+"quarkus.datasource.username=quarkus_test\n"
+"quarkus.datasource.password=quarkus_test\n"
+"quarkus.datasource.jdbc.url=jdbc:postgresql://localhost/quarkus_test\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quartz.adoc:224
+#, no-wrap
+msgid ""
+"# Hibernate configuration\n"
+"quarkus.hibernate-orm.database.generation=none\n"
+"quarkus.hibernate-orm.log.sql=true\n"
+"quarkus.hibernate-orm.sql-load-script=no-file\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quartz.adoc:232
+#, no-wrap
+msgid ""
+"# flyway configuration\n"
+"quarkus.flyway.connect-retries=10\n"
+"quarkus.flyway.table=flyway_quarkus_history\n"
+"quarkus.flyway.migrate-at-start=true\n"
+"quarkus.flyway.baseline-on-migrate=true\n"
+"quarkus.flyway.baseline-version=1.0\n"
+"quarkus.flyway.baseline-description=Quartz\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:235
+msgid "Indicate that the scheduler will be run in clustered mode"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:236
+msgid ""
+"Use the database store to persist job related information so that they can "
+"be shared between nodes"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/quartz.adoc:237
+#, no-wrap
+msgid "Updating the resource and the test"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:240
+msgid "Edit the `TaskResource` class, and update the content to:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quartz.adoc:246
+#, no-wrap
+msgid "import java.util.List;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quartz.adoc:251
+#, no-wrap
+msgid ""
+"import javax.ws.rs.GET;\n"
+"import javax.ws.rs.Path;\n"
+"import javax.ws.rs.Produces;\n"
+"import javax.ws.rs.core.MediaType;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quartz.adoc:254
+#, no-wrap
+msgid ""
+"@Path(\"/tasks\")\n"
+"public class TaskResource {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quartz.adoc:260
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    public List<Task> listAll() {\n"
+"        return Task.listAll(); <1>\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:262
+msgid "Retrieve the list of created tasks from the database"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:264
+msgid ""
+"We also need to update the tests. Edit the `TaskResourceTest` class to "
+"match:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quartz.adoc:270
+#, no-wrap
+msgid "import io.quarkus.test.junit.QuarkusTest;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quartz.adoc:272
+#, no-wrap
+msgid "import static org.hamcrest.Matchers.greaterThanOrEqualTo;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quartz.adoc:274
+#, no-wrap
+msgid "import org.junit.jupiter.api.Test;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quartz.adoc:277
+#, no-wrap
+msgid ""
+"import static io.restassured.RestAssured.given;\n"
+"import static org.hamcrest.CoreMatchers.is;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quartz.adoc:280
+#, no-wrap
+msgid ""
+"@QuarkusTest\n"
+"public class TaskResourceTest {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quartz.adoc:291
+#, no-wrap
+msgid ""
+"    @Test\n"
+"    public void tasks() throws InterruptedException {\n"
+"        Thread.sleep(1000); // wait at least a second to have the first task "
+"created\n"
+"        given()\n"
+"                .when().get(\"/tasks\")\n"
+"                .then()\n"
+"                .statusCode(200)\n"
+"                .body(\"size()\", is(greaterThanOrEqualTo(1))); <1>\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:293
+msgid "Ensure that we have a `200` response and at least one task created"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/quartz.adoc:294
+#, no-wrap
+msgid "Creating Quartz Tables"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:298
+msgid ""
+"Add a SQL migration file named "
+"`src/main/resources/db/migration/V2.0.0\\__QuarkusQuartzTasks.sql` with the "
+"content copied from file with the content from "
+"link:{quickstarts-blob-url}/quartz-quickstart/src/main/resources/db/migration/V2.0.0__QuarkusQuartzTasks.sql[V2.0.0__QuarkusQuartzTasks.sql]."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/quartz.adoc:299
+#, no-wrap
+msgid "Configuring the load balancer"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:302
+msgid ""
+"In the root directory, create a `nginx.conf` file with the following "
+"content:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quartz.adoc:306
+#, no-wrap
+msgid "user  nginx;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quartz.adoc:310
+#, no-wrap
+msgid ""
+"events {\n"
+"    worker_connections   1000;\n"
+"}\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quartz.adoc:319
+#, no-wrap
+msgid ""
+"http {\n"
+"        server {\n"
+"              listen 8080;\n"
+"              location / {\n"
+"                proxy_pass http://tasks:8080; <1>\n"
+"              }\n"
+"        }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:322
+msgid "Route all traffic to our tasks application"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/quartz.adoc:323
+#, no-wrap
+msgid "Setting Application Deployment"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:326
+msgid ""
+"In the root directory, create a `docker-compose.yml` file with the following "
+"content:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quartz.adoc:330
+#, no-wrap
+msgid "version: '3'\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quartz.adoc:343
+#, no-wrap
+msgid ""
+"services:\n"
+"  tasks: <1>\n"
+"    image: quarkus-quickstarts/quartz:1.0\n"
+"    build:\n"
+"      context: ./\n"
+"      dockerfile: src/main/docker/Dockerfile.${QUARKUS_MODE:-jvm}\n"
+"    environment:\n"
+"      QUARKUS_DATASOURCE_URL: jdbc:postgresql://postgres/quarkus_test\n"
+"    networks:\n"
+"      - tasks-network\n"
+"    depends_on:\n"
+"      - postgres\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quartz.adoc:354
+#, no-wrap
+msgid ""
+"  nginx: <2>\n"
+"    image: nginx:1.17.6\n"
+"    volumes:\n"
+"      - ./nginx.conf:/etc/nginx/nginx.conf:ro\n"
+"    depends_on:\n"
+"      - tasks\n"
+"    ports:\n"
+"      - 8080:8080\n"
+"    networks:\n"
+"      - tasks-network\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quartz.adoc:366
+#, no-wrap
+msgid ""
+"  postgres: <3>\n"
+"    image: postgres:11.3\n"
+"    container_name: quarkus_test\n"
+"    environment:\n"
+"      - POSTGRES_USER=quarkus_test\n"
+"      - POSTGRES_PASSWORD=quarkus_test\n"
+"      - POSTGRES_DB=quarkus_test\n"
+"    ports:\n"
+"      - 5432:5432\n"
+"    networks:\n"
+"      - tasks-network\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quartz.adoc:370
+#, no-wrap
+msgid ""
+"networks:\n"
+"  tasks-network:\n"
+"    driver: bridge\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:373
+msgid "Define the tasks service"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:374
+msgid ""
+"Define the nginx load balancer to route incoming traffic to an appropriate "
+"node"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:375
+msgid "Define the configuration to run the database"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/quartz.adoc:376
+#, no-wrap
+msgid "Running the database"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:379
+msgid "In a separate terminal, run the below command:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quartz.adoc:383
+#, no-wrap
+msgid "docker-compose up postgres <1>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:386
+msgid ""
+"Start the database instance using the configuration options supplied in the "
+"`docker-compose.yml` file"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/quartz.adoc:387
+#, no-wrap
+msgid "Run the application in Dev Mode"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:391
+msgid ""
+"Run the application with: `./mvnw quarkus:dev`.  After a few seconds, open "
+"another terminal and run `curl localhost:8080/tasks` to verify that we have "
+"at least one task created."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:394
+msgid ""
+"As usual, the application can be packaged using `./mvnw clean package` and "
+"executed using the `-runner.jar` file.  You can also generate the native "
+"executable with `./mvnw clean package -Pnative`."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/quartz.adoc:395
+#, no-wrap
+msgid "Packaging the application and run several instances"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:398
+msgid ""
+"The application can be packaged using `./mvnw clean package`. Once the build "
+"is successful, run the below command:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quartz.adoc:402
+#, no-wrap
+msgid "docker-compose up --scale tasks=2 --scale nginx=1 <1>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:405
+msgid "Start two instances of the application and a load balancer"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:407
+msgid ""
+"After a few seconds, in another terminal, run `curl localhost:8080/tasks` to "
+"verify that tasks were only created at different instants and in an interval "
+"of 10 seconds."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:409
+msgid ""
+"You can also generate the native executable with `./mvnw clean package "
+"-Pnative`."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/quartz.adoc:411
+#, no-wrap
+msgid "Registering Plugin and Listeners"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:414
+msgid ""
+"You can register `plugins`, `job-listeners` and `trigger-listeners` through "
+"Quarkus configuration."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:416
+msgid ""
+"The example below registers the plugin "
+"`org.quartz.plugins.history.LoggingJobHistoryPlugin` named as `jobHistory` "
+"with the property `jobSuccessMessage` defined as `Job [{1}.{0}] execution "
+"complete and reports: {8}`"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quartz.adoc:421
+#, no-wrap
+msgid ""
+"quarkus.quartz.plugins.jobHistory.class=org.quartz.plugins.history.LoggingJobHistoryPlugin\n"
+"quarkus.quartz.plugins.jobHistory.properties.jobSuccessMessage=Job [{1}.{0}] "
+"execution complete and reports: {8}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quartz.adoc:424
+msgid ""
+"You can also register a listener programmatically with an injected "
+"`org.quartz.Scheduler`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quartz.adoc:433
+#, no-wrap
+msgid ""
+"public class MyListenerManager {\n"
+"    void onStart(@Observes StartupEvent event, org.quartz.Scheduler "
+"scheduler) throws SchedulerException {\n"
+"        scheduler.getListenerManager().addJobListener(new "
+"MyJogListener());\n"
+"        scheduler.getListenerManager().addTriggerListener(new "
+"MyTriggerListener());\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/quartz.adoc:436
+#, no-wrap
+msgid "Quartz Configuration Reference"
+msgstr ""

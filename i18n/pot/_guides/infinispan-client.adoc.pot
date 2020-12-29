@@ -1,0 +1,867 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2020-12-29 14:10+0900\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. This guide is maintained in the main Quarkus repository
+#. and pull requests should be submitted there:
+#. https://github.com/quarkusio/quarkus/tree/master/docs/src/main/asciidoc
+#. type: Title =
+#: upstream/_guides/infinispan-client.adoc:6
+#, no-wrap
+msgid "Quarkus - Infinispan Client"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/infinispan-client.adoc:12
+msgid ""
+"Infinispan is an in memory data grid that allows running in a server outside "
+"of application processes. This extension provides functionality to allow the "
+"client that can connect to said server when running in Quarkus."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/infinispan-client.adoc:15
+msgid ""
+"More information can be found about Infinispan at https://infinispan.org and "
+"the client/server at "
+"https://infinispan.org/docs/dev/user_guide/user_guide.html#client_server"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/infinispan-client.adoc:16
+#, no-wrap
+msgid "Configuration"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/infinispan-client.adoc:20
+msgid ""
+"Once you have your Quarkus project configured you can add the "
+"`infinispan-client` extension to your project by running the following from "
+"the command line in your project base directory."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/infinispan-client.adoc:24
+#, no-wrap
+msgid "./mvnw quarkus:add-extension -Dextensions=\"infinispan-client\"\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/infinispan-client.adoc:27
+msgid "This will add the following to your pom.xml"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/infinispan-client.adoc:34
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-infinispan-client</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/infinispan-client.adoc:39
+msgid ""
+"The Infinispan client is configurable in the `application.properties` file "
+"that can be provided in the `src/main/resources` directory. These are the "
+"properties that can be configured in this file:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/infinispan-client.adoc:45
+msgid ""
+"It is also possible to configure a `hotrod-client.properties` as described "
+"in the Infinispan user guide. Note that the `hotrod-client.properties` "
+"values overwrite any matching property from the other configuration values "
+"(eg. near cache).  This properties file is build time only and if it is "
+"changed, requires a full rebuild."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/infinispan-client.adoc:46
+#, no-wrap
+msgid "Serialization (Key Value types support)"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/infinispan-client.adoc:51
+msgid ""
+"By default the client will support keys and values of the following types: "
+"byte[], primitive wrappers (eg. Integer, Long, Double etc.), String, Date "
+"and Instant. User types require some additional steps that are detailed "
+"here. Let's say we have the following user classes:"
+msgstr ""
+
+#. type: Block title
+#: upstream/_guides/infinispan-client.adoc:52 upstream/_guides/infinispan-client.adoc:96
+#, no-wrap
+msgid "Author.java"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/infinispan-client.adoc:58
+#, no-wrap
+msgid ""
+"public class Author {\n"
+"   private final String name;\n"
+"   private final String surname;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/infinispan-client.adoc:65
+#, no-wrap
+msgid ""
+"   public Author(String name, String surname) {\n"
+"      this.name = Objects.requireNonNull(name);\n"
+"      this.surname = Objects.requireNonNull(surname);\n"
+"   }\n"
+"   // Getter/Setter/equals/hashCode/toString omitted\n"
+"}\n"
+msgstr ""
+
+#. type: Block title
+#: upstream/_guides/infinispan-client.adoc:67 upstream/_guides/infinispan-client.adoc:116
+#, no-wrap
+msgid "Book.java"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/infinispan-client.adoc:75
+#, no-wrap
+msgid ""
+"public class Book {\n"
+"   private final String title;\n"
+"   private final String description;\n"
+"   private final int publicationYear;\n"
+"   private final Set<Author> authors;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/infinispan-client.adoc:84
+#, no-wrap
+msgid ""
+"   public Book(String title, String description, int publicationYear, "
+"Set<Author> authors) {\n"
+"      this.title = Objects.requireNonNull(title);\n"
+"      this.description = Objects.requireNonNull(description);\n"
+"      this.publicationYear = publicationYear;\n"
+"      this.authors = Objects.requireNonNull(authors);\n"
+"   }\n"
+"   // Getter/Setter/equals/hashCode/toString omitted\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/infinispan-client.adoc:87
+msgid ""
+"Serialization of user types uses a library based on protobuf, called "
+"Protostream."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/infinispan-client.adoc:88
+#, no-wrap
+msgid "Annotation based Serialization"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/infinispan-client.adoc:93
+msgid ""
+"This can be done automatically by adding protostream annotations to your "
+"user classes.  In addition a single Initializer annotated interface is "
+"required which controls how the supporting classes are generated."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/infinispan-client.adoc:95
+msgid "Here is an example of how the preceding classes should be changed:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/infinispan-client.adoc:104
+#, no-wrap
+msgid ""
+"    @ProtoFactory\n"
+"    public Author(String name, String surname) {\n"
+"        this.name = Objects.requireNonNull(name);\n"
+"        this.surname = Objects.requireNonNull(surname);\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/infinispan-client.adoc:109
+#, no-wrap
+msgid ""
+"    @ProtoField(number = 1)\n"
+"    public String getName() {\n"
+"        return name;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/infinispan-client.adoc:114
+#, no-wrap
+msgid ""
+"    @ProtoField(number = 2)\n"
+"    public String getSurname() {\n"
+"        return surname;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/infinispan-client.adoc:126
+#, no-wrap
+msgid ""
+"    @ProtoFactory\n"
+"    public Book(String title, String description, int publicationYear, "
+"Set<Author> authors) {\n"
+"        this.title = Objects.requireNonNull(title);\n"
+"        this.description = Objects.requireNonNull(description);\n"
+"        this.publicationYear = publicationYear;\n"
+"        this.authors = Objects.requireNonNull(authors);\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/infinispan-client.adoc:131
+#, no-wrap
+msgid ""
+"    @ProtoField(number = 1)\n"
+"    public String getTitle() {\n"
+"        return title;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/infinispan-client.adoc:136
+#, no-wrap
+msgid ""
+"    @ProtoField(number = 2)\n"
+"    public String getDescription() {\n"
+"        return description;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/infinispan-client.adoc:141
+#, no-wrap
+msgid ""
+"    @ProtoField(number = 3, defaultValue = \"-1\")\n"
+"    public int getPublicationYear() {\n"
+"        return publicationYear;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/infinispan-client.adoc:146
+#, no-wrap
+msgid ""
+"    @ProtoField(number = 4)\n"
+"    public Set<Author> getAuthors() {\n"
+"        return authors;\n"
+"    }\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/infinispan-client.adoc:149
+msgid ""
+"If your classes have only mutable fields, then the `ProtoFactory` annotation "
+"is not required, assuming your class has a no arg constructor."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/infinispan-client.adoc:152
+msgid ""
+"Then all that is required is a very simple `SerializationContextInitializer` "
+"interface with an annotation on it to specify configuration settings"
+msgstr ""
+
+#. type: Block title
+#: upstream/_guides/infinispan-client.adoc:153
+#, no-wrap
+msgid "BookContextInitializer.java"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/infinispan-client.adoc:159
+#, no-wrap
+msgid ""
+"@AutoProtoSchemaBuilder(includeClasses = { Book.class, Author.class }, "
+"schemaPackageName = \"book_sample\")\n"
+"interface BookContextInitializer extends SerializationContextInitializer {\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/infinispan-client.adoc:164
+msgid ""
+"So in this case we will automatically generate the marshaller and schemas "
+"for the included classes and place them in the schema package "
+"automatically. The package does not have to be provided, but if you utilize "
+"querying, you must know the generated package."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/infinispan-client.adoc:166
+msgid ""
+"In Quarkus the `schemaFileName` and `schemaFilePath` attributes should NOT "
+"be set on the `AutoProtoSchemaBuilder` annotation, setting either will cause "
+"native runtime to error."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/infinispan-client.adoc:167
+#, no-wrap
+msgid "User written serialization"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/infinispan-client.adoc:173
+msgid ""
+"The previous method is suggested for any case when the user can annotate "
+"their classes.  Unfortunately the user may not be able to annotate all "
+"classes they will put in the cache. In this case you must define your schema "
+"and create your own Marshaller(s)  yourself."
+msgstr ""
+
+#. type: Labeled list
+#: upstream/_guides/infinispan-client.adoc:174
+#, no-wrap
+msgid "Protobuf schema"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/infinispan-client.adoc:175
+msgid "You can supply a protobuf schema through either one of two ways."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/infinispan-client.adoc:176
+msgid "Proto File"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/infinispan-client.adoc:179
+msgid ""
+"+ You can put the `.proto` file in the `META-INF` directory of the "
+"project. These files will automatically be picked up at initialization time."
+msgstr ""
+
+#. type: Block title
+#: upstream/_guides/infinispan-client.adoc:180
+#, no-wrap
+msgid "library.proto"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/infinispan-client.adoc:183
+#, no-wrap
+msgid "package book_sample;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/infinispan-client.adoc:188
+#, no-wrap
+msgid ""
+"message Book {\n"
+"  required string title = 1;\n"
+"  required string description = 2;\n"
+"  required int32 publicationYear = 3; // no native Date type available in "
+"Protobuf\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/infinispan-client.adoc:191
+#, no-wrap
+msgid ""
+"  repeated Author authors = 4;\n"
+"}\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/infinispan-client.adoc:196
+#, no-wrap
+msgid ""
+"message Author {\n"
+"  required string name = 1;\n"
+"  required string surname = 2;\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/infinispan-client.adoc:198
+msgid "In Code"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/infinispan-client.adoc:201
+msgid ""
+"+ Or you can define the proto schema directly in user code by defining a "
+"produced bean of type `org.infinispan.protostream.FileDescriptorSource`."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/infinispan-client.adoc:221
+#, no-wrap
+msgid ""
+"   @Produces\n"
+"   FileDescriptorSource bookProtoDefinition() {\n"
+"      return FileDescriptorSource.fromString(\"library.proto\", \"package "
+"book_sample;\\n\" +\n"
+"            \"\\n\" +\n"
+"            \"message Book {\\n\" +\n"
+"            \"  required string title = 1;\\n\" +\n"
+"            \"  required string description = 2;\\n\" +\n"
+"            \"  required int32 publicationYear = 3; // no native Date type "
+"available in Protobuf\\n\" +\n"
+"            \"\\n\" +\n"
+"            \"  repeated Author authors = 4;\\n\" +\n"
+"            \"}\\n\" +\n"
+"            \"\\n\" +\n"
+"            \"message Author {\\n\" +\n"
+"            \"  required string name = 1;\\n\" +\n"
+"            \"  required string surname = 2;\\n\" +\n"
+"            \"}\");\n"
+"   }\n"
+msgstr ""
+
+#. type: Labeled list
+#: upstream/_guides/infinispan-client.adoc:222
+#, no-wrap
+msgid "User Marshaller"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/infinispan-client.adoc:226
+msgid ""
+"The last thing to do is to provide a "
+"`org.infinispan.protostream.MessageMarshaller` implementation for each user "
+"class defined in the proto schema. This class is then provided via "
+"`@Produces` in a similar fashion to the code based proto schema definition "
+"above."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/infinispan-client.adoc:228
+msgid "Here is the Marshaller class for our Author & Book classes."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/infinispan-client.adoc:230
+msgid ""
+"The type name must match the `<protobuf package>.<protobuf message>` "
+"exactly!"
+msgstr ""
+
+#. type: Block title
+#: upstream/_guides/infinispan-client.adoc:231
+#, no-wrap
+msgid "AuthorMarshaller.java"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/infinispan-client.adoc:235
+#, no-wrap
+msgid "public class AuthorMarshaller implements MessageMarshaller<Author> {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/infinispan-client.adoc:240
+#, no-wrap
+msgid ""
+"   @Override\n"
+"   public String getTypeName() {\n"
+"      return \"book_sample.Author\";\n"
+"   }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/infinispan-client.adoc:245
+#, no-wrap
+msgid ""
+"   @Override\n"
+"   public Class<? extends Author> getJavaClass() {\n"
+"      return Author.class;\n"
+"   }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/infinispan-client.adoc:251
+#, no-wrap
+msgid ""
+"   @Override\n"
+"   public void writeTo(ProtoStreamWriter writer, Author author) throws "
+"IOException {\n"
+"      writer.writeString(\"name\", author.getName());\n"
+"      writer.writeString(\"surname\", author.getSurname());\n"
+"   }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/infinispan-client.adoc:259
+#, no-wrap
+msgid ""
+"   @Override\n"
+"   public Author readFrom(ProtoStreamReader reader) throws IOException {\n"
+"      String name = reader.readString(\"name\");\n"
+"      String surname = reader.readString(\"surname\");\n"
+"      return new Author(name, surname);\n"
+"   }\n"
+"}\n"
+msgstr ""
+
+#. type: Block title
+#: upstream/_guides/infinispan-client.adoc:261
+#, no-wrap
+msgid "BookMarshaller.java"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/infinispan-client.adoc:265
+#, no-wrap
+msgid "public class BookMarshaller implements MessageMarshaller<Book> {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/infinispan-client.adoc:270
+#, no-wrap
+msgid ""
+"   @Override\n"
+"   public String getTypeName() {\n"
+"      return \"book_sample.Book\";\n"
+"   }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/infinispan-client.adoc:275
+#, no-wrap
+msgid ""
+"   @Override\n"
+"   public Class<? extends Book> getJavaClass() {\n"
+"      return Book.class;\n"
+"   }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/infinispan-client.adoc:283
+#, no-wrap
+msgid ""
+"   @Override\n"
+"   public void writeTo(ProtoStreamWriter writer, Book book) throws "
+"IOException {\n"
+"      writer.writeString(\"title\", book.getTitle());\n"
+"      writer.writeString(\"description\", book.getDescription());\n"
+"      writer.writeInt(\"publicationYear\", book.getPublicationYear());\n"
+"      writer.writeCollection(\"authors\", book.getAuthors(), "
+"Author.class);\n"
+"   }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/infinispan-client.adoc:293
+#, no-wrap
+msgid ""
+"   @Override\n"
+"   public Book readFrom(ProtoStreamReader reader) throws IOException {\n"
+"      String title = reader.readString(\"title\");\n"
+"      String description = reader.readString(\"description\");\n"
+"      int publicationYear = reader.readInt(\"publicationYear\");\n"
+"      Set<Author> authors = reader.readCollection(\"authors\", new "
+"HashSet<>(), Author.class);\n"
+"      return new Book(title, description, publicationYear, authors);\n"
+"   }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/infinispan-client.adoc:296
+msgid "And you pass the marshaller by defining the following:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/infinispan-client.adoc:303
+#, no-wrap
+msgid ""
+"   @Produces\n"
+"   MessageMarshaller authorMarshaller() {\n"
+"      return new AuthorMarshaller();\n"
+"   }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/infinispan-client.adoc:308
+#, no-wrap
+msgid ""
+"   @Produces\n"
+"   MessageMarshaller bookMarshaller() {\n"
+"      return new BookMarshaller();\n"
+"   }\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/infinispan-client.adoc:310
+msgid ""
+"The above produced Marshaller method MUST return `MessageMarshaller` without "
+"types or else it will not be found."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/infinispan-client.adoc:311
+#, no-wrap
+msgid "Dependency Injection"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/infinispan-client.adoc:317
+msgid ""
+"As you saw above we support the user injecting Marshaller configuration. You "
+"can do the inverse with the Infinispan client extension providing injection "
+"for `RemoteCacheManager` and `RemoteCache` objects.  There is one global "
+"`RemoteCacheManager` that takes all of the configuration parameters setup in "
+"the above sections."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/infinispan-client.adoc:320
+msgid ""
+"It is very simple to inject these components. All you need to do is to add "
+"the Inject annotation to the field, constructor or method. In the below code "
+"we utilize field and constructor injection."
+msgstr ""
+
+#. type: Block title
+#: upstream/_guides/infinispan-client.adoc:321
+#, no-wrap
+msgid "SomeClass.java"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/infinispan-client.adoc:327
+#, no-wrap
+msgid ""
+"    @Inject SomeClass(RemoteCacheManager remoteCacheManager) {\n"
+"       this.remoteCacheManager = remoteCacheManager;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/infinispan-client.adoc:330
+#, no-wrap
+msgid ""
+"    @Inject @Remote(\"myCache\")\n"
+"    RemoteCache<String, Book> cache;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/infinispan-client.adoc:332
+#, no-wrap
+msgid "    RemoteCacheManager remoteCacheManager;\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/infinispan-client.adoc:337
+msgid ""
+"If you notice the `RemoteCache` declaration has an additional optional "
+"annotation named `Remote`.  This is a qualifier annotation allowing you to "
+"specify which named cache that will be injected. This annotation is not "
+"required and if it is not supplied, the default cache will be injected."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/infinispan-client.adoc:339
+msgid ""
+"Other types may be supported for injection, please see other sections for "
+"more information"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/infinispan-client.adoc:340
+#, no-wrap
+msgid "Querying"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/infinispan-client.adoc:345
+msgid ""
+"The Infinispan client supports both indexed and non indexed querying as long "
+"as the `ProtoStreamMarshaller` is configured above. This allows the user to "
+"query based on the properties of the proto schema."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/infinispan-client.adoc:350
+msgid ""
+"Query builds upon the proto definitions you can configure when setting up "
+"the `ProtoStreamMarshaller`.  Either method of Serialization above will "
+"automatically register the schema with the server at startup, meaning that "
+"you will automatically gain the ability to query objects stored in the "
+"remote Infinispan Server."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/infinispan-client.adoc:352
+msgid ""
+"You can read more about this at "
+"https://infinispan.org/docs/stable/titles/developing/developing.html#query_dsl."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/infinispan-client.adoc:355
+msgid ""
+"You can use either the Query DSL or the Ickle Query language with the "
+"Quarkus Infinispan client extension."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/infinispan-client.adoc:356
+#, no-wrap
+msgid "Counters"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/infinispan-client.adoc:360
+msgid ""
+"Infinispan also has a notion of counters and the Quarkus Infinispan client "
+"supports them out of the box."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/infinispan-client.adoc:364
+msgid ""
+"The Quarkus Infinispan client extension allows for Dependency Injection of "
+"the `CounterManager` directly. All you need to do is annotate your field, "
+"constructor or method and you get it with no fuss. You can then use counters "
+"as you would normally."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/infinispan-client.adoc:369
+#, no-wrap
+msgid ""
+"@Inject\n"
+"CounterManager counterManager;\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/infinispan-client.adoc:371
+#, no-wrap
+msgid "Near Caching"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/infinispan-client.adoc:377
+msgid ""
+"Near caching is disabled by default, but you can enable it by setting the "
+"profile config property `quarkus.infinispan-client.near-cache-max-entries` "
+"to a value greater than 0. You can also configure a regular expression so "
+"that only a subset of caches have near caching applied through the "
+"`quarkus.infinispan-client.near-cache-name-pattern` attribute."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/infinispan-client.adoc:378
+#, no-wrap
+msgid "Encryption"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/infinispan-client.adoc:381
+msgid "Encryption at this point requires additional steps to get working."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/infinispan-client.adoc:385
+msgid ""
+"The first step is to configure the `hotrod-client.properties` file to point "
+"to your truststore and/or keystore. This is further detailed at "
+"https://infinispan.org/docs/dev/user_guide/user_guide.html#hr_encryption."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/infinispan-client.adoc:388
+msgid ""
+"The Infinispan Client extension enables SSL by default. You can read more "
+"about this at link:native-and-ssl[Using SSL With Native Executables]."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/infinispan-client.adoc:389
+#, no-wrap
+msgid "Authentication"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/infinispan-client.adoc:393
+msgid ""
+"This chart illustrates what mechanisms have been verified to be working "
+"properly with the Quarkus Infinispan Client extension."
+msgstr ""
+
+#. type: Block title
+#: upstream/_guides/infinispan-client.adoc:394
+#, no-wrap
+msgid "Mechanisms"
+msgstr ""
+
+#. type: Table
+#: upstream/_guides/infinispan-client.adoc:413
+#, no-wrap
+msgid ""
+"| Name | Verified\n"
+"\n"
+"| DIGEST-MD5\n"
+"| [green]*Y*\n"
+"\n"
+"| PLAIN\n"
+"| [green]*Y*\n"
+"\n"
+"| EXTERNAL\n"
+"| [green]*Y*\n"
+"\n"
+"| GSSAPI\n"
+"| [red]*N*\n"
+"\n"
+"| Custom\n"
+"| [red]*N*\n"
+"\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/infinispan-client.adoc:417
+msgid ""
+"The guide for configuring these can be found at "
+"https://infinispan.org/docs/dev/user_guide/user_guide.html#authentication.  "
+"However you need to configure these through the `hotrod-client.properties` "
+"file if using Dependency Injection."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/infinispan-client.adoc:418
+#, no-wrap
+msgid "Additional Features"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/infinispan-client.adoc:422
+msgid ""
+"The Infinispan Client has additional features that were not mentioned "
+"here. This means this feature was not tested in a Quarkus environment and "
+"they may or may not work. Please let us know if you need these added!"
+msgstr ""

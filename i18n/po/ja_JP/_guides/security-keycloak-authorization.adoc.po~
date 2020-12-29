@@ -1,0 +1,852 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2020-12-26 18:44+0900\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. This guide is maintained in the main Quarkus repository
+#. and pull requests should be submitted there:
+#. https://github.com/quarkusio/quarkus/tree/master/docs/src/main/asciidoc
+#. type: Title =
+#: upstream/_guides/security-keycloak-authorization.adoc:6
+#, no-wrap
+msgid "Quarkus - Using OpenID Connect and Keycloak to Centralize Authorization"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:11
+msgid ""
+"This guide demonstrates how your Quarkus application can authorize a bearer "
+"token access to protected resources using "
+"https://www.keycloak.org/docs/latest/authorization_services/index.html[Keycloak "
+"Authorization Services]."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:15
+msgid ""
+"The `quarkus-keycloak-authorization` extension is based on `quarkus-oidc` "
+"and provides a policy enforcer that enforces access to protected resources "
+"based on permissions managed by Keycloak and currently can only be used with "
+"the Quarkus link:security-openid-connect[OIDC service applications].  It "
+"provides a flexible and dynamic authorization capability based on "
+"Resource-Based Access Control.  In other words, instead of explicitly "
+"enforcing access based on some specific access control mechanism (e.g.: "
+"RBAC), you just check whether or not a request is allowed to access a "
+"resource based on its name, identifier or URI."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:17
+msgid ""
+"By externalizing authorization from your application, you are allowed to "
+"protect your applications using different access control mechanisms as well "
+"as avoid re-deploying your application every time your security requirements "
+"change, where Keycloak will be acting as a centralized authorization service "
+"from where your protected resources and their associated permissions are "
+"managed."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:19
+msgid ""
+"See the link:security-openid-connect[Using OpenID Connect to Protect Service "
+"Applications] guide for more information about `Bearer Token` authentication "
+"mechanism."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:22
+msgid ""
+"If you are already familiar with Keycloak, you’ll notice that the extension "
+"is basically another adapter implementation but specific for Quarkus "
+"applications.  Otherwise, you can find more information in the Keycloak "
+"https://www.keycloak.org/docs/latest/authorization_services/index.html#_enforcer_overview[documentation]."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/security-keycloak-authorization.adoc:23
+#, no-wrap
+msgid "Prerequisites"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:26
+msgid "To complete this guide, you need:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:28
+msgid "less than 15 minutes"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:29
+msgid "an IDE"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:30
+msgid "JDK 1.8+ installed with `JAVA_HOME` configured appropriately"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:31
+msgid "Apache Maven {maven-version}"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:32
+msgid "https://stedolan.github.io/jq/[jq tool]"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:33
+msgid "https://www.keycloak.org/docs/latest/server_installation/index.html[Keycloak]"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:34
+msgid "Docker"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/security-keycloak-authorization.adoc:35
+#, no-wrap
+msgid "Architecture"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:38
+msgid ""
+"In this example, we build a very simple microservice which offers two "
+"endpoints:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:40
+msgid "`/api/users/me`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:41
+msgid "`/api/admin`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:43
+msgid ""
+"These endpoints are protected and can only be accessed if a client is "
+"sending a bearer token along with the request, which must be valid (e.g.: "
+"signature, expiration and audience) and trusted by the microservice."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:46
+msgid ""
+"The bearer token is issued by a Keycloak Server and represents the subject "
+"to which the token was issued for.  For being an OAuth 2.0 Authorization "
+"Server, the token also references the client acting on behalf of the user."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:50
+msgid ""
+"The `/api/users/me` endpoint can be accessed by any user with a valid "
+"token.  As a response, it returns a JSON document with details about the "
+"user where these details are obtained from the information carried on the "
+"token.  This endpoint is protected with RBAC (Role-Based Access Control) and "
+"only users granted with the `user` role can access this endpoint."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:52
+msgid ""
+"The `/api/admin` endpoint is protected with RBAC (Role-Based Access Control) "
+"and only users granted with the `admin` role can access it."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:56
+msgid ""
+"This is a very simple example using RBAC policies to govern access to your "
+"resources.  However, Keycloak supports other types of policies that you can "
+"use to perform even more fine-grained access control.  By using this "
+"example, you'll see that your application is completely decoupled from your "
+"authorization policies with enforcement being purely based on the accessed "
+"resource."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/security-keycloak-authorization.adoc:57
+#, no-wrap
+msgid "Solution"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:61
+msgid ""
+"We recommend that you follow the instructions in the next sections and "
+"create the application step by step.  However, you can go right to the "
+"completed example."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:63
+msgid ""
+"Clone the Git repository: `git clone {quickstarts-clone-url}`, or download "
+"an {quickstarts-archive-url}[archive]."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:65
+msgid ""
+"The solution is located in the `security-keycloak-authorization-quickstart` "
+"{quickstarts-tree-url}/security-keycloak-authorization-quickstart[directory]."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/security-keycloak-authorization.adoc:66
+#, no-wrap
+msgid "Creating the Project"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:70
+msgid ""
+"First, we need a new project.  Create a new project with the following "
+"command:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-keycloak-authorization.adoc:79
+#, no-wrap
+msgid ""
+"mvn io.quarkus:quarkus-maven-plugin:{quarkus-version}:create \\\n"
+"    -DprojectGroupId=org.acme \\\n"
+"    -DprojectArtifactId=security-keycloak-authorization-quickstart \\\n"
+"    -Dextensions=\"oidc,keycloak-authorization,resteasy-jackson\" \\\n"
+"    -DnoExamples\n"
+"cd security-keycloak-authorization-quickstart\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:82
+msgid ""
+"This command generates a Maven project, importing the "
+"`keycloak-authorization` extension which is an implementation of a Keycloak "
+"Adapter for Quarkus applications and provides all the necessary capabilities "
+"to integrate with a Keycloak Server and perform bearer token authorization."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:85
+msgid ""
+"If you already have your Quarkus project configured, you can add the `oidc` "
+"and `keycloak-authorization` extensions to your project by running the "
+"following command in your project base directory:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-keycloak-authorization.adoc:89
+#, no-wrap
+msgid "./mvnw quarkus:add-extension -Dextensions=\"oidc,keycloak-authorization\"\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:92
+msgid "This will add the following to your `pom.xml`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-keycloak-authorization.adoc:103
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-oidc</artifactId>\n"
+"</dependency>\n"
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-keycloak-authorization</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:107
+msgid ""
+"Let's start by implementing the `/api/users/me` endpoint.  As you can see "
+"from the source code below it is just a regular JAX-RS resource:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-keycloak-authorization.adoc:111 upstream/_guides/security-keycloak-authorization.adoc:153
+#, no-wrap
+msgid "package org.acme.security.keycloak.authorization;;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-keycloak-authorization.adoc:115
+#, no-wrap
+msgid ""
+"import javax.inject.Inject;\n"
+"import javax.ws.rs.GET;\n"
+"import javax.ws.rs.Path;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-keycloak-authorization.adoc:117
+#, no-wrap
+msgid "import org.jboss.resteasy.annotations.cache.NoCache;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-keycloak-authorization.adoc:119
+#, no-wrap
+msgid "import io.quarkus.security.identity.SecurityIdentity;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-keycloak-authorization.adoc:122
+#, no-wrap
+msgid ""
+"@Path(\"/api/users\")\n"
+"public class UsersResource {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-keycloak-authorization.adoc:125 upstream/_guides/security-keycloak-authorization.adoc:316
+#, no-wrap
+msgid ""
+"    @Inject\n"
+"    SecurityIdentity identity;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-keycloak-authorization.adoc:132
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @Path(\"/me\")\n"
+"    @NoCache\n"
+"    public User me() {\n"
+"        return new User(identity);\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-keycloak-authorization.adoc:134
+#, no-wrap
+msgid "    public static class User {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-keycloak-authorization.adoc:136
+#, no-wrap
+msgid "        private final String userName;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-keycloak-authorization.adoc:140
+#, no-wrap
+msgid ""
+"        User(SecurityIdentity identity) {\n"
+"            this.userName = identity.getPrincipal().getName();\n"
+"        }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-keycloak-authorization.adoc:146
+#, no-wrap
+msgid ""
+"        public String getUserName() {\n"
+"            return userName;\n"
+"        }\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:149
+msgid "The source code for the `/api/admin` endpoint is also very simple:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-keycloak-authorization.adoc:158
+#, no-wrap
+msgid ""
+"import javax.ws.rs.GET;\n"
+"import javax.ws.rs.Path;\n"
+"import javax.ws.rs.Produces;\n"
+"import javax.ws.rs.core.MediaType;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-keycloak-authorization.adoc:160
+#, no-wrap
+msgid "import io.quarkus.security.Authenticated;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-keycloak-authorization.adoc:164
+#, no-wrap
+msgid ""
+"@Path(\"/api/admin\")\n"
+"@Authenticated\n"
+"public class AdminResource {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-keycloak-authorization.adoc:171
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @Produces(MediaType.TEXT_PLAIN)\n"
+"    public String admin() {\n"
+"        return \"granted\";\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:175
+msgid ""
+"Note that we did not define any annotation such as `@RoleAllowed` to "
+"explicitly enforce access to a resource.  The extension will be responsible "
+"to map the URIs of the protected resources you have in Keycloak and evaluate "
+"the permissions accordingly, granting or denying access depending on the "
+"permissions that will be granted by Keycloak."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/security-keycloak-authorization.adoc:176
+#, no-wrap
+msgid "Configuring the application"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:179
+msgid ""
+"The OpenID Connect extension allows you to define the adapter configuration "
+"using the `application.properties` file which should be located at the "
+"`src/main/resources` directory."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-keycloak-authorization.adoc:187
+#, no-wrap
+msgid ""
+"# OIDC Configuration\n"
+"quarkus.oidc.auth-server-url=https://localhost:8543/auth/realms/quarkus\n"
+"quarkus.oidc.client-id=backend-service\n"
+"quarkus.oidc.credentials.secret=secret\n"
+"quarkus.oidc.tls.verification=none\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-keycloak-authorization.adoc:190
+#, no-wrap
+msgid ""
+"# Enable Policy Enforcement\n"
+"quarkus.keycloak.policy-enforcer.enable=true\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:193
+msgid ""
+"By default, applications using the `quarkus-oidc` extension are marked as a "
+"`service` type application (see `quarkus.oidc.application-type`). This "
+"extension currently supports only such `service` type applications."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/security-keycloak-authorization.adoc:194
+#, no-wrap
+msgid "Starting and Configuring the Keycloak Server"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:197
+msgid ""
+"To start a Keycloak Server you can use Docker and just run the following "
+"command:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-keycloak-authorization.adoc:201
+#, no-wrap
+msgid ""
+"docker run --name keycloak -e KEYCLOAK_USER=admin -e KEYCLOAK_PASSWORD=admin "
+"-p 8180:8080 -p 8543:8443 {keycloak-docker-image}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:204
+msgid ""
+"You should be able to access your Keycloak Server at "
+"http://localhost:8180/auth[localhost:8180/auth] or "
+"https://localhost:8543/auth[localhost:8543/auth]."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:207
+msgid ""
+"Log in as the `admin` user to access the Keycloak Administration Console.  "
+"Username should be `admin` and password `admin`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:210
+msgid ""
+"Import the "
+"{quickstarts-tree-url}/security-keycloak-authorization-quickstart/config/quarkus-realm.json[realm "
+"configuration file] to create a new realm.  For more details, see the "
+"Keycloak documentation about how to "
+"https://www.keycloak.org/docs/latest/server_admin/index.html#_create-realm[create "
+"a new realm]."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/security-keycloak-authorization.adoc:211
+#, no-wrap
+msgid "Running and Using the Application"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/security-keycloak-authorization.adoc:213
+#, no-wrap
+msgid "Running in Developer Mode"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:216
+msgid "To run the microservice in dev mode, use `./mvnw clean compile quarkus:dev`."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/security-keycloak-authorization.adoc:217
+#, no-wrap
+msgid "Running in JVM Mode"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:220
+msgid ""
+"When you're done playing with \"dev-mode\" you can run it as a standard Java "
+"application."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:222
+msgid "First compile it:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-keycloak-authorization.adoc:226
+#, no-wrap
+msgid "./mvnw package\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:229
+msgid "Then run it:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-keycloak-authorization.adoc:233
+#, no-wrap
+msgid "java -jar ./target/security-keycloak-authorization-quickstart-runner.jar\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/security-keycloak-authorization.adoc:235
+#, no-wrap
+msgid "Running in Native Mode"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:238
+msgid "This same demo can be compiled into native code: no modifications required."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:240
+msgid ""
+"This implies that you no longer need to install a JVM on your production "
+"environment, as the runtime technology is included in the produced binary, "
+"and optimized to run with minimal resource overhead."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:242
+msgid ""
+"Compilation will take a bit longer, so this step is disabled by default; "
+"let's build again by enabling the `native` profile:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-keycloak-authorization.adoc:246
+#, no-wrap
+msgid "./mvnw package -Pnative\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:249
+msgid "After getting a cup of coffee, you'll be able to run this binary directly:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-keycloak-authorization.adoc:253
+#, no-wrap
+msgid "./target/security-keycloak-authorization-quickstart-runner\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/security-keycloak-authorization.adoc:255
+#, no-wrap
+msgid "Testing the Application"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:258
+msgid ""
+"The application is using bearer token authorization and the first thing to "
+"do is obtain an access token from the Keycloak Server in order to access the "
+"application resources:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-keycloak-authorization.adoc:267
+#, no-wrap
+msgid ""
+"export access_token=$(\\\n"
+"    curl --insecure -X POST "
+"https://localhost:8543/auth/realms/quarkus/protocol/openid-connect/token "
+"\\\n"
+"    --user backend-service:secret \\\n"
+"    -H 'content-type: application/x-www-form-urlencoded' \\\n"
+"    -d 'username=alice&password=alice&grant_type=password' | jq --raw-output "
+"'.access_token' \\\n"
+" )\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:270
+msgid "The example above obtains an access token for user `alice`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:274
+msgid ""
+"Any user is allowed to access the `http://localhost:8080/api/users/me` "
+"endpoint which basically returns a JSON payload with details about the user."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-keycloak-authorization.adoc:280
+#, no-wrap
+msgid ""
+"curl -v -X GET \\\n"
+"  http://localhost:8080/api/users/me \\\n"
+"  -H \"Authorization: Bearer \"$access_token\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:284
+msgid ""
+"The `http://localhost:8080/api/admin` endpoint can only be accessed by users "
+"with the `admin` role.  If you try to access this endpoint with the "
+"previously issued access token, you should get a `403` response from the "
+"server."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-keycloak-authorization.adoc:290
+#, no-wrap
+msgid ""
+" curl -v -X GET \\\n"
+"   http://localhost:8080/api/admin \\\n"
+"   -H \"Authorization: Bearer \"$access_token\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:293
+msgid ""
+"In order to access the admin endpoint you should obtain a token for the "
+"`admin` user:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-keycloak-authorization.adoc:302
+#, no-wrap
+msgid ""
+"export access_token=$(\\\n"
+"    curl --insecure -X POST "
+"https://localhost:8543/auth/realms/quarkus/protocol/openid-connect/token "
+"\\\n"
+"    --user backend-service:secret \\\n"
+"    -H 'content-type: application/x-www-form-urlencoded' \\\n"
+"    -d 'username=admin&password=admin&grant_type=password' | jq --raw-output "
+"'.access_token' \\\n"
+" )\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/security-keycloak-authorization.adoc:304
+#, no-wrap
+msgid "Checking Permissions Programmatically"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:308
+msgid ""
+"In some cases, you may want to programmatically check whether or not a "
+"request is granted to access a protected resource. By injecting a "
+"`SecurityIdentity` instance in your beans, you are allowed to check "
+"permissions as follows:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-keycloak-authorization.adoc:313
+#, no-wrap
+msgid ""
+"@Path(\"/api/protected\")\n"
+"public class ProtectedResource {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-keycloak-authorization.adoc:329
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    public CompletionStage<List<Permission>> get() {\n"
+"        return identity.checkPermission(new "
+"AuthPermission(\"{resource_name}\"))\n"
+"                .thenCompose(granted -> {\n"
+"                    if (granted) {\n"
+"                        return "
+"CompletableFuture.completedFuture(doGetState());\n"
+"                    }\n"
+"                    throw new ForbiddenException();\n"
+"                });\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/security-keycloak-authorization.adoc:331
+#, no-wrap
+msgid "Mapping Protected Resources"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:334
+msgid ""
+"By default, the extension is going to fetch resources on-demand from "
+"Keycloak where their `URI` are used to map the resources in your application "
+"that should be protected."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:336
+msgid ""
+"If you want to disable this behavior and fetch resources during startup, you "
+"can use the following configuration:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-keycloak-authorization.adoc:340
+#, no-wrap
+msgid "quarkus.keycloak.policy-enforcer.lazy-load-paths=false\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:343
+msgid ""
+"Note that, depending on how many resources you have in Keycloak the time "
+"taken to fetch them may impact your application startup time."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/security-keycloak-authorization.adoc:344
+#, no-wrap
+msgid "More About Configuring Protected Resources "
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:347
+msgid ""
+"In the default configuration, Keycloak is responsible for managing the roles "
+"and deciding who can access which routes."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:349
+msgid ""
+"To configure the protected routes using the `@RolesAllowed` annotation or "
+"the `application.properties` file, check the "
+"link:security-openid-connect[Using OpenID Connect Adapter to Protect JAX-RS "
+"Applications] guide. For more details, check the link:security[Security "
+"guide]."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/security-keycloak-authorization.adoc:350
+#, no-wrap
+msgid "Configuration Reference"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:353
+msgid ""
+"The configuration is based on the official "
+"https://www.keycloak.org/docs/latest/authorization_services/index.html#_enforcer_filter[Keycloak "
+"Policy Enforcer Configuration]. If you are looking for more details about "
+"the different configuration options, please take a look at this "
+"documentation,"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/security-keycloak-authorization.adoc:356
+#, no-wrap
+msgid "References"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:359
+msgid "https://www.keycloak.org/documentation.html[Keycloak Documentation]"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:360
+msgid ""
+"https://www.keycloak.org/docs/latest/authorization_services/index.html[Keycloak "
+"Authorization Services Documentation]"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:361
+msgid "https://openid.net/connect/[OpenID Connect]"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:362
+msgid "https://tools.ietf.org/html/rfc7519[JSON Web Token]"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-keycloak-authorization.adoc:362
+msgid "link:security[Quarkus Security]"
+msgstr ""

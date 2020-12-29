@@ -1,0 +1,2575 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# 
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2020-12-29 14:10+0900\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. This guide is maintained in the main Quarkus repository
+#. and pull requests should be submitted there:
+#. https://github.com/quarkusio/quarkus/tree/master/docs/src/main/asciidoc
+#. type: Title =
+#: upstream/_guides/cdi-reference.adoc:6
+#, no-wrap
+msgid "Quarkus - Contexts and Dependency Injection"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:17
+msgid ""
+"Quarkus DI solution is based on the http://docs.jboss.org/cdi/spec/2.0/cdi-"
+"spec.html[Contexts and Dependency Injection for Java 2.0, window=\"_blank\"] "
+"specification.  However, it is not a full CDI implementation verified by the "
+"TCK.  Only a subset of the CDI features is implemented - see also "
+"<<supported_features,the list of supported features>> and <<limitations,the "
+"list of limitations>>."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:19
+msgid ""
+"If you're new to CDI then we recommend you to read the link:cdi[Introduction "
+"to CDI] first."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:21
+msgid ""
+"Most of the existing CDI code should work just fine but there are some small "
+"differences which follow from the Quarkus architecture and goals."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/cdi-reference.adoc:23
+#, no-wrap
+msgid "Bean Discovery"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:28
+msgid ""
+"Bean discovery in CDI is a complex process which involves legacy deployment "
+"structures and accessibility requirements of the underlying module "
+"architecture.  However, Quarkus is using a *simplified bean discovery*.  "
+"There is only single bean archive with the https://docs.jboss.org/cdi/"
+"spec/2.0/cdi-spec.html#default_bean_discovery[bean discovery mode "
+"`annotated`, window=\"_blank\"] and no visibility boundaries."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:30
+msgid "The bean archive is synthesized from:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:32
+msgid "the application classes,"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:33
+msgid ""
+"dependencies that contain a `beans.xml` descriptor (content is ignored),"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:34
+msgid "dependencies that contain a Jandex index - `META-INF/jandex.idx`,"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:35
+msgid ""
+"dependencies referenced by `quarkus.index-dependency` in `application."
+"properties`,"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:36
+msgid "and Quarkus integration code."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:41
+msgid ""
+"Bean classes that don't have a http://docs.jboss.org/cdi/spec/2.0/cdi-spec."
+"html#bean_defining_annotations[bean defining annotation, window=\"_blank\"] "
+"are not discovered.  This behavior is defined by CDI.  But producer methods "
+"and fields and observer methods are discovered even if the declaring class "
+"is not annotated with a bean defining annotation (this behavior is different "
+"to what is defined in CDI).  In fact, the declaring bean classes are "
+"considered annotated with `@Dependent`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:43
+msgid ""
+"Quarkus extensions may declare additional discovery rules. For example, "
+"`@Scheduled` business methods are registered even if the declaring class is "
+"not annotated with a bean defining annotation."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/cdi-reference.adoc:44
+#, no-wrap
+msgid "How to Generate a Jandex Index"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:48
+msgid ""
+"A dependency with a Jandex index is automatically scanned for beans.  To "
+"generate the index just add the following to your `pom.xml`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:68
+#, no-wrap
+msgid ""
+"<build>\n"
+"  <plugins>\n"
+"    <plugin>\n"
+"      <groupId>org.jboss.jandex</groupId>\n"
+"      <artifactId>jandex-maven-plugin</artifactId>\n"
+"      <version>1.0.7</version>\n"
+"      <executions>\n"
+"        <execution>\n"
+"          <id>make-index</id>\n"
+"          <goals>\n"
+"            <goal>jandex</goal>\n"
+"          </goals>\n"
+"        </execution>\n"
+"      </executions>\n"
+"    </plugin>\n"
+"  </plugins>\n"
+"</build>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:71
+msgid ""
+"If you are are using gradle, you can apply the following plugin to your "
+"`build.gradle`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:77
+#, no-wrap
+msgid ""
+"plugins {\n"
+"    id 'org.kordamp.gradle.jandex' version '0.6.0'\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:80
+msgid ""
+"If you can't modify the dependency, you can still index it by adding "
+"`quarkus.index-dependency` entries to your `application.properties`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:86
+#, no-wrap
+msgid ""
+"quarkus.index-dependency.<name>.group-id=\n"
+"quarkus.index-dependency.<name>.artifact-id=\n"
+"quarkus.index-dependency.<name>.classifier=(this one is optional)\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:89
+msgid ""
+"For example, the following entries ensure that the `org.acme:acme-api` "
+"dependency is indexed:"
+msgstr ""
+
+#. type: Block title
+#: upstream/_guides/cdi-reference.adoc:90
+#: upstream/_guides/cdi-reference.adoc:115
+#: upstream/_guides/cdi-reference.adoc:127
+#: upstream/_guides/cdi-reference.adoc:428
+#: upstream/_guides/cdi-reference.adoc:602
+#, no-wrap
+msgid "Example application.properties"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:95
+#, no-wrap
+msgid ""
+"quarkus.index-dependency.acme.group-id=org.acme <1>\n"
+"quarkus.index-dependency.acme.artifact-id=acme-api <2>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:97
+#: upstream/_guides/cdi-reference.adoc:134
+msgid "Value is a group id for a dependency identified by name `acme`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:98
+#: upstream/_guides/cdi-reference.adoc:135
+msgid "Value is an artifact id for a dependency identified by name `acme`."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/cdi-reference.adoc:99
+#, no-wrap
+msgid "How To Exclude Types and Dependencies from Discovery"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:105
+msgid ""
+"It may happen that some beans from third-party libraries do not work "
+"correctly in Quarkus.  A typical example is a bean injecting a portable "
+"extension.  In such case, it's possible to exclude types and dependencies "
+"from the bean discovery.  The `quarkus.arc.exclude-types` property accepts a "
+"list of string values that are used to match classes that should be excluded."
+msgstr ""
+
+#. type: Block title
+#: upstream/_guides/cdi-reference.adoc:106
+#: upstream/_guides/cdi-reference.adoc:419
+#: upstream/_guides/cdi-reference.adoc:593
+#, no-wrap
+msgid "Value Examples"
+msgstr ""
+
+#. type: Table
+#: upstream/_guides/cdi-reference.adoc:113
+#, no-wrap
+msgid ""
+"|Value|Description\n"
+"|`org.acme.Foo`| Match the fully qualified name of the class\n"
+"|`org.acme.*`| Match classes with package `org.acme`\n"
+"|`org.acme.**`| Match classes where the package starts with `org.acme` \n"
+"|`Bar`| Match the simple name of the class\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:119
+#, no-wrap
+msgid "quarkus.arc.exclude-types=org.acme.Foo,org.acme.*,Bar <1><2><3>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:121
+msgid "Exclude the type `org.acme.Foo`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:122
+msgid "Exclude all types from the `org.acme` package."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:123
+msgid "Exclude all types whose simple name is `Bar`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:126
+msgid ""
+"It is also possible to exclude a dependency artifact that would be otherwise "
+"scanned for beans.  For example, because it contains a `beans.xml` "
+"descriptor."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:132
+#, no-wrap
+msgid ""
+"quarkus.arc.exclude-dependency.acme.group-id=org.acme <1>\n"
+"quarkus.arc.exclude-dependency.acme.artifact-id=acme-services <2>\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/cdi-reference.adoc:136
+#, no-wrap
+msgid "Native Executables and Private Members"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:142
+msgid ""
+"Quarkus is using GraalVM to build a native executable.  One of the "
+"limitations of GraalVM is the usage of https://github.com/oracle/graal/blob/"
+"master/substratevm/Limitations.md#reflection[Reflection, window=\"_blank"
+"\"].  Reflective operations are supported but all relevant members must be "
+"registered for reflection explicitly.  Those registrations result in a "
+"bigger native executable."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:146
+msgid ""
+"And if Quarkus DI needs to access a private member it *has to use "
+"reflection*.  That's why Quarkus users are encouraged __not to use private "
+"members__ in their beans.  This involves injection fields, constructors and "
+"initializers, observer methods, producer methods and fields, disposers and "
+"interceptor methods."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:149
+msgid ""
+"How to avoid using private members? You can use package-private modifiers:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:154
+#: upstream/_guides/cdi-reference.adoc:171
+#, no-wrap
+msgid ""
+"@ApplicationScoped\n"
+"public class CounterBean {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:157
+#, no-wrap
+msgid ""
+"    @Inject\n"
+"    CounterService counterService; <1>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:161
+#, no-wrap
+msgid ""
+"    void onMessage(@Observes Event msg) { <2>\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:163
+msgid "A package-private injection field."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:164
+msgid "A package-private observer method."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:166
+msgid "Or constructor injection:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:173
+#, no-wrap
+msgid "    private CounterService service;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:178
+#, no-wrap
+msgid ""
+"    CounterBean(CounterService service) { <1>\n"
+"      this.service = service;\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:180
+msgid ""
+"A package-private constructor injection. `@Inject` is optional in this "
+"particular case."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/cdi-reference.adoc:182
+#, no-wrap
+msgid "Supported Features"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:185
+msgid "Programming model"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:186
+msgid "Managed beans implemented by a Java class"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:187
+msgid "`@PostConstruct` and `@PreDestroy` lifecycle callbacks"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:188
+msgid "Producer methods and fields, disposers"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:189
+msgid "Qualifiers"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:190
+msgid "Alternatives"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:191
+msgid "Stereotypes"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:192
+msgid "Dependency injection and lookup"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:193
+msgid "Field, constructor and initializer/setter injection"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:194
+msgid "Type-safe resolution"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:195
+msgid "Programmatic lookup via `javax.enterprise.inject.Instance`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:196
+msgid "Client proxies"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:197
+msgid "Injection point metadata"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:198
+msgid "Scopes and contexts"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:199
+msgid ""
+"`@Dependent`, `@ApplicationScoped`, `@Singleton`, `@RequestScoped` and "
+"`@SessionScoped`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:200
+msgid "Custom scopes and contexts"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:201
+msgid "Interceptors"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:202
+msgid "Business method interceptors: `@AroundInvoke`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:203
+msgid ""
+"Interceptors for lifecycle event callbacks: `@PostConstruct`, `@PreDestroy`, "
+"`@AroundConstruct`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:204
+msgid ""
+"Events and observer methods, including asynchronous events and transactional "
+"observer methods"
+msgstr ""
+
+#. type: Title ====
+#: upstream/_guides/cdi-reference.adoc:206
+#: upstream/_guides/cdi-reference.adoc:666
+#, no-wrap
+msgid "Limitations"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:209
+msgid "`@ConversationScoped` is not supported"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:210
+msgid "Decorators are not supported"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:211
+msgid "Portable Extensions are not supported"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:212
+msgid ""
+"`BeanManager` - only the following methods are implemented: `getBeans()`, "
+"`createCreationalContext()`, `getReference()`, `getInjectableReference()` , "
+"`resolve()`, `getContext()`, `fireEvent()`, `getEvent()` and "
+"`createInstance()`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:213
+msgid "Specialization is not supported"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:214
+msgid "`beans.xml` descriptor content is ignored"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:215
+msgid "Passivation and passivating scopes are not supported"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:216
+msgid "Interceptor methods on superclasses are not implemented yet"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:217
+msgid "`@Interceptors` is not supported"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/cdi-reference.adoc:219
+#, no-wrap
+msgid "Non-standard Features"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/cdi-reference.adoc:221
+#, no-wrap
+msgid "Eager Instantiation of Beans"
+msgstr ""
+
+#. type: Title ====
+#: upstream/_guides/cdi-reference.adoc:224
+#, no-wrap
+msgid "Lazy By Default"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:228
+msgid ""
+"By default, CDI beans are created lazily, when needed.  What exactly \"needed"
+"\" means depends on the scope of a bean."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:230
+msgid ""
+"A *normal scoped bean* (`@ApplicationScoped`, `@RequestScoped`, etc.) is "
+"needed when a method is invoked upon an injected instance (contextual "
+"reference per the specification)."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:232
+msgid ""
+"In other words, injecting a normal scoped bean will not suffice because a "
+"_client proxy_ is injected instead of a contextual instance of the bean."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:234
+msgid ""
+"A *bean with a pseudo-scope* (`@Dependent` and `@Singleton` ) is created "
+"when injected."
+msgstr ""
+
+#. type: Block title
+#: upstream/_guides/cdi-reference.adoc:235
+#, no-wrap
+msgid "Lazy Instantiation Example"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:244
+#, no-wrap
+msgid ""
+"@Singleton // => pseudo-scope\n"
+"class AmazingService {\n"
+"  String ping() {\n"
+"    return \"amazing\";\n"
+"  }\n"
+"}\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:251
+#, no-wrap
+msgid ""
+"@ApplicationScoped // => normal scope\n"
+"class CoolService {\n"
+"  String ping() {\n"
+"    return \"cool\";\n"
+"  }\n"
+"}\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:254
+#, no-wrap
+msgid ""
+"@Path(\"/ping\")\n"
+"public class PingResource {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:257
+#, no-wrap
+msgid ""
+"  @Inject\n"
+"  AmazingService s1; <1>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:260
+#, no-wrap
+msgid ""
+"  @Inject\n"
+"  CoolService s2; <2>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:266
+#, no-wrap
+msgid ""
+"  @GET\n"
+"  public String ping() {\n"
+"    return s1.ping() + s2.ping(); <3>\n"
+"  }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:268
+msgid "Injection triggers the instantiation of `AmazingService`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:269
+msgid ""
+"Injection itself does not result in the instantiation of `CoolService`. A "
+"client proxy is injected."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:270
+msgid ""
+"The first invocation upon the injected proxy triggers the instantiation of "
+"`CoolService`."
+msgstr ""
+
+#. type: Title ====
+#: upstream/_guides/cdi-reference.adoc:271
+#, no-wrap
+msgid "Startup Event"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:274
+msgid "However, if you really need to instantiate a bean eagerly you can:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:276
+msgid ""
+"Declare an observer of the `StartupEvent` - the scope of the bean does not "
+"matter in this case:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:284
+#, no-wrap
+msgid ""
+"@ApplicationScoped\n"
+"class CoolService {\n"
+"  void startup(@Observes StartupEvent event) { <1>\n"
+"  }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:286
+msgid ""
+"A `CoolService` is created during startup to service the observer method "
+"invocation."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:288
+#, no-wrap
+msgid "Use the bean in an observer of the `StartupEvent` - normal scoped beans must be used as described in <<lazy_by_default>>:    \n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:293
+#, no-wrap
+msgid ""
+"@Dependent\n"
+"class MyBeanStarter {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:298
+#, no-wrap
+msgid ""
+"  void startup(@Observes StartupEvent event, AmazingService amazing, CoolService cool) { <1>\n"
+"    cool.toString(); <2>\n"
+"  }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:300
+msgid "The `AmazingService` is created during injection."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:301
+msgid ""
+"The `CoolService` is a normal scoped bean so we have to invoke a method upon "
+"the injected proxy to force the instantiation."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:303
+msgid ""
+"Annotate the bean with `@io.quarkus.runtime.Startup` as described in link:"
+"lifecycle#startup_annotation[Startup annotation]:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:309
+#, no-wrap
+msgid ""
+"@Startup // <1>\n"
+"@ApplicationScoped\n"
+"public class EagerAppBean {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:311
+#, no-wrap
+msgid "   private final String name;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:316
+#, no-wrap
+msgid ""
+"   EagerAppBean(NameGenerator generator) { // <2>\n"
+"     this.name = generator.createName();\n"
+"   }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:318
+msgid ""
+"For each bean annotated with `@Startup` a synthetic observer of "
+"`StartupEvent` is generated. The default priority is used."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:319
+msgid ""
+"The bean constructor is called when the application starts and the resulting "
+"contextual instance is stored in the application context."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:321
+msgid ""
+"Quarkus users are encouraged to always prefer the `@Observes StartupEvent` "
+"to `@Initialized(ApplicationScoped.class)` as explained in the link:"
+"lifecycle[Application Initialization and Termination] guide."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/cdi-reference.adoc:322
+#, no-wrap
+msgid "Request Context Lifecycle"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:325
+msgid "The request context is also active:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:327
+msgid "during notification of a synchronous observer method."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:329
+msgid "The request context is destroyed:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:331
+msgid ""
+"after the observer notification completes for an event, if it was not "
+"already active when the notification started."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:333
+msgid ""
+"An event with qualifier `@Initialized(RequestScoped.class)` is fired when "
+"the request context is initialized for an observer notification. Moreover, "
+"the events with qualifiers `@BeforeDestroyed(RequestScoped.class)` and "
+"`@Destroyed(RequestScoped.class)` are fired when the request context is "
+"destroyed."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/cdi-reference.adoc:334
+#, no-wrap
+msgid "Qualified Injected Fields"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:337
+msgid ""
+"In CDI, if you declare a field injection point you need to use `@Inject` and "
+"optionally a set of qualifiers."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:343
+#: upstream/_guides/cdi-reference.adoc:619
+#, no-wrap
+msgid ""
+"  @Inject\n"
+"  @ConfigProperty(name = \"cool\")\n"
+"  String coolProperty;\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:346
+msgid ""
+"In Quarkus, you can skip the `@Inject` annotation completely if the injected "
+"field declares at least one qualifier."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:351
+#: upstream/_guides/cdi-reference.adoc:636
+#, no-wrap
+msgid ""
+"  @ConfigProperty(name = \"cool\")\n"
+"  String coolProperty;\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:354
+msgid ""
+"With the notable exception of one special case discussed below, `@Inject` is "
+"still required for constructor and method injection."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/cdi-reference.adoc:355
+#, no-wrap
+msgid "Simplified Constructor Injection"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:359
+msgid ""
+"In CDI, a normal scoped bean must always declare a no-args constructor (this "
+"constructor is normally generated by the compiler unless you declare any "
+"other constructor).  However, this requirement complicates constructor "
+"injection - you need to provide a dummy no-args constructor to make things "
+"work in CDI."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:364
+#: upstream/_guides/cdi-reference.adoc:384
+#, no-wrap
+msgid ""
+"@ApplicationScoped\n"
+"public class MyCoolService {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:366
+#: upstream/_guides/cdi-reference.adoc:386
+#, no-wrap
+msgid "  private SimpleProcessor processor;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:369
+#, no-wrap
+msgid ""
+"  MyCoolService() { // dummy constructor needed\n"
+"  }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:375
+#, no-wrap
+msgid ""
+"  @Inject // constructor injection\n"
+"  MyCoolService(SimpleProcessor processor) {\n"
+"    this.processor = processor;\n"
+"  }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:379
+msgid ""
+"There is no need to declare dummy constructors for normal scoped bean in "
+"Quarkus - they are generated automatically.  Also if there's only one "
+"constructor there is no need for `@Inject`."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:391
+#, no-wrap
+msgid ""
+"  MyCoolService(SimpleProcessor processor) {\n"
+"    this.processor = processor;\n"
+"  }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:394
+msgid ""
+"We don't generate a no-args constructor automatically if a bean class "
+"extends a class that does not declare a no-args constructor."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/cdi-reference.adoc:396
+#, no-wrap
+msgid "Removing Unused Beans"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:400
+msgid ""
+"The container attempts to remove all unused beans during build by default.  "
+"This optimization can be disabled by setting `quarkus.arc.remove-unused-"
+"beans` to `none` or `false`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:402
+msgid "An unused bean:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:404
+msgid "is not a built-in bean or an interceptor,"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:405
+msgid "is not eligible for injection to any injection point,"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:406
+msgid "is not excluded by any extension,"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:407
+msgid "does not have a name,"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:408
+msgid "does not declare an observer,"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:409
+msgid ""
+"does not declare any producer which is eligible for injection to any "
+"injection point,"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:410
+msgid ""
+"is not directly eligible for injection into any `javax.enterprise.inject."
+"Instance` or `javax.inject.Provider` injection point"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:412
+msgid ""
+"This optimization applies to all forms of bean declarations: bean class, "
+"producer method, producer field."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:415
+msgid ""
+"Users can instruct the container to not remove any of their specific beans "
+"(even if they satisfy all the rules specified above) by annotating them with "
+"`io.quarkus.arc.Unremovable`.  This annotation can be placed on the types, "
+"producer methods, and producer fields."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:418
+msgid ""
+"Since this is not always possible, there is an option to achieve the same "
+"via `application.properties`.  The `quarkus.arc.unremovable-types` property "
+"accepts a list of string values that are used to match beans based on their "
+"name or package."
+msgstr ""
+
+#. type: Table
+#: upstream/_guides/cdi-reference.adoc:426
+#, no-wrap
+msgid ""
+"|Value|Description\n"
+"|`org.acme.Foo`| Match the fully qualified name of the bean class\n"
+"|`org.acme.*`| Match beans where the package of the bean class is `org.acme`\n"
+"|`org.acme.**`| Match beans where the package of the bean class starts with `org.acme`\n"
+"|`Bar`| Match the simple name of the bean class\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:432
+#, no-wrap
+msgid "quarkus.arc.unremovable-types=org.acme.Foo,org.acme.*,Bar\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:435
+msgid ""
+"Furthermore, extensions can eliminate possible false positives by producing "
+"`UnremovableBeanBuildItem`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:438
+msgid ""
+"Finally, Quarkus provides a middle ground for the bean removal optimization "
+"where application beans are never removed whether or not they are unused, "
+"while the optimization proceeds normally for non application classes. To use "
+"this mode, set `quarkus.arc.remove-unused-beans` to `fwk` or `framework`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:441
+msgid ""
+"When using the dev mode (running `./mvnw clean compile quarkus:dev`), you "
+"can see more information about which beans are being removed by enabling "
+"additional logging via the following line in your `application.properties`."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:444
+#, no-wrap
+msgid "quarkus.log.category.\"io.quarkus.arc.processor\".level=DEBUG\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/cdi-reference.adoc:447
+#, no-wrap
+msgid "Default Beans"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:451
+msgid ""
+"Quarkus adds a capability that CDI currently does not support which is to "
+"conditionally declare a bean if no other bean with equal types and "
+"qualifiers was declared by any available means (bean class, producer, "
+"synthetic bean, ...)  This is done using the `@io.quarkus.arc.DefaultBean` "
+"annotation and is best explained with an example."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:453
+msgid ""
+"Say there is a Quarkus extension that among other things declares a few CDI "
+"beans like the following code does:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:458
+#: upstream/_guides/cdi-reference.adoc:511
+#: upstream/_guides/cdi-reference.adoc:532
+#: upstream/_guides/cdi-reference.adoc:561
+#, no-wrap
+msgid ""
+"@Dependent\n"
+"public class TracerConfiguration {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:463
+#, no-wrap
+msgid ""
+"    @Produces\n"
+"    public Tracer tracer(Reporter reporter, Configuration configuration) {\n"
+"        return new Tracer(reporter, configuration);\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:469
+#, no-wrap
+msgid ""
+"    @Produces\n"
+"    @DefaultBean\n"
+"    public Configuration configuration() {\n"
+"        // create a Configuration\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:476
+#, no-wrap
+msgid ""
+"    @Produces\n"
+"    @DefaultBean\n"
+"    public Reporter reporter(){\n"
+"        // create a Reporter\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:481
+msgid ""
+"The idea is that the extension auto-configures things for the user, "
+"eliminating a lot of boilerplate - we can just `@Inject` a `Tracer` wherever "
+"it is needed.  Now imagine that in our application we would like to utilize "
+"the configured `Tracer`, but we need to customize it a little, for example "
+"by providing a custom `Reporter`.  The only thing that would be needed in "
+"our application would be something like the following:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:487
+#, no-wrap
+msgid ""
+"@Dependent\n"
+"public class CustomTracerConfiguration {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:493
+#, no-wrap
+msgid ""
+"    @Produces\n"
+"    public Reporter reporter(){\n"
+"        // create a custom Reporter\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:497
+msgid ""
+"`@DefaultBean` allows extensions (or any other code for that matter) to "
+"provide defaults while backing off if beans of that type are supplied in any "
+"way Quarkus supports."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/cdi-reference.adoc:498
+#, no-wrap
+msgid "Enabling Beans for Quarkus Build Profile"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:503
+msgid ""
+"Quarkus adds a capability that CDI currently does not support which is to "
+"conditionally enable a bean when a Quarkus build time profile is enabled, "
+"via the `@io.quarkus.arc.profile.IfBuildProfile` and `@io.quarkus.arc."
+"profile.UnlessBuildProfile` annotations.  When used in conjunction with `@io."
+"quarkus.arc.DefaultBean`, these annotations allow for the creation of "
+"different bean configurations for different build profiles."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:506
+msgid ""
+"Imagine for instance that an application contains a bean named `Tracer`, "
+"which needs to be do nothing when in tests or dev-mode, but works in its "
+"normal capacity for the production artifact.  An elegant way to create such "
+"beans is the following:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:517
+#, no-wrap
+msgid ""
+"    @Produces\n"
+"    @IfBuildProfile(\"prod\")\n"
+"    public Tracer realTracer(Reporter reporter, Configuration configuration) {\n"
+"        return new RealTracer(reporter, configuration);\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:524
+#: upstream/_guides/cdi-reference.adoc:545
+#: upstream/_guides/cdi-reference.adoc:574
+#, no-wrap
+msgid ""
+"    @Produces\n"
+"    @DefaultBean\n"
+"    public Tracer noopTracer() {\n"
+"        return new NoopTracer();\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:527
+msgid ""
+"If instead, it is required that the `Tracer` bean also works in dev-mode and "
+"only default to doing nothing for tests, then `@UnlessBuildProfile` would be "
+"ideal. The code would look like:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:538
+#, no-wrap
+msgid ""
+"    @Produces\n"
+"    @UnlessBuildProfile(\"test\") // this will be enabled for both prod and dev build time profiles\n"
+"    public Tracer realTracer(Reporter reporter, Configuration configuration) {\n"
+"        return new RealTracer(reporter, configuration);\n"
+"    }\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:548
+msgid ""
+"The runtime profile has absolutely no effect on the bean resolution using "
+"`@IfBuildProfile` and `@UnlessBuildProfile`."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/cdi-reference.adoc:549
+#, no-wrap
+msgid "Enabling Beans for Quarkus Build Properties"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:554
+msgid ""
+"Quarkus adds a capability that CDI currently does not support which is to "
+"conditionally enable a bean when a Quarkus build time property has a "
+"specific value, via the `@io.quarkus.arc.properties.IfBuildProperty` "
+"annotation.  When used in conjunction with `@io.quarkus.arc.DefaultBean`, "
+"this annotation allow for the creation of different bean configurations for "
+"different build properties."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:556
+msgid ""
+"The scenario we mentioned above with `Tracer` could also be implemented in "
+"the following way:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:567
+#, no-wrap
+msgid ""
+"    @Produces\n"
+"    @IfBuildProperty(name = \"some.tracer.enabled\", stringValue = \"true\")\n"
+"    public Tracer realTracer(Reporter reporter, Configuration configuration) {\n"
+"        return new RealTracer(reporter, configuration);\n"
+"    }\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:577
+msgid ""
+"Properties set at runtime have absolutely no effect on the bean resolution "
+"using `@IfBuildProperty`."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/cdi-reference.adoc:578
+#, no-wrap
+msgid "Declaring Selected Alternatives"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:582
+msgid ""
+"In CDI, an alternative bean may be selected either globally for an "
+"application by means of `@Priority`, or for a bean archive using a `beans."
+"xml` descriptor.  Quarkus has a simplified bean discovery and the content of "
+"`beans.xml` is ignored."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:587
+msgid ""
+"The disadvantage of `@Priority` is that it has `@Target({ TYPE, "
+"PARAMETER })` and so it cannot be used for producer methods and fields.  To "
+"address this problem and to simplify the code Quarkus provides the `io."
+"quarkus.arc.AlternativePriority` annotation.  It's basically a shortcut for "
+"`@Alternative` plus `@Priority`.  Additionally, it can be used for producers."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:592
+msgid ""
+"However, it is also possible to select alternatives for an application using "
+"the unified configuration.  The `quarkus.arc.selected-alternatives` property "
+"accepts a list of string values that are used to match alternative beans.  "
+"If any value matches then the priority of `Integer#MAX_VALUE` is used for "
+"the relevant bean.  The priority declared via `@Priority` or "
+"`@AlternativePriority` is overridden."
+msgstr ""
+
+#. type: Table
+#: upstream/_guides/cdi-reference.adoc:600
+#, no-wrap
+msgid ""
+"|Value|Description\n"
+"|`org.acme.Foo`| Match the fully qualified name of the bean class or the bean class of the bean that declares the producer\n"
+"|`org.acme.*`| Match beans where the package of the bean class is `org.acme`\n"
+"|`org.acme.**`| Match beans where the package of the bean class starts with `org.acme` \n"
+"|`Bar`| Match the simple name of the bean class or the bean class of the bean that declares the producer\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:606
+#, no-wrap
+msgid "quarkus.arc.selected-alternatives=org.acme.Foo,org.acme.*,Bar\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/cdi-reference.adoc:608
+#, no-wrap
+msgid "Simplified Producer Method Declaration"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:611
+msgid "In CDI, a producer method must be always annotated with `@Produces`."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:615
+#: upstream/_guides/cdi-reference.adoc:633
+#, no-wrap
+msgid "class Producers {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:626
+#, no-wrap
+msgid ""
+"  @Produces\n"
+"  @ApplicationScoped\n"
+"  MyService produceService() {\n"
+"    return new MyService(coolProperty);\n"
+"  }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:629
+msgid ""
+"In Quarkus, you can skip the `@Produces` annotation completely if the "
+"producer method is annotated with a scope annotation, a stereotype or a "
+"qualifier."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:642
+#, no-wrap
+msgid ""
+"  @ApplicationScoped\n"
+"  MyService produceService() {\n"
+"    return new MyService(coolProperty);\n"
+"  }\n"
+"}\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/cdi-reference.adoc:644
+#, no-wrap
+msgid "Interception of Static Methods "
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:650
+msgid ""
+"The Interceptors specification is clear that _around-invoke_ methods must "
+"not be declared static.  However, this restriction was driven mostly by "
+"technical limitations.  And since Quarkus is a build-time oriented stack "
+"that allows for additional class transformations, those limitations don't "
+"apply anymore.  It's possible to annotate a non-private static method with "
+"an interceptor binding:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:654
+#, no-wrap
+msgid "class Services {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:662
+#, no-wrap
+msgid ""
+"  @Logged <1>\n"
+"  static BigDecimal computePrice(long amount) { <2>\n"
+"    BigDecimal price;\n"
+"    // Perform computations...\n"
+"    return price;\n"
+"  }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:664
+msgid "`Logged` is an interceptor binding."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:665
+msgid ""
+"Each method invocation is intercepted if there is an interceptor associated "
+"with `Logged`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:669
+msgid ""
+"Only *method-level bindings* are considered for backward compatibility "
+"reasons (otherwise static methods of bean classes that declare class-level "
+"bindings would be suddenly intercepted)"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:670
+msgid "Private static methods are never intercepted"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:671
+msgid ""
+"`InvocationContext#getTarget()` returns `null` for obvious reasons; "
+"therefore not all existing interceptors may behave correctly when "
+"intercepting static methods"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:673
+msgid ""
+"Interceptors can use `InvocationContext.getMethod()` to detect static "
+"methods and adjust the behavior accordingly."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/cdi-reference.adoc:674
+#, no-wrap
+msgid "Ability to handle 'final' classes and methods"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:679
+msgid ""
+"In normal CDI, classes that are marked as `final` and / or have `final` "
+"methods are not eligible for proxy creation, which in turn means that "
+"interceptors and normal scoped beans don't work properly.  This situation is "
+"very common when trying to use CDI with alternative JVM languages like "
+"Kotlin where classes and methods are `final` by default."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:681
+msgid ""
+"Quarkus however, can overcome these limitations when `quarkus.arc.transform-"
+"unproxyable-classes` is set to `true` (which is the default value)."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/cdi-reference.adoc:682
+#, no-wrap
+msgid "Container-managed Concurrency"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:690
+msgid ""
+"There is no standard concurrency control mechanism for CDI beans.  "
+"Nevertheless, a bean instance can be shared and accessed concurrently from "
+"multiple threads.  In that case it should be thread-safe.  You can use "
+"standard Java constructs (`volatile`, `synchronized`, `ReadWriteLock`, etc.) "
+"or let the container control the concurrent access.  Quarkus provides `@io."
+"quarkus.arc.Lock` and a built-in interceptor for this interceptor binding.  "
+"Each interceptor instance associated with a contextual instance of an "
+"intercepted bean holds a separate `ReadWriteLock` with non-fair ordering "
+"policy."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:692
+msgid ""
+"`io.quarkus.arc.Lock` is a regular interceptor binding and as such can be "
+"used for any bean with any scope. However, it is especially useful for "
+"\"shared\" scopes, e.g. `@Singleton` and `@ApplicationScoped`."
+msgstr ""
+
+#. type: Block title
+#: upstream/_guides/cdi-reference.adoc:693
+#, no-wrap
+msgid "Container-managed Concurrency Example"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:697
+#, no-wrap
+msgid "import io.quarkus.arc.Lock;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:701
+#, no-wrap
+msgid ""
+"@Lock <1>\n"
+"@ApplicationScoped\n"
+"class SharedService {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:705
+#, no-wrap
+msgid ""
+"  void addAmount(BigDecimal amount) {\n"
+"    // ...changes some internal state of the bean\n"
+"  }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:711
+#, no-wrap
+msgid ""
+"  @Lock(value = Lock.Type.READ, time = 1, unit = TimeUnit.SECONDS) <2> <3>\n"
+"  BigDecimal getAmount() {\n"
+"    // ...it is safe to read the value concurrently\n"
+"  }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:713
+msgid ""
+"`@Lock` (which maps to `@Lock(Lock.Type.WRITE)`) declared on the class "
+"instructs the container to lock the bean instance for any invocation of any "
+"business method, i.e. the client has \"exclusive access\" and no concurrent "
+"invocations will be allowed."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:714
+msgid ""
+"`@Lock(Lock.Type.READ)` overrides the value specified at class level. It "
+"means that any number of clients can invoke the method concurrently, unless "
+"the bean instance is locked by `@Lock(Lock.Type.WRITE)`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:715
+msgid ""
+"You can also specify the \"wait time\". If it's not possible to acquire the "
+"lock in the given time a `LockException` is thrown."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/cdi-reference.adoc:717
+#, no-wrap
+msgid "Build Time Extension Points"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/cdi-reference.adoc:720
+#, no-wrap
+msgid "Portable Extensions"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:725
+msgid ""
+"Quarkus incorporates build-time optimizations in order to provide instant "
+"startup and low memory footprint.  The downside of this approach is that CDI "
+"Portable Extensions cannot be supported.  Nevertheless, most of the "
+"functionality can be achieved using Quarkus link:writing-"
+"extensions[extensions]."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/cdi-reference.adoc:726
+#, no-wrap
+msgid "Additional Bean Defining Annotations"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:730
+msgid ""
+"As described in <<bean_discovery>> bean classes that don’t have a bean "
+"defining annotation are not discovered.  However, "
+"`BeanDefiningAnnotationBuildItem` can be used to extend the set of default "
+"bean defining annotations (`@Dependent`, `@Singleton`, `@ApplicationScoped`, "
+"`@RequestScoped` and `@Stereotype` annotations):"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:737
+#, no-wrap
+msgid ""
+"@BuildStep\n"
+"BeanDefiningAnnotationBuildItem additionalBeanDefiningAnnotation() {\n"
+"    return new BeanDefiningAnnotationBuildItem(DotName.createSimple(\"javax.ws.rs.Path\")));\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:740
+msgid ""
+"Bean registrations that are result of a `BeanDefiningAnnotationBuildItem` "
+"are unremovable by default. See also <<remove_unused_beans>>."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/cdi-reference.adoc:741
+#, no-wrap
+msgid "Resource Annotations"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:744
+msgid ""
+"`ResourceAnnotationBuildItem` is used to specify resource annotations that "
+"make it possible to resolve non-CDI injection points, such as Java EE "
+"resources."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:746
+msgid ""
+"An integrator must also provide a corresponding `io.quarkus.arc."
+"ResourceReferenceProvider` implementation."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:755
+#, no-wrap
+msgid ""
+"@BuildStep\n"
+"void setupResourceInjection(BuildProducer<ResourceAnnotationBuildItem> resourceAnnotations, BuildProducer<GeneratedResourceBuildItem> resources) {\n"
+"    resources.produce(new GeneratedResourceBuildItem(\"META-INF/services/io.quarkus.arc.ResourceReferenceProvider\",\n"
+"        JPAResourceReferenceProvider.class.getName().getBytes()));\n"
+"    resourceAnnotations.produce(new ResourceAnnotationBuildItem(DotName.createSimple(PersistenceContext.class.getName())));\n"
+"}\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/cdi-reference.adoc:758
+#, no-wrap
+msgid "Additional Beans"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:762
+msgid ""
+"`AdditionalBeanBuildItem` is used to specify additional bean classes to be "
+"analyzed during discovery.  Additional bean classes are transparently added "
+"to the application index processed by the container."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:771
+#, no-wrap
+msgid ""
+"@BuildStep\n"
+"List<AdditionalBeanBuildItem> additionalBeans() {\n"
+"     return Arrays.asList(\n"
+"          new AdditionalBeanBuildItem(SmallRyeHealthReporter.class),\n"
+"          new AdditionalBeanBuildItem(HealthServlet.class));\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:774
+msgid ""
+"A bean registration that is a result of an `AdditionalBeanBuildItem` is "
+"removable by default. See also <<remove_unused_beans>>."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/cdi-reference.adoc:776
+#, no-wrap
+msgid "Synthetic Beans"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:783
+msgid ""
+"Sometimes it is very useful to be able to register a synthetic bean.  Bean "
+"attributes of a synthetic bean are not derived from a java class, method or "
+"field.  Instead, the attributes are specified by an extension.  In CDI, this "
+"could be achieved using the `AfterBeanDiscovery.addBean()` methods.  In "
+"Quarkus, there are three ways to register a synthetic bean."
+msgstr ""
+
+#. type: Title ====
+#: upstream/_guides/cdi-reference.adoc:784
+#, no-wrap
+msgid "`BeanRegistrarBuildItem`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:787
+msgid ""
+"A build step can produce a `BeanRegistrarBuildItem` and leverage the `io."
+"quarkus.arc.processor.BeanConfigurator` API to build a synthetic bean "
+"definition."
+msgstr ""
+
+#. type: Block title
+#: upstream/_guides/cdi-reference.adoc:788
+#, no-wrap
+msgid "`BeanRegistrarBuildItem` Example"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:794
+#, no-wrap
+msgid ""
+"@BuildStep\n"
+"BeanRegistrarBuildItem syntheticBean() {\n"
+"     return new BeanRegistrarBuildItem(new BeanRegistrar() {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:801
+#, no-wrap
+msgid ""
+"            @Override\n"
+"            public void register(RegistrationContext registrationContext) {\n"
+"                 registrationContext.configure(String.class).types(String.class).qualifiers(new MyQualifierLiteral()).creator(mc -> mc.returnValue(mc.load(\"foo\"))).done();\n"
+"            }\n"
+"        }));\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:804
+msgid ""
+"The output of a `BeanConfigurator` is recorded as bytecode. Therefore there "
+"are some limitations in how a synthetic bean instance is created. See also "
+"`BeanConfigurator.creator()` methods."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:806
+msgid ""
+"You can easily filter all class-based beans via the convenient `BeanStream` "
+"returned from the `RegistrationContext.beans()` method."
+msgstr ""
+
+#. type: Title ====
+#: upstream/_guides/cdi-reference.adoc:807
+#, no-wrap
+msgid "`BeanRegistrationPhaseBuildItem`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:811
+msgid ""
+"If a build step *needs to produce other build items during the registration* "
+"it should use the `BeanRegistrationPhaseBuildItem`.  The reason is that "
+"injected objects are only valid during a `@BuildStep` method invocation."
+msgstr ""
+
+#. type: Block title
+#: upstream/_guides/cdi-reference.adoc:812
+#, no-wrap
+msgid "`BeanRegistrationPhaseBuildItem` Example"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:822
+#, no-wrap
+msgid ""
+"@BuildStep\n"
+"void syntheticBean(BeanRegistrationPhaseBuildItem beanRegistrationPhase,\n"
+"            BuildProducer<MyBuildItem> myBuildItem, \n"
+"            BuildProducer<BeanConfiguratorBuildItem> beanConfigurators) {\n"
+"   beanConfigurators.produce(new BeanConfiguratorBuildItem(beanRegistrationPhase.getContext().configure(String.class).types(String.class).qualifiers(new MyQualifierLiteral()).creator(mc -> mc.returnValue(mc.load(\"foo\")))));\n"
+"   myBuildItem.produce(new MyBuildItem());\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:825
+msgid "See the `BeanRegistrationPhaseBuildItem` javadoc for more information."
+msgstr ""
+
+#. type: Title ====
+#: upstream/_guides/cdi-reference.adoc:826
+#, no-wrap
+msgid "`SyntheticBeanBuildItem`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:830
+msgid ""
+"Finally, a build step can produce a `SyntheticBeanBuildItem` to register a "
+"synthetic bean whose instance can be easily *produced through a <<writing-"
+"extensions.adoc#bytecode-recording,recorder>>*.  The extended "
+"`BeanConfigurator` accepts either a `io.quarkus.runtime.RuntimeValue` or a "
+"`java.util.function.Supplier`."
+msgstr ""
+
+#. type: Block title
+#: upstream/_guides/cdi-reference.adoc:831
+#, no-wrap
+msgid "`SyntheticBeanBuildItem` Example"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:841
+#, no-wrap
+msgid ""
+"@BuildStep\n"
+"@Record(STATIC_INIT) <1>\n"
+"SyntheticBeanBuildItem syntheticBean(TestRecorder recorder) {\n"
+"   return SyntheticBeanBuildItem.configure(Foo.class).scope(Singleton.class)\n"
+"                .runtimeValue(recorder.createFoo()) <2>\n"
+"                .done();\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:843
+msgid "By default, a synthetic bean is initialized during `STATIC_INIT`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:844
+msgid ""
+"The bean instance is supplied by a value returned from a recorder method."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:846
+msgid ""
+"It is possible to mark a synthetic bean to be initialized during "
+"`RUNTIME_INIT`:"
+msgstr ""
+
+#. type: Block title
+#: upstream/_guides/cdi-reference.adoc:847
+#, no-wrap
+msgid "`RUNTIME_INIT` `SyntheticBeanBuildItem` Example"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:858
+#, no-wrap
+msgid ""
+"@BuildStep\n"
+"@Record(RUNTIME_INIT) <1>\n"
+"SyntheticBeanBuildItem syntheticBean(TestRecorder recorder) {\n"
+"   return SyntheticBeanBuildItem.configure(Foo.class).scope(Singleton.class)\n"
+"                .setRuntimeInit() <2>\n"
+"                .runtimeValue(recorder.createFoo())\n"
+"                .done();\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:860
+msgid ""
+"The recorder must be executed in the `ExecutionTime.RUNTIME_INIT` phase."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:861
+msgid "The bean instance is initialized during `RUNTIME_INIT`."
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_guides/cdi-reference.adoc:865
+msgid ""
+"Synthetic bean initialized during `RUNTIME_INIT` must not be accessed during "
+"`STATIC_INIT`. `RUNTIME_INIT` build steps that access a runtime-init "
+"synthetic bean should consume the `SyntheticBeansRuntimeInitBuildItem`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:874
+#, no-wrap
+msgid ""
+"@BuildStep\n"
+"@Record(RUNTIME_INIT) \n"
+"@Consume(SyntheticBeansRuntimeInitBuildItem.class) <1>\n"
+"void accessFoo(TestRecorder recorder) {\n"
+"   recorder.foo(); <2>\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:876
+msgid "This build step must be executed after `syntheticBean()` completes."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:877
+msgid ""
+"This recorder method results in an invocation of the `Foo` bean instance."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/cdi-reference.adoc:879
+#, no-wrap
+msgid "Annotation Transformations"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_guides/cdi-reference.adoc:884
+msgid ""
+"A very common task is to override the annotations found on the bean "
+"classes.  For example you might want to add an interceptor binding to a "
+"specific bean class.  Here is how to do it - use the "
+"`AnnotationsTransformerBuildItem`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:890
+#, no-wrap
+msgid ""
+"@BuildStep\n"
+"AnnotationsTransformerBuildItem transform() {\n"
+"    return new AnnotationsTransformerBuildItem(new AnnotationsTransformer() {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:894
+#, no-wrap
+msgid ""
+"        public boolean appliesTo(org.jboss.jandex.AnnotationTarget.Kind kind) {\n"
+"            return kind == org.jboss.jandex.AnnotationTarget.Kind.CLASS;\n"
+"        }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:902
+#, no-wrap
+msgid ""
+"        public void transform(TransformationContext context) {\n"
+"            if (context.getTarget().asClass().name().toString().equals(\"com.foo.Bar\")) {\n"
+"                context.transform().add(MyInterceptorBinding.class).done();\n"
+"            }\n"
+"        }\n"
+"    });\n"
+"}\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/cdi-reference.adoc:904
+#, no-wrap
+msgid "Additional Interceptor Bindings"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:910
+msgid ""
+"In rare cases it might be handy to programmatically register an existing "
+"annotation as interceptor binding.  This is similar to what pure CDI "
+"achieves through `BeforeBeanDiscovery#addInterceptorBinding()`.  Though here "
+"we are going to use `InterceptorBindingRegistrarBuildItem` to get it done.  "
+"Note that you can register multiple annotations in one go:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:926
+#, no-wrap
+msgid ""
+"@BuildStep\n"
+"InterceptorBindingRegistrarBuildItem addInterceptorBindings() {\n"
+"    InterceptorBindingRegistrarBuildItem additionalBindingsRegistrar = new InterceptorBindingRegistrarBuildItem(new InterceptorBindingRegistrar() {\n"
+"        @Override\n"
+"        public Collection<DotName> registerAdditionalBindings() {\n"
+"            Collection<DotName> result = new HashSet<>();\n"
+"            result.add(DotName.createSimple(MyAnnotation.class.getName()));\n"
+"            result.add(DotName.createSimple(MyOtherAnnotation.class.getName()));\n"
+"            return result;\n"
+"        }\n"
+"    });\n"
+"    return additionalBindingsRegistrar;\n"
+"}\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/cdi-reference.adoc:928
+#, no-wrap
+msgid "Injection Point Transformation"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:933
+msgid ""
+"Every now and then it is handy to be able to change qualifiers of an "
+"injection point programmatically.  You can do just that with "
+"`InjectionPointTransformerBuildItem`.  The following sample shows how to "
+"apply transformation to injection points with type `Foo` that contain "
+"qualifier `MyQualifier`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:939
+#, no-wrap
+msgid ""
+"@BuildStep\n"
+"InjectionPointTransformerBuildItem transformer() {\n"
+"    return new InjectionPointTransformerBuildItem(new InjectionPointsTransformer() {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:943
+#, no-wrap
+msgid ""
+"        public boolean appliesTo(Type requiredType) {\n"
+"            return requiredType.name().equals(DotName.createSimple(Foo.class.getName()));\n"
+"        }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:955
+#, no-wrap
+msgid ""
+"        public void transform(TransformationContext context) {\n"
+"            if (context.getQualifiers().stream()\n"
+"                    .anyMatch(a -> a.name().equals(DotName.createSimple(MyQualifier.class.getName())))) {\n"
+"                context.transform()\n"
+"                        .removeAll()\n"
+"                        .add(DotName.createSimple(MyOtherQualifier.class.getName()))\n"
+"                        .done();\n"
+"            }\n"
+"        }\n"
+"    });\n"
+"}\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/cdi-reference.adoc:957
+#, no-wrap
+msgid "Observer Transformation"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:961
+msgid ""
+"Any https://docs.jboss.org/cdi/spec/2.0/cdi-spec."
+"html#observer_methods[observer method] definition can be vetoed or "
+"transformed using an `ObserverTransformerBuildItem`.  The attributes that "
+"can be transformed include:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:963
+msgid ""
+"https://docs.jboss.org/cdi/api/2.0/javax/enterprise/inject/spi/"
+"ObserverMethod.html#getObservedQualifiers--[qualifiers]"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:964
+msgid ""
+"https://docs.jboss.org/cdi/api/2.0/javax/enterprise/inject/spi/"
+"ObserverMethod.html#getReception--[reception]"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:965
+msgid ""
+"https://docs.jboss.org/cdi/api/2.0/javax/enterprise/inject/spi/"
+"ObserverMethod.html#getPriority--[priority]"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:966
+msgid ""
+"https://docs.jboss.org/cdi/api/2.0/javax/enterprise/inject/spi/"
+"ObserverMethod.html#getTransactionPhase--[transaction phase]"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:967
+msgid ""
+"https://docs.jboss.org/cdi/api/2.0/javax/enterprise/inject/spi/"
+"ObserverMethod.html#isAsync--[asynchronous]"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:973
+#, no-wrap
+msgid ""
+"@BuildStep\n"
+"ObserverTransformerBuildItem transformer() {\n"
+"    return new ObserverTransformerBuildItem(new ObserverTransformer() {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:977
+#, no-wrap
+msgid ""
+"        public boolean appliesTo(Type observedType, Set<AnnotationInstance> qualifiers) {\n"
+"            return observedType.name.equals(DotName.createSimple(MyEvent.class.getName()));\n"
+"        }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:984
+#, no-wrap
+msgid ""
+"        public void transform(TransformationContext context) {\n"
+"            // Veto all observers of MyEvent\n"
+"            context.veto();\n"
+"        }\n"
+"    });\n"
+"}\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/cdi-reference.adoc:986
+#, no-wrap
+msgid "Bean Deployment Validation"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:990
+msgid ""
+"Once the bean deployment is ready an extension can perform additional "
+"validations and inspect the found beans, observers and injection points.  "
+"Register a `BeanDeploymentValidatorBuildItem`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:1003
+#, no-wrap
+msgid ""
+"@BuildStep\n"
+"BeanDeploymentValidatorBuildItem beanDeploymentValidator() {\n"
+"    return new BeanDeploymentValidatorBuildItem(new BeanDeploymentValidator() {\n"
+"         public void validate(ValidationContext validationContext) {\n"
+"             for (InjectionPointInfo injectionPoint : validationContext.get(Key.INJECTION_POINTS)) {\n"
+"                 System.out.println(\"Injection point: \" + injectionPoint);\n"
+"             }\n"
+"         }\n"
+"    });\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:1006
+msgid ""
+"You can easily filter all registered beans via the convenient `BeanStream` "
+"returned from the `ValidationContext.beans()` method."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:1009
+msgid ""
+"If an extension needs to produce other build items during the \"validation\" "
+"phase it should use the `ValidationPhaseBuildItem` instead.  The reason is "
+"that injected objects are only valid during a `@BuildStep` method invocation."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:1021
+#, no-wrap
+msgid ""
+"@BuildStep\n"
+"void validate(ValidationPhaseBuildItem validationPhase,\n"
+"            BuildProducer<MyBuildItem> myBuildItem, \n"
+"            BuildProducer<ValidationErrorBuildItem> errors) {\n"
+"   if (someCondition) {\n"
+"     errors.produce(new ValidationErrorBuildItem(new IllegalStateException()));\n"
+"     myBuildItem.produce(new MyBuildItem());\n"
+"   }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:1024
+msgid "See `ValidationPhaseBuildItem` javadoc for more information."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/cdi-reference.adoc:1026
+#, no-wrap
+msgid "Custom Contexts"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:1029
+msgid ""
+"An extension can register a custom `InjectableContext` implementation by "
+"means of a `ContextRegistrarBuildItem`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:1040
+#, no-wrap
+msgid ""
+"@BuildStep\n"
+"ContextRegistrarBuildItem customContext() {\n"
+"    return new ContextRegistrarBuildItem(new ContextRegistrar() {\n"
+"         public void register(RegistrationContext registrationContext) {\n"
+"            registrationContext.configure(CustomScoped.class).normal().contextClass(MyCustomContext.class).done();\n"
+"         }\n"
+"    });\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:1044
+msgid ""
+"If an extension needs to produce other build items during the \"context "
+"registration\" phase it should use the `ContextRegistrationPhaseBuildItem` "
+"instead.  The reason is that injected objects are only valid during a "
+"`@BuildStep` method invocation."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/cdi-reference.adoc:1054
+#, no-wrap
+msgid ""
+"@BuildStep\n"
+"void addContext(ContextRegistrationPhaseBuildItem contextRegistrationPhase,\n"
+"            BuildProducer<MyBuildItem> myBuildItem, \n"
+"            BuildProducer<ContextConfiguratorBuildItem> contexts) {\n"
+"   contexts.produce(new ContextConfiguratorBuildItem(contextRegistrationPhase.getContext().configure(CustomScoped.class).normal().contextClass(MyCustomContext.class)));\n"
+"   myBuildItem.produce(new MyBuildItem());\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:1057
+msgid "See `ContextRegistrationPhaseBuildItem` javadoc for more information."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/cdi-reference.adoc:1060
+#, no-wrap
+msgid "Available Build Time Metadata"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:1064
+msgid ""
+"Any of the above extensions that operates with `BuildExtension.BuildContext` "
+"can leverage certain build time metadata that are generated during build.  "
+"The built-in keys located in `io.quarkus.arc.processor.BuildExtension.Key` "
+"are:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:1066
+msgid "`ANNOTATION_STORE`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:1067
+msgid ""
+"Contains an `AnnotationStore` that keeps information about all "
+"`AnnotationTarget` annotations after application of annotation transformers"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:1068
+msgid "`INJECTION_POINTS`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:1069
+msgid "`Collection<InjectionPointInfo>` containing all injection points"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:1070
+msgid "`BEANS`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:1071
+msgid "`Collection<BeanInfo>` containing all beans"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:1072
+msgid "`REMOVED_BEANS`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:1073
+msgid ""
+"`Collection<BeanInfo>` containing all the removed beans; see "
+"<<remove_unused_beans>> for more information"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:1074
+msgid "`OBSERVERS`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:1075
+msgid "`Collection<ObserverInfo>` containing all observers"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:1076
+msgid "`SCOPES`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:1077
+msgid "`Collection<ScopeInfo>` containing all scopes, including custom ones"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:1078
+msgid "`QUALIFIERS`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:1079
+msgid "`Map<DotName, ClassInfo>` containing all qualifiers"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:1080
+msgid "`INTERCEPTOR_BINDINGS`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:1081
+msgid "`Map<DotName, ClassInfo>` containing all interceptor bindings"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:1082
+msgid "`STEREOTYPES`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:1083
+msgid "`Map<DotName, ClassInfo>` containing all stereotypes"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:1088
+msgid ""
+"To get hold of these, simply query the extension context object for given "
+"key.  Note that these metadata are made available as build proceeds which "
+"means that extensions can only leverage metadata that were build before they "
+"are invoked.  If your extension attempts to retrieve metadata that wasn't "
+"yet produced, `null` will be returned.  Here is a summary of which "
+"extensions can access which metadata:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:1090
+msgid "`AnnotationsTransformer`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:1091
+msgid ""
+"Shouldn't rely on any metadata as it could be used at any time in any phase "
+"of the bootstrap"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:1092
+msgid "`ContextRegistrar`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:1093
+#: upstream/_guides/cdi-reference.adoc:1095
+#: upstream/_guides/cdi-reference.adoc:1097
+msgid ""
+"Has access to `ANNOTATION_STORE`, `QUALIFIERS`, `INTERCEPTOR_BINDINGS`, "
+"`STEREOTYPES`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:1094
+msgid "`InjectionPointsTransformer`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:1096
+msgid "`ObserverTransformer`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:1098
+msgid "`BeanRegistrar`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:1099
+msgid ""
+"Has access to `ANNOTATION_STORE`, `QUALIFIERS`, `INTERCEPTOR_BINDINGS`, "
+"`STEREOTYPES`, `BEANS` (class-based beans only), `OBSERVERS` (class-based "
+"observers only), `INJECTION_POINTS`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:1100
+msgid "`ObserverRegistrar`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:1101
+msgid ""
+"Has access to `ANNOTATION_STORE`, `QUALIFIERS`, `INTERCEPTOR_BINDINGS`, "
+"`STEREOTYPES`, `BEANS`, `OBSERVERS` (class-based observers only), "
+"`INJECTION_POINTS`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:1102
+msgid "`BeanDeploymentValidator`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:1103
+msgid "Has access to all build metadata"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/cdi-reference.adoc:1105
+#, no-wrap
+msgid "Development Mode"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:1108
+msgid ""
+"In the development mode, two special endpoints are registered automatically "
+"to provide some basic debug info in the JSON format:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:1110
+msgid ""
+"HTTP GET `/quarkus/arc` - returns the summary; number of beans, config "
+"properties, etc."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:1111
+msgid "HTTP GET `/quarkus/arc/beans` - returns the list of all beans"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:1112
+msgid "You can use query params to filter the output:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:1113
+msgid ""
+"`scope` - include beans with scope that ends with the given value, i.e. "
+"`http://localhost:8080/quarkus/arc/beans?scope=ApplicationScoped`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:1114
+msgid ""
+"`beanClass` - include beans with bean class that starts with the given "
+"value, i.e. `http://localhost:8080/quarkus/arc/beans?beanClass=org.acme.Foo`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:1115
+msgid ""
+"`kind` - include beans of the specified kind (`CLASS`, `PRODUCER_FIELD`, "
+"`PRODUCER_METHOD`, `INTERCEPTOR` or `SYNTHETIC`), i.e. `http://"
+"localhost:8080/quarkus/arc/beans?kind=PRODUCER_METHOD`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:1116
+msgid ""
+"HTTP GET `/quarkus/arc/removed-beans` - returns the list of unused beans "
+"removed during build"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:1117
+msgid ""
+"HTTP GET `/quarkus/arc/observers` - returns the list of all observer methods"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/cdi-reference.adoc:1119
+msgid ""
+"These endpoints are only available in the development mode, i.e. when you "
+"run your application via `mvn quarkus:dev` (or `./gradlew quarkusDev`)."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/cdi-reference.adoc:1122
+#, no-wrap
+msgid "ArC Configuration Reference"
+msgstr ""

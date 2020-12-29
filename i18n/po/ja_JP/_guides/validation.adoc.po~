@@ -1,0 +1,830 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2020-12-26 18:44+0900\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. This guide is maintained in the main Quarkus repository
+#. and pull requests should be submitted there:
+#. https://github.com/quarkusio/quarkus/tree/master/docs/src/main/asciidoc
+#. type: Title =
+#: upstream/_guides/validation.adoc:6
+#, no-wrap
+msgid "Quarkus - Validation with Hibernate Validator"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:11
+msgid "This guide covers how to use Hibernate Validator/Bean Validation for:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:13
+msgid "validating the input/output of your REST services;"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:14
+msgid ""
+"validating the parameters and return values of the methods of your business "
+"services."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/validation.adoc:15
+#, no-wrap
+msgid "Prerequisites"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:18
+msgid "To complete this guide, you need:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:20
+msgid "less than 15 minutes"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:21
+msgid "an IDE"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:22
+msgid "JDK 1.8+ installed with `JAVA_HOME` configured appropriately"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:23
+msgid "Apache Maven {maven-version}"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/validation.adoc:24
+#, no-wrap
+msgid "Architecture"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:29
+msgid ""
+"The application built in this guide is quite simple. The user fills a form "
+"on a web page.  The web page sends the form content to the `BookResource` as "
+"JSON (using Ajax). The `BookResource` validates the user input and returns "
+"the _result_ as JSON."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:31
+msgid "image:validation-guide-architecture.png[alt=Architecture]"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/validation.adoc:32
+#, no-wrap
+msgid "Solution"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:36
+msgid ""
+"We recommend that you follow the instructions in the next sections and "
+"create the application step by step.  However, you can go right to the "
+"completed example."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:38
+msgid ""
+"Clone the Git repository: `git clone {quickstarts-clone-url}`, or download "
+"an {quickstarts-archive-url}[archive]."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:40
+msgid ""
+"The solution is located in the `validation-quickstart` "
+"{quickstarts-tree-url}/validation-quickstart[directory]."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/validation.adoc:41
+#, no-wrap
+msgid "Creating the Maven project"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:44
+msgid ""
+"First, we need a new project. Create a new project with the following "
+"command:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/validation.adoc:54
+#, no-wrap
+msgid ""
+"mvn io.quarkus:quarkus-maven-plugin:{quarkus-version}:create \\\n"
+"    -DprojectGroupId=org.acme \\\n"
+"    -DprojectArtifactId=validation-quickstart \\\n"
+"    -DclassName=\"org.acme.validation.BookResource\" \\\n"
+"    -Dpath=\"/books\" \\\n"
+"    -Dextensions=\"resteasy-jackson, hibernate-validator\"\n"
+"cd validation-quickstart\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:57
+msgid ""
+"This command generates a Maven structure importing the RESTEasy/JAX-RS, "
+"Jackson and Hibernate Validator/Bean Validation extensions."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:60
+msgid ""
+"If you already have your Quarkus project configured, you can add the "
+"`hibernate-validator` extension to your project by running the following "
+"command in your project base directory:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/validation.adoc:64
+#, no-wrap
+msgid "./mvnw quarkus:add-extension -Dextensions=\"hibernate-validator\"\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:67
+msgid "This will add the following to your `pom.xml`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/validation.adoc:74
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-hibernate-validator</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/validation.adoc:76
+#, no-wrap
+msgid "Accessing the Validator"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:79
+msgid ""
+"Edit the `org.acme.validation.BookResource` class, and inject the "
+"`Validator` object as follows:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/validation.adoc:84
+#, no-wrap
+msgid ""
+"@Inject\n"
+"Validator validator;\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:87
+msgid "The `Validator` allows checking constraints on a specific object."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/validation.adoc:88
+#, no-wrap
+msgid "Constraints"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:92
+msgid ""
+"In this application, we are going to test an elementary object, but we "
+"support complicated constraints and can validate graphs of objects.  Create "
+"the `org.acme.validation.Book` class with the following content:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/validation.adoc:96 upstream/_guides/validation.adoc:213
+#, no-wrap
+msgid "package org.acme.validation;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/validation.adoc:99
+#, no-wrap
+msgid ""
+"import javax.validation.constraints.NotBlank;\n"
+"import javax.validation.constraints.Min;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/validation.adoc:101
+#, no-wrap
+msgid "public class Book {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/validation.adoc:104
+#, no-wrap
+msgid ""
+"    @NotBlank(message=\"Title may not be blank\")\n"
+"    public String title;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/validation.adoc:107
+#, no-wrap
+msgid ""
+"    @NotBlank(message=\"Author may not be blank\")\n"
+"    public String author;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/validation.adoc:111
+#, no-wrap
+msgid ""
+"    @Min(message=\"Author has been very lazy\", value=1)\n"
+"    public double pages;\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:115
+msgid ""
+"Constraints are added on fields, and when an object is validated, the values "
+"are checked.  The getter and setter methods are also used for JSON mapping."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/validation.adoc:116
+#, no-wrap
+msgid "JSON mapping and validation"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:120
+msgid "Back to the `BookResource` class.  Add the following method:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/validation.adoc:133
+#, no-wrap
+msgid ""
+"@Path(\"/manual-validation\")\n"
+"@POST\n"
+"public Result tryMeManualValidation(Book book) {\n"
+"    Set<ConstraintViolation<Book>> violations = validator.validate(book);\n"
+"    if (violations.isEmpty()) {\n"
+"        return new Result(\"Book is valid! It was validated by manual "
+"validation.\");\n"
+"    } else {\n"
+"        return new Result(violations);\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:136
+msgid "Yes it does not compile, `Result` is missing, but we will add it very soon."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:138
+msgid ""
+"The method parameter (`book`) is created from the JSON payload "
+"automatically."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:143
+msgid ""
+"The method uses the `Validator` to check the payload.  It returns a set of "
+"violations.  If this set is empty, it means the object is valid.  In case of "
+"failures, the messages are concatenated and sent back to the browser."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:145
+msgid "Let's now create the `Result` class as an inner class:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/validation.adoc:149
+#, no-wrap
+msgid "public static class Result {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/validation.adoc:154
+#, no-wrap
+msgid ""
+"    Result(String message) {\n"
+"        this.success = true;\n"
+"        this.message = message;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/validation.adoc:161
+#, no-wrap
+msgid ""
+"    Result(Set<? extends ConstraintViolation<?>> violations) {\n"
+"        this.success = false;\n"
+"        this.message = violations.stream()\n"
+"             .map(cv -> cv.getMessage())\n"
+"             .collect(Collectors.joining(\", \"));\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/validation.adoc:164
+#, no-wrap
+msgid ""
+"    private String message;\n"
+"    private boolean success;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/validation.adoc:168
+#, no-wrap
+msgid ""
+"    public String getMessage() {\n"
+"        return message;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/validation.adoc:172
+#, no-wrap
+msgid ""
+"    public boolean isSuccess() {\n"
+"        return success;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/validation.adoc:174
+#, no-wrap
+msgid "}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:178
+msgid ""
+"The class is very simple and only contains 2 fields and the associated "
+"getters and setters.  Because we indicate that we produce JSON, the mapping "
+"to JSON is made automatically."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/validation.adoc:179
+#, no-wrap
+msgid "REST end point validation"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:185
+msgid ""
+"While using the `Validator` manually might be useful for some advanced "
+"usage, if you simply want to validate the parameters or the return value or "
+"your REST end point, you can annotate it directly, either with constraints "
+"(`@NotNull`, `@Digits`...)  or with `@Valid` (which will cascade the "
+"validation to the bean)."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:187
+msgid "Let's create an end point validating the `Book` provided in the request:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/validation.adoc:197
+#, no-wrap
+msgid ""
+"@Path(\"/end-point-method-validation\")\n"
+"@POST\n"
+"@Produces(MediaType.APPLICATION_JSON)\n"
+"@Consumes(MediaType.APPLICATION_JSON)\n"
+"public Result tryMeEndPointMethodValidation(@Valid Book book) {\n"
+"    return new Result(\"Book is valid! It was validated by end point method "
+"validation.\");\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:200
+msgid ""
+"As you can see, we don't have to manually validate the provided `Book` "
+"anymore as it is automatically validated."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:203
+msgid ""
+"If a validation error is triggered, a violation report is generated and "
+"serialized as JSON as our end point produces a JSON output.  It can be "
+"extracted and manipulated to display a proper error message."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/validation.adoc:204
+#, no-wrap
+msgid "Service method validation"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:207
+msgid ""
+"It might not always be handy to have the validation rules declared at the "
+"end point level as it could duplicate some business validation."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:209
+msgid ""
+"The best option is then to annotate a method of your business service with "
+"your constraints (or in our particular case with `@Valid`):"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/validation.adoc:216
+#, no-wrap
+msgid ""
+"import javax.enterprise.context.ApplicationScoped;\n"
+"import javax.validation.Valid;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/validation.adoc:219
+#, no-wrap
+msgid ""
+"@ApplicationScoped\n"
+"public class BookService {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/validation.adoc:224
+#, no-wrap
+msgid ""
+"    public void validateBook(@Valid Book book) {\n"
+"        // your business logic here\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:227
+msgid ""
+"Calling the service in your rest end point triggers the `Book` validation "
+"automatically:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/validation.adoc:231
+#, no-wrap
+msgid "@Inject BookService bookService;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/validation.adoc:242
+#, no-wrap
+msgid ""
+"@Path(\"/service-method-validation\")\n"
+"@POST\n"
+"public Result tryMeServiceMethodValidation(Book book) {\n"
+"    try {\n"
+"        bookService.validateBook(book);\n"
+"        return new Result(\"Book is valid! It was validated by service "
+"method validation.\");\n"
+"    } catch (ConstraintViolationException e) {\n"
+"        return new Result(e.getConstraintViolations());\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:246
+msgid ""
+"Note that, if you want to push the validation errors to the frontend, you "
+"have to catch the exception and push the information yourselves as they will "
+"not be automatically pushed to the JSON output."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:248
+msgid ""
+"Keep in mind that you usually don't want to expose to the public the "
+"internals of your services"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:249
+msgid "and especially not the validated value contained in the violation object."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/validation.adoc:250
+#, no-wrap
+msgid "A frontend"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:255
+msgid ""
+"Now let's add the simple web page to interact with our `BookResource`.  "
+"Quarkus automatically serves static resources contained in the "
+"`META-INF/resources` directory.  In the "
+"`src/main/resources/META-INF/resources` directory, replace the `index.html` "
+"file with the content from this "
+"{quickstarts-blob-url}/validation-quickstart/src/main/resources/META-INF/resources/index.html[index.html] "
+"file in it."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/validation.adoc:256
+#, no-wrap
+msgid "Run the application"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:259
+msgid "Now, let's see our application in action. Run it with:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/validation.adoc:263
+#, no-wrap
+msgid "./mvnw compile quarkus:dev\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:266
+msgid "Then, open your browser to http://localhost:8080/:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:268
+msgid "Enter the book details (valid or invalid)"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:269
+msgid ""
+"Click on the _Try me..._ buttons to check if your data is valid using one of "
+"the methods we presented above."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:271
+msgid "image:validation-guide-screenshot.png[alt=Application]"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:274
+msgid ""
+"As usual, the application can be packaged using `./mvnw clean package` and "
+"executed using the `-runner.jar` file.  You can also build the native "
+"executable using `./mvnw package -Pnative`."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/validation.adoc:275
+#, no-wrap
+msgid "Going further"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/validation.adoc:277
+#, no-wrap
+msgid "Hibernate Validator extension and CDI"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:280
+msgid "The Hibernate Validator extension is tightly integrated with CDI."
+msgstr ""
+
+#. type: Title ====
+#: upstream/_guides/validation.adoc:281
+#, no-wrap
+msgid "Configuring the ValidatorFactory"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:284
+msgid ""
+"Sometimes, you might need to configure the behavior of the "
+"`ValidatorFactory`, for instance to use a specific `ParameterNameProvider`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:287
+msgid ""
+"While the `ValidatorFactory` is instantiated by Quarkus itself, you can very "
+"easily tweak it by declaring replacement beans that will be injected in the "
+"configuration."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:289
+msgid ""
+"If you create a bean of the following types in your application, it will "
+"automatically be injected into the `ValidatorFactory` configuration:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:291
+msgid "`javax.validation.ClockProvider`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:292
+msgid "`javax.validation.ConstraintValidator`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:293
+msgid "`javax.validation.ConstraintValidatorFactory`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:294
+msgid "`javax.validation.MessageInterpolator`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:295
+msgid "`javax.validation.ParameterNameProvider`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:296
+msgid "`javax.validation.TraversableResolver`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:297
+msgid "`org.hibernate.validator.spi.properties.GetterPropertySelectionStrategy`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:298
+msgid "`org.hibernate.validator.spi.scripting.ScriptEvaluatorFactory`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:300
+msgid "You don't have to wire anything."
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_guides/validation.adoc:304
+msgid "Obviously, for each listed type, you can declare only one bean."
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_guides/validation.adoc:306
+msgid "These beans should be declared as `@ApplicationScoped`."
+msgstr ""
+
+#. type: Title ====
+#: upstream/_guides/validation.adoc:308
+#, no-wrap
+msgid "Constraint validators as beans"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:311
+msgid "You can declare your constraint validators as CDI beans:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/validation.adoc:316
+#, no-wrap
+msgid ""
+"@ApplicationScoped\n"
+"public class MyConstraintValidator implements "
+"ConstraintValidator<MyConstraint, String> {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/validation.adoc:319
+#, no-wrap
+msgid ""
+"    @Inject\n"
+"    MyService service;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/validation.adoc:325
+#, no-wrap
+msgid ""
+"    @Override\n"
+"    public boolean isValid(String value, ConstraintValidatorContext context) "
+"{\n"
+"        if (value == null) {\n"
+"            return true;\n"
+"        }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/validation.adoc:329
+#, no-wrap
+msgid ""
+"        return service.validate(value);\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:333
+msgid ""
+"When initializing a constraint validator of a given type, Quarkus will check "
+"if a bean of this type is available and, if so, it will use it instead of "
+"instantiating one."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:335
+msgid ""
+"Thus, as demonstrated in our example, you can fully use injection in your "
+"constraint validator beans."
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_guides/validation.adoc:339
+msgid ""
+"Except in very specific situations, it is recommended to make the said beans "
+"`@ApplicationScoped`."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/validation.adoc:341
+#, no-wrap
+msgid "Validation and localization"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:344
+msgid ""
+"By default, constraint violation messages will be returned in the build "
+"system locale."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:346
+msgid ""
+"You can configure this behavior by adding the following configuration in "
+"your `application.properties`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/validation.adoc:351
+#, no-wrap
+msgid ""
+"# The default locale to use\n"
+"quarkus.default-locale=fr-FR\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/validation.adoc:355
+msgid ""
+"If you are using RESTEasy, in the context of a JAX-RS endpoint, Hibernate "
+"Validator will automatically resolve the optimal locale to use from the "
+"`Accept-Language` HTTP header, provided the supported locales have been "
+"properly specified in the `application.properties`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/validation.adoc:360
+#, no-wrap
+msgid ""
+"# The list of all the supported locales\n"
+"quarkus.locales=en-US,es-ES,fr-FR\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/validation.adoc:363
+#, no-wrap
+msgid "Hibernate Validator Configuration Reference"
+msgstr ""

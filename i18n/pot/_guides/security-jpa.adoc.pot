@@ -1,0 +1,808 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2020-12-29 14:10+0900\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. This guide is maintained in the main Quarkus repository
+#. and pull requests should be submitted there:
+#. https://github.com/quarkusio/quarkus/tree/master/docs/src/main/asciidoc
+#. type: Title =
+#: upstream/_guides/security-jpa.adoc:6
+#, no-wrap
+msgid "Quarkus - Using Security with JPA"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-jpa.adoc:12
+msgid ""
+"This guide demonstrates how your Quarkus application can use a database to "
+"store your user identities with link:hibernate-orm[Hibernate ORM] or "
+"link:hibernate-orm-panache[Hibernate ORM with Panache]."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/security-jpa.adoc:14
+#, no-wrap
+msgid "Prerequisites"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-jpa.adoc:17
+msgid "To complete this guide, you need:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-jpa.adoc:19
+msgid "less than 15 minutes"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-jpa.adoc:20
+msgid "an IDE"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-jpa.adoc:21
+msgid "JDK 1.8+ installed with `JAVA_HOME` configured appropriately"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-jpa.adoc:22
+msgid "Apache Maven {maven-version}"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/security-jpa.adoc:23
+#, no-wrap
+msgid "Architecture"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-jpa.adoc:26
+msgid ""
+"In this example, we build a very simple microservice which offers three "
+"endpoints:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-jpa.adoc:28
+msgid "`/api/public`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-jpa.adoc:29
+msgid "`/api/users/me`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-jpa.adoc:30
+msgid "`/api/admin`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-jpa.adoc:34
+msgid ""
+"The `/api/public` endpoint can be accessed anonymously.  The `/api/admin` "
+"endpoint is protected with RBAC (Role-Based Access Control) where only users "
+"granted with the `admin` role can access. At this endpoint, we use the "
+"`@RolesAllowed` annotation to declaratively enforce the access constraint.  "
+"The `/api/users/me` endpoint is also protected with RBAC (Role-Based Access "
+"Control) where only users granted with the `user` role can access. As a "
+"response, it returns a JSON document with details about the user."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/security-jpa.adoc:35
+#, no-wrap
+msgid "Solution"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-jpa.adoc:39
+msgid ""
+"We recommend that you follow the instructions in the next sections and "
+"create the application step by step.  However, you can go right to the "
+"completed example."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-jpa.adoc:41
+msgid ""
+"Clone the Git repository: `git clone {quickstarts-clone-url}`, or download "
+"an {quickstarts-archive-url}[archive]."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-jpa.adoc:43
+msgid ""
+"The solution is located in the `security-jpa-quickstart` "
+"{quickstarts-tree-url}/security-jpa-quickstart[directory]."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/security-jpa.adoc:44
+#, no-wrap
+msgid "Creating the Maven Project"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-jpa.adoc:47
+msgid ""
+"First, we need a new project. Create a new project with the following "
+"command:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-jpa.adoc:56
+#, no-wrap
+msgid ""
+"mvn io.quarkus:quarkus-maven-plugin:{quarkus-version}:create \\\n"
+"    -DprojectGroupId=org.acme \\\n"
+"    -DprojectArtifactId=security-jpa-quickstart \\\n"
+"    "
+"-Dextensions=\"security-jpa,jdbc-postgresql,resteasy,hibernate-orm-panache\" "
+"\\\n"
+"    -DnoExamples\n"
+"cd security-jpa-quickstart\n"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_guides/security-jpa.adoc:61
+msgid ""
+"Don't forget to add the database connector library of choice. Here we are "
+"using PostgreSQL as identity store."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-jpa.adoc:65
+msgid ""
+"This command generates a Maven project, importing the `security-jpa` "
+"extension which allows you to map your security source to JPA entities."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-jpa.adoc:68
+msgid ""
+"If you already have your Quarkus project configured, you can add the "
+"`security-jpa` extension to your project by running the following command in "
+"your project base directory:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-jpa.adoc:72
+#, no-wrap
+msgid "./mvnw quarkus:add-extension -Dextensions=\"security-jpa\"\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-jpa.adoc:75
+msgid "This will add the following to your `pom.xml`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-jpa.adoc:82
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-security-jpa</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/security-jpa.adoc:84
+#, no-wrap
+msgid "Writing the application"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-jpa.adoc:87
+msgid ""
+"Let's start by implementing the `/api/public` endpoint. As you can see from "
+"the source code below, it is just a regular JAX-RS resource:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-jpa.adoc:91 upstream/_guides/security-jpa.adoc:116 upstream/_guides/security-jpa.adoc:141 upstream/_guides/security-jpa.adoc:168 upstream/_guides/security-jpa.adoc:235
+#, no-wrap
+msgid "package org.acme.security.jpa;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-jpa.adoc:97
+#, no-wrap
+msgid ""
+"import javax.annotation.security.PermitAll;\n"
+"import javax.ws.rs.GET;\n"
+"import javax.ws.rs.Path;\n"
+"import javax.ws.rs.Produces;\n"
+"import javax.ws.rs.core.MediaType;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-jpa.adoc:100
+#, no-wrap
+msgid ""
+"@Path(\"/api/public\")\n"
+"public class PublicResource {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-jpa.adoc:108
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @PermitAll\n"
+"    @Produces(MediaType.TEXT_PLAIN)\n"
+"    public String publicResource() {\n"
+"        return \"public\";\n"
+"   }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-jpa.adoc:111
+msgid ""
+"The source code for the `/api/admin` endpoint is also very simple. The main "
+"difference here is that we are using a `@RolesAllowed` annotation to make "
+"sure that only users granted with the `admin` role can access the endpoint:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-jpa.adoc:122
+#, no-wrap
+msgid ""
+"import javax.annotation.security.RolesAllowed;\n"
+"import javax.ws.rs.GET;\n"
+"import javax.ws.rs.Path;\n"
+"import javax.ws.rs.Produces;\n"
+"import javax.ws.rs.core.MediaType;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-jpa.adoc:125
+#, no-wrap
+msgid ""
+"@Path(\"/api/admin\")\n"
+"public class AdminResource {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-jpa.adoc:133
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @RolesAllowed(\"admin\")\n"
+"    @Produces(MediaType.TEXT_PLAIN)\n"
+"    public String adminResource() {\n"
+"         return \"admin\";\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-jpa.adoc:137
+msgid ""
+"Finally, let's consider the `/api/users/me` endpoint. As you can see from "
+"the source code below, we are trusting only users with the `user` role.  We "
+"are using `SecurityContext` to get access to the current authenticated "
+"Principal and we return the user's name. This information is loaded from the "
+"database."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-jpa.adoc:148
+#, no-wrap
+msgid ""
+"import javax.annotation.security.RolesAllowed;\n"
+"import javax.inject.Inject;\n"
+"import javax.ws.rs.GET;\n"
+"import javax.ws.rs.Path;\n"
+"import javax.ws.rs.core.Context;\n"
+"import javax.ws.rs.core.SecurityContext;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-jpa.adoc:151
+#, no-wrap
+msgid ""
+"@Path(\"/api/users\")\n"
+"public class UserResource {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-jpa.adoc:159
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @RolesAllowed(\"user\")\n"
+"    @Path(\"/me\")\n"
+"    public String me(@Context SecurityContext securityContext) {\n"
+"        return securityContext.getUserPrincipal().getName();\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/security-jpa.adoc:161
+#, no-wrap
+msgid "Defining our user entity"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-jpa.adoc:164
+msgid ""
+"We can now describe how our security information is stored in our model by "
+"adding a few annotations to our `User` entity:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-jpa.adoc:171
+#, no-wrap
+msgid ""
+"import javax.persistence.Entity;\n"
+"import javax.persistence.Table;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-jpa.adoc:178
+#, no-wrap
+msgid ""
+"import io.quarkus.hibernate.orm.panache.PanacheEntity;\n"
+"import io.quarkus.security.common.BcryptUtil;\n"
+"import io.quarkus.security.jpa.Password;\n"
+"import io.quarkus.security.jpa.Roles;\n"
+"import io.quarkus.security.jpa.UserDefinition;\n"
+"import io.quarkus.security.jpa.Username;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-jpa.adoc:189
+#, no-wrap
+msgid ""
+"@Entity\n"
+"@Table(name = \"test_user\")\n"
+"@UserDefinition <1>\n"
+"public class User extends PanacheEntity {\n"
+"    @Username <2>\n"
+"    public String username;\n"
+"    @Password <3>\n"
+"    public String password;\n"
+"    @Roles <4>\n"
+"    public String role;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-jpa.adoc:204
+#, no-wrap
+msgid ""
+"    /**\n"
+"     * Adds a new user in the database\n"
+"     * @param username the user name\n"
+"     * @param password the unencrypted password (it will be encrypted with "
+"bcrypt)\n"
+"     * @param role the comma-separated roles\n"
+"     */\n"
+"    public static void add(String username, String password, String role) { "
+"<5>\n"
+"        User user = new User();\n"
+"        user.username = username;\n"
+"        user.password = BcryptUtil.bcryptHash(password);\n"
+"        user.role = role;\n"
+"        user.persist();\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-jpa.adoc:208
+msgid ""
+"The `security-jpa` extension is only initialized if there is a single entity "
+"annotated with `@UserDefinition`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-jpa.adoc:210
+msgid ""
+"This annotation must be present on a single entity. It can be a regular "
+"Hibernate ORM entity or a Hibernate ORM with Panache entity as in this "
+"example."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-jpa.adoc:211
+msgid "This indicates the field used for the user name."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-jpa.adoc:212
+msgid ""
+"This indicates the field used for the password. This defaults to using "
+"bcrypt hashed passwords, but you can also configure it for clear text "
+"passwords."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-jpa.adoc:213
+msgid ""
+"This indicates the comma-separated list of roles added to the target "
+"Principal representation attributes."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-jpa.adoc:214
+msgid ""
+"This method allows us to add users while hashing the password with the "
+"proper bcrypt hash."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/security-jpa.adoc:215
+#, no-wrap
+msgid "Configuring the Application"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-jpa.adoc:218
+msgid ""
+"The `security-jpa` extension requires at least one datasource to access to "
+"your database."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-jpa.adoc:225
+#, no-wrap
+msgid ""
+"quarkus.datasource.db-kind=postgresql\n"
+"quarkus.datasource.username=quarkus\n"
+"quarkus.datasource.password=quarkus\n"
+"quarkus.datasource.jdbc.url=jdbc:postgresql:security_jpa\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-jpa.adoc:227
+#, no-wrap
+msgid "quarkus.hibernate-orm.database.generation=drop-and-create\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-jpa.adoc:231
+msgid ""
+"In our context, we are using PostgreSQL as identity store. The database "
+"schema is created by Hibernate ORM automatically on startup (change this in "
+"production) and we initialize the database with users and roles in the "
+"`Startup` class:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-jpa.adoc:239
+#, no-wrap
+msgid ""
+"import javax.enterprise.event.Observes;\n"
+"import javax.inject.Singleton;\n"
+"import javax.transaction.Transactional;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-jpa.adoc:241
+#, no-wrap
+msgid "import io.quarkus.runtime.StartupEvent;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-jpa.adoc:253
+#, no-wrap
+msgid ""
+"@Singleton\n"
+"public class Startup {\n"
+"    @Transactional\n"
+"    public void loadUsers(@Observes StartupEvent evt) {\n"
+"        // reset and load all test users\n"
+"        User.deleteAll();\n"
+"        User.add(\"admin\", \"admin\", \"admin\");\n"
+"        User.add(\"user\", \"user\", \"user\");\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_guides/security-jpa.adoc:259
+msgid ""
+"It is probably useless but we kindly remind you that you must not store "
+"clear-text passwords in production environments ;-).  As a result, the "
+"`security-jpa` defaults to using bcrypt-hashed passwords."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/security-jpa.adoc:261
+#, no-wrap
+msgid "Testing the Application"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_guides/security-jpa.adoc:266
+msgid ""
+"In the following tests we use the basic authentication mechanism, you can "
+"enable it by setting `quarkus.http.auth.basic=true` in the "
+"`application.properties` file."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-jpa.adoc:270
+msgid ""
+"The application is now protected and the identities are provided by our "
+"database.  The very first thing to check is to ensure the anonymous access "
+"works."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-jpa.adoc:277
+#, no-wrap
+msgid ""
+"$ curl -i -X GET http://localhost:8080/api/public\n"
+"HTTP/1.1 200 OK\n"
+"Content-Length: 6\n"
+"Content-Type: text/plain;charset=UTF-8\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-jpa.adoc:279
+#, no-wrap
+msgid "public%\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-jpa.adoc:282
+msgid "Now, let's try a to hit a protected resource anonymously."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-jpa.adoc:289
+#, no-wrap
+msgid ""
+"$ curl -i -X GET http://localhost:8080/api/admin\n"
+"HTTP/1.1 401 Unauthorized\n"
+"Content-Length: 14\n"
+"Content-Type: text/html;charset=UTF-8\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-jpa.adoc:291
+#, no-wrap
+msgid "Not authorized%\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-jpa.adoc:294
+msgid "So far so good, now let's try with an allowed user."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-jpa.adoc:301
+#, no-wrap
+msgid ""
+"$ curl -i -X GET -u admin:admin http://localhost:8080/api/admin\n"
+"HTTP/1.1 200 OK\n"
+"Content-Length: 5\n"
+"Content-Type: text/plain;charset=UTF-8\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-jpa.adoc:303
+#, no-wrap
+msgid "admin%\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-jpa.adoc:306
+msgid ""
+"By providing the `admin:admin` credentials, the extension authenticated the "
+"user and loaded their roles.  The `admin` user is authorized to access to "
+"the protected resources."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-jpa.adoc:308
+msgid ""
+"The user `admin` should be forbidden to access a resource protected with "
+"`@RolesAllowed(\"user\")` because it doesn't have this role."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-jpa.adoc:315
+#, no-wrap
+msgid ""
+"$ curl -i -X GET -u admin:admin http://localhost:8080/api/users/me\n"
+"HTTP/1.1 403 Forbidden\n"
+"Content-Length: 34\n"
+"Content-Type: text/html;charset=UTF-8\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-jpa.adoc:317
+#, no-wrap
+msgid "Forbidden%\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-jpa.adoc:320
+msgid ""
+"Finally, using the user `user` works and the security context contains the "
+"principal details (username for instance)."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-jpa.adoc:327
+#, no-wrap
+msgid ""
+"$ curl -i -X GET -u user:user http://localhost:8080/api/users/me\n"
+"HTTP/1.1 200 OK\n"
+"Content-Length: 4\n"
+"Content-Type: text/plain;charset=UTF-8\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-jpa.adoc:329
+#, no-wrap
+msgid "user%\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/security-jpa.adoc:331
+#, no-wrap
+msgid "Supported model types"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-jpa.adoc:334
+msgid "The `@UserDefinition` class must be a JPA entity (with Panache or not)."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-jpa.adoc:335
+msgid "The `@Username` and `@Password` field types must be of type `String`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-jpa.adoc:336
+msgid ""
+"The `@Roles` field must either be of type `String` or `Collection<String>` "
+"or alternately a `Collection<X>` where `X` is an entity class with one "
+"`String` field annotated with the `@RolesValue` annotation."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-jpa.adoc:337
+msgid ""
+"Each `String` role element type will be parsed as a comma-separated list of "
+"roles."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/security-jpa.adoc:338
+#, no-wrap
+msgid "Storing roles in another entity"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-jpa.adoc:341
+msgid "You can also store roles in another entity:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-jpa.adoc:350
+#, no-wrap
+msgid ""
+"@UserDefinition\n"
+"@Table(name = \"test_user\")\n"
+"@Entity\n"
+"public class User extends PanacheEntity {\n"
+"    @Username\n"
+"    public String name;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-jpa.adoc:353
+#, no-wrap
+msgid ""
+"    @Password\n"
+"    public String pass;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-jpa.adoc:358
+#, no-wrap
+msgid ""
+"    @ManyToMany\n"
+"    @Roles\n"
+"    public List<Role> roles = new ArrayList<>();\n"
+"}\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-jpa.adoc:361
+#, no-wrap
+msgid ""
+"@Entity\n"
+"public class Role extends PanacheEntity {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-jpa.adoc:364
+#, no-wrap
+msgid ""
+"    @ManyToMany(mappedBy = \"roles\")\n"
+"    public List<ExternalRolesUserEntity> users;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-jpa.adoc:368
+#, no-wrap
+msgid ""
+"    @RolesValue\n"
+"    public String role;\n"
+"}\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/security-jpa.adoc:370
+#, no-wrap
+msgid "Password storage and hashing"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-jpa.adoc:374
+msgid ""
+"By default, we consider passwords to be stored hashed with "
+"https://en.wikipedia.org/wiki/Bcrypt[bcrypt] under the "
+"https://en.wikipedia.org/wiki/Crypt_(C)[Modular Crypt Format] (MCF)."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-jpa.adoc:378
+msgid ""
+"When you need to create such a hashed password we provide the convenient "
+"`String BcryptUtil.bcryptHash(String password)` function, which defaults to "
+"creating a random salt and hashing in 10 iterations (though you can specify "
+"the iterations and salt too)."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-jpa.adoc:381
+msgid ""
+"with MCF you don't need dedicated columns to store the hashing algorithm, "
+"the iterations count or the salt because they're all stored in the hashed "
+"value."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-jpa.adoc:384
+msgid ""
+"WARN: you can also store passwords in clear text with "
+"`@Password(PasswordType.CLEAR)` but we strongly recommend against it in "
+"production."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/security-jpa.adoc:385
+#, no-wrap
+msgid "References"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-jpa.adoc:387
+msgid "link:security[Quarkus Security]"
+msgstr ""
