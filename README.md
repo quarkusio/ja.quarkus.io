@@ -12,11 +12,13 @@ Japanese: [https://ja-i18n-quarkusio.surge.sh/](https://ja-i18n-quarkusio.surge.
 * ruby
 * bundler
 
-### Build translated documents
+### Build a translated site
 
 ```bash
 bin/build
 ```
+
+This generates a translated site to `docs`
 
 ## License
 
