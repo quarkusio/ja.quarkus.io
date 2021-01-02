@@ -1,8 +1,8 @@
 # i18n-quarkusio
 
-[https://i18n-quarkusio.github.io/](https://i18n-quarkusio.github.io/)
-
 Translation project for [https://quarkus.io/](https://quarkus.io/)
+
+Japanese: [https://ja-i18n-quarkusio.surge.sh/](https://ja-i18n-quarkusio.surge.sh)
 
 ## Build
 

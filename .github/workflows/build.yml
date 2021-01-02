@@ -9,8 +9,8 @@ on:
     - cron: '* 9 * * *'
 
 jobs:
-  build:
-    name: Build
+  deploy-ja:
+    name: Deploy Japanese translation to surge.sh
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout
@@ -18,7 +18,7 @@ jobs:
       - name: Cache bundle directory
         uses: actions/cache@v1
         with:
-          path: vendor/bundle
+          path: vendor/bundleb
           key: ${{ runner.os }}-gem-${{ hashFiles('**/Gemfile.lock') }}
           restore-keys: |
             ${{ runner.os }}-gem-
@@ -28,19 +28,16 @@ jobs:
           git submodule update
           sudo apt-get install ruby-dev po4a
           sudo gem install bundler
+          sudo npm --global install surge
       - name: Exec po4a-translate
         run: bin/exec-po4a-translate
       - name: Apply override files
         run: bin/exec-override
       - name: Exec jekyll
         run: bin/exec-jekyll
-      - name: Configure git
+      - name: Deploy to surge.sh
         run: |
-          git config --local user.email "mail@ynojima.net"
-          git config --local user.name "ynojima"
-      - name: Commit & Push
-        run: |
-          git checkout -b gh-pages
-          git add --force docs
-          git commit -m "Deploy i18n-quarkusio"
-          git push -f origin gh-pages
+          surge docs ja-i18n-quarkusio.surge.sh
+        env:
+          SURGE_LOGIN: ${{ secrets.SURGE_LOGIN }}
+          SURGE_TOKEN: ${{ secrets.SURGE_TOKEN }}
