@@ -40,7 +40,7 @@ bin/apply-translation
 You can build a translated site from `translated` directory with:
 
 ```
-bin/apply-translation
+bin/exec-jekyll
 ```
 
 ## License
