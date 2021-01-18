@@ -43,6 +43,12 @@ You can build a translated site from `translated` directory with:
 bin/exec-jekyll
 ```
 
+## Contributing
+
+Submitting a pull request, and reporting an issue are all welcome.
+
+For translators, we have a [translation guide(ja)](./translation-guide.ja.md).
+
 ## License
 
 i18n-quarkusio is Open Source Project released under the
