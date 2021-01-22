@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+set -eu
+
+SCRIPT_DIR=$(cd $(dirname $0); pwd)
+I18N_HOME=$(cd $(dirname $SCRIPT_DIR); pwd)
+TARGET_LANGS=ja_JP
+
+cd $I18N_HOME
+mkdir -p i18n/tmx
+TMP=`mktemp -d`
+touch $TMP/accumulation.po
+
+for TARGET_LANG in $TARGET_LANGS; do
+  for ITEM in `\find i18n/po -name "*.po"`; do
+    if [ -f $ITEM ] ; then
+      echo $ITEM
+      echo $TMP/tmp_out.po
+      pofilter --nofuzzy --excludefilter=untranslated -i $ITEM -o $TMP/tmp.po
+      touch $TMP/tmp.po
+      msgcat -i $TMP/tmp.po $TMP/accumulation.po -o $TMP/accumulation.po
+    fi
+  done
+  po2tmx -l $TARGET_LANG -i $TMP/accumulation.po -o i18n/tmx/quarkus.tmx
+done
