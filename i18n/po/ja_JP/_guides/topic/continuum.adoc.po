@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2021-01-11 16:54+0000\n"
+"POT-Creation-Date: 2021-01-27 09:06+0000\n"
 "PO-Revision-Date: 2021-01-10 20:21+0900\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -322,7 +322,7 @@ msgid ""
 "100% uptime, lower latency, push data instead of pull, higher throughput and "
 "elasticity.  However, these features are nearly impossible to achieve by "
 "using _yesterday’s software architecture_ without a huge investment in "
-"resources, infrastructure and tooling.  The world changed and having dozen "
+"resources, infrastructure and tooling.  The world changed and having dozens "
 "of servers, long response time (> 500 ms), downtime due to maintenance or "
 "waterfalls of failures does not meet the expected user experience."
 msgstr ""
@@ -343,7 +343,7 @@ msgstr "Quarkusは、お客様のリアクティブへの道筋をサポート�
 msgid ""
 "@GET\n"
 "@Path(\"/greeting/{name}\")\n"
-"public CompletionStage<String> greetings(@PathParam(\"name\") String name) {\n"
+"public Uni<String> greetings(@PathParam(\"name\") String name) {\n"
 "    return reactiveService.getAsyncGreetings(name);\n"
 "}\n"
 msgstr ""
@@ -358,9 +358,19 @@ msgid ""
 msgstr ""
 "メソッドアクションは、スレッドをブロックすることなく、すべてが行われたときに非同期操作を構成し、結果を完了させることができます。これにより、リソース消費と弾力性が大幅に向上します。"
 
+#. type: Plain text
+#: upstream/_guides/topic/continuum.adoc:154
+#, fuzzy
+msgid ""
+"Thanks to a reactive core, an intuitive event-driven development model and a "
+"\"reactive-first\" strategy for all the Quarkus internals, Quarkus "
+"applications handles high concurrency, and uses resources efficiently."
+msgstr ""
+"リアクティブコア、直感的なイベント駆動型開発モデル、Quarkus内部のすべての「リアクティブファースト」戦略のおかげで、Quarkusアプリケーションは高い同時実行性を処理し、リソースを効率的に使用します。"
+
 #.  TODO Async rest client, but does not seem to be working.
 #. type: Plain text
-#: upstream/_guides/topic/continuum.adoc:157
+#: upstream/_guides/topic/continuum.adoc:159
 #, fuzzy
 msgid ""
 "But, what about streams? Generating a _server-sent event_ response with "
@@ -368,30 +378,24 @@ msgid ""
 msgstr "しかし、ストリームについてはどうでしょうか？Quarkusを使用して _サーバーから送信されたイベント_レスポンスを生成するのは簡単です。"
 
 #. type: delimited block -
-#: upstream/_guides/topic/continuum.adoc:166
+#: upstream/_guides/topic/continuum.adoc:168
 #, no-wrap
 msgid ""
 "@Produces(MediaType.SERVER_SENT_EVENTS)\n"
 "@GET\n"
 "@Path(\"/neo\")\n"
-"public Publisher<String> stream() {\n"
+"public Multi<String> stream() {\n"
 "    return service.getStream();\n"
 "}\n"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_guides/topic/continuum.adoc:170
+#: upstream/_guides/topic/continuum.adoc:171
 #, fuzzy
 msgid ""
-"This method returns a Reactive Streams `Publisher`.  To provide this stream, "
-"you can either use https://github.com/ReactiveX/RxJava[Rx Java 2] or https://"
-"www.smallrye.io/smallrye-reactive-streams-operators/[MicroProfile Reactive "
-"Streams Operators]:"
-msgstr ""
-"このメソッドは、Reactive Streams `Publisher` を返します。このストリームを提供するために、 link:https://"
-"github.com/ReactiveX/RxJava[Rx Java 2]または link:https://www.smallrye.io/"
-"smallrye-reactive-streams-operators/[MicroProfile Reactive Streams "
-"演算子を]使用することができます。"
+"This method returns a `Multi`, but you can use any Reactive Streams "
+"`Publisher` implementation."
+msgstr "このメソッドは `Multi` を返しますが、Reactive Streams `Publisher` の実装を使用することができます。"
 
 #. type: delimited block -
 #: upstream/_guides/topic/continuum.adoc:181
@@ -400,10 +404,9 @@ msgid ""
 "@Produces(MediaType.SERVER_SENT_EVENTS)\n"
 "@GET\n"
 "@Path(\"/neo\")\n"
-"public Publisher<String> stream() {\n"
-"    return ReactiveStreams.of(\"a\", \"b\", \"c\")\n"
-"           .map(String::toUpperCase)\n"
-"           .buildRs();\n"
+"public Multi<String> stream() {\n"
+"    return Multi.createFrom().items(\"a\", \"b\", \"c\")\n"
+"           .onItem().transform(String::toUpperCase);\n"
 "}\n"
 msgstr ""
 
@@ -481,42 +484,48 @@ msgstr ""
 "メッセージを一つずつ処理するだけでは不十分な場合もあります。次のスニペットに示すように、リアクティブプログラミングを使ってメッセージ処理ロジックを表現することもできます。"
 
 #. type: delimited block -
-#: upstream/_guides/topic/continuum.adoc:222
+#: upstream/_guides/topic/continuum.adoc:221
 #, no-wrap
 msgid ""
 "@Incoming(\"health\")\n"
 "@Outgoing(\"output\")\n"
-"public Publisher<KafkaMessage<String, JsonObject>> "
-"filterState(Flowable<MqttMessage> input) {\n"
+"public Multi<Record<String, JsonObject>> filterState(Multi<JsonObject> "
+"input) {\n"
 "    return input\n"
-"      .map(message -> Buffer.buffer(message.getPayload()).toJsonObject())\n"
-"      .map(json -> json.getJsonObject(\"state\"))\n"
-"      .distinctUntilChanged(json -> json.getString(\"state\")) // Filter on "
-"the \"State\" key of the json object.\n"
-"      .doOnNext(json -> LOGGER.info(\"Forwarding new state '{}' to Kafka\", "
-"json.encode()))\n"
-"      .map(json -> KafkaMessage.of(\"state\", \"neo\", json));\n"
+"      .onItem().transform(json -> json.getJsonObject(\"state\"))\n"
+"      .drop().repetitions()\n"
+"      .onItem().invoke(json -> LOGGER.info(\"Forwarding new state '{}' to "
+"Kafka\", json.encode()))\n"
+"      .onItem().transform(json -> Record.of(\"neo\", json));\n"
 "}\n"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_guides/topic/continuum.adoc:225
+#: upstream/_guides/topic/continuum.adoc:224
 #, fuzzy
+msgid "You can also use _imperative_ logic with Reactive Messaging:"
+msgstr "Reactive Messaging で _命令_型ロジックを使用することもできます。"
+
+#. type: delimited block -
+#: upstream/_guides/topic/continuum.adoc:233
+#, no-wrap
 msgid ""
-"Stream-based manipulation can either use Rx Java 2 (as in the previous "
-"snippet) or MicroProfile Reactive Streams Operators."
+"@Incoming(\"orders\")\n"
+"@Outgoing(\"queue\")\n"
+"@Blocking\n"
+"public Beverage process(Order order) {\n"
+"    return prepare(order); // Block the caller thread.\n"
+"}\n"
 msgstr ""
-"ストリームベースの操作には、Rx Java 2 (前のスニペットのように) または MicroProfile Reactive Streams "
-"Operators を使用することができます。"
 
 #. type: Title ==
-#: upstream/_guides/topic/continuum.adoc:226
+#: upstream/_guides/topic/continuum.adoc:235
 #, fuzzy, no-wrap
 msgid "Functions as a Service and Serverless"
 msgstr "サービスとしての機能とサーバーレス"
 
 #. type: Plain text
-#: upstream/_guides/topic/continuum.adoc:230
+#: upstream/_guides/topic/continuum.adoc:239
 #, fuzzy
 msgid ""
 "Thanks to their stellar startup time and low memory usage, you can implement "
@@ -527,21 +536,21 @@ msgstr ""
 "Lambdaを使用している場合、Quarkusの関数は次のようになります。"
 
 #. type: delimited block -
-#: upstream/_guides/topic/continuum.adoc:234
+#: upstream/_guides/topic/continuum.adoc:243
 #, no-wrap
 msgid ""
 "public class HelloLambda implements RequestHandler<HelloRequest, String> {\n"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/topic/continuum.adoc:237
+#: upstream/_guides/topic/continuum.adoc:246
 #, no-wrap
 msgid "    @Inject\n"
 "    HelloGreeter greeter;\n"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/topic/continuum.adoc:243
+#: upstream/_guides/topic/continuum.adoc:252
 #, no-wrap
 msgid ""
 "    @Override\n"
@@ -552,7 +561,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: upstream/_guides/topic/continuum.adoc:245
+#: upstream/_guides/topic/continuum.adoc:254
 #, fuzzy
 msgid ""
 "You can use any of the Quarkus features in your function and benefit from "
@@ -560,3 +569,23 @@ msgid ""
 "this new world without having to change your programming language."
 msgstr ""
 "Quarkusの機能のいずれかを関数で使用することができ、高速な起動と低メモリ使用率の恩恵を受けることができます。Quarkusを使用すると、プログラミング言語を変更することなく、この新しい世界を受け入れることができます。"
+
+#, fuzzy
+#~ msgid ""
+#~ "This method returns a Reactive Streams `Publisher`.  To provide this stream, "
+#~ "you can either use https://github.com/ReactiveX/RxJava[Rx Java 2] or https://"
+#~ "www.smallrye.io/smallrye-reactive-streams-operators/[MicroProfile Reactive "
+#~ "Streams Operators]:"
+#~ msgstr ""
+#~ "このメソッドは、Reactive Streams `Publisher` を返します。このストリームを提供するために、 link:https://"
+#~ "github.com/ReactiveX/RxJava[Rx Java 2]または link:https://www.smallrye.io/"
+#~ "smallrye-reactive-streams-operators/[MicroProfile Reactive Streams "
+#~ "演算子を]使用することができます。"
+
+#, fuzzy
+#~ msgid ""
+#~ "Stream-based manipulation can either use Rx Java 2 (as in the previous "
+#~ "snippet) or MicroProfile Reactive Streams Operators."
+#~ msgstr ""
+#~ "ストリームベースの操作には、Rx Java 2 (前のスニペットのように) または MicroProfile Reactive Streams "
+#~ "Operators を使用することができます。"
