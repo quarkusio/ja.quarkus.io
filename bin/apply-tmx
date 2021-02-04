@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+set -eu
+
+SCRIPT_DIR=$(cd $(dirname $0); pwd)
+I18N_HOME=$(cd $(dirname $SCRIPT_DIR); pwd)
+TARGET_LANGS=ja_JP
+SIMILARITY=99
+
+cd $I18N_HOME
+
+for TARGET_LANG in $TARGET_LANGS; do
+  for ITEM in `\find i18n/po/$TARGET_LANG -name "*.po"`; do
+    if [ -f $ITEM ] ; then
+      echo $ITEM
+        pretranslate --similarity=$SIMILARITY --tm=i18n/tmx/quarkus.tmx --template=$ITEM --input=$ITEM --output=$ITEM
+        msgcat --no-wrap -i $ITEM -o $ITEM
+    fi
+  done
+done
+
+set +e
+git diff --cached --exit-code --quiet
+
+if [[ $? -eq 1 ]] ; then
+  set -e
+  git commit -m "Apply tmx"
+  git push origin master
+fi
+set -e

@@ -19,6 +19,30 @@ on:
       - completed
 
 jobs:
+  build-tmx:
+    name: Build tmx
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Cache bundle directory
+        uses: actions/cache@v1
+        with:
+          path: vendor/bundleb
+          key: ${{ runner.os }}-gem-${{ hashFiles('**/Gemfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-gem-
+      - name: Setup build env
+        run: |
+          git submodule init
+          git submodule update
+          sudo apt-get install ruby-dev po4a
+          sudo gem install bundler
+          sudo npm --global install surge
+          sudo pip3 install translate-toolkit
+      - name: Build tmx
+        run: bin/build-tmx
+
   deploy-ja:
     name: Deploy Japanese translation to surge.sh
     runs-on: ubuntu-20.04
