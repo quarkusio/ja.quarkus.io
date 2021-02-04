@@ -1,0 +1,755 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2021-02-04 16:45+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:1
+#, no-wrap
+msgid "---\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:8
+#, no-wrap
+msgid ""
+"layout: post\n"
+"title: 'How to Use Kafka, Schema Registry and Avro with Quarkus'\n"
+"date: 2020-09-22\n"
+"tags: reactive kafka avro apicurio\n"
+"synopsis: How to Use Kafka, Schema Registry, and Avro with Quarkus\n"
+"author: cescoffier\n"
+"---\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:13
+msgid "In the Kafka world, Apache Avro is by far the most used serialization protocol.  Avro is a data serialization system.  Combined with Kafka, it provides schema-based, robust, and fast binary serialization."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:17
+msgid "In this blog post, we will see how you can use Avro with a schema registry in a Quarkus application.  This blog focuses on the JVM mode.  We will cover the native mode in another post."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:20
+msgid "We will write a simple application receiving HTTP requests, writing the payload into Kafka, and reading them from Kafka.  For simplicity, the same application will write into Kafka and read from it, but obviously, it would be different applications in the real world."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:22
+msgid "image:/assets/images/posts/kafka-avro/architecture.png[]"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:24
+msgid "## How to start"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:27
+msgid "Well, let's start from the beginning.  Go to https://code.quarkus.io to create your project, and select the following extension:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:29
+msgid "RESTEasy JSON-B"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:30
+msgid "SmallRye Reactive Messaging - Kafka Connector"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:31
+msgid "Apache Avro"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:33
+msgid "image:/assets/images/posts/kafka-avro/project.png[]"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:35
+msgid "Download the project and open it in your favorite IDE."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:38
+msgid "We need to add a few more content to the generated `pom.xml`.  Open the `pom.xml` file and add the following `dependency`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:53
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"  <groupId>io.apicurio</groupId>\n"
+"  <artifactId>apicurio-registry-utils-serde</artifactId>\n"
+"  <version>1.2.2.Final</version>\n"
+"  <exclusions>\n"
+"    <exclusion>\n"
+"      <groupId>org.jboss.spec.javax.interceptor</groupId>\n"
+"      <artifactId>jboss-interceptors-api_1.2_spec</artifactId>\n"
+"    </exclusion>\n"
+"  </exclusions>\n"
+"</dependency>\n"
+"----    \n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:58
+#, no-wrap
+msgid ""
+"This dependency provides Avro serializer and deserializer. \n"
+"There are multiple versions of this _serde_. \n"
+"In this blog post, we use the ones provided by Apicurio.\n"
+"You can also use Confluent's one (the artifact is not on Maven Central, so you need to add an extra repository).\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:61
+#, no-wrap
+msgid ""
+"We also need to add the `avro-maven-plugin`.\n"
+"Under `<build><plugins>`, add:\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:63
+#, no-wrap
+msgid "[source, xml]\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:82
+#, no-wrap
+msgid ""
+"<plugin>\n"
+"  <groupId>org.apache.avro</groupId>\n"
+"  <artifactId>avro-maven-plugin</artifactId>\n"
+"  <version>1.9.2</version>\n"
+"  <executions>\n"
+"    <execution>\n"
+"    <phase>generate-sources</phase>\n"
+"      <goals>\n"
+"        <goal>schema</goal>\n"
+"      </goals>\n"
+"      <configuration>\n"
+"        <sourceDirectory>src/main/avro</sourceDirectory>\n"
+"        <outputDirectory>${project.build.directory}/generated-sources</outputDirectory>\n"
+"        <stringType>String</stringType>\n"
+"      </configuration>\n"
+"      </execution>\n"
+"  </executions>\n"
+"</plugin>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:86
+#, no-wrap
+msgid ""
+"This plugin generates the code from Avro schema files located in the `src/main/avro` directory.\n"
+"With this setup, we can finally start to write some code.\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:88
+#, no-wrap
+msgid "## The Avro schema\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:91
+#, no-wrap
+msgid ""
+"First, we need to write the schema representing the object we will read and write in Kafka.\n"
+"Create the `src/main/avro/movie.avsc` file with the following content:\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:93
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:176
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:238
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:359
+#, no-wrap
+msgid "[source, text]\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:109
+#, no-wrap
+msgid ""
+"{\n"
+"  \"namespace\": \"me.escoffier.quarkus\",\n"
+"  \"type\": \"record\",\n"
+"  \"name\": \"Movie\",\n"
+"  \"fields\": [\n"
+"    {\n"
+"      \"name\": \"title\",\n"
+"      \"type\": \"string\"\n"
+"    },\n"
+"    {\n"
+"      \"name\": \"year\",\n"
+"      \"type\": \"int\"\n"
+"    }\n"
+"  ]\n"
+"}\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:113
+#, no-wrap
+msgid ""
+"The `avro-maven-plugin`, configured in the `pom.xml` file, generates the `me.escoffier.quarkus.Movie` class with the `title` and `year` attributes.\n"
+"To generate the class, run:\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:115
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:318
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:327
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:334
+#, no-wrap
+msgid "[source, bash]\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:117
+msgid "mvn generate-sources"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:120
+#, no-wrap
+msgid "## The Movie Resource\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:123
+#, no-wrap
+msgid ""
+"The first class we will write receives HTTP requests and writes the (Movie) payload into Kafka.\n"
+"Create the `src/main/java/me/escoffier/MovieResource.java` with the following content:\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:125
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:206
+#, no-wrap
+msgid "[source, java]\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:127
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:208
+msgid "package me.escoffier;"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:132
+msgid "import me.escoffier.quarkus.Movie; import org.eclipse.microprofile.reactive.messaging.Channel; import org.eclipse.microprofile.reactive.messaging.Emitter; import org.jboss.logging.Logger;"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:140
+msgid "import javax.inject.Inject; import javax.ws.rs.Consumes; import javax.ws.rs.POST; import javax.ws.rs.Path; import javax.ws.rs.Produces; import javax.ws.rs.core.MediaType; import javax.ws.rs.core.Response;"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:145
+msgid "@Path(\"/movies\")  @Consumes(MediaType.APPLICATION_JSON)  @Produces(MediaType.APPLICATION_JSON)  public class MovieResource {"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:148
+#, no-wrap
+msgid ""
+"    private static final Logger LOGGER = \n"
+"        Logger.getLogger(\"MovieResource\");\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:150
+#, no-wrap
+msgid "    @Inject @Channel(\"movies\") Emitter<Movie> emitter;\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:160
+#, no-wrap
+msgid ""
+"    @POST\n"
+"    public Response enqueueMovie(Movie movie) {\n"
+"        LOGGER.infof(\"Sending movie %s to Kafka\", \n"
+"            movie.getTitle()\n"
+"        );\n"
+"        emitter.send(movie);\n"
+"        return Response.accepted().build();\n"
+"    }\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:162
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:228
+msgid "}"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:168
+#, no-wrap
+msgid ""
+"This JAX-RS resource is straightforward. \n"
+"It has a single endpoint method, receiving JSON payload on `/movies`. \n"
+"RESTEasy maps the JSON document into `Movie` objects automatically. \n"
+"As described in the `avsc` file, the expected JSON contains two fields: `title` and `year`.\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:172
+#, no-wrap
+msgid ""
+"When using Quarkus with Reactive Messaging, you don't interact with Kafka directly.\n"
+"You inject an `Emitter`, which sends an object (our movie) to a _channel_.\n"
+"The application configuration maps this channel to a Kafka topic.\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:174
+#, no-wrap
+msgid "Speaking about configuration, open the `src/main/resources/application.properties`, and add:\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:178
+msgid "mp.messaging.connector.smallrye-kafka.apicurio.registry.url=http://localhost:8081/api"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:185
+msgid "mp.messaging.outgoing.movies.connector=smallrye-kafka mp.messaging.outgoing.movies.topic=movies mp.messaging.outgoing.movies.value.serializer=io.apicurio.registry.utils.serde.AvroKafkaSerializer mp.messaging.outgoing.movies.apicurio.registry.artifact-id=io.apicurio.registry.utils.serde.strategy.SimpleTopicIdStrategy mp.messaging.outgoing.movies.apicurio.registry.global-id=io.apicurio.registry.utils.serde.strategy.GetOrCreateIdStrategy mp.messaging.outgoing.movies.apicurio.registry.avro-datum-provider=io.apicurio.registry.utils.serde.avro.ReflectAvroDatumProvider"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:190
+#, no-wrap
+msgid ""
+"This configuration requires a bit of an explanation.\n"
+"First, `mp.messaging.connector.smallrye-kafka.apicurio.registry.url` configure the schema registry URL. \n"
+"If you use the Confluent _serde_, instead of the Apicurio one, the property is named `mp.messaging.connector.smallrye-kafka.schema.registry.url`.\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:197
+#, no-wrap
+msgid ""
+"The `mp.messaging.outgoing.movies` configure the `movies` channel.\n"
+"The `connector` attribute indicates that the SmallRye Kafka connector manages the channel.\n"
+"The `topic` attribute (which we could omit in this case as it matches the channel name) specifies the topic's name.\n"
+"`value.serializer` sets the serializer to use. \n"
+"Here we use `io.apicurio.registry.utils.serde.AvroKafkaSerializer` provided by Apicurio.\n"
+"The `registry.*` properties configure how the registry handles the schema.\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:199
+#, no-wrap
+msgid "## The movie consumer\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:202
+#, no-wrap
+msgid ""
+"The second half of the application is even simpler.\n"
+"It just logs the received movies.\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:204
+#, no-wrap
+msgid "Creates the `src/main/java/me/escoffier/MovieConsumer.java` with the following content:\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:212
+msgid "import me.escoffier.quarkus.Movie; import org.eclipse.microprofile.reactive.messaging.Incoming; import org.jboss.logging.Logger;"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:214
+msgid "import javax.enterprise.context.ApplicationScoped;"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:217
+msgid "@ApplicationScoped public class MovieConsumer {"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:220
+#, no-wrap
+msgid ""
+"    private static final Logger LOGGER = \n"
+"        Logger.getLogger(\"MovieConsumer\");\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:226
+#, no-wrap
+msgid ""
+"    @Incoming(\"movies-from-kafka\")\n"
+"    public void receive(Movie movie) {\n"
+"        LOGGER.infof(\"Received movie: %s (%d)\", \n"
+"            movie.getTitle(), movie.getYear());\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:232
+#, no-wrap
+msgid ""
+"The `@Incoming` annotation indicates that the method is called for each `Movie` object transiting on the `movies-from-kafka` channel.\n"
+"In this case, we simply write a log message.\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:236
+#, no-wrap
+msgid ""
+"We are almost there.\n"
+"We need to configure the reception from Kafka.\n"
+"Re-open the `application.properties` and add:\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:245
+msgid "mp.messaging.incoming.movies-from-kafka.connector=smallrye-kafka mp.messaging.incoming.movies-from-kafka.topic=movies mp.messaging.incoming.movies-from-kafka.value.deserializer=io.apicurio.registry.utils.serde.AvroKafkaDeserializer mp.messaging.incoming.movies-from-kafka.auto.offset.reset=earliest mp.messaging.incoming.movies-from-kafka.enable.auto.commit=false mp.messaging.incoming.movies-from-kafka.apicurio.registry.avro-datum-provider=io.apicurio.registry.utils.serde.avro.ReflectAvroDatumProvider"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:250
+#, no-wrap
+msgid ""
+"These properties map the `movies-from-kafka` to the `movies` Kafka topic.\n"
+"It also configures the deserializer (`io.apicurio.registry.utils.serde.AvroKafkaDeserializer`).\n"
+"We disable Kafka auto-commit (`enable.auto.commit=false`), as Reactive Messaging handles the offset commit for you.\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:252
+#, no-wrap
+msgid "NOTE: Because the sender and receiver are colocalized in the same application, we cannot use the same channel name.\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:254
+#, no-wrap
+msgid "## A bit of infrastructure\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:256
+#, no-wrap
+msgid "Before running the application, we need:\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:259
+#, no-wrap
+msgid ""
+"* A Kafka broker\n"
+"* The Apicurio schema registry\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:261
+#, no-wrap
+msgid "Create the `docker-compose.yaml` file at the root of your project with the following content:\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:263
+#, no-wrap
+msgid "[source, yaml]\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:265
+msgid "version: '2'"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:267
+msgid "services:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:275
+#, no-wrap
+msgid ""
+"  zookeeper:\n"
+"    image: strimzi/kafka:0.11.3-kafka-2.1.0\n"
+"    command: [\n"
+"      \"sh\", \"-c\",\n"
+"      \"bin/zookeeper-server-start.sh config/zookeeper.properties\"\n"
+"    ]\n"
+"    ports:\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:276
+#, no-wrap
+msgid "\"2181:2181\"\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:277
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:290
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:302
+#, no-wrap
+msgid "environment:\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:278
+#, no-wrap
+msgid "LOG_DIR: /tmp/logs\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:280
+msgid "kafka:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:282
+#, no-wrap
+msgid ""
+"image: strimzi/kafka:0.11.3-kafka-2.1.0\n"
+"command: [\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:284
+#, no-wrap
+msgid ""
+"\"sh\", \"-c\",\n"
+"\"bin/kafka-server-start.sh config/server.properties --override listeners=$${KAFKA_LISTENERS} --override advertised.listeners=$${KAFKA_ADVERTISED_LISTENERS} --override zookeeper.connect=$${KAFKA_ZOOKEEPER_CONNECT}\"\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:286
+#, no-wrap
+msgid ""
+"]\n"
+"depends_on:\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:287
+#, no-wrap
+msgid "zookeeper\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:288
+#, no-wrap
+msgid "ports:\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:289
+#, no-wrap
+msgid "\"9092:9092\"\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:294
+#, no-wrap
+msgid ""
+"LOG_DIR: \"/tmp/logs\"\n"
+"KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092\n"
+"KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092\n"
+"KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:296
+msgid "schema-registry:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:298
+#, no-wrap
+msgid ""
+"image: apicurio/apicurio-registry-mem:1.2.2.Final\n"
+"ports:\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:299
+#, no-wrap
+msgid "8081:8080\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:300
+#, no-wrap
+msgid "depends_on:\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:301
+#, no-wrap
+msgid "kafka\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:306
+#, no-wrap
+msgid ""
+"QUARKUS_PROFILE: prod\n"
+"KAFKA_BOOTSTRAP_SERVERS: localhost:9092\n"
+"APPLICATION_ID: registry_id\n"
+"APPLICATION_SERVER: localhost:9000\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:311
+#, no-wrap
+msgid ""
+"This `docker-compose` file starts everything we need. \n"
+"You may wonder about some of the properties of the Apicurio registry. \n"
+"Actually, the Apicurio registry is also a Quarkus application. \n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:313
+#, no-wrap
+msgid "## Time to run\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:316
+#, no-wrap
+msgid ""
+"Alright, let's get this rolling.\n"
+"First, start the infrastructure with:\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:320
+msgid "docker-compose up -d"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:323
+#, no-wrap
+msgid "NOTE: Stop the infrastructure with `docker-compose down; docker-compose rm`\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:325
+#, no-wrap
+msgid "Then, start the application:\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:329
+msgid "mvn compile quarkus:dev"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:332
+#, no-wrap
+msgid "Once start, open another terminal and _post_ movies:\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:339
+#, no-wrap
+msgid ""
+"curl --header \"Content-Type: application/json\" \\\n"
+"  --request POST \\\n"
+"  --data '{\"title\":\"The Shawshank Redemption\",\"year\":1994}' \\\n"
+"  http://localhost:8080/movies\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:344
+#, no-wrap
+msgid ""
+"curl --header \"Content-Type: application/json\" \\\n"
+"  --request POST \\\n"
+"  --data '{\"title\":\"The Godfather\",\"year\":1972}' \\\n"
+"  http://localhost:8080/movies\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:349
+#, no-wrap
+msgid ""
+"curl --header \"Content-Type: application/json\" \\\n"
+"  --request POST \\\n"
+"  --data '{\"title\":\"The Dark Knight\",\"year\":2008}' \\\n"
+"  http://localhost:8080/movies  \n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:354
+#, no-wrap
+msgid ""
+"curl --header \"Content-Type: application/json\" \\\n"
+"  --request POST \\\n"
+"  --data '{\"title\":\"12 Angry Men\",\"year\":1957}' \\\n"
+"  http://localhost:8080/movies    \n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:357
+#, no-wrap
+msgid "In the application log, you should see:\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:368
+msgid "2020-09-11 16:42:22,597 INFO [MovieResource] (executor-thread-1) Sending movie The Shawshank Redemption to Kafka 2020-09-11 16:42:22,619 INFO [MovieResource] (executor-thread-1) Sending movie The Godfather to Kafka 2020-09-11 16:42:22,624 INFO [MovieConsumer] (vert.x-eventloop-thread-0) Received movie: The Shawshank Redemption (1994)  2020-09-11 16:42:22,641 INFO [MovieConsumer] (vert.x-eventloop-thread-0) Received movie: The Godfather (1972)  2020-09-11 16:42:22,644 INFO [MovieResource] (executor-thread-1) Sending movie The Dark Knight to Kafka 2020-09-11 16:42:22,663 INFO [MovieConsumer] (vert.x-eventloop-thread-0) Received movie: The Dark Knight (2008)  2020-09-11 16:42:22,669 INFO [MovieResource] (executor-thread-1) Sending movie 12 Angry Men to Kafka 2020-09-11 16:42:22,688 INFO [MovieConsumer] (vert.x-eventloop-thread-0) Received movie: 12 Angry Men (1957)"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:371
+#, no-wrap
+msgid "## Conclusion\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:375
+#, no-wrap
+msgid ""
+"Done!\n"
+"In just a few code lines and a bit of configuration, we can integrate Kafka, Avro, and a schema registry in a Quarkus application!\n"
+"You can found the code of this demo on https://github.com/cescoffier/quarkus-kafka-and-avro. The readme file contains the instructions to run it. \n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-09-22-kafka-avro.adoc:377
+#, no-wrap
+msgid "Quarkus 1.9 will be a lots of new goodies around messaging and reactive in general. Stay tuned!\n"
+msgstr ""

@@ -1,0 +1,486 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2021-02-04 16:46+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. This guide is maintained in the main Quarkus repository
+#. and pull requests should be submitted there:
+#. https://github.com/quarkusio/quarkus/tree/master/docs/src/main/asciidoc
+#. type: Title =
+#: upstream/_guides/websockets.adoc:6
+#, no-wrap
+msgid "Quarkus - Using WebSockets"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/websockets.adoc:12
+msgid "This guide explains how your Quarkus application can utilize web sockets to create interactive web applications.  Because it's the _canonical_ web socket application, we are going to create a simple chat application."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/websockets.adoc:13
+#, no-wrap
+msgid "Prerequisites"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/websockets.adoc:16
+msgid "To complete this guide, you need:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/websockets.adoc:18
+msgid "less than 15 minutes"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/websockets.adoc:19
+msgid "an IDE"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/websockets.adoc:20
+msgid "JDK 1.8+ installed with `JAVA_HOME` configured appropriately"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/websockets.adoc:21
+msgid "Apache Maven {maven-version}"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/websockets.adoc:24
+#, no-wrap
+msgid "Architecture"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/websockets.adoc:27
+msgid "In this guide, we create a straightforward chat application using web sockets to receive and send messages to the other connected users."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/websockets.adoc:29
+msgid "image:websocket-guide-architecture.png[alt=Architecture]"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/websockets.adoc:30
+#, no-wrap
+msgid "Solution"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/websockets.adoc:34
+msgid "We recommend that you follow the instructions in the next sections and create the application step by step.  However, you can skip right to the completed example."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/websockets.adoc:36
+msgid "Clone the Git repository: `git clone {quickstarts-clone-url}`, or download an {quickstarts-archive-url}[archive]."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/websockets.adoc:38
+msgid "The solution is located in the `websockets-quickstart` {quickstarts-tree-url}/websockets-quickstart[directory]."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/websockets.adoc:39
+#, no-wrap
+msgid "Creating the Maven project"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/websockets.adoc:42
+msgid "First, we need a new project. Create a new project with the following command:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/websockets.adoc:51
+#, no-wrap
+msgid ""
+"mvn io.quarkus:quarkus-maven-plugin:{quarkus-version}:create \\\n"
+"    -DprojectGroupId=org.acme \\\n"
+"    -DprojectArtifactId=websockets-quickstart \\\n"
+"    -Dextensions=\"undertow-websockets\" \\\n"
+"    -DnoExamples\n"
+"cd websockets-quickstart\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/websockets.adoc:54
+msgid "This command generates the Maven project (without any classes) and import the `undertow-websockets` extension."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/websockets.adoc:57
+msgid "If you already have your Quarkus project configured, you can add the `undertow-websockets` extension to your project by running the following command in your project base directory:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/websockets.adoc:61
+#, no-wrap
+msgid "./mvnw quarkus:add-extension -Dextensions=\"undertow-websockets\"\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/websockets.adoc:64
+msgid "This will add the following to your `pom.xml`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/websockets.adoc:71
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-undertow-websockets</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/websockets.adoc:73
+#, no-wrap
+msgid "Handling web sockets"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/websockets.adoc:78
+msgid "Our application contains a single class that handles the web sockets.  Create the `org.acme.websockets.ChatSocket` class in the `src/main/java` directory.  Copy the following content into the created file:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/websockets.adoc:82 upstream/_guides/websockets.adoc:180
+#, no-wrap
+msgid "package org.acme.websockets;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/websockets.adoc:85
+#, no-wrap
+msgid ""
+"import java.util.Map;\n"
+"import java.util.concurrent.ConcurrentHashMap;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/websockets.adoc:94
+#, no-wrap
+msgid ""
+"import javax.enterprise.context.ApplicationScoped;\n"
+"import javax.websocket.OnClose;\n"
+"import javax.websocket.OnError;\n"
+"import javax.websocket.OnMessage;\n"
+"import javax.websocket.OnOpen;\n"
+"import javax.websocket.server.PathParam;\n"
+"import javax.websocket.server.ServerEndpoint;\n"
+"import javax.websocket.Session;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/websockets.adoc:98
+#, no-wrap
+msgid ""
+"@ServerEndpoint(\"/chat/{username}\")         // <1>\n"
+"@ApplicationScoped\n"
+"public class ChatSocket {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/websockets.adoc:100
+#, no-wrap
+msgid "    Map<String, Session> sessions = new ConcurrentHashMap<>(); // <2>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/websockets.adoc:106
+#, no-wrap
+msgid ""
+"    @OnOpen\n"
+"    public void onOpen(Session session, @PathParam(\"username\") String username) {\n"
+"        sessions.put(username, session);\n"
+"        broadcast(\"User \" + username + \" joined\");\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/websockets.adoc:112
+#, no-wrap
+msgid ""
+"    @OnClose\n"
+"    public void onClose(Session session, @PathParam(\"username\") String username) {\n"
+"        sessions.remove(username);\n"
+"        broadcast(\"User \" + username + \" left\");\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/websockets.adoc:118
+#, no-wrap
+msgid ""
+"    @OnError\n"
+"    public void onError(Session session, @PathParam(\"username\") String username, Throwable throwable) {\n"
+"        sessions.remove(username);\n"
+"        broadcast(\"User \" + username + \" left on error: \" + throwable);\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/websockets.adoc:123
+#, no-wrap
+msgid ""
+"    @OnMessage\n"
+"    public void onMessage(String message, @PathParam(\"username\") String username) {\n"
+"        broadcast(\">> \" + username + \": \" + message);\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/websockets.adoc:133
+#, no-wrap
+msgid ""
+"    private void broadcast(String message) {\n"
+"        sessions.values().forEach(s -> {\n"
+"            s.getAsyncRemote().sendObject(message, result ->  {\n"
+"                if (result.getException() != null) {\n"
+"                    System.out.println(\"Unable to send message: \" + result.getException());\n"
+"                }\n"
+"            });\n"
+"        });\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/websockets.adoc:135 upstream/_guides/websockets.adoc:234
+#, no-wrap
+msgid "}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/websockets.adoc:137
+msgid "Configures the web socket URL"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/websockets.adoc:138
+msgid "Stores the currently opened web sockets"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/websockets.adoc:139
+#, no-wrap
+msgid "A slick web frontend"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/websockets.adoc:144
+msgid "All chat applications need a _nice_ UI, well, this one may not be that nice, but does the work.  Quarkus automatically serves static resources contained in the `META-INF/resources` directory.  Create the `src/main/resources/META-INF/resources` directory and copy this {quickstarts-blob-url}/websockets-quickstart/src/main/resources/META-INF/resources/index.html[index.html] file in it."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/websockets.adoc:145
+#, no-wrap
+msgid "Run the application"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/websockets.adoc:148
+msgid "Now, let's see our application in action. Run it with:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/websockets.adoc:152
+#, no-wrap
+msgid "./mvnw compile quarkus:dev\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/websockets.adoc:155
+msgid "Then open your 2 browser windows to http://localhost:8080/:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/websockets.adoc:157
+msgid "Enter a name in the top text area (use 2 different names)."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/websockets.adoc:158
+msgid "Click on connect"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/websockets.adoc:159
+msgid "Send and receive messages"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/websockets.adoc:161
+msgid "image:websocket-guide-screenshot.png[alt=Application]"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/websockets.adoc:164
+msgid "As usual, the application can be packaged using `./mvnw clean package` and executed using the `-runner.jar` file.  You can also build the native executable using `./mvnw package -Pnative`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/websockets.adoc:166
+msgid "You can also test your web socket applications using the approach detailed {quickstarts-blob-url}/websockets-quickstart/src/test/java/org/acme/websockets/ChatTest.java[here]."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/websockets.adoc:167
+#, no-wrap
+msgid "WebSocket Clients"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/websockets.adoc:170
+msgid "Quarkus also contains a WebSocket client. You can call `ContainerProvider.getWebSocketContainer().connectToServer` to create a websocket connection."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/websockets.adoc:174
+msgid "When you connect to the server you can either pass in the Class of the annotated client endpoint you want to use, or an instance of `javax.websocket.Endpoint`. If you are using the annotated endpoint then you can use the exact same annotations as you can on the server, except it must be annotated with `@ClientEndpoint` instead of `@ServerEndpoint`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/websockets.adoc:176
+msgid "The example below shows the client being used to test the chat endpoint above."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/websockets.adoc:184
+#, no-wrap
+msgid ""
+"import java.net.URI;\n"
+"import java.util.concurrent.LinkedBlockingDeque;\n"
+"import java.util.concurrent.TimeUnit;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/websockets.adoc:190
+#, no-wrap
+msgid ""
+"import javax.websocket.ClientEndpoint;\n"
+"import javax.websocket.ContainerProvider;\n"
+"import javax.websocket.OnMessage;\n"
+"import javax.websocket.OnOpen;\n"
+"import javax.websocket.Session;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/websockets.adoc:193
+#, no-wrap
+msgid ""
+"import org.junit.jupiter.api.Assertions;\n"
+"import org.junit.jupiter.api.Test;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/websockets.adoc:196
+#, no-wrap
+msgid ""
+"import io.quarkus.test.common.http.TestHTTPResource;\n"
+"import io.quarkus.test.junit.QuarkusTest;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/websockets.adoc:199
+#, no-wrap
+msgid ""
+"@QuarkusTest\n"
+"public class ChatTest {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/websockets.adoc:201
+#, no-wrap
+msgid "    private static final LinkedBlockingDeque<String> MESSAGES = new LinkedBlockingDeque<>();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/websockets.adoc:204
+#, no-wrap
+msgid ""
+"    @TestHTTPResource(\"/chat/stu\")\n"
+"    URI uri;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/websockets.adoc:214
+#, no-wrap
+msgid ""
+"    @Test\n"
+"    public void testWebsocketChat() throws Exception {\n"
+"        try (Session session = ContainerProvider.getWebSocketContainer().connectToServer(Client.class, uri)) {\n"
+"            Assertions.assertEquals(\"CONNECT\", MESSAGES.poll(10, TimeUnit.SECONDS));\n"
+"            Assertions.assertEquals(\"User stu joined\", MESSAGES.poll(10, TimeUnit.SECONDS));\n"
+"            session.getAsyncRemote().sendText(\"hello world\");\n"
+"            Assertions.assertEquals(\">> stu: hello world\", MESSAGES.poll(10, TimeUnit.SECONDS));\n"
+"        }\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/websockets.adoc:217
+#, no-wrap
+msgid ""
+"    @ClientEndpoint\n"
+"    public static class Client {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/websockets.adoc:225
+#, no-wrap
+msgid ""
+"        @OnOpen\n"
+"        public void open(Session session) {\n"
+"            MESSAGES.add(\"CONNECT\");\n"
+"            // Send a message to indicate that we are ready,\n"
+"            // as the message handler may not be registered immediately after this callback.\n"
+"            session.getAsyncRemote().sendText(\"_ready_\");\n"
+"        }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/websockets.adoc:230
+#, no-wrap
+msgid ""
+"        @OnMessage\n"
+"        void message(String msg) {\n"
+"            MESSAGES.add(msg);\n"
+"        }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/websockets.adoc:232
+#, no-wrap
+msgid "    }\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/websockets.adoc:237
+#, no-wrap
+msgid "More WebSocket Information"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/websockets.adoc:240
+msgid "The Quarkus WebSocket implementation is an implementation of link:https://eclipse-ee4j.github.io/websocket-api/[Jakarta Websockets]."
+msgstr ""
