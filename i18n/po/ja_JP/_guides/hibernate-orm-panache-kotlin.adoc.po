@@ -1,0 +1,270 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr "Project-Id-Version: PACKAGE VERSION\nPOT-Creation-Date: 2021-02-04 15:41+0000\nPO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\nLast-Translator: FULL NAME <EMAIL@ADDRESS>\nLanguage-Team: LANGUAGE <LL@li.org>\nLanguage: \nMIME-Version: 1.0\nContent-Type: text/plain; charset=UTF-8\nContent-Transfer-Encoding: 8bit\n"
+
+#. This guide is maintained in the main Quarkus repository
+#. and pull requests should be submitted there:
+#. https://github.com/quarkusio/quarkus/tree/master/docs/src/main/asciidoc
+#. type: Title =
+#: upstream/_guides/hibernate-orm-panache-kotlin.adoc:6
+#, no-wrap
+msgid "Quarkus - Simplified Hibernate ORM with Panache and Kotlin"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/hibernate-orm-panache-kotlin.adoc:15
+msgid "Hibernate ORM is the de facto standard JPA implementation and is well-known in the Java ecosystem.  Panache offers a new layer atop this familiar framework.  This guide will not dive in to the specifics of either as those are already covered in the link:hibernate-orm-panache[Panache guide].  In this guide, we'll cover the Kotlin specific changes needed to use Panache in your Kotlin-based Quarkus applications."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/hibernate-orm-panache-kotlin.adoc:16
+#, no-wrap
+msgid "First: an example"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/hibernate-orm-panache-kotlin.adoc:21
+msgid "As we saw in the Panache guide, Panache allows us to extend the functionality in our entities and repositories (also known as DAOs) with some automatically provided functionality.  When using Kotlin, the approach is very similar to what we see in the Java version with a slight change or two.  To Panache-enable your entity, you would define it something like:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/hibernate-orm-panache-kotlin.adoc:30
+#, no-wrap
+msgid "@Entity\nclass Person: PanacheEntity {\n    lateinit var name: String\n    lateinit var birth: LocalDate\n    lateinit var status: Status\n}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/hibernate-orm-panache-kotlin.adoc:35
+msgid "As you can see our entities remain simple.  There is, however, a slight difference from the Java version.  The Kotlin language doesn't support the notion of static methods in quite the same way as Java does.  Instead, we must use a https://kotlinlang.org/docs/tutorials/kotlin-for-py/objects-and-companion-objects.html#companion-objects[companion object]:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/hibernate-orm-panache-kotlin.adoc:45
+#, no-wrap
+msgid "@Entity\nclass Person : PanacheEntity() {\n    companion object: PanacheCompanion<Person> {  // <1>\n        fun findByName(name: String) = find(\"name\", name).firstResult()\n        fun findAlive() = list(\"status\", Status.Alive)\n        fun deleteStefs() = delete(\"name\", \"Stef\")\n    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/hibernate-orm-panache-kotlin.adoc:50
+#, no-wrap
+msgid "    lateinit var name: String  // <2>\n    lateinit var birth: LocalDate\n    lateinit var status: Status\n}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/hibernate-orm-panache-kotlin.adoc:53
+msgid "The companion object holds all the methods not related to a specific instance allowing for general management and querying bound to a specific type."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/hibernate-orm-panache-kotlin.adoc:56
+msgid "Here there are options, but we've chosen the `lateinit` approach.  This allows us to declare these fields as non-null knowing they will be properly assigned either by the constructor (not shown) or by hibernate loading data from the database."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/hibernate-orm-panache-kotlin.adoc:60
+msgid "These types differ from the Java types mentioned in those tutorials.  For Kotlin support, all the Panache types will be found in the `io.quarkus.hibernate.orm.panache.kotlin` package.  This subpackage allows for the distinction between the Java and Kotlin variants and allows for both to be used unambiguously in a single project."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/hibernate-orm-panache-kotlin.adoc:64
+msgid "In the Kotlin version, we've simply moved the bulk of the link:https://www.martinfowler.com/eaaCatalog/activeRecord.html[`active record pattern`] functionality to the `companion object`.  Apart from this slight change, we can then work with our types in ways that map easily from the Java side of world."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/hibernate-orm-panache-kotlin.adoc:66
+#, no-wrap
+msgid "Using the repository pattern"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/hibernate-orm-panache-kotlin.adoc:69
+#, no-wrap
+msgid "Defining your entity"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/hibernate-orm-panache-kotlin.adoc:72
+msgid "When using the repository pattern, you can define your entities as regular JPA entities."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/hibernate-orm-panache-kotlin.adoc:83
+#, no-wrap
+msgid "@Entity\nclass Person {\n    @Id\n    @GeneratedValue\n    var id: Long? = null;\n    lateinit var name: String\n    lateinit var birth: LocalDate\n    lateinit var status: Status\n}\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/hibernate-orm-panache-kotlin.adoc:85
+#, no-wrap
+msgid "Defining your repository"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/hibernate-orm-panache-kotlin.adoc:89
+msgid "When using Repositories, you get the exact same convenient methods as with the active record pattern, injected in your Repository, by making them implement `PanacheRepository`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/hibernate-orm-panache-kotlin.adoc:98
+#, no-wrap
+msgid "@ApplicationScoped\nclass PersonRepository: PanacheRepository<Person> {\n     fun findByName(name: String) = find(\"name\", name).firstResult()\n     fun findAlive() = list(\"status\", Status.Alive)\n     fun deleteStefs() = delete(\"name\", \"Stef\")\n}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/hibernate-orm-panache-kotlin.adoc:102
+msgid "All the operations that are defined on `PanacheEntityBase` are available on your repository, so using it is exactly the same as using the active record pattern, except you need to inject it:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/hibernate-orm-panache-kotlin.adoc:107
+#, no-wrap
+msgid "@Inject\nlateinit var personRepository: PersonRepository\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/hibernate-orm-panache-kotlin.adoc:110
+#, no-wrap
+msgid "@GET\nfun count() = personRepository.count()\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/hibernate-orm-panache-kotlin.adoc:112
+#, no-wrap
+msgid "Most useful operations"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/hibernate-orm-panache-kotlin.adoc:115
+msgid "Once you have written your repository, here are the most common operations you will be able to perform:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/hibernate-orm-panache-kotlin.adoc:123
+#, no-wrap
+msgid "// creating a person\nvar person = Person()\nperson.name = \"Stef\"\nperson.birth = LocalDate.of(1910, Month.FEBRUARY, 1)\nperson.status = Status.Alive\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/hibernate-orm-panache-kotlin.adoc:126
+#, no-wrap
+msgid "// persist it\npersonRepository.persist(person)\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/hibernate-orm-panache-kotlin.adoc:129
+#, no-wrap
+msgid "// note that once persisted, you don't need to explicitly save your entity: all\n// modifications are automatically persisted on transaction commit.\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/hibernate-orm-panache-kotlin.adoc:135
+#, no-wrap
+msgid "// check if it's persistent\nif(personRepository.isPersistent(person)){\n    // delete it\n    personRepository.delete(person)\n}\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/hibernate-orm-panache-kotlin.adoc:138
+#, no-wrap
+msgid "// getting a list of all Person entities\nval allPersons = personRepository.listAll()\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/hibernate-orm-panache-kotlin.adoc:141
+#, no-wrap
+msgid "// finding a specific person by ID\nperson = personRepository.findById(personId) ?: throw Exception(\"No person with that ID\")\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/hibernate-orm-panache-kotlin.adoc:144
+#, no-wrap
+msgid "// finding all living persons\nval livingPersons = personRepository.list(\"status\", Status.Alive)\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/hibernate-orm-panache-kotlin.adoc:147
+#, no-wrap
+msgid "// counting all persons\nval countAll = personRepository.count()\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/hibernate-orm-panache-kotlin.adoc:150
+#, no-wrap
+msgid "// counting all living persons\nval countAlive = personRepository.count(\"status\", Status.Alive)\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/hibernate-orm-panache-kotlin.adoc:153
+#, no-wrap
+msgid "// delete all living persons\npersonRepository.delete(\"status\", Status.Alive)\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/hibernate-orm-panache-kotlin.adoc:156
+#, no-wrap
+msgid "// delete all persons\npersonRepository.deleteAll()\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/hibernate-orm-panache-kotlin.adoc:159
+#, no-wrap
+msgid "// delete by id\nval deleted = personRepository.deleteById(personId)\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/hibernate-orm-panache-kotlin.adoc:162
+#, no-wrap
+msgid "// set the name of all living persons to 'Mortal'\npersonRepository.update(\"name = 'Mortal' where status = ?1\", Status.Alive)\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/hibernate-orm-panache-kotlin.adoc:166
+msgid "All `list` methods have equivalent `stream` versions."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/hibernate-orm-panache-kotlin.adoc:173
+#, no-wrap
+msgid "val persons = personRepository.streamAll();\nval namesButEmmanuels = persons\n    .map { it.name.toLowerCase() }\n    .filter { it != \"emmanuel\" }\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/hibernate-orm-panache-kotlin.adoc:176
+msgid "The `stream` methods require a transaction to work."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/hibernate-orm-panache-kotlin.adoc:180
+msgid "The rest of the documentation show usages based on the active record pattern only, but keep in mind that they can be performed with the repository pattern as well.  The repository pattern examples have been omitted for brevity."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/hibernate-orm-panache-kotlin.adoc:185
+msgid "For more examples, please consult the link:hibernate-orm-panache[Java version] for complete details.  Both APIs are the same and work identically except for some Kotlin-specific tweaks to make things feel more natural to Kotlin developers.  These tweaks include things like better use of nullability and the lack of `Optional` on API methods."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/hibernate-orm-panache-kotlin.adoc:186
+#, no-wrap
+msgid "Setting up and configuring Hibernate ORM with Panache"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/hibernate-orm-panache-kotlin.adoc:191
+msgid "To get started using Panache with Kotlin, you can, generally, follow the steps laid out in the Java tutorial.  The biggest change to configuring your project is the Quarkus artifact to include.  You can, of course, keep the Java version if you need but if all you need are the Kotlin APIs then include the following dependency instead:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/hibernate-orm-panache-kotlin.adoc:201
+#, no-wrap
+msgid "<dependencies>\n    <!-- Hibernate ORM specific dependencies -->\n    <dependency>\n        <groupId>io.quarkus</groupId>\n        <artifactId>quarkus-hibernate-orm-panache-kotlin</artifactId>  // <1>\n    </dependency>\n</dependencies>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/hibernate-orm-panache-kotlin.adoc:203
+msgid "Note the addition of `-kotlin` on the end.  Generally you'll only need this version but if your project will be using both Java and Kotlin code, you can safely include both artifacts."
+msgstr ""

@@ -1,0 +1,392 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr "Project-Id-Version: PACKAGE VERSION\nPOT-Creation-Date: 2021-02-04 15:40+0000\nPO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\nLast-Translator: FULL NAME <EMAIL@ADDRESS>\nLanguage-Team: LANGUAGE <LL@li.org>\nLanguage: \nMIME-Version: 1.0\nContent-Type: text/plain; charset=UTF-8\nContent-Transfer-Encoding: 8bit\n"
+
+#. type: Plain text
+#: upstream/_posts/2021-01-12-magic-control.adoc:1
+#, no-wrap
+msgid "---\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-01-12-magic-control.adoc:8
+#, no-wrap
+msgid "layout: post\ntitle: Bored with magic tricks?\ndate: 2021-01-12\ntags: vert.x\nsynopsis: How to control the amount of magic from Quarkus\nauthor: cescoffier\n---\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-01-12-magic-control.adoc:13
+msgid "Just before my PTO, someone told me: '_I don't like magic._' In this context, _magic_ refers to the amount of hidden _stuff_ done by Quarkus under the hood for the sake of simplicity.  It includes dependency injection, annotations, and so on."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-01-12-magic-control.adoc:17
+msgid "It's not the first time that I get that kind of comment, and coming from the Vert.x project, it makes sense.  Vert.x has (almost) no magic, and for a good reason: too much magic can be terrible and make production tuning utterly expensive.  Sometimes you want to have more control and avoid unexpected behaviors: execute the code you wrote, and nothing else."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-01-12-magic-control.adoc:22
+msgid "But magic is not inherently bad.  Magic is power that can be used for good or for bad.  After all, your application runs on a silicon with microcode magic powering an Operating System with abstraction magic powering the Java Virtual Machine with Just In Time magic.  There is magic, it's just magic you have enough knowledge (or trust) of vs magic you don't."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-01-12-magic-control.adoc:27
+msgid "You may think that Quarkus has a lot of magic tricks.  It is true in some sense but it is easily understood and comes with strong benefits in either memory optimization, startup time optimization or last but not least developer experience improvements.  You can decide the amount of magic that you want and the amount of control you feel comfortable with.  You don't have to use dependency injection or managed clients if you prefer doing things yourself."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-01-12-magic-control.adoc:31
+msgid "In this post, we will cover three different approaches to reducing the amount of magic.  We will go from almost no magic to just enough to get a good developer experience.  Examples from this blog post are available on https://github.com/cescoffier/quarkus-magic-control[GitHub]."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_posts/2021-01-12-magic-control.adoc:32
+#, no-wrap
+msgid "The _almost no magic_ approach"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-01-12-magic-control.adoc:38
+msgid "Quarkus applications are Java applications.  So, somewhere there is a `public static void main(String... args)`.  While you don't need to write that method when using Quarkus, it can still be convenient and give you more control about your application startup.  It's also a good trick to start your Quarkus application directly from your IDE."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-01-12-magic-control.adoc:40
+msgid "As an example, we will implement a straightforward HTTP application. Nothing fancy:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2021-01-12-magic-control.adoc:44
+#, no-wrap
+msgid "package me.escoffier.quarkus.nomagic;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2021-01-12-magic-control.adoc:52
+#, no-wrap
+msgid "import io.quarkus.runtime.Quarkus;\nimport io.quarkus.runtime.QuarkusApplication;\nimport io.quarkus.runtime.annotations.QuarkusMain;\nimport io.vertx.core.Vertx;\nimport io.vertx.core.http.HttpServer;\nimport io.vertx.ext.web.Router;\nimport org.eclipse.microprofile.config.ConfigProvider;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2021-01-12-magic-control.adoc:55
+#, no-wrap
+msgid "@QuarkusMain\npublic class Main implements QuarkusApplication {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2021-01-12-magic-control.adoc:59
+#, no-wrap
+msgid "    public static void main(String... args) {\n        Quarkus.run(Main.class, args);\n    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2021-01-12-magic-control.adoc:64
+#, no-wrap
+msgid "    @Override\n    public int run(String... args) {\n        Vertx vertx = Vertx.vertx();\n        Router router = Router.router(vertx);\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2021-01-12-magic-control.adoc:66
+#, no-wrap
+msgid "        String message = ConfigProvider.getConfig().getValue(\"message\", String.class);\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2021-01-12-magic-control.adoc:72
+#, no-wrap
+msgid "        router.get(\"/\").handler(rc -> rc.response().end(message));\n        router.get(\"/bye\").handler(rc -> {\n            rc.response().end(\"bye\");\n            Quarkus.asyncExit();\n        });\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2021-01-12-magic-control.adoc:76
+#, no-wrap
+msgid "        HttpServer server = vertx.createHttpServer()\n                .requestHandler(router)\n                .listen(8080);\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2021-01-12-magic-control.adoc:78
+#, no-wrap
+msgid "        Quarkus.waitForExit();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2021-01-12-magic-control.adoc:83
+#, no-wrap
+msgid "        server.close();\n        return 0;\n    }\n}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-01-12-magic-control.adoc:87
+msgid "The complete source code is available https://github.com/cescoffier/quarkus-magic-control/tree/main/no-magic-example[here].  Don't expect much more; the application had only one Java class, but let's look into it."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-01-12-magic-control.adoc:96
+msgid "The `@QuarkusMain` indicates that Quarkus should use this class as the _main entry point_ of the application.  The `run` method contains your application logic.  We will come back to this logic later.  First, look at the `public static void main(String... args)` method.  It just starts the application.  You can use this entry point directly from your IDE.  Yes, there is still a bit of magic behind `Quarkus.run`; that's where the extension initialization happens - not unlike _any_ framework initialization including Vert.x.  As this application does not use any extension, nothing much will happen."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-01-12-magic-control.adoc:99
+msgid "This application https://github.com/cescoffier/quarkus-magic-control/blob/main/no-magic-example/pom.xml#L17-L26[depends] directly on Vert.x Web and Vert.x Core.  The only Quarkus dependency is Arc (not used directly but required):"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2021-01-12-magic-control.adoc:107
+#, no-wrap
+msgid "<dependencies>\n    <dependency>\n        <groupId>io.quarkus</groupId>\n        <artifactId>quarkus-arc</artifactId>\n    </dependency>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2021-01-12-magic-control.adoc:114
+#, no-wrap
+msgid "    <dependency>\n        <groupId>io.vertx</groupId>\n        <artifactId>vertx-web</artifactId>\n        <version>3.9.5</version>\n    </dependency>\n</dependencies>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-01-12-magic-control.adoc:121
+msgid "Let's go back to the `run` method.  It contains the application logic, here, a dummy Vert.x application.  It creates the `Vertx` instance, a `Router`, registers a few routes, and starts the HTTP server.  Because we don't want the application to stop immediately, we _wait for exit_.  The `/bye` request handler illustrates how you can programmatically trigger the application shutdown."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-01-12-magic-control.adoc:125
+msgid "This application has almost no magic, just a single annotation, and a regular Java entry point.  You may wonder why not using a bare Java program? Even used that way, Quarkus provides benefits. For example, you can access the built-in configuration support as illustrated in the snippet:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2021-01-12-magic-control.adoc:129
+#, no-wrap
+msgid "String message = ConfigProvider.getConfig().getValue(\"message\", String.class);\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-01-12-magic-control.adoc:132
+msgid "The configuration is located in the `application.properties` file."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-01-12-magic-control.adoc:138
+msgid "This first approach has a few drawbacks.  It does not benefit from the built-time processing of Quarkus.  The logic executed at build time is packaged inside extensions, and in this case, we don't use extensions (except Arc).  Another issue is that compiling this application to native will fail because extensions are also involved during the native compilation.  Finally, the hot reload won't work, but you can directly restart the application from your IDE."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_posts/2021-01-12-magic-control.adoc:139
+#, no-wrap
+msgid "Using the managed Vert.x instance"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-01-12-magic-control.adoc:146
+msgid "Quarkus uses Vert.x heavily.  The `quarkus-vertx-core` extension manages the Vert.x instance used by Quarkus.  You can use that instance directly and avoid creating the Vert.x instance.  If you need to configure the instance, you can configure it from https://quarkus.io/guides/all-config#quarkus-vertx-core_quarkus-vertx-core-eclipse-vert.x-core[the `application.properties`].  It also enables native packaging (as that extension contains the directive to compile Vert.x applications to native)."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-01-12-magic-control.adoc:148
+msgid "In your pom.xml file, just add the following dependency:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2021-01-12-magic-control.adoc:155
+#, no-wrap
+msgid "<dependency>\n    <groupId>io.quarkus</groupId>\n    <artifactId>quarkus-vertx-core</artifactId>\n</dependency>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-01-12-magic-control.adoc:158
+msgid "With this, the _run_ method becomes:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2021-01-12-magic-control.adoc:165
+#, no-wrap
+msgid "@Override\npublic int run(String... args) {\n    Vertx vertx = CDI.current().select(Vertx.class).get();\n    Router router = Router.router(vertx);\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2021-01-12-magic-control.adoc:167
+#: upstream/_posts/2021-01-12-magic-control.adoc:231
+#, no-wrap
+msgid "    String message = ConfigProvider.getConfig().getValue(\"message\", String.class);\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2021-01-12-magic-control.adoc:173
+#, no-wrap
+msgid "    router.get(\"/\").handler(rc -> rc.response().end(message + \" world!\"));\n    router.get(\"/stop\").handler(rc -> {\n        rc.response().end(\"bye\");\n        Quarkus.asyncExit();\n    });\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2021-01-12-magic-control.adoc:177
+#, no-wrap
+msgid "    HttpServer server = vertx.createHttpServer()\n            .requestHandler(router)\n            .listen(8080);\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2021-01-12-magic-control.adoc:179
+#, no-wrap
+msgid "    Quarkus.waitForExit();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2021-01-12-magic-control.adoc:183
+#, no-wrap
+msgid "    server.close();\n    return 0;\n}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-01-12-magic-control.adoc:189
+msgid "Note how it retrieves the managed Vert.x instance.  While you can use `@Inject`, you can also retrieve it programmatically, the rest of the code does not change.  See? No magic for you! We can still start it from the IDE using the _main_ method."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-01-12-magic-control.adoc:191
+msgid "If you don't include the `quarkus-vertx-core` extension (or any extension depending on it), Quarkus won't create the Vert.x instance."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-01-12-magic-control.adoc:193
+msgid "Using extensions gives you some property wiring as well as the build time optimisations and native image compilation:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2021-01-12-magic-control.adoc:199
+#, no-wrap
+msgid "> mvn package -Dnative\n...\n> ./target/managed-vertx-example-1.0-SNAPSHOT-runner\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-01-12-magic-control.adoc:202
+msgid "But, still no hot reload 😿."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_posts/2021-01-12-magic-control.adoc:203
+#, no-wrap
+msgid "Using the managed HTTP server"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-01-12-magic-control.adoc:207
+msgid "Instead of using only the `quarkus-vertx-core` extension, we can choose to delegate the HTTP server to Quarkus.  You may see that as a loss of control, but actually, we rarely do much around it, and again, you can configure it from the `application.properties` file if needed."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-01-12-magic-control.adoc:209
+msgid "Instead of ``quarkus-vertx-core`, use `quarkus-vertx-http`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2021-01-12-magic-control.adoc:218
+#, no-wrap
+msgid "<dependencies>\n    <dependency>\n        <groupId>io.quarkus</groupId>\n        <artifactId>quarkus-vertx-http</artifactId>\n    </dependency>\n</dependencies>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-01-12-magic-control.adoc:221
+msgid "No need to depend on Vert.x Web directly, it's included."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-01-12-magic-control.adoc:223
+msgid "You will still register your routes, but using a managed `Router`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2021-01-12-magic-control.adoc:229
+#, no-wrap
+msgid "@Override\npublic int run(String... args) {\n    Router router = CDI.current().select(Router.class).get();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2021-01-12-magic-control.adoc:237
+#, no-wrap
+msgid "    router.get(\"/\").handler(rc -> rc.response().end(message));\n    router.get(\"/bye\").handler(rc -> {\n        rc.response().end(\"bye\");\n        Quarkus.asyncExit();\n    });\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2021-01-12-magic-control.adoc:241
+#, no-wrap
+msgid "    Quarkus.waitForExit();\n    return 0;\n}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-01-12-magic-control.adoc:245
+msgid "That approach enables the Quarkus hot reload as it intercepts the HTTP requests.  You are still in control of everything related to your application logic."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-01-12-magic-control.adoc:247
+msgid "You can start the hot reload using:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2021-01-12-magic-control.adoc:251
+#, no-wrap
+msgid "> mvn quarkus:dev\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_posts/2021-01-12-magic-control.adoc:253
+#, no-wrap
+msgid "The final _magic touch_"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-01-12-magic-control.adoc:258
+msgid "The question, now, is how far are we from a _regular_ Quarkus application? Quite close, actually.  The equivalent application using RESTEasy Reactive would be something like:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2021-01-12-magic-control.adoc:263
+#, no-wrap
+msgid "@Path(\"/\")\npublic class MyResource {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2021-01-12-magic-control.adoc:265
+#, no-wrap
+msgid "    @Inject @ConfigProperty(\"message\") String message;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2021-01-12-magic-control.adoc:270
+#, no-wrap
+msgid "    @GET\n    public String hello() {\n        return message;\n    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2021-01-12-magic-control.adoc:272
+#, no-wrap
+msgid "}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-01-12-magic-control.adoc:279
+msgid "Unlike the previous approaches, this one leverages a declarative (annotation-based) model.  Under the hood, it's not that different from the last approach.  Quarkus registers a route (on the router), which then calls the `hello` method when a matching request is received.  The router gets initialized during the `Quarkus.run` method.  No need for the _main_ endpoint, but you can still use one, often convenient in IDEs."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_posts/2021-01-12-magic-control.adoc:280
+#, no-wrap
+msgid "Summary"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-01-12-magic-control.adoc:286
+msgid "Our relation to magic depends on our background and experience.  Quarkus lets you decide how much magic you accept.  This post presented fours configurations, going from almost no magic to the _regular_ Quarkus code.  Each approach has pros and cons:"
+msgstr ""
+
+#. type: Table
+#: upstream/_posts/2021-01-12-magic-control.adoc:314
+#, no-wrap
+msgid "| |Control | Build time optimizations | Native executable | Hot Reload\n\n|_Almost no magic_\n|Full\n|🥵\n|🥵\n|🥵\n\n|Use the managed Vert.x instance\n|Everything but Vert.x\n|😀, for Vert.x\n|😀\n|🥵\n\n|Use the managed HTTP server\n|Everything but Vert.x and the HTTP server\n|😀, for Vert.x and HTTP\n|😀\n|😀\n\n|_Regular_ Quarkus\n|Endpoint managed by Quarkus\n|😀\n|😀\n|😀\n\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-01-12-magic-control.adoc:318
+msgid "Pick the approach that fits your needs.  Besides, most of Quarkus services are also available using a programmatic approach, as we have seen for configuration.  So, if you prefer avoiding managed objects, feel free just to use the available APIs."
+msgstr ""
