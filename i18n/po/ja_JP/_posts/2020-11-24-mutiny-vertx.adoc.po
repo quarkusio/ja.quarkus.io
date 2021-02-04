@@ -1,0 +1,318 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr "Project-Id-Version: PACKAGE VERSION\nPOT-Creation-Date: 2021-02-04 15:40+0000\nPO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\nLast-Translator: FULL NAME <EMAIL@ADDRESS>\nLanguage-Team: LANGUAGE <LL@li.org>\nLanguage: \nMIME-Version: 1.0\nContent-Type: text/plain; charset=UTF-8\nContent-Transfer-Encoding: 8bit\n"
+
+#. type: Plain text
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:1
+#, no-wrap
+msgid "---\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:8
+#, no-wrap
+msgid "layout: post\ntitle: Mutiny and the Reactiverse\ndate: 2020-11-24\ntags: reactive mutiny vert.x\nsynopsis: Discover the Mutiny variant of the Vert.x API\nauthor: cescoffier\n---\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:16
+msgid "I had the question multiple times: how do I use Eclipse Vert.x in Quarkus? Indeed, you can use Vert.x in Quarkus.  You can deploy _verticles_, communicate with the event bus, or use anything from the Vert.x ecosystem.  But, you can also use the Mutiny variant of Vert.x in Quarkus, and get a seamless experience with the other reactive APIs offered by Quarkus.  Several posts have already mentioned this, but it deserves a specific blog post.  So, here we are."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:17
+#, no-wrap
+msgid "Eclipse Vert.x"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:24
+msgid "https://vertx.io[Vert.x] is a toolkit to build reactive applications.  The Vert.x ecosystem is enormous.  From HTTP and data access abilities to messaging clients via microservice and security facilities, the Vert.x ecosystem is remarkably diverse and versatile.  To understand that variety, just check the https://vertx.io/docs/[Vert.x documentation].  That makes Vert.x popular in many areas such as web applications, IoT gateways, banking applications and so on."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:27
+msgid "As you may know, Quarkus is based on Vert.x.  Under the hood, there is a managed Vert.x instance that powers the rest of Quarkus."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:29
+msgid "image:/assets/images/posts/mutiny-vertx/architecture.png[width=50%]"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:32
+msgid "When Quarkus serves a HTTP endpoint, under the hood, there is a Vert.x HTTP server handling the request and response.  That's also true for messaging, gRPC and almost any I/O."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:33
+#, no-wrap
+msgid "The Vert.x \"bare\" API and friends"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:37
+msgid "Vert.x provides multiple APIs.  Let's focus on the \"bare\" one for now."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:40
+msgid "Following the reactive nature of Vert.x, the API contains mostly asynchronous methods.  These methods are following a syntax convention:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:46
+#, no-wrap
+msgid "public void doSomething(param1, param2, Handler<AsyncResult<T>> handler) {\n    // ...\n}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:52
+msgid "The interesting part is the last parameter.  It's a function, a callback to be more precise, that gets called when the operation completes or fails.  Indeed, the asynchronous nature of Vert.x does not allow using `try/catch` blocks.  So you need to pass a continuation callback, invoked with the outcome."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:55
+msgid "`AsyncResult` is a structure capturing this outcome.  It contains the result (of type `<T>`) produced by the operation, or the failure if it failed."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:57
+msgid "Let's take an example:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:68
+#, no-wrap
+msgid "vertx.fileSystem()\n    .readFile(\"my-file.txt\", ar -> {\n        if (ar.failed()) {\n            System.out.println(\"D'oh! Cannot read the file: \" + ar.cause());\n        } else {\n            System.out.println(\"File content is: \" + ar.result());\n        }\n    });\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:74
+msgid "This code reads a file, and as it's an asynchronous operation, invokes the callback when the file is read.  The `readFile` method reads the complete content of the file and accumulates it in a _buffer_.  The callback receives the asynchronous result containing either the file's content (`ar.result()`) or a failure.  Vert.x invokes this callback when the operation has either completed or failed."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:81
+msgid "Vert.x also supports streams thanks to the `ReadStream` and `WriteStream` classes.  A `ReadStream` represents a stream of data you can read.  So you can attach a callback invoked on every item traversing the stream.  A `WriteStream` is a data source.  You can push items to a `WriteStream.` These items will be consumed by a `ReadStream`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:103
+#, no-wrap
+msgid "vertx.fileSystem()\n    .open(\"my-file.txt\", new OpenOptions().setRead(true), ar -> {\n        if (ar.failed()) {\n            System.out.println(\n                    \"D'oh! Cannot read the file: \" + ar.cause()\n            );\n        } else {\n            AsyncFile file = ar.result();\n            // AsyncFile is a read stream, we can read from it:\n            file\n                    .exceptionHandler(t ->\n                        System.out.println(\"Failure while reading the file: \" + t)\n                    )\n                    // Reads the file chunk by chunk\n                    .handler(buffer ->\n                        System.out.println(\"Received buffer: \" + buffer)\n                    );\n        }\n    });\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:107
+msgid "Vert.x streams do not implement Reactive Streams.  Vert.x provides a different back-pressure protocol."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:112
+msgid "Why are these API shaping rules important? Vert.x does not provide a single API.  The \"bare\" API presented above is just one of the proposed API.  It also provides API in Kotlin, API for RX Java, and so on."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:116
+msgid "These APIs are **generated**.  Vert.x provides a code generator that _ translates_ the Vert.x \"bare\" API into the other APIs.  Because all methods are well-formed, the generator understands how they should be adapted."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:118
+msgid "image:/assets/images/posts/mutiny-vertx/generation.png[]"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:121
+msgid "The generated code exposes a different API; each method delegating to the \"bare\" API.  Asynchronous methods and streams can follow different transformations, so the resulting API uses the right idioms."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:122
+#, no-wrap
+msgid "The Vert.x Mutiny API"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:127
+msgid "Mutiny is an event-driven reactive programming library.  It's not related to Vert.x.  However, we have written a code generator that generates the Mutiny variant for the Vert.x API:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:129
+msgid "image:/assets/images/posts/mutiny-vertx/mutiny.png[]"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:131
+msgid "The transformations are straightforward:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:133
+msgid "`io.vertx` package => `io.vertx.mutiny` package"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:134
+msgid "Asynchronous methods => method returning a `Uni<T>`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:135
+msgid "`ReadStreams<T>` => can be consumed as `Multi<T>`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:136
+msgid "`WriteStreams<T>` => can be consumed as Reactive Streams `Subscriber<T>`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:138
+msgid "It also adapts the Vert.x back pressure protocol to Reactive Streams, as Mutiny implements Reactive Streams."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:140
+msgid "For example, the first example from above becomes:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:146
+#, no-wrap
+msgid "Uni<Buffer> uni = vertx.fileSystem().readFile(\"my-file.txt\");\nuni.subscribe()\n  .with(it -> System.out.println(\"File content is: \" + it));\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:150
+msgid "One difference between the two APIs is related to laziness. The Vert.x \"bare\" API triggers the operation as soon as the method is called.  The Mutiny variant expects a subscription to trigger the operation."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:152
+msgid "The stream example from above becomes:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:164
+#, no-wrap
+msgid "Uni<AsyncFile> uni = vertx.fileSystem()\n        .open(\"my-file.txt\", new OpenOptions().setRead(true));\nuni\n    // Gets a Multi to read the file:\n    .onItem().transformToMulti(asyncFile -> asyncFile.toMulti())\n    // Gets the buffers one by one:\n    .subscribe().with(\n       buffer -> System.out.println(\"Received buffer: \" + buffer)\n);\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:166
+#, no-wrap
+msgid "A bit more than this"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:170
+msgid "The Mutiny variant does not only apply the rules exposed in the previous section.  For asynchronous methods, it also provides:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:172
+msgid "`xAndAwait()` methods - blocks the caller thread until the outcome is received. In the case of a failure, throws a `RuntimeException`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:173
+msgid "`xAndForget()` methods - triggers the operation, discard the outcome"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:178
+#, no-wrap
+msgid "// Read the content of the file in a blocking manner:\nBuffer content   = vertx.fileSystem().readFileAndAwait(\"my-file.txt\");\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:184
+#, no-wrap
+msgid "// Open and close the file\n// Closing the file is an asynchronous operation (returning a Uni).\n// We trigger the operation and discard the outcome\nvertx.fileSystem().open(\"my-file.txt\", new OpenOptions().setRead(true))\n    .subscribe().with(file -> file.closeAndForget());\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:186
+#, no-wrap
+msgid "Where can we find this API?"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:190
+msgid "At the moment of writing, we only provide Vert.x core and Vert.x clients (MongoDB, Redis, Web client, Mqtt, and so on).  We are extending the support to cover the full Vert.x stack."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:193
+msgid "To use the Mutiny clients, you need to add the right dependency to your project.  Browse https://search.maven.org/search?q=a:smallrye-mutiny-vertx*[the list of dependency] to pick the one you need."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:195
+msgid "For example, to you use the Mutiny variant of the Vert.x Web client, add the following dependency:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:203
+#, no-wrap
+msgid "<dependency>\n  <groupId>io.smallrye.reactive</groupId>\n  <artifactId>smallrye-mutiny-vertx-web-client</artifactId>\n  <version>...</version>\n</dependency>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:206
+msgid "Once you have the dependency, just create the web client instance:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:210
+#, no-wrap
+msgid "@Inject Vertx vertx; // Inject the managed io.vertx.mutiny.core.Vertx instance\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:212
+#, no-wrap
+msgid "private WebClient client;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:220
+#, no-wrap
+msgid "@PostConstruct\npublic void init() {\n  client = WebClient.create(vertx, new WebClientOptions()\n    .setDefaultHost(\"localhost\")\n    .setDefaultPort(8082)\n  );\n}\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:226
+#, no-wrap
+msgid "private Uni<String> call(String path) {\n  return client\n    .get(path).send()\n    .onItem().transform(HttpResponse::bodyAsString);\n}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:229
+msgid "Something missing? Open an issue on https://github.com/smallrye/smallrye-reactive-utils/issues[SmallRye Reactive Utils]."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:231
+msgid "The Javadoc is available http://smallrye.io/smallrye-reactive-utils/apidocs/[here]."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:232
+#, no-wrap
+msgid "The road ahead: Vert.x 4!"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2020-11-24-mutiny-vertx.adoc:236
+msgid "Vert.x 4 is coming soon! We are already working in Quarkus and the different satellite projects to migrate.  With Vert.x 4, a new generator has been implemented (following the same code generation approach), paving the road to a smooth upgrade."
+msgstr ""
