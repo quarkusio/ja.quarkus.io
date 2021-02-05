@@ -27,18 +27,30 @@ jobs:
         uses: actions/checkout@v2
       - name: Configure git
         run: |
-          git submodule init
-          git submodule update
-          git config --local user.email "mail@ynojima.net"
-          git config --local user.name "ynojima"
-      - name: Sync upstream
-        run: bin/sync-upstream
+          bin/configure-git
+
+      - name: Sync submodule
+        run: bin/sync-submodule
+      - name: Push changes
+        run: bin/push-changes "Update upstream"
+
       - name: Exec po4a-updatepo
         run: |
           bin/exec-po4a-updatepo
+
+      - name: Push changes
+        run: bin/push-changes "Update .po files"
+
       - name: Apply tmx
         run: bin/apply-tmx
-      - name: Add machine translations
-        run: bin/add-machine-translations
+
+      - name: Push changes
+        run: bin/push-changes "Apply translation memory"
+
+      - name: Machine translate
+        run: bin/machine-translate
         env:
           TRANSLATOR_DEEPL_APIKEY: ${{ secrets.TRANSLATOR_DEEPL_APIKEY }}
+
+      - name: Push changes
+        run: bin/push-changes "Add machine translation"
