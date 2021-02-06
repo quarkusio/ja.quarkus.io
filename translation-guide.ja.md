@@ -22,7 +22,7 @@ Windows/Mac/Linux での実行に対応しており、ショートカットキ�
 ### 翻訳対象の自動取込、自動下訳
 
 翻訳対象のファイルは、[quarkus.io](https://quarkus.io)が更新されますと定期的に本レポジトリにGitHub Actionsのワークフローにより、
-自動で取り込まれ、.poファイルが作成されます。.poファイルには [quarkus-adoc-po-translator](https://github.com/i18n-quarkusio/quarkus-adoc-po-translator) を用いて
+自動で取り込まれ、.poファイルが作成されます。.poファイルには [quarkus-adoc-po-translator](https://github.com/doc-l10n-kit/quarkus-adoc-po-translator) を用いて
 DeepL APIで自動で翻訳した訳文が挿入されますので、翻訳の際の下訳としてご活用下さい。
 
 但し、あくまでも機械翻訳な為、てにおは等が不自然な部分も多く、「要確認」（fuzzy）としてマークされており、「要確認」マークを外さない限り、翻訳として反映されません。
