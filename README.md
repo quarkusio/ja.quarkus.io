@@ -17,7 +17,7 @@ All you need for your local environment is a CAT Tool like [POEdit](https://poed
 ### Extracting texts from original repository
 
 ja-quarkusio extracts texts with [po4a-updatepo](https://po4a.org/) utility from .adoc files to .adoc.po files, which saved in 
-in [i18n/po](i18n/po) directory.
+in [l10n/po](l10n/po) directory.
 ja-quarkusio GitHub repository has a [GitHub Actions' periodic workflow](.github/workflows/sync-upstream.yml) to extract .adoc files stored in upstream submodule, 
 which points [quarkusio.github.io](https://github.com/quarkusio/quarkusio.github.io) repository.
 
