@@ -22,7 +22,8 @@ Windows/Mac/Linux での実行に対応しており、ショートカットキ�
 ### 翻訳対象の自動取込、自動下訳
 
 翻訳対象のファイルは、[quarkus.io](https://quarkus.io)が更新されますと定期的に本レポジトリにGitHub Actionsのワークフローにより、
-自動で取り込まれ、.poファイルが作成されます。.poファイルには [quarkus-adoc-po-translator](https://github.com/doc-l10n-kit/quarkus-adoc-po-translator) を用いて
+自動で取り込まれ、.poファイルが作成されます。.poファイルには翻訳メモリに収録された既存の訳文や、
+[quarkus-adoc-po-translator](https://github.com/doc-l10n-kit/quarkus-adoc-po-translator) を用いて
 DeepL APIで自動で翻訳した訳文が挿入されますので、翻訳の際の下訳としてご活用下さい。
 
 但し、あくまでも機械翻訳な為、てにおは等が不自然な部分も多く、「要確認」（fuzzy）としてマークされており、「要確認」マークを外さない限り、翻訳として反映されません。
@@ -33,3 +34,12 @@ DeepL APIで自動で翻訳した訳文が挿入されますので、翻訳の�
 .poファイルを翻訳し、Pull-Requestを頂ければ、自動でGitHub Actionsでサイトのビルドが行われ、一時的にサイトを閲覧できるURLが
 GitHubのPull-Requestに対するコメントとして5分程度で送信されます。
 そちらの一時サイトから、翻訳結果のプレビューを確認することが出来ますので、ご活用下さい。
+
+### HTMLテンプレートの更新対応・翻訳
+
+quarkus.ioのコンテンツは asciidoctor (.adoc) で記述されていますが、一部のテキストはJekyllのHTMLテンプレートに含まれています。
+JekyllのHTMLテンプレートに記述されたテキストについては、po4aでプログラム処理するのが不可能な為、[l10n/overrideディレクトリ](l10n/override) に
+po4aで処理できないファイルのコピーを配置し、こちらのファイルを手動で翻訳しておき、Jekyllサイトビルド時にこれらのファイルで
+元ファイルを上書きすることでローカライゼーションを実現しています。
+upstream側で元ファイルが更新された場合、[l10n/overrideディレクトリ](l10n/override)側にコピーしたファイル側も更新する必要があります。
+現時点で、upstream側の元ファイルの更新を検知して通知する機能等はありませんのでご注意下さい。
