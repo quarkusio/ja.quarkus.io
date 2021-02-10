@@ -45,7 +45,10 @@ Files Changedタブのコメントをつけたい行にマウスオーバーす�
 
 ### 変更提案コメントの反映
 
-変更提案コメントは、"Commit suggestion"ボタンを押すことで、Pull Requestに対して変更を反映させることが出来ます。
+変更提案コメントは、以下のように表示され、"Commit suggestion"ボタンを押すことで、Pull Requestに対してその場で変更を反映させることが出来ます。
+
+![変更提案コメントフォーム](internal/docs/images/suggestion-comment.png)
+
 議論の余地なく修正して構わないと思われる内容は、変更の反映を行ってください。
 "Add suggestion to batch"ボタンは、変更の適用をまとめて一つのコミットで行う為のボタンです。
 
