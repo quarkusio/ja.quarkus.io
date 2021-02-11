@@ -14,10 +14,15 @@ touch $TMP/accumulation.po
 for ITEM in `\find l10n/po -name "*.po"`; do
   if [ -f $ITEM ] ; then
     echo $ITEM
-    echo $TMP/tmp_out.po
-    pofilter --nofuzzy --excludefilter=untranslated -i $ITEM -o $TMP/tmp.po
+    echo $TMP/tmp.po
+    pofilter --nonotes --nofuzzy --excludefilter=untranslated -i $ITEM -o $TMP/tmp.po
     touch $TMP/tmp.po
-    msgcat -i $TMP/tmp.po $TMP/accumulation.po -o $TMP/accumulation.po
+    msgcat --force-po --to-code=utf-8 --no-wrap --use-first -i $TMP/tmp.po $TMP/accumulation.po -o $TMP/accumulation.po
   fi
 done
-po2tmx -l $TARGET_LANG -i $TMP/accumulation.po -o $TMX_FILE_PATH
+
+echo $TMP/accumulation.po
+
+grep -v "^#~" $TMP/accumulation.po > $TMP/comment-filtered.po
+
+po2tmx -l $TARGET_LANG -i $TMP/comment-filtered.po -o $TMX_FILE_PATH
