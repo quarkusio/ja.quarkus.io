@@ -2,22 +2,24 @@
 set -eu
 
 SCRIPT_DIR=$(cd $(dirname $0); pwd)
-I18N_HOME=$(cd $(dirname $SCRIPT_DIR); pwd)
-cd $I18N_HOME
+L10N_HOME=$(cd $(dirname $SCRIPT_DIR); pwd)
+cd $L10N_HOME
 
 source config/l10n-kit.conf
 
-rm -rf $I18N_HOME/translated/$TARGET_LANG
-mkdir -p $I18N_HOME/translated
-cp -p -R $I18N_HOME/upstream $I18N_HOME/translated/$TARGET_LANG
+rm -rf $L10N_HOME/translated/$TARGET_LANG
+mkdir -p $L10N_HOME/translated
+cp -p -R $L10N_HOME/upstream $L10N_HOME/translated/$TARGET_LANG
 
 for ITEM in `\find upstream -name "*.adoc"`; do
     if [ -f $ITEM ] ; then
         RELATIVE_FILE_PATH=`echo $ITEM | sed -e "s|^upstream\/||"`
         RELATIVE_FILE_DIR=$(dirname $RELATIVE_FILE_PATH);
 
-        mkdir -p "$I18N_HOME/l10n/po/$TARGET_LANG/$RELATIVE_FILE_DIR"
-        po4a-translate --master-charset UTF-8 --localized-charset UTF-8 -f asciidoc --keep 0 --master "upstream/$RELATIVE_FILE_PATH" --localized "translated/$TARGET_LANG/$RELATIVE_FILE_PATH" --po "l10n/po/$TARGET_LANG/$RELATIVE_FILE_PATH.po"
+        if [ -f "l10n/po/$TARGET_LANG/$RELATIVE_FILE_PATH.po" ] ; then
+            mkdir -p "$L10N_HOME/l10n/po/$TARGET_LANG/$RELATIVE_FILE_DIR"
+            po4a-translate --master-charset UTF-8 --localized-charset UTF-8 -f asciidoc --keep 0 --master "upstream/$RELATIVE_FILE_PATH" --localized "translated/$TARGET_LANG/$RELATIVE_FILE_PATH" --po "l10n/po/$TARGET_LANG/$RELATIVE_FILE_PATH.po"
+        fi
     fi
 done
 
@@ -26,8 +28,10 @@ for ITEM in `\find upstream -name "*.md"`; do
         RELATIVE_FILE_PATH=`echo $ITEM | sed -e "s|^upstream\/||"`
         RELATIVE_FILE_DIR=$(dirname $RELATIVE_FILE_PATH);
 
-        mkdir -p "$I18N_HOME/l10n/po/$TARGET_LANG/$RELATIVE_FILE_DIR"
-        po4a-translate --master-charset UTF-8 --localized-charset UTF-8 -f text -o markdown -o neverwrap --keep 0 --master "upstream/$RELATIVE_FILE_PATH" --localized "translated/$TARGET_LANG/$RELATIVE_FILE_PATH" --po "l10n/po/$TARGET_LANG/$RELATIVE_FILE_PATH.po"
+        if [ -f "l10n/po/$TARGET_LANG/$RELATIVE_FILE_PATH.po" ] ; then
+            mkdir -p "$L10N_HOME/l10n/po/$TARGET_LANG/$RELATIVE_FILE_DIR"
+            po4a-translate --master-charset UTF-8 --localized-charset UTF-8 -f text -o markdown -o neverwrap --keep 0 --master "upstream/$RELATIVE_FILE_PATH" --localized "translated/$TARGET_LANG/$RELATIVE_FILE_PATH" --po "l10n/po/$TARGET_LANG/$RELATIVE_FILE_PATH.po"
+        fi
     fi
 done
 
@@ -36,12 +40,14 @@ YAML_FILES=(
 )
 
 for ITEM in $YAML_FILES ; do
-    ABSOLUTE_FILE_PATH="$I18N_HOME/upstream/$ITEM"
+    ABSOLUTE_FILE_PATH="$L10N_HOME/upstream/$ITEM"
     if [ -f $ABSOLUTE_FILE_PATH ] ; then
         RELATIVE_FILE_PATH=$ITEM
         RELATIVE_FILE_DIR=$(dirname $RELATIVE_FILE_PATH);
 
-        mkdir -p "$I18N_HOME/l10n/po/$TARGET_LANG/$RELATIVE_FILE_DIR"
-        po4a-translate --master-charset UTF-8 --localized-charset UTF-8 -f yaml --keep 0 --master "upstream/$RELATIVE_FILE_PATH"  --localized "translated/$TARGET_LANG/$RELATIVE_FILE_PATH" --po "l10n/po/$TARGET_LANG/$RELATIVE_FILE_PATH.po"
+        if [ -f "l10n/po/$TARGET_LANG/$RELATIVE_FILE_PATH.po" ] ; then
+            mkdir -p "$L10N_HOME/l10n/po/$TARGET_LANG/$RELATIVE_FILE_DIR"
+            po4a-translate --master-charset UTF-8 --localized-charset UTF-8 -f yaml --keep 0 --master "upstream/$RELATIVE_FILE_PATH"  --localized "translated/$TARGET_LANG/$RELATIVE_FILE_PATH" --po "l10n/po/$TARGET_LANG/$RELATIVE_FILE_PATH.po"
+        fi
     fi
 done

@@ -1,14 +1,24 @@
 name: pull-request
 
-on: pull_request
+on: pull_request_target
 
 jobs:
   deploy-ja:
     name: Deploy Japanese translation to surge.sh
     runs-on: ubuntu-20.04
     steps:
-      - name: Checkout
+      # To avoid GitHub Secrets compromise, checkouts merged commit to 'merged' dir and copy its l10n dir to base branch code base
+      - name: Checkout base branch
         uses: actions/checkout@v2
+      - name: Checkout merged commit to 'merged' dir
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: merged
+      - name: Copy l10n dir
+        run: |
+          rm -rf l10n
+          cp -r merged/l10n ./
       - name: Cache bundle directory
         uses: actions/cache@v1
         with:
