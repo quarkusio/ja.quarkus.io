@@ -19,8 +19,8 @@ on:
       - completed
 
 jobs:
-  build-tmx:
-    name: Build tmx
+  update:
+    name: Update files
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout
@@ -42,11 +42,29 @@ jobs:
       - name: Push changes
         run: bin/push-changes "Update tmx"
 
-      - name: Update stats
-        run: bin/update-stats
+      - name: Update translation stats
+        run: bin/update-translation-stats
 
       - name: Push changes
-        run: bin/push-changes "Update stats"
+        run: bin/push-changes "Update translation stats"
+
+      - name: Update override stats
+        run: |
+          bin/update-override-stats
+
+      - name: Create override files update issue
+        run: |
+          set +e
+          git diff --cached --exit-code --quiet
+
+          if [[ $? -eq 1 ]] ; then
+            set -e
+            gh issue create --title "Upstream files overridden are updated" --body "Uptream files overridden are updated. see [override stats](../l10n/stats/override.csv)"
+          fi
+          set -e
+
+      - name: Push changes
+        run: bin/push-changes "Update override stats"
 
   deploy-ja:
     name: Deploy Japanese translation to surge.sh
