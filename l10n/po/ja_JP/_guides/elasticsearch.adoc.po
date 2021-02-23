@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2021-02-11 02:12+0000\n"
+"POT-Creation-Date: 2021-02-23 11:07+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -263,7 +263,7 @@ msgstr "ここで、アプリケーションのビジネス層となる `org.acm
 
 #. type: delimited block -
 #: upstream/_guides/elasticsearch.adoc:125
-#: upstream/_guides/elasticsearch.adoc:304
+#: upstream/_guides/elasticsearch.adoc:350
 #, no-wrap
 msgid ""
 "import java.io.IOException;\n"
@@ -273,7 +273,7 @@ msgstr ""
 
 #. type: delimited block -
 #: upstream/_guides/elasticsearch.adoc:128
-#: upstream/_guides/elasticsearch.adoc:307
+#: upstream/_guides/elasticsearch.adoc:353
 #, no-wrap
 msgid ""
 "import javax.enterprise.context.ApplicationScoped;\n"
@@ -338,7 +338,7 @@ msgstr ""
 
 #. type: delimited block -
 #: upstream/_guides/elasticsearch.adoc:163
-#: upstream/_guides/elasticsearch.adoc:349
+#: upstream/_guides/elasticsearch.adoc:395
 #, no-wrap
 msgid ""
 "    public List<Fruit> searchByColor(String color) throws IOException {\n"
@@ -348,7 +348,7 @@ msgstr ""
 
 #. type: delimited block -
 #: upstream/_guides/elasticsearch.adoc:167
-#: upstream/_guides/elasticsearch.adoc:353
+#: upstream/_guides/elasticsearch.adoc:399
 #, no-wrap
 msgid ""
 "    public List<Fruit> searchByName(String name) throws IOException {\n"
@@ -392,7 +392,7 @@ msgstr ""
 
 #. type: Plain text
 #: upstream/_guides/elasticsearch.adoc:194
-#: upstream/_guides/elasticsearch.adoc:374
+#: upstream/_guides/elasticsearch.adoc:420
 #, fuzzy
 msgid "In this example you can note the following:"
 msgstr "この例では、次のように注意することができます。"
@@ -411,7 +411,7 @@ msgstr "Elasticsearchリクエストを作成します。"
 
 #. type: Plain text
 #: upstream/_guides/elasticsearch.adoc:198
-#: upstream/_guides/elasticsearch.adoc:378
+#: upstream/_guides/elasticsearch.adoc:424
 #, fuzzy
 msgid "We use Vert.x `JsonObject` to serialize the object before sending it to Elasticsearch, you can use whatever you want to serialize to JSON."
 msgstr "Elasticsearchに送信する前にオブジェクトをシリアライズするためにVert.x `JsonObject` を使用していますが、JSONにシリアライズしたいものは何でも使えます。"
@@ -424,7 +424,7 @@ msgstr "Elasticsearchにリクエスト(ここではインデックス作成の�
 
 #. type: Plain text
 #: upstream/_guides/elasticsearch.adoc:200
-#: upstream/_guides/elasticsearch.adoc:380
+#: upstream/_guides/elasticsearch.adoc:426
 #, fuzzy
 msgid "In order to deserialize the object from Elasticsearch, we again use Vert.x `JsonObject`."
 msgstr "Elasticsearchからオブジェクトをデシリアライズするために、再びVert.x `JsonObject` ."
@@ -546,25 +546,104 @@ msgid "If you need a more advanced configuration, you can find the comprehensive
 msgstr "より高度な設定が必要な場合は、このガイドの最後にサポートされている設定プロパティーの包括的なリストがあります。"
 
 #. type: Title ==
-#: upstream/_guides/elasticsearch.adoc:264
+#: upstream/_guides/elasticsearch.adoc:263
+#, fuzzy, no-wrap
+msgid "Programmatically Configuring Elasticsearch"
+msgstr "Elasticsearchの設定"
+
+#. type: Plain text
+#: upstream/_guides/elasticsearch.adoc:265
+msgid "On top of the parametric configuration, you can also programmatically apply additional configuration to the client by implementing a `RestClientBuilder.HttpClientConfigCallback` and annotating it with `ElasticsearchClientConfig`. You may provide multiple implementations and configuration provided by each implementation will be applied in a randomly ordered cascading manner."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/elasticsearch.adoc:267
+msgid "For example, when accessing an Elasticsearch cluster that is set up for TLS on the HTTP layer, the client needs to trust the certificate that Elasticsearch is using. The following is an example of setting up the client to trust the CA that has signed the certificate that Elasticsearch is using, when that CA certificate is available in a PKCS#12 keystore."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/elasticsearch.adoc:275
+#, no-wrap
+msgid ""
+"import io.quarkus.elasticsearch.restclient.lowlevel.ElasticsearchClientConfig;\n"
+"import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;\n"
+"import org.apache.http.ssl.SSLContextBuilder;\n"
+"import org.apache.http.ssl.SSLContexts;\n"
+"import org.elasticsearch.client.RestClientBuilder;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/elasticsearch.adoc:283
+#, no-wrap
+msgid ""
+"import javax.enterprise.context.Dependent;\n"
+"import javax.net.ssl.SSLContext;\n"
+"import java.io.InputStream;\n"
+"import java.nio.file.Files;\n"
+"import java.nio.file.Path;\n"
+"import java.nio.file.Paths;\n"
+"import java.security.KeyStore;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/elasticsearch.adoc:303
+#, no-wrap
+msgid ""
+"@ElasticsearchClientConfig\n"
+"@Dependent\n"
+"public class SSLContextConfigurator implements RestClientBuilder.HttpClientConfigCallback {\n"
+"    @Override\n"
+"    public HttpAsyncClientBuilder customizeHttpClient(HttpAsyncClientBuilder httpClientBuilder) {\n"
+"        try {\n"
+"            String keyStorePass = \"password-for-keystore\";\n"
+"            Path trustStorePath = Paths.get(\"/path/to/truststore.p12\");\n"
+"            KeyStore truststore = KeyStore.getInstance(\"pkcs12\");\n"
+"            try (InputStream is = Files.newInputStream(trustStorePath)) {\n"
+"                truststore.load(is, keyStorePass.toCharArray());\n"
+"            }\n"
+"            SSLContextBuilder sslBuilder = SSLContexts.custom()\n"
+"                    .loadTrustMaterial(truststore, null);\n"
+"            SSLContext sslContext = sslBuilder.build();\n"
+"            httpClientBuilder.setSSLContext(sslContext);\n"
+"        } catch (Exception e) {\n"
+"            throw new RuntimeException(e);\n"
+"        }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/elasticsearch.adoc:307
+#, no-wrap
+msgid ""
+"        return httpClientBuilder;\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/elasticsearch.adoc:309
+msgid "See https://www.elastic.co/guide/en/elasticsearch/client/java-rest/current/_encrypted_communication.html[Elasticsearch documentation] for more details on this particular example."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/elasticsearch.adoc:310
 #, fuzzy, no-wrap
 msgid "Running an Elasticsearch cluster"
 msgstr "Elasticsearchクラスターの実行"
 
 #. type: Plain text
-#: upstream/_guides/elasticsearch.adoc:268
+#: upstream/_guides/elasticsearch.adoc:314
 #, fuzzy
 msgid "As by default, the Elasticsearch client is configured to access a local Elasticsearch cluster on port 9200 (the default Elasticsearch port), if you have a local running instance on this port, there is nothing more to do before being able to test it!"
 msgstr "デフォルトでは、Elasticsearchクライアントはポート9200(Elasticsearchのデフォルトポート)でローカルのElasticsearchクラスターにアクセスするように設定されているので、このポートでローカルで実行中のインスタンスを持っている場合、テストできるようになるまでにやるべきことは何もありません!"
 
 #. type: Plain text
-#: upstream/_guides/elasticsearch.adoc:270
+#: upstream/_guides/elasticsearch.adoc:316
 #, fuzzy
 msgid "If you want to use Docker to run an Elasticsearch instance, you can use the following command to launch one:"
 msgstr "Dockerを使ってElasticsearchインスタンスを起動したい場合は、以下のコマンドで起動します。"
 
 #. type: delimited block -
-#: upstream/_guides/elasticsearch.adoc:275
+#: upstream/_guides/elasticsearch.adoc:321
 #, no-wrap
 msgid ""
 "docker run --name elasticsearch  -e \"discovery.type=single-node\" -e \"ES_JAVA_OPTS=-Xms512m -Xmx512m\"\\\n"
@@ -572,79 +651,79 @@ msgid ""
 msgstr ""
 
 #. type: Title ==
-#: upstream/_guides/elasticsearch.adoc:277
+#: upstream/_guides/elasticsearch.adoc:323
 #, fuzzy, no-wrap
 msgid "Creating a frontend"
 msgstr "フロントエンドの作成"
 
 #. type: Plain text
-#: upstream/_guides/elasticsearch.adoc:282
+#: upstream/_guides/elasticsearch.adoc:328
 #, fuzzy
 msgid "Now let's add a simple web page to interact with our `FruitResource`.  Quarkus automatically serves static resources located under the `META-INF/resources` directory.  In the `src/main/resources/META-INF/resources` directory, add a `fruits.html` file with the content from this {quickstarts-blob-url}/elasticsearch-low-level-client-quickstart/src/main/resources/META-INF/resources/fruits.html[fruits.html] file in it."
 msgstr "ここで、 `FruitResource` .Quarkusと対話するための簡単なウェブページを追加してみましょう。Quarkusは、 `META-INF/resources` ディレクトリーの下にある静的なリソースを自動的に提供します。 `src/main/resources/META-INF/resources` ディレクトリーに、この {quickstarts-blob-url}/elasticsearch-low-level-client-quickstart/src/main/resources/META-INF/resources/fruits.html[fruits.html]ファイルの内容を含む `fruits.html` ファイルを追加します。"
 
 #. type: Plain text
-#: upstream/_guides/elasticsearch.adoc:284
+#: upstream/_guides/elasticsearch.adoc:330
 #, fuzzy
 msgid "You can now interact with your REST service:"
 msgstr "これで、REST サービスと対話できるようになりました。"
 
 #. type: Plain text
-#: upstream/_guides/elasticsearch.adoc:286
+#: upstream/_guides/elasticsearch.adoc:332
 #, fuzzy
 msgid "start Quarkus with `./mvnw quarkus:dev`"
 msgstr "クォークスを起動する `./mvnw quarkus:dev`"
 
 #. type: Plain text
-#: upstream/_guides/elasticsearch.adoc:287
+#: upstream/_guides/elasticsearch.adoc:333
 #, fuzzy
 msgid "open a browser to `http://localhost:8080/fruits.html`"
 msgstr "ブラウザを開く `http://localhost:8080/fruits.html`"
 
 #. type: Plain text
-#: upstream/_guides/elasticsearch.adoc:288
+#: upstream/_guides/elasticsearch.adoc:334
 #, fuzzy
 msgid "add new fruits to the list via the 'Add fruit' form"
 msgstr "フルーツを追加」フォームで新しいフルーツをリストに追加します。"
 
 #. type: Plain text
-#: upstream/_guides/elasticsearch.adoc:289
+#: upstream/_guides/elasticsearch.adoc:335
 #, fuzzy
 msgid "search for fruits by name or color via the 'Search Fruit' form"
 msgstr "名前や色で果物を検索することができます。"
 
 #. type: Title ==
-#: upstream/_guides/elasticsearch.adoc:290
+#: upstream/_guides/elasticsearch.adoc:336
 #, fuzzy, no-wrap
 msgid "Using the High Level REST Client"
 msgstr "高レベルRESTクライアントの使用"
 
 #. type: Plain text
-#: upstream/_guides/elasticsearch.adoc:293
+#: upstream/_guides/elasticsearch.adoc:339
 #, fuzzy
 msgid "Quarkus provides support for the Elasticsearch High Level REST Client but keep in mind that it comes with some caveats:"
 msgstr "QuarkusはElasticsearch High Level REST Clientのサポートを提供していますが、いくつかの注意点があることを覚えておいてください。"
 
 #. type: Plain text
-#: upstream/_guides/elasticsearch.adoc:295
+#: upstream/_guides/elasticsearch.adoc:341
 #, fuzzy
 msgid "It drags a lot of dependencies - especially Lucene -, which doesn't fit well with Quarkus philosophy. The Elasticsearch team is aware of this issue and it might improve sometime in the future."
 msgstr "これは多くの依存関係(特に Lucene)を引きずっており、Quarkus の哲学にはあまり合っていません。Elasticsearch チームはこの問題を認識しており、将来的には改善されるかもしれません。"
 
 #. type: Plain text
-#: upstream/_guides/elasticsearch.adoc:296
+#: upstream/_guides/elasticsearch.adoc:342
 #, fuzzy
 msgid "It is tied to a certain version of the Elasticsearch server: you cannot use a High Level REST Client version 7 to access a server version 6."
 msgstr "これはElasticsearchサーバーの特定のバージョンに縛られています: 高レベルRESTクライアントのバージョン7を使用してサーバーのバージョン6にアクセスすることはできません。"
 
 #. type: Plain text
-#: upstream/_guides/elasticsearch.adoc:298
+#: upstream/_guides/elasticsearch.adoc:344
 #, fuzzy
 msgid "Here is a version of the `FruitService` using the high level client instead of the low level one:"
 msgstr "ここでは、低レベルのクライアントの代わりに高レベルのクライアントを使用した `FruitService` のバージョンを示します。"
 
 #. type: delimited block -
-#: upstream/_guides/elasticsearch.adoc:320
+#: upstream/_guides/elasticsearch.adoc:366
 #, no-wrap
 msgid ""
 "import org.elasticsearch.action.get.GetRequest;\n"
@@ -662,13 +741,13 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/elasticsearch.adoc:322
+#: upstream/_guides/elasticsearch.adoc:368
 #, no-wrap
 msgid "import io.vertx.core.json.JsonObject;\n"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/elasticsearch.adoc:327
+#: upstream/_guides/elasticsearch.adoc:373
 #, no-wrap
 msgid ""
 "@ApplicationScoped\n"
@@ -678,7 +757,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/elasticsearch.adoc:334
+#: upstream/_guides/elasticsearch.adoc:380
 #, no-wrap
 msgid ""
 "    public void index(Fruit fruit) throws IOException {\n"
@@ -690,7 +769,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/elasticsearch.adoc:345
+#: upstream/_guides/elasticsearch.adoc:391
 #, no-wrap
 msgid ""
 "    public Fruit get(String id) throws IOException {\n"
@@ -706,7 +785,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/elasticsearch.adoc:359
+#: upstream/_guides/elasticsearch.adoc:405
 #, no-wrap
 msgid ""
 "    private List<Fruit> search(String term, String match) throws IOException {\n"
@@ -717,7 +796,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/elasticsearch.adoc:371
+#: upstream/_guides/elasticsearch.adoc:417
 #, no-wrap
 msgid ""
 "        SearchResponse searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);\n"
@@ -734,115 +813,115 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: upstream/_guides/elasticsearch.adoc:376
+#: upstream/_guides/elasticsearch.adoc:422
 #, fuzzy
 msgid "We inject an Elasticsearch `RestHighLevelClient` inside the service."
 msgstr "サービス内部にElasticsearch `RestHighLevelClient` を注入しています。"
 
 #. type: Plain text
-#: upstream/_guides/elasticsearch.adoc:377
+#: upstream/_guides/elasticsearch.adoc:423
 #, fuzzy
 msgid "We create an Elasticsearch index request."
 msgstr "Elasticsearchのインデックスリクエストを作成します。"
 
 #. type: Plain text
-#: upstream/_guides/elasticsearch.adoc:379
+#: upstream/_guides/elasticsearch.adoc:425
 #, fuzzy
 msgid "We send the request to Elasticsearch."
 msgstr "Elasticsearchにリクエストを送信します。"
 
 #. type: Title ==
-#: upstream/_guides/elasticsearch.adoc:381
+#: upstream/_guides/elasticsearch.adoc:427
 #, fuzzy, no-wrap
 msgid "Hibernate Search Elasticsearch"
 msgstr "Hibernate検索 Elasticsearch"
 
 #. type: Plain text
-#: upstream/_guides/elasticsearch.adoc:384
+#: upstream/_guides/elasticsearch.adoc:430
 #, fuzzy
 msgid "Quarkus supports Hibernate Search with Elasticsearch via the `hibernate-search-orm-elasticsearch` extension."
 msgstr "Quarkusは、 `hibernate-search-orm-elasticsearch` 拡張機能を介してElasticsearchでHibernate Searchをサポートしています。"
 
 #. type: Plain text
-#: upstream/_guides/elasticsearch.adoc:386
+#: upstream/_guides/elasticsearch.adoc:432
 #, fuzzy
 msgid "Hibernate Search Elasticsearch allows to synchronize your JPA entities to an Elasticsearch cluster and offers a way to query your Elasticsearch cluster using the Hibernate Search API."
 msgstr "Hibernate Search Elasticsearchでは、JPAエンティティーをElasticsearchクラスターに同期させることができ、Hibernate Search APIを使ってElasticsearchクラスターにクエリを発行する方法を提供しています。"
 
 #. type: Plain text
-#: upstream/_guides/elasticsearch.adoc:388
+#: upstream/_guides/elasticsearch.adoc:434
 #, fuzzy
 msgid "If you're interested in it, you can read the link:hibernate-search-orm-elasticsearch[Hibernate Search with Elasticsearch guide]."
 msgstr "興味のある方は、 link:hibernate-search-orm-elasticsearch[Hibernate Search with Elasticsearchのガイド] を読んでみてください。"
 
 #. type: Title ==
-#: upstream/_guides/elasticsearch.adoc:389
+#: upstream/_guides/elasticsearch.adoc:435
 #, fuzzy, no-wrap
 msgid "Cluster Health Check"
 msgstr "クラスターヘルスチェック"
 
 #. type: Plain text
-#: upstream/_guides/elasticsearch.adoc:393
+#: upstream/_guides/elasticsearch.adoc:439
 #, fuzzy
 msgid "If you are using the `quarkus-smallrye-health` extension, both the extension will automatically add a readiness health check to validate the health of the cluster."
 msgstr "`quarkus-smallrye-health` 拡張モジュールを使用している場合、どちらの拡張モジュールも、クラスターの健全性を検証するための準備状態の健全性チェックを自動的に追加します。"
 
 #. type: Plain text
-#: upstream/_guides/elasticsearch.adoc:396
+#: upstream/_guides/elasticsearch.adoc:442
 #, fuzzy
 msgid "So when you access the `/q/health/ready` endpoint of your application you will have information about the cluster status.  It uses the cluster health endpoint, the check will be down if the status of the cluster is **red**, or the cluster is not available."
 msgstr "そのため、アプリケーションの `/q/health/ready` エンドポイントにアクセスすると、クラスターの状態に関する情報を得ることができます。これはクラスターヘルスエンドポイントを使用しており、クラスターの状態が *赤で* あったり、クラスターが利用できなかったりするとチェックが落ちます。"
 
 #. type: Plain text
-#: upstream/_guides/elasticsearch.adoc:398
+#: upstream/_guides/elasticsearch.adoc:444
 #, fuzzy
 msgid "This behavior can be disabled by setting the `quarkus.elasticsearch.health.enabled` property to `false` in your `application.properties`."
 msgstr "この動作は、 `application.properties` の `quarkus.elasticsearch.health.enabled` プロパティーを `false` に設定することで無効にできます。"
 
 #. type: Title ==
-#: upstream/_guides/elasticsearch.adoc:399
+#: upstream/_guides/elasticsearch.adoc:445
 #, no-wrap
 msgid "Building a native executable"
 msgstr "ネイティブ実行可能ファイルの構築"
 
 #. type: Plain text
-#: upstream/_guides/elasticsearch.adoc:402
+#: upstream/_guides/elasticsearch.adoc:448
 #, fuzzy
 msgid "You can use both clients in a native executable."
 msgstr "ネイティブ実行ファイルで両方のクライアントを使用することができます。"
 
 #. type: Plain text
-#: upstream/_guides/elasticsearch.adoc:404
+#: upstream/_guides/elasticsearch.adoc:450
 #, fuzzy
 msgid "You can build a native executable with the usual command `./mvnw package -Pnative`."
 msgstr "ネイティブな実行ファイルは、通常のコマンド `./mvnw package -Pnative` でビルドできます。"
 
 #. type: Plain text
-#: upstream/_guides/elasticsearch.adoc:406
+#: upstream/_guides/elasticsearch.adoc:452
 #, fuzzy
 msgid "Running it is as simple as executing `./target/elasticsearch-low-level-client-quickstart-1.0.0-SNAPSHOT-runner`."
 msgstr "実行は `./target/elasticsearch-low-level-client-quickstart-1.0-SNAPSHOT-runner` を実行するだけで簡単です。"
 
 #. type: Plain text
-#: upstream/_guides/elasticsearch.adoc:408
+#: upstream/_guides/elasticsearch.adoc:454
 #, fuzzy
 msgid "You can then point your browser to `http://localhost:8080/fruits.html` and use your application."
 msgstr "その後、ブラウザを `http://localhost:8080/fruits.html` とアプリケーションを使用します。"
 
 #. type: Title ==
-#: upstream/_guides/elasticsearch.adoc:409
+#: upstream/_guides/elasticsearch.adoc:455
 #, no-wrap
 msgid "Conclusion"
 msgstr "結論"
 
 #. type: Plain text
-#: upstream/_guides/elasticsearch.adoc:412
+#: upstream/_guides/elasticsearch.adoc:458
 #, fuzzy
 msgid "Accessing an Elasticsearch cluster from a low level or a high level client is easy with Quarkus as it provides easy configuration, CDI integration and native support for it."
 msgstr "Quarkusでは、簡単な設定、CDIの統合、ネイティブサポートが提供されているため、低レベルまたは高レベルのクライアントからElasticsearchクラスターにアクセスすることが簡単にできます。"
 
 #. type: Title ==
-#: upstream/_guides/elasticsearch.adoc:413
+#: upstream/_guides/elasticsearch.adoc:459
 #, no-wrap
 msgid "Configuration Reference"
 msgstr "設定リファレンス"

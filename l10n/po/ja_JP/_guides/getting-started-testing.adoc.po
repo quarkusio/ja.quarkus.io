@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2021-02-05 12:07+0900\n"
+"POT-Creation-Date: 2021-02-23 11:07+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -226,7 +226,7 @@ msgstr ""
 
 #. type: delimited block -
 #: upstream/_guides/getting-started-testing.adoc:115
-#: upstream/_guides/getting-started-testing.adoc:857
+#: upstream/_guides/getting-started-testing.adoc:954
 #, no-wrap
 msgid ""
 "@QuarkusTest\n"
@@ -266,8 +266,8 @@ msgstr ""
 #. type: delimited block -
 #: upstream/_guides/getting-started-testing.adoc:137
 #: upstream/_guides/getting-started-testing.adoc:426
-#: upstream/_guides/getting-started-testing.adoc:564
-#: upstream/_guides/getting-started-testing.adoc:874
+#: upstream/_guides/getting-started-testing.adoc:661
+#: upstream/_guides/getting-started-testing.adoc:971
 #, no-wrap
 msgid "}\n"
 msgstr ""
@@ -957,30 +957,179 @@ msgstr "プロファイルを定義したので、それをテストクラスに
 msgid "All the test profile config is stored in a single class, which makes it easy to tell if the previous test ran with the same configuration."
 msgstr "テストプロファイルの設定はすべて単一のクラスに保存されているので、前回のテストが同じ設定で実行されたかどうかが簡単にわかります。"
 
+#. type: Title ===
+#: upstream/_guides/getting-started-testing.adoc:541
+#, fuzzy, no-wrap
+#| msgid "Testing a specific endpoint"
+msgid "Running specific tests"
+msgstr "特定のエンドポイントのテスト"
+
+#. type: Plain text
+#: upstream/_guides/getting-started-testing.adoc:545
+msgid "Quarkus provides the ability to limit test execution to tests with specific `@TestProfile` annotations.  This works by leveraging the `tags` method of `QuarkusTestProfile` in conjunction with the `quarkus.test.profile.tags` system property."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/getting-started-testing.adoc:549
+msgid "Essentially, any `QuarkusTestProfile` with at least one matching tag matching the value of `quarkus.test.profile.tags` will be considered active and all the tests annotated with `@TestProfile` of active profiles, will be run while the rest will be skipped.  This is best shown in the following example."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/getting-started-testing.adoc:551
+msgid "First let's define a few `QuarkusTestProfile` implementations like so:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/getting-started-testing.adoc:554
+#, no-wrap
+msgid "public class Profiles {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/getting-started-testing.adoc:556
+#, no-wrap
+msgid "    public static class NoTags implements QuarkusTestProfile {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/getting-started-testing.adoc:558
+#, no-wrap
+msgid "    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/getting-started-testing.adoc:565
+#, no-wrap
+msgid ""
+"    public static class SingleTag implements QuarkusTestProfile {\n"
+"        @Override\n"
+"        public Set<String> tags() {\n"
+"            return Collections.singleton(\"test1\");\n"
+"        }\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/getting-started-testing.adoc:573
+#, no-wrap
+msgid ""
+"    public static class MultipleTags implements QuarkusTestProfile {\n"
+"        @Override\n"
+"        public Set<String> tags() {\n"
+"            return new HashSet<>(Arrays.asList(\"test1\", \"test2\"));\n"
+"        }\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/getting-started-testing.adoc:576
+msgid "Now let's assume that we have the following tests:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/getting-started-testing.adoc:581
+#, no-wrap
+msgid ""
+"@QuarkusTest\n"
+"public class NoQuarkusProfileTest {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/getting-started-testing.adoc:587
+#: upstream/_guides/getting-started-testing.adoc:600
+#: upstream/_guides/getting-started-testing.adoc:613
+#: upstream/_guides/getting-started-testing.adoc:626
+#, no-wrap
+msgid ""
+"    @Test\n"
+"    public void test() {\n"
+"        // test something\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/getting-started-testing.adoc:594
+#, no-wrap
+msgid ""
+"@QuarkusTest\n"
+"@TestProfile(Profiles.NoTags.class)\n"
+"public class NoTagsTest {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/getting-started-testing.adoc:607
+#, no-wrap
+msgid ""
+"@QuarkusTest\n"
+"@TestProfile(Profiles.SingleTag.class)\n"
+"public class SingleTagTest {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/getting-started-testing.adoc:620
+#, no-wrap
+msgid ""
+"@QuarkusTest\n"
+"@TestProfile(Profiles.MultipleTags.class)\n"
+"public class MultipleTagsTest {\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/getting-started-testing.adoc:629
+msgid "Let's consider the following scenarios:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/getting-started-testing.adoc:631
+msgid "`quarkus.test.profile.tags` is not set: All tests will be executed."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/getting-started-testing.adoc:633
+msgid "`quarkus.test.profile.tags=foo`: In this case none of tests will be executed because none of the tags defined on the `QuarkusTestProfile` implementations match the value of `quarkus.test.profile.tags`.  Note that `NoQuarkusProfileTest` is not executed either because it is not annotated with `@TestProfile`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/getting-started-testing.adoc:635
+msgid "`quarkus.test.profile.tags=test1`: In this case `SingleTagTest` and `MultipleTagsTest` will be run because the tags on their respective `QuarkusTestProfile` implementations match the value of `quarkus.test.profile.tags`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/getting-started-testing.adoc:636
+msgid "`quarkus.test.profile.tags=test1,test3`: This case results in the same tests being executed as the previous case."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/getting-started-testing.adoc:638
+msgid "`quarkus.test.profile.tags=test2,test3`: In this case only `MultipleTagsTest` will be run because `MultipleTagsTest` is the only `QuarkusTestProfile` implementation whose `tags` method matches the value of `quarkus.test.profile.tags`."
+msgstr ""
+
 #. type: Title ==
-#: upstream/_guides/getting-started-testing.adoc:542
+#: upstream/_guides/getting-started-testing.adoc:639
 #, no-wrap
 msgid "Mock Support"
 msgstr "モックサポート"
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:546
+#: upstream/_guides/getting-started-testing.adoc:643
 msgid "Quarkus supports the use of mock objects using two different approaches. You can either use CDI alternatives to mock out a bean for all test classes, or use `QuarkusMock` to mock out beans on a per test basis."
 msgstr "Quarkusでは、2つの異なるアプローチを使用したモックオブジェクトの使用をサポートしています。CDIの代替品を使用してすべてのテストクラスのBeanをモックアウトするか、 `QuarkusMock`  を使用してテストごとにBeanをモックアウトすることができます。"
 
 #. type: Title ===
-#: upstream/_guides/getting-started-testing.adoc:547
+#: upstream/_guides/getting-started-testing.adoc:644
 #, no-wrap
 msgid "CDI `@Alternative` mechanism."
 msgstr "CDI `@Alternative`  メカニズム"
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:553
+#: upstream/_guides/getting-started-testing.adoc:650
 msgid "To use this simply override the bean you wish to mock with a class in the `src/test/java` directory, and put the `@Alternative` and `@Priority(1)` annotations on the bean.  Alternatively, a convenient `io.quarkus.test.Mock` stereotype annotation could be used.  This built-in stereotype declares `@Alternative`, `@Priority(1)` and `@Dependent`.  For example if I have the following service:"
 msgstr "これを使用するには、 `src/test/java`  ディレクトリーのクラスでモックしたいBeanをオーバーライドし、 `@Alternative`  と `@Priority(1)`  アノテーションをBeanに配置するだけです。あるいは、便利な `io.quarkus.test.Mock`  ステレオタイプアノテーションを使用することもできます。この組み込みステレオタイプは、 `@Alternative`  、 `@Priority(1)`  、 `@Dependent`  を宣言します。例えば、以下のようなサービスがあるとします:"
 
 #. type: delimited block -
-#: upstream/_guides/getting-started-testing.adoc:558
+#: upstream/_guides/getting-started-testing.adoc:655
 #, no-wrap
 msgid ""
 "@ApplicationScoped\n"
@@ -988,7 +1137,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/getting-started-testing.adoc:562
+#: upstream/_guides/getting-started-testing.adoc:659
 #, no-wrap
 msgid ""
 "    public String service() {\n"
@@ -997,12 +1146,12 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:567
+#: upstream/_guides/getting-started-testing.adoc:664
 msgid "I could mock it with the following class in `src/test/java`:"
 msgstr "`src/test/java`  で以下のクラスでモックできました:"
 
 #. type: delimited block -
-#: upstream/_guides/getting-started-testing.adoc:573
+#: upstream/_guides/getting-started-testing.adoc:670
 #, no-wrap
 msgid ""
 "@Mock\n"
@@ -1011,7 +1160,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/getting-started-testing.adoc:579
+#: upstream/_guides/getting-started-testing.adoc:676
 #, no-wrap
 msgid ""
 "    @Override\n"
@@ -1022,44 +1171,44 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:581
+#: upstream/_guides/getting-started-testing.adoc:678
 msgid "Overrides the `@Dependent` scope declared on the `@Mock` stereotype."
 msgstr "`@Mock`  ステレオタイプで宣言された `@Dependent`  スコープをオーバーライドします。"
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:584
+#: upstream/_guides/getting-started-testing.adoc:681
 msgid "It is important that the alternative be present in the `src/test/java` directory rather than `src/main/java`, as otherwise it will take effect all the time, not just when testing."
 msgstr "代替品が `src/main/java`  ではなく `src/test/java`  ディレクトリーに存在することが重要です。そうでなければ、テスト以外も常に有効になってしまいます。"
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:587
+#: upstream/_guides/getting-started-testing.adoc:684
 msgid "Note that at present this approach does not work with native image testing, as this would required the test alternatives to be baked into the native image."
 msgstr "現在のところ、このアプローチはネイティブイメージテストでは機能しないことに注意してください。テスト代替品がネイティブイメージに焼き込まれる必要がある為です。"
 
 #. type: Title ===
-#: upstream/_guides/getting-started-testing.adoc:589
+#: upstream/_guides/getting-started-testing.adoc:686
 #, fuzzy, no-wrap
 msgid "Mocking using QuarkusMock"
 msgstr "QuarkusMockを使ったモッキング"
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:594
+#: upstream/_guides/getting-started-testing.adoc:691
 msgid "The `io.quarkus.test.junit.QuarkusMock` class can be used to temporarily mock out any normal scoped bean. If you use this method in a `@BeforeAll` method the mock will take effect for all tests on the current class, while if you use this in a test method the mock will only take effect for the duration of the current test."
 msgstr "`io.quarkus.test.junit.QuarkusMock`  クラスは、通常のスコープ付きBeanを一時的にモックアウトするために使用することができます。 `@BeforeAll`  メソッドでこのメソッドを使用した場合、モックは現在のクラスのすべてのテストに対して有効になりますが、test メソッドでこれを使用した場合、モックは現在のテストの間のみ有効になります。"
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:597
+#: upstream/_guides/getting-started-testing.adoc:694
 msgid "This method can be used for any normal scoped CDI bean (e.g. `@ApplicationScoped`, `@RequestScoped` etc, basically every scope except `@Singleton` and `@Dependent`)."
 msgstr "この方法は、通常のスコープ付き CDI Bean(例: `@ApplicationScoped` , `@RequestScoped`  など、 `@Singleton`  と `@Dependent`  以外の基本的にすべてのスコープ)に対して使用することができます。"
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:599
+#: upstream/_guides/getting-started-testing.adoc:696
 msgid "An example usage could look like:"
 msgstr "使用例は次のようになります:"
 
 #. type: delimited block -
-#: upstream/_guides/getting-started-testing.adoc:604
-#: upstream/_guides/getting-started-testing.adoc:672
+#: upstream/_guides/getting-started-testing.adoc:701
+#: upstream/_guides/getting-started-testing.adoc:769
 #, no-wrap
 msgid ""
 "@QuarkusTest\n"
@@ -1067,7 +1216,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/getting-started-testing.adoc:607
+#: upstream/_guides/getting-started-testing.adoc:704
 #, no-wrap
 msgid ""
 "    @Inject\n"
@@ -1075,7 +1224,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/getting-started-testing.adoc:610
+#: upstream/_guides/getting-started-testing.adoc:707
 #, no-wrap
 msgid ""
 "    @Inject\n"
@@ -1083,7 +1232,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/getting-started-testing.adoc:617
+#: upstream/_guides/getting-started-testing.adoc:714
 #, no-wrap
 msgid ""
 "    @BeforeAll\n"
@@ -1095,7 +1244,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/getting-started-testing.adoc:623
+#: upstream/_guides/getting-started-testing.adoc:720
 #, no-wrap
 msgid ""
 "    @Test\n"
@@ -1106,7 +1255,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/getting-started-testing.adoc:630
+#: upstream/_guides/getting-started-testing.adoc:727
 #, no-wrap
 msgid ""
 "    @Test\n"
@@ -1118,8 +1267,8 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/getting-started-testing.adoc:633
-#: upstream/_guides/getting-started-testing.adoc:699
+#: upstream/_guides/getting-started-testing.adoc:730
+#: upstream/_guides/getting-started-testing.adoc:796
 #, no-wrap
 msgid ""
 "    @ApplicationScoped\n"
@@ -1127,9 +1276,9 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/getting-started-testing.adoc:638
-#: upstream/_guides/getting-started-testing.adoc:646
-#: upstream/_guides/getting-started-testing.adoc:704
+#: upstream/_guides/getting-started-testing.adoc:735
+#: upstream/_guides/getting-started-testing.adoc:743
+#: upstream/_guides/getting-started-testing.adoc:801
 #, no-wrap
 msgid ""
 "        public String greet(String name) {\n"
@@ -1139,8 +1288,8 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/getting-started-testing.adoc:641
-#: upstream/_guides/getting-started-testing.adoc:707
+#: upstream/_guides/getting-started-testing.adoc:738
+#: upstream/_guides/getting-started-testing.adoc:804
 #, no-wrap
 msgid ""
 "    @ApplicationScoped\n"
@@ -1148,7 +1297,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/getting-started-testing.adoc:654
+#: upstream/_guides/getting-started-testing.adoc:751
 #, no-wrap
 msgid ""
 "    public static class BonjourGreeter extends MockableBean2 {\n"
@@ -1161,38 +1310,38 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:656
+#: upstream/_guides/getting-started-testing.adoc:753
 msgid "As the injected instance is not available here we use `installMockForType`, this mock is used for both test methods"
 msgstr "インジェクションされたインスタンスはここでは利用できないので、 `installMockForType` を使用します。このモックは両方のテストメソッドに使用されます。"
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:657
+#: upstream/_guides/getting-started-testing.adoc:754
 msgid "We use `installMockForInstance` to replace the injected bean, this takes effect for the duration of the test method."
 msgstr "私たちは `installMockForInstance`  を使用して注入されたBeanを置き換えます。"
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:660
+#: upstream/_guides/getting-started-testing.adoc:757
 msgid "Note that there is no dependency on Mockito, you can use any mocking library you like, or even manually override the objects to provide the behaviour you require."
 msgstr "Mockitoには依存しないことに注意してください。好きなモッキングライブラリを使うことができますし、必要な動作を提供するためにオブジェクトを手動でオーバーライドすることもできます。"
 
 #. type: Title ====
-#: upstream/_guides/getting-started-testing.adoc:661
+#: upstream/_guides/getting-started-testing.adoc:758
 #, no-wrap
 msgid "Further simplification with `@InjectMock`"
 msgstr "`@InjectMock` での更なる単純化"
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:665
+#: upstream/_guides/getting-started-testing.adoc:762
 msgid "Building on the features provided by `QuarkusMock`, Quarkus also allows users to effortlessly take advantage of link:https://site.mockito.org/[Mockito] for mocking the beans supported by `QuarkusMock`.  This functionality is available via the `@io.quarkus.test.junit.mockito.InjectMock` annotation which is available in the `quarkus-junit5-mockito` dependency."
 msgstr "`QuarkusMock`  で提供されている機能をベースに、Quarkusでは、 `QuarkusMock`  でサポートされているBeanをモックするために link:https://site.mockito.org/[Mockito を]簡単に利用できるようにしています。この機能は、 `quarkus-junit5-mockito`  依存関係で利用可能な `@io.quarkus.test.junit.mockito.InjectMock`  アノテーションを介して利用できます。"
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:667
+#: upstream/_guides/getting-started-testing.adoc:764
 msgid "Using `@InjectMock`, the previous example could be written as follows:"
 msgstr "`@InjectMock`  を使用すると、先ほどの例は次のように書くことができます:"
 
 #. type: delimited block -
-#: upstream/_guides/getting-started-testing.adoc:675
+#: upstream/_guides/getting-started-testing.adoc:772
 #, no-wrap
 msgid ""
 "    @InjectMock\n"
@@ -1200,7 +1349,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/getting-started-testing.adoc:678
+#: upstream/_guides/getting-started-testing.adoc:775
 #, no-wrap
 msgid ""
 "    @InjectMock\n"
@@ -1208,7 +1357,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/getting-started-testing.adoc:683
+#: upstream/_guides/getting-started-testing.adoc:780
 #, no-wrap
 msgid ""
 "    @BeforeEach\n"
@@ -1218,7 +1367,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/getting-started-testing.adoc:689
+#: upstream/_guides/getting-started-testing.adoc:786
 #, no-wrap
 msgid ""
 "    @Test\n"
@@ -1229,7 +1378,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/getting-started-testing.adoc:696
+#: upstream/_guides/getting-started-testing.adoc:793
 #, no-wrap
 msgid ""
 "    @Test\n"
@@ -1241,7 +1390,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/getting-started-testing.adoc:713
+#: upstream/_guides/getting-started-testing.adoc:810
 #, no-wrap
 msgid ""
 "        public String greet(String name) {\n"
@@ -1252,32 +1401,32 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:715
+#: upstream/_guides/getting-started-testing.adoc:812
 msgid "`@InjectMock` results in a mock being and is available in test methods of the test class (other test classes are *not* affected by this)"
 msgstr "`@InjectMock` により、モックがテストクラスのテストメソッドに存在することになり、利用可能になります (他のテストクラスはこの影響を受け *ません* )。"
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:716
+#: upstream/_guides/getting-started-testing.adoc:813
 msgid "The `mockableBean1` is configured here for every test method of the class"
 msgstr "クラスのすべてのテストメソッドに対して `mockableBean1`  が設定されています。"
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:717
+#: upstream/_guides/getting-started-testing.adoc:814
 msgid "Since the `mockableBean2` mock has not been configured, it will return the default Mockito response."
 msgstr "`mockableBean2`  のモックが設定されていないので、デフォルトの Mockito レスポンスを返します。"
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:718
+#: upstream/_guides/getting-started-testing.adoc:815
 msgid "In this test the `mockableBean2` is configured, so it returns the configured response."
 msgstr "このテストでは、 `mockableBean2`  が設定されているので、設定されたレスポンスを返します。"
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:722
+#: upstream/_guides/getting-started-testing.adoc:819
 msgid "Although the test above is good for showing the capabilities of `@InjectMock`, it is not a good representation of a real test. In a real test we would most likely configure a mock, but then test a bean that uses the mocked bean.  Here is an example:"
 msgstr "上のテストは `@InjectMock`  の機能を示すのには良いですが、実際のテストを上手く表してはいません。実際のテストでは、ほとんどの場合、モックを設定し、モックされたBeanを使用するBeanをテストします。以下に例を示します:"
 
 #. type: delimited block -
-#: upstream/_guides/getting-started-testing.adoc:727
+#: upstream/_guides/getting-started-testing.adoc:824
 #, no-wrap
 msgid ""
 "@QuarkusTest\n"
@@ -1285,7 +1434,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/getting-started-testing.adoc:730
+#: upstream/_guides/getting-started-testing.adoc:827
 #, no-wrap
 msgid ""
 "    @InjectMock\n"
@@ -1293,7 +1442,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/getting-started-testing.adoc:740
+#: upstream/_guides/getting-started-testing.adoc:837
 #, no-wrap
 msgid ""
 "    @Test\n"
@@ -1308,8 +1457,8 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/getting-started-testing.adoc:743
-#: upstream/_guides/getting-started-testing.adoc:807
+#: upstream/_guides/getting-started-testing.adoc:840
+#: upstream/_guides/getting-started-testing.adoc:904
 #, no-wrap
 msgid ""
 "    @Path(\"greeting\")\n"
@@ -1317,15 +1466,15 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/getting-started-testing.adoc:745
-#: upstream/_guides/getting-started-testing.adoc:809
+#: upstream/_guides/getting-started-testing.adoc:842
+#: upstream/_guides/getting-started-testing.adoc:906
 #, no-wrap
 msgid "        final GreetingService greetingService;\n"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/getting-started-testing.adoc:749
-#: upstream/_guides/getting-started-testing.adoc:813
+#: upstream/_guides/getting-started-testing.adoc:846
+#: upstream/_guides/getting-started-testing.adoc:910
 #, no-wrap
 msgid ""
 "        public GreetingResource(GreetingService greetingService) {\n"
@@ -1334,8 +1483,8 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/getting-started-testing.adoc:756
-#: upstream/_guides/getting-started-testing.adoc:820
+#: upstream/_guides/getting-started-testing.adoc:853
+#: upstream/_guides/getting-started-testing.adoc:917
 #, no-wrap
 msgid ""
 "        @GET\n"
@@ -1347,8 +1496,8 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/getting-started-testing.adoc:764
-#: upstream/_guides/getting-started-testing.adoc:828
+#: upstream/_guides/getting-started-testing.adoc:861
+#: upstream/_guides/getting-started-testing.adoc:925
 #, no-wrap
 msgid ""
 "    @ApplicationScoped\n"
@@ -1361,28 +1510,28 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:766
+#: upstream/_guides/getting-started-testing.adoc:863
 msgid "Since we configured `greetingService` as a mock, the `GreetingResource` which uses the `GreetingService` bean, we get the mocked response instead of the response of the regular `GreetingService` bean"
 msgstr "`greetingService`  をモックとして設定したので、 `GreetingService`  Beanを使用する `GreetingResource`  は、通常の `GreetingService` Beanのレスポンスの代わりにモックされたレスポンスを取得します。"
 
 #. type: Title ====
-#: upstream/_guides/getting-started-testing.adoc:767
+#: upstream/_guides/getting-started-testing.adoc:864
 #, no-wrap
 msgid "Using Spies instead of Mocks with `@InjectSpy`"
 msgstr " `@InjectSpy` で、モックの代わりにスパイを使用する"
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:771
+#: upstream/_guides/getting-started-testing.adoc:868
 msgid "Building on the features provided by `InjectMock`, Quarkus also allows users to effortlessly take advantage of link:https://site.mockito.org/[Mockito] for spying on the beans supported by `QuarkusMock`.  This functionality is available via the `@io.quarkus.test.junit.mockito.InjectSpy` annotation which is available in the `quarkus-junit5-mockito` dependency."
 msgstr "`InjectMock`  で提供されている機能をベースに、 `QuarkusMock`  でサポートされているビーンズをスパイするために link:https://site.mockito.org/[Mockito ]を簡単に利用できるようにしました。この機能は、 `quarkus-junit5-mockito`  依存関係で利用可能な `@io.quarkus.test.junit.mockito.InjectSpy`  アノテーションを介して利用できます。"
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:775
+#: upstream/_guides/getting-started-testing.adoc:872
 msgid "Sometimes when testing you only need to verify that a certain logical path was taken, or you only need to stub out a single method's response while still executing the rest of the methods on the Spied clone. Please see link:https://javadoc.io/doc/org.mockito/mockito-core/latest/org/mockito/Mockito.html#spy-T-[Mockito documentation] for more details on Spy partial mocks.  In either of those situations a Spy of the object is preferable.  Using `@InjectSpy`, the previous example could be written as follows:"
 msgstr "テストを行う際に、特定の論理パスが取られたかどうかを確認するだけで済む場合もありますし、Spied クローン上で残りのメソッドを実行している間に、1つのメソッドのレスポンスをスタブアウトするだけで済む場合もあります。Spy パーシャル モックの詳細については link:https://javadoc.io/doc/org.mockito/mockito-core/latest/org/mockito/Mockito.html#spy-T-[Mockito のドキュメント]を参照してください。いずれの場合も、オブジェクトの Spy が望ましいでしょう。 `@InjectSpy`  を使用して、先ほどの例は次のように書くことができます。"
 
 #. type: delimited block -
-#: upstream/_guides/getting-started-testing.adoc:780
+#: upstream/_guides/getting-started-testing.adoc:877
 #, no-wrap
 msgid ""
 "@QuarkusTest\n"
@@ -1390,7 +1539,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/getting-started-testing.adoc:783
+#: upstream/_guides/getting-started-testing.adoc:880
 #, no-wrap
 msgid ""
 "    @InjectSpy\n"
@@ -1398,7 +1547,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/getting-started-testing.adoc:791
+#: upstream/_guides/getting-started-testing.adoc:888
 #, no-wrap
 msgid ""
 "    @Test\n"
@@ -1411,7 +1560,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/getting-started-testing.adoc:794
+#: upstream/_guides/getting-started-testing.adoc:891
 #, no-wrap
 msgid ""
 "        Mockito.verify(greetingService, Mockito.times(1)).greet(); <1>\n"
@@ -1419,7 +1568,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/getting-started-testing.adoc:804
+#: upstream/_guides/getting-started-testing.adoc:901
 #, no-wrap
 msgid ""
 "    @Test\n"
@@ -1434,33 +1583,33 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:830
+#: upstream/_guides/getting-started-testing.adoc:927
 msgid "Instead of overriding the value, we just want to ensure that the greet method on our `GreetingService` was called by this test."
 msgstr "値をオーバーライドするのではなく、 `GreetingService`  の greet メソッドがこのテストで呼び出されたことを確認したいだけです。"
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:831
+#: upstream/_guides/getting-started-testing.adoc:928
 msgid "Here we are telling the Spy to return \"hi\" instead of \"hello\". When the `GreetingResource` requests the greeting from `GreetingService` we get the mocked response instead of the response of the regular `GreetingService` bean"
 msgstr "ここでは、\"hello\"の代わりに\"hi\"を返すようにSpyに指示しています。 `GreetingResource`  が `GreetingService`  から挨拶を要求するとき、通常の `GreetingService`  Bean のレスポンスの代わりにモックされたレスポンスを取得します。"
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:832
+#: upstream/_guides/getting-started-testing.adoc:929
 msgid "We are verifying that we get the mocked response from the Spy."
 msgstr "私たちは、スパイからのモックされた応答を得ることを検証しています。"
 
 #. type: Title ====
-#: upstream/_guides/getting-started-testing.adoc:833
+#: upstream/_guides/getting-started-testing.adoc:930
 #, no-wrap
 msgid "Using `@InjectMock` with `@RestClient`"
 msgstr "`@InjectMock`  との併用 `@RestClient`"
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:836
+#: upstream/_guides/getting-started-testing.adoc:933
 msgid "The `@RegisterRestClient` registers the implementation of the rest-client at runtime, and because the bean needs to be a regular scope, you have to annotate your interface with `@ApplicationScoped`."
 msgstr "`@RegisterRestClient`  は、実行時に rest-client の実装を登録しています。Beanは通常のスコープである必要があるため、インターフェイスに `@ApplicationScoped` を付与する必要があります。"
 
 #. type: delimited block -
-#: upstream/_guides/getting-started-testing.adoc:843
+#: upstream/_guides/getting-started-testing.adoc:940
 #, no-wrap
 msgid ""
 "@Path(\"/\")\n"
@@ -1470,7 +1619,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/getting-started-testing.adoc:849
+#: upstream/_guides/getting-started-testing.adoc:946
 #, no-wrap
 msgid ""
 "    @GET\n"
@@ -1481,12 +1630,12 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:852
+#: upstream/_guides/getting-started-testing.adoc:949
 msgid "For the test class here is an example:"
 msgstr "テストクラスの例です:"
 
 #. type: delimited block -
-#: upstream/_guides/getting-started-testing.adoc:861
+#: upstream/_guides/getting-started-testing.adoc:958
 #, no-wrap
 msgid ""
 "    @InjectMock\n"
@@ -1495,7 +1644,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/getting-started-testing.adoc:865
+#: upstream/_guides/getting-started-testing.adoc:962
 #, no-wrap
 msgid ""
 "    @Test\n"
@@ -1504,7 +1653,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/getting-started-testing.adoc:872
+#: upstream/_guides/getting-started-testing.adoc:969
 #, no-wrap
 msgid ""
 "        given()\n"
@@ -1516,135 +1665,153 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:876
+#: upstream/_guides/getting-started-testing.adoc:973
 msgid "Indicate that this injection point is meant to use an instance of `RestClient`."
 msgstr "この注入ポイントが `RestClient`  のインスタンスを使用することを意味していることを示します。"
 
 #. type: Title ===
-#: upstream/_guides/getting-started-testing.adoc:877
+#: upstream/_guides/getting-started-testing.adoc:974
 #, fuzzy, no-wrap
 msgid "Mocking with Panache"
 msgstr "パナッシュでモッキング"
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:880
+#: upstream/_guides/getting-started-testing.adoc:977
 msgid "If you are using the `quarkus-hibernate-orm-panache` or `quarkus-mongodb-panache` extensions, check out the link:hibernate-orm-panache#mocking[Hibernate ORM with Panache Mocking] and link:mongodb-panache#mocking[MongoDB with Panache Mocking] documentation for the easiest way to mock your data access."
 msgstr "`quarkus-hibernate-orm-panache`  や `quarkus-mongodb-panache` のエクステンションを使っている場合は、 link:hibernate-orm-panache#mocking[Hibernate ORM とPanache Mocking]や link:mongodb-panache#mocking[MongoDB とPanache Mocking]のドキュメントをチェックして、データアクセスをモックする最も簡単な方法を確認してください。"
 
 #. type: Title ==
-#: upstream/_guides/getting-started-testing.adoc:881
+#: upstream/_guides/getting-started-testing.adoc:978
 #, no-wrap
 msgid "Testing Security"
 msgstr "セキュリティーのテスト"
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:884
+#: upstream/_guides/getting-started-testing.adoc:981
 msgid "If you are using Quarkus Security, check out the link:security-testing[Testing Security] section for information on how to easily test security features of the application."
 msgstr "Quarkus Securityを使用している場合、アプリケーションのセキュリティー機能を簡単にテストする方法については、「 link:security-testing[セキュリティーのテスト]」のセクションをご覧ください。"
 
 #. type: Title ==
-#: upstream/_guides/getting-started-testing.adoc:886
+#: upstream/_guides/getting-started-testing.adoc:983
 #, fuzzy, no-wrap
 msgid "Starting services before the Quarkus application starts"
 msgstr "Quarkusアプリケーションの起動前にサービスを開始する"
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:889
+#: upstream/_guides/getting-started-testing.adoc:986
 msgid "A very common need is to start some services on which your Quarkus application depends, before the Quarkus application starts for testing. To address this need, Quarkus provides `@io.quarkus.test.common.QuarkusTestResource` and `io.quarkus.test.common.QuarkusTestResourceLifecycleManager`."
 msgstr "非常に一般的なニーズは、Quarkusアプリケーションがテストを開始する前に、Quarkusアプリケーションに依存するいくつかのサービスを開始することです。このニーズに対応するために、Quarkusでは、 `@io.quarkus.test.common.QuarkusTestResource`  と `io.quarkus.test.common.QuarkusTestResourceLifecycleManager` を提供します。"
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:892
-msgid "By simply annotating any test in the test suite with `@QuarkusTestResource`, Quarkus will run the corresponding `QuarkusTestResourceLifecycleManager` before any tests are run.  A test suite is also free to utilize multiple `@QuarkusTestResource` annotations, in which case all the corresponding `QuarkusTestResourceLifecycleManager` objects will be run before the tests."
+#: upstream/_guides/getting-started-testing.adoc:989
+#, fuzzy
+#| msgid "By simply annotating any test in the test suite with `@QuarkusTestResource`, Quarkus will run the corresponding `QuarkusTestResourceLifecycleManager` before any tests are run.  A test suite is also free to utilize multiple `@QuarkusTestResource` annotations, in which case all the corresponding `QuarkusTestResourceLifecycleManager` objects will be run before the tests."
+msgid "By simply annotating any test in the test suite with `@QuarkusTestResource`, Quarkus will run the corresponding `QuarkusTestResourceLifecycleManager` before any tests are run.  A test suite is also free to utilize multiple `@QuarkusTestResource` annotations, in which case all the corresponding `QuarkusTestResourceLifecycleManager` objects will be run before the tests. When using multiple test resources they can be started concurrently. For that you need to set `@QuarkusTestResource(parallel = true)`."
 msgstr "テストスイート内の任意のテストに `@QuarkusTestResource` をアノテーションするだけで、Quarkusは、テストを実行する前に対応する `QuarkusTestResourceLifecycleManager`  を実行します。テストスイートでは、複数の `@QuarkusTestResource`  アノテーションを自由に利用することもできます。この場合、対応するすべての `QuarkusTestResourceLifecycleManager`  オブジェクトがテストの前に実行されます。"
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:897
+#: upstream/_guides/getting-started-testing.adoc:994
 msgid "Quarkus provides a few implementations of `QuarkusTestResourceLifecycleManager` out of the box (see `io.quarkus.test.h2.H2DatabaseTestResource` which starts an H2 database, or `io.quarkus.test.kubernetes.client.KubernetesMockServerTestResource` which starts a mock Kubernetes API server), but it is common to create custom implementations to address specific application needs.  Common cases include starting docker containers using https://www.testcontainers.org/[Testcontainers] (an example of which can be found https://github.com/quarkusio/quarkus-quickstarts/blob/master/kafka-quickstart/src/test/java/org/acme/kafka/KafkaResource.java[here]), or starting a mock HTTP server using http://wiremock.org/[Wiremock] (an example of which can be found https://github.com/geoand/quarkus-test-demo/blob/master/src/test/java/org/acme/getting/started/country/WiremockCountries.java[here])."
 msgstr "Quarkusでは、 `QuarkusTestResourceLifecycleManager`  の実装がいくつか提供されていますが(H2データベースを起動する `io.quarkus.test.h2.H2DatabaseTestResource` や、モックKubernetes APIサーバーを起動する `io.quarkus.test.kubernetes.client.KubernetesMockServerTestResource`  を参照)、特定のアプリケーションのニーズに対応するためにカスタム実装を作成するのが一般的です。一般的なケースとしては、 link:https://www.testcontainers.org/[Testcontainers]を使ってdockerコンテナーを起動したり(その例は link:https://github.com/quarkusio/quarkus-quickstarts/blob/master/kafka-quickstart/src/test/java/org/acme/kafka/KafkaResource.java[こちら]にあります)、 link:http://wiremock.org/[Wiremock]を使ってモックHTTPサーバを起動したり(その例は link:https://github.com/geoand/quarkus-test-demo/blob/master/src/test/java/org/acme/getting/started/country/WiremockCountries.java[こちら]にあります)などがあります。"
 
 #. type: Title ==
-#: upstream/_guides/getting-started-testing.adoc:898
+#: upstream/_guides/getting-started-testing.adoc:995
+#, no-wrap
+msgid "Hang Detection"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/getting-started-testing.adoc:1000
+msgid "`@QuarkusTest` has support for hang detection to help diagnose any unexpected hangs. If no progress is made for a specified time (i.e. no JUnit callbacks are invoked) then Quarkus will print a stack trace to the console to help diagnose the hang.  The default value for this timeout is 10 minutes."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/getting-started-testing.adoc:1005
+msgid "No further action will be taken, and the tests will continue as normal (generally until CI times out), however the printed stack traces should help diagnose why the build has failed. You can control this timeout with the `quarkus.test.hang-detection-timeout` system property (you can also set this in application.properties, but this won't be read until Quarkus has started, so the timeout for Quarkus start will be the default of 10 minutes)."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/getting-started-testing.adoc:1006
 #, no-wrap
 msgid "Native Executable Testing"
 msgstr "ネイティブ実行可能ファイルテスト"
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:902
+#: upstream/_guides/getting-started-testing.adoc:1010
 msgid "It is also possible to test native executables using `@NativeImageTest`. This supports all the features mentioned in this guide except injecting into tests (and the native executable runs in a separate non-JVM process this is not really possible)."
 msgstr "`@NativeImageTest` を使用してネイティブ実行ファイルをテストすることも可能です。これは、テストに注入すること(そして、ネイティブ実行可能ファイルは別の非JVMプロセスで実行されることーこれは実際には可能ではありません)を除いて、このガイドで述べたすべての機能をサポートしています。"
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:905
+#: upstream/_guides/getting-started-testing.adoc:1013
 msgid "This is covered in the link:building-native-image[Native Executable Guide]."
 msgstr "これは link:building-native-image[ネイティブ実行可能ファイルガイド] で説明されています。"
 
 #. type: Title ==
-#: upstream/_guides/getting-started-testing.adoc:907
+#: upstream/_guides/getting-started-testing.adoc:1015
 #, no-wrap
 msgid "Running `@QuarkusTest` from an IDE"
 msgstr "IDE から `@QuarkusTest`  を実行する"
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:910
+#: upstream/_guides/getting-started-testing.adoc:1018
 msgid "Most IDEs offer the possibility to run a selected class as JUnit test directly. For this you should set a few properties in the settings of your chosen IDE:"
 msgstr "ほとんどの IDE では、選択したクラスを JUnit テストとして直接実行できるようになっています。そのためには、選択した IDE の設定でいくつかのプロパティーを設定する必要があります。"
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:912
+#: upstream/_guides/getting-started-testing.adoc:1020
 msgid "`java.util.logging.manager` (see link:logging[Logging Guide])"
 msgstr "`java.util.logging.manager`  (ロ link:logging[ギングガイド]を参照)"
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:914
+#: upstream/_guides/getting-started-testing.adoc:1022
 #, fuzzy
 msgid "`maven.home` (only if there are any custom settings in `${maven.home}/conf/settings.xml`, see link:maven-tooling[Maven Guide])"
 msgstr "`maven.home` ( `${maven.home}/conf/settings.xml` にカスタム設定がある場合のみ、 link:maven-tooling[Mavenガイドを] 参照してください)"
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:916
+#: upstream/_guides/getting-started-testing.adoc:1024
 msgid "`maven.settings` (in case a custom version of `settings.xml` file should be used for the tests)"
 msgstr "`maven.settings`  (カスタム版の `settings.xml`  ファイルをテストに使用する場合)"
 
 #. type: Title ===
-#: upstream/_guides/getting-started-testing.adoc:917
+#: upstream/_guides/getting-started-testing.adoc:1025
 #, fuzzy, no-wrap
 msgid "Eclipse separate JRE definition"
 msgstr "Eclipse別のJREの定義"
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:920
+#: upstream/_guides/getting-started-testing.adoc:1028
 msgid "Copy your current \"Installed JRE\" definition into a new one, where you will add the properties as a new VM arguments:"
 msgstr "現在の\"Installed JRE\"定義を新しい定義にコピーし、新しいVMの引数としてプロパティーを追加します:"
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:922
+#: upstream/_guides/getting-started-testing.adoc:1030
 msgid "`-Djava.util.logging.manager=org.jboss.logmanager.LogManager`"
 msgstr "`-Djava.util.logging.manager=org.jboss.logmanager.LogManager`"
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:924
+#: upstream/_guides/getting-started-testing.adoc:1032
 msgid "`-Dmaven.home=<path-to-your-maven-installation>`"
 msgstr "`-Dmaven.home=&amp;lt;path-to-your-maven-installation&amp;gt;`"
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:926
+#: upstream/_guides/getting-started-testing.adoc:1034
 msgid "Use this JRE definition as your Quarkus project targeted runtime and the workaround will be applied to any \"Run as JUnit\" configuration."
 msgstr "このJRE定義をQuarkusプロジェクトのターゲットランタイムとして使用すると、「Run as JUnit」設定に回避策が適用されます。"
 
 #. type: Title ===
-#: upstream/_guides/getting-started-testing.adoc:927
+#: upstream/_guides/getting-started-testing.adoc:1035
 #, no-wrap
 msgid "VSCode \"run with\" configuration"
 msgstr "VSCode \"run with\" 設定"
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:930
+#: upstream/_guides/getting-started-testing.adoc:1038
 msgid "The `settings.json` placed in the root of your project directory or in the workspace will need the workaround in your test configuration:"
 msgstr "プロジェクトディレクトリーやワークスペースのルートにある `settings.json`  は、テスト設定で回避策が必要です。"
 
 #. type: delimited block -
-#: upstream/_guides/getting-started-testing.adoc:940
+#: upstream/_guides/getting-started-testing.adoc:1048
 #, no-wrap
 msgid ""
 "\"java.test.config\": [\n"
@@ -1658,12 +1825,12 @@ msgid ""
 msgstr ""
 
 #. type: Title ===
-#: upstream/_guides/getting-started-testing.adoc:942
+#: upstream/_guides/getting-started-testing.adoc:1050
 #, fuzzy, no-wrap
 msgid "IntelliJ JUnit template"
 msgstr "IntelliJ JUnit テンプレート"
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:944
+#: upstream/_guides/getting-started-testing.adoc:1052
 msgid "Nothing needed in IntelliJ because the IDE will pick the `systemPropertyVariables` from the surefire plugin configuration in `pom.xml`."
 msgstr "IntelliJでは何も必要ありません。なぜなら、IDEは `systemPropertyVariables` を `pom.xml`のsurefireプラグイン設定から取得するからです。"
