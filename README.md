@@ -59,6 +59,18 @@ updated, GitHub Actions workflow automatically create a issue to let you know.
 Please refer the [l10n/stats/override.csv](l10n/stats/override.csv) to check which files are updated, and update the override files 
 to keep it up to date.
 
+## FAQ
+
+### Some guides or blog posts are not translated.
+
+These articles are not translated, but don't worry. Machine-translation is available in the corresponding .adoc.po file,
+please post-edit the .adoc.po files to polish up, remove "fuzzy" mark, and send a pull-request when you find it.
+
+### Some sentences are not translated in the translated articles
+
+It seems corresponding upstream sentences are updated, and completed translations are not available. 
+please post-edit the .adoc.po files to polish up, remove "fuzzy" mark, and send a pull-request when you find it.
+
 ## Contributing
 
 Submitting a pull request, and reporting an issue are all welcome.
