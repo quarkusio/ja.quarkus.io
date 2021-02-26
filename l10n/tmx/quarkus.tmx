@@ -7817,6 +7817,270 @@ author: gsmet
     </tu>
     <tu>
       <tuv xml:lang="en">
+        <seg>This guide demonstrates how your Quarkus application can utilize MicroProfile Reactive Messaging to consume and produce HTTP messages.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>このガイドでは、Quarkus アプリケーションが MicroProfile Reactive Messaging を使用して HTTP メッセージを消費および生成する方法を説明します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>GraalVM, Docker or Podman installed if you want to run in native mode.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>ネイティブモードで実行したい場合は、GraalVM、Docker、Podman がインストールされていること</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>In this guide we will implement a service, namely `CostConverter` that consumes HTTP messages with costs in multiple currencies and converts each cost to its value in Euro.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>このガイドでは、複数の通貨のコストを持つ HTTP メッセージを消費し、各コストをユーロの値に変換するサービス、すなわち `CostConverter` を実装します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>To let a user easily try out the service, we will implement an HTTP resource summing up the costs (`CostCollector`), and a simple web page to add new costs and watch the sum.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>ユーザーが簡単にサービスを試すことができるように、コストを合計したHTTPリソース( `CostCollector` )と、新しいコストを追加して合計を見るためのシンプルなWebページを実装します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>The solution is located in the `reactive-messaging-http-quickstart` {quickstarts-tree-url}/reactive-messaging-http-quickstart[directory].</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>ソリューションは `reactive-messaging-http-quickstart` {quickstarts-tree-url}/reactive-messaging-http-quickstart[ディレクトリ] にあります。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>This command generates a Maven project, importing the Reactive Messaging and HTTP connector extensions.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>このコマンドは、Reactive MessagingとHTTPコネクタエクステンションをインポートしてMavenプロジェクトを生成します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>The Converter</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>コンバーター</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Create the `src/main/java/org/acme/reactivehttp/CostConverter.java` file, with the following content:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>以下の内容の `src/main/java/org/acme/reactivehttp/CostConverter.java` ファイルを作成します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Consume messages from the `incoming-costs` stream.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`incoming-costs` ストリームからメッセージを消費します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Dispatch returned values to the `outgoing-costs` stream.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>返された値を `outgoing-costs` ストリームにディスパッチします。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Consume an event with payload of type `Cost` and produce a `double`.  In the case of consuming an arbitrary object, the reactive-messaging-http extension will attempt to deserialize the request body assuming it is JSON.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`Cost` 型のペイロードを持つイベントを消費して `double` を生成します。任意のオブジェクトを消費する場合、reactive-messaging-http エクステンションは、リクエストボディが JSON であると仮定して、リクエストボディをデシリアライズしようとします。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Let's define the `Cost` class:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`Cost` クラスを定義してみましょう。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>In the next step, we will create configurations for both streams in the `application.properties` file.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>次のステップでは、 `application.properties` ファイルに両方のストリームの設定を作成します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>We need to configure the HTTP connector. This is done in the `application.properties` file.  The keys are structured as follows:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>HTTP コネクタを設定する必要があります。これは `application.properties` ファイルで行います。キーは以下のように構成されています。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>The `channel-name` segment must match the value set in the `@Incoming` and `@Outgoing` annotation:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`channel-name` セグメントは、 `@Incoming` および `@Outgoing` アノテーションで設定された値と一致する必要があります。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>The CostCollector</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>コストコレクター</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>To illustrate that converting messages and passing them through works, let's add an endpoint that will receive the outgoing costs and sum them up.  This is a usual JAX-RS endpoint.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>メッセージを変換して受け渡す様子を説明するために、送信コストを受け取って集計するエンドポイントを追加してみましょう。これは通常のJAX-RSエンドポイントです。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>To conveniently interact with the application, let's create a simple web page.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>アプリケーションと便利にやりとりするために、簡単なWebページを作成してみましょう。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>The page will provide a form to add costs, and an info of the current sum of costs.  The page periodically updates the sum by requesting the current sum from `/cost-collector`.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>このページでは、コストを追加するためのフォームと、現在のコストの合計の情報を提供します。ページは定期的に `/cost-collector` から現在の合計を要求することによって合計を更新します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Create the `src/main/resources/META-INF/resources/index.html` file, with the following content:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>以下の内容の `src/main/resources/META-INF/resources/index.html` ファイルを作成します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Get it running</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>実行</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Run the application using:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>以下でアプリケーションを実行します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Open `http://localhost:8080/index.html` in your browser.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>ブラウザで `http://localhost:8080/index.html` を開いてください。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Running Native</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>ネイティブ実行</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>You can build the native executable with:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>以下ででネイティブ実行ファイルをビルドすることができます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>All `quarkus-http` connector options:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`quarkus-http` コネクタの全オプション。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Except of the `quarkus-http` connector, the `quarkus-reactive-messaging-http` extension also brings in `quarkus-websocket` - a connector for exposing and feeding WebSockets.  At the moment only binary data is supported.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`quarkus-http` コネクタ以外に、 `quarkus-reactive-messaging-http` エクステンションには `quarkus-websocket` - WebSocket を公開して供給するためのコネクタ - が組み込まれています。現時点ではバイナリーデータのみサポートされています。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>While the sink of the HTTP connector checks if the message is consumed by the remote endpoint, the WebSocket sink does not. It may happen that a failure to receive a message is not reported, e.g. if the remote side closes the WebSocket connection in a crucial moment.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>HTTP コネクタのシンクは、メッセージがリモートエンドポイントによって消費されるかどうかをチェックしますが、WebSocket シンクはチェックしません。例えば、リモート側が肝心な時に WebSocket 接続を閉じた場合など、メッセージの受信に失敗したことが報告されないことがあるかもしれません。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>The `quarkus-websocket` connector is configured with the following properties:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`quarkus-websocket` コネクタは、以下のプロパティーで構成されています。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Reactive Messaging</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>リアクティブメッセージング</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>This extension utilizes MicroProfile Reactive Messaging to build data streaming applications.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>このエクステンションは、MicroProfile Reactive Messaging を利用してデータストリーミングアプリケーションを構築します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>If you did the Kafka or AMQP quickstart, you have realized that it's the same code.  The only difference is the connector configuration.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>KafkaやAMQPのクイックスタートをした人は、同じコードであることに気づいたはずです。違いはコネクタの設定だけです。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>If you want to go further check the documentation of https://smallrye.io/smallrye-reactive-messaging[SmallRye Reactive Messaging], the implementation used in Quarkus.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>さらに詳しく知りたい場合は、Quarkusで使用されている実装である link:https://smallrye.io/smallrye-reactive-messaging[SmallRye Reactive Messaging] のドキュメントを確認してください。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
         <seg>Setting it up</seg>
       </tuv>
       <tuv xml:lang="ja_JP">
@@ -12924,14 +13188,6 @@ permalink: /vision/standards
     </tu>
     <tu>
       <tuv xml:lang="en">
-        <seg>The `channel-name` segment must match the value set in the `@Incoming` and `@Outgoing` annotation:</seg>
-      </tuv>
-      <tuv xml:lang="ja_JP">
-        <seg>`channel-name` セグメントは、 `@Incoming` および `@Outgoing` アノテーションで設定された値と一致する必要があります。</seg>
-      </tuv>
-    </tu>
-    <tu>
-      <tuv xml:lang="en">
         <seg>More details about this configuration is available on the https://kafka.apache.org/documentation/#producerconfigs[Producer configuration] and https://kafka.apache.org/documentation/#consumerconfigs[Consumer configuration] section from the Kafka documentation. These properties are configured with the prefix `kafka`.</seg>
       </tuv>
       <tuv xml:lang="ja_JP">
@@ -12972,14 +13228,6 @@ permalink: /vision/standards
     </tu>
     <tu>
       <tuv xml:lang="en">
-        <seg>Get it running</seg>
-      </tuv>
-      <tuv xml:lang="ja_JP">
-        <seg>実行</seg>
-      </tuv>
-    </tu>
-    <tu>
-      <tuv xml:lang="en">
         <seg>If you followed the instructions, you should have Kafka running.  Then, you just need to run the application using:</seg>
       </tuv>
       <tuv xml:lang="ja_JP">
@@ -13000,22 +13248,6 @@ permalink: /vision/standards
       </tuv>
       <tuv xml:lang="ja_JP">
         <seg>Kafka ブローカーを docker compose で起動した場合は、 `CTRL+C` に続いて `docker-compose down` で停止します。</seg>
-      </tuv>
-    </tu>
-    <tu>
-      <tuv xml:lang="en">
-        <seg>Running Native</seg>
-      </tuv>
-      <tuv xml:lang="ja_JP">
-        <seg>ネイティブ実行</seg>
-      </tuv>
-    </tu>
-    <tu>
-      <tuv xml:lang="en">
-        <seg>You can build the native executable with:</seg>
-      </tuv>
-      <tuv xml:lang="ja_JP">
-        <seg>以下でネイティブ実行ファイルをビルドすることができます。</seg>
       </tuv>
     </tu>
     <tu>
@@ -13488,14 +13720,6 @@ permalink: /vision/standards
       </tuv>
       <tuv xml:lang="ja_JP">
         <seg>このガイドでは、Quarkusを使用してKafkaと対話する方法を示しました。MicroProfile Reactive Messagingを利用して、データストリーミングアプリケーションを構築します。</seg>
-      </tuv>
-    </tu>
-    <tu>
-      <tuv xml:lang="en">
-        <seg>If you want to go further check the documentation of https://smallrye.io/smallrye-reactive-messaging[SmallRye Reactive Messaging], the implementation used in Quarkus.</seg>
-      </tuv>
-      <tuv xml:lang="ja_JP">
-        <seg>さらに詳しく知りたい場合は、Quarkusで使用されている実装である link:https://smallrye.io/smallrye-reactive-messaging[SmallRye Reactive Messaging] のドキュメントを確認してください。</seg>
       </tuv>
     </tu>
     <tu>
@@ -15825,7 +16049,15 @@ for example.
         <seg>Native executable fails on macOS with `error: unknown type name 'uint8_t'`</seg>
       </tuv>
       <tuv xml:lang="ja_JP">
-        <seg>macOS でのネイティブ実行ファイルが `error: unknown type name 'uint8_t'` で失敗します</seg>
+        <seg>macOS でのネイティブ実行ファイルが `error: unknown type name 'uint8_t'` で失敗する</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Your macOS has the wrong `*.h` files compared to the OS and no gcc compilation will work.  This can happen when you migrate from versions of the OS.  See https://stackoverflow.com/questions/48029309/cannot-compile-any-c-programs-error-unknown-type-name-uint8-t</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>お使いの macOS には、その OS とは異なる `*.h` ファイルがあるため、gcc コンパイルが動作しません。この問題は、その OS の別のバージョンから移行したときに起こる可能性があります。 https://stackoverflow.com/questions/48029309/cannot-compile-any-c-programs-error-unknown-type-name-uint8-t を参照してください。</seg>
       </tuv>
     </tu>
     <tu>
@@ -15849,7 +16081,7 @@ for example.
         <seg>Reinstall XCode for good measure</seg>
       </tuv>
       <tuv xml:lang="ja_JP">
-        <seg>念のためにXCodeを再インストールします。</seg>
+        <seg>念のため Xcode を再インストールします。</seg>
       </tuv>
     </tu>
     <tu>
@@ -15857,7 +16089,7 @@ for example.
         <seg>generally reinstall your brew dependencies with native compilation</seg>
       </tuv>
       <tuv xml:lang="ja_JP">
-        <seg>一般的には、ネイティブコンパイルでの brew の依存関係を再インストールします。</seg>
+        <seg>通常は、ネイティブコンパイルで brew の依存関係を再インストールします。</seg>
       </tuv>
     </tu>
     <tu>
@@ -15865,7 +16097,7 @@ for example.
         <seg>The executable should work now.</seg>
       </tuv>
       <tuv xml:lang="ja_JP">
-        <seg>実行ファイルが動作するようになるはずです。</seg>
+        <seg>これで、実行ファイルが動作するようになるはずです。</seg>
       </tuv>
     </tu>
     <tu>
@@ -22213,14 +22445,6 @@ This guide will walk you through all that.
       </tuv>
       <tuv xml:lang="ja_JP">
         <seg>/guides/amqp</seg>
-      </tuv>
-    </tu>
-    <tu>
-      <tuv xml:lang="en">
-        <seg>This guide demonstrates how your Quarkus application can utilize MicroProfile Reactive Messaging to consume and produce HTTP messages.</seg>
-      </tuv>
-      <tuv xml:lang="ja_JP">
-        <seg>このガイドでは、QuarkusアプリケーションがMicroProfile Reactive Messagingを使用してHTTPメッセージを消費および生成する方法を説明します。</seg>
       </tuv>
     </tu>
     <tu>
