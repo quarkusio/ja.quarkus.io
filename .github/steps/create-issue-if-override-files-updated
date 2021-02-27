@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -eu
+
+SCRIPT_DIR=$(cd $(dirname $0); pwd)
+L10N_HOME=$(cd $(dirname $(dirname $SCRIPT_DIR)); pwd)
+cd $L10N_HOME
+
+source config/l10n-kit.conf
+
+set +e
+git diff --exit-code --quiet ./l10n/stats/override.csv
+UPDATE_CHECK_EXIT_CODE=$?
+set -e
+
+cat ./l10n/stats/override.csv | awk -F "," 'NR>1 {print $4}' | grep NG > /dev/null
+NG_CHECK_EXIT_CODE=$?
+
+echo $UPDATE_CHECK_EXIT_CODE
+echo $NG_CHECK_EXIT_CODE
+
+if [ $UPDATE_CHECK_EXIT_CODE -ne 0 -a $NG_CHECK_EXIT_CODE -eq 0 ] ; then
+  gh issue create --title "Upstream files overridden are updated" --body "Uptream files overridden are updated. see override stats for more details."
+fi
