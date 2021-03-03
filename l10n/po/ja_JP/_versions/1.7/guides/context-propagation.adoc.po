@@ -1,0 +1,252 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2021-03-03 20:10+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. This guide is maintained in the main Quarkus repository
+#. and pull requests should be submitted there:
+#. https://github.com/quarkusio/quarkus/tree/master/docs/src/main/asciidoc
+#. type: Title =
+#: upstream/_versions/1.7/guides/context-propagation.adoc:6
+#, no-wrap
+msgid "Context Propagation in Quarkus"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/context-propagation.adoc:15
+#, no-wrap
+msgid ""
+"Traditional blocking code uses link:https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/ThreadLocal.html[`ThreadLocal`]\n"
+" variables to store contextual objects in order to avoid\n"
+"passing them as parameters everywhere. Many Quarkus extensions require those contextual objects to operate\n"
+"properly: link:rest-json[RESTEasy], link:cdi-reference[ArC] and link:transaction[Transaction]\n"
+"for example.\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/context-propagation.adoc:20
+msgid "If you write reactive/async code, you have to cut your work into a pipeline of code blocks that get executed \"later\", and in practice after the method you defined them in have returned. As such, `try/finally` blocks as well as `ThreadLocal` variables stop working, because your reactive code gets executed in another thread, after the caller ran its `finally` block."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/context-propagation.adoc:24
+msgid "link:https://github.com/eclipse/microprofile-context-propagation[MicroProfile Context Propagation] was made to make those Quarkus extensions work properly in reactive/async settings. It works by capturing those contextual values that used to be in thread-locals, and restoring them when your code is called."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/1.7/guides/context-propagation.adoc:25
+#, no-wrap
+msgid "Setting it up"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/context-propagation.adoc:29
+msgid "If you are using link:http://smallrye.io/smallrye-mutiny[Mutiny] (the `quarkus-mutiny` extension), you just need to add the the `quarkus-smallrye-context-propagation` extension to enable context propagation."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/context-propagation.adoc:31
+msgid "In other words, add the following dependencies to your `pom.xml`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/context-propagation.adoc:50
+#, no-wrap
+msgid ""
+"<dependencies>\n"
+"    <!-- Mutiny and RestEasy support extensions if not already included -->\n"
+"    <dependency>\n"
+"        <groupId>io.quarkus</groupId>\n"
+"        <artifactId>quarkus-mutiny</artifactId>\n"
+"    </dependency>\n"
+"    <dependency>\n"
+"        <groupId>io.quarkus</groupId>\n"
+"        <artifactId>quarkus-resteasy-mutiny</artifactId>\n"
+"    </dependency>\n"
+"    <!-- Context Propagation extension -->\n"
+"    <dependency>\n"
+"        <groupId>io.quarkus</groupId>\n"
+"        <artifactId>quarkus-smallrye-context-propagation</artifactId>\n"
+"    </dependency>\n"
+"</dependencies>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/context-propagation.adoc:53
+msgid "With this, you will get context propagation for ArC, RESTEasy and transactions, if you are using them."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/1.7/guides/context-propagation.adoc:54
+#, no-wrap
+msgid "Usage example with Mutiny"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/1.7/guides/context-propagation.adoc:57
+#, no-wrap
+msgid "Mutiny"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/1.7/guides/context-propagation.adoc:60
+msgid "This section uses Mutiny reactive types, if you're not familiar with them, read the link:getting-started-reactive#mutiny[Getting Started with Reactive guide] first."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/context-propagation.adoc:65
+msgid "Let's write a REST endpoint that reads the next 3 items from a link:kafka[Kafka topic], stores them in a database using link:hibernate-orm-panache[Hibernate ORM with Panache] (all in the same transaction) before returning them to the client, you can do it like this:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/context-propagation.adoc:71
+#, no-wrap
+msgid ""
+"    // Get the prices stream\n"
+"    @Inject\n"
+"    @Channel(\"prices\") Publisher<Double> prices;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/context-propagation.adoc:92
+#, no-wrap
+msgid ""
+"    @Transactional\n"
+"    @GET\n"
+"    @Path(\"/prices\")\n"
+"    @Produces(MediaType.SERVER_SENT_EVENTS)\n"
+"    @SseElementType(MediaType.TEXT_PLAIN)\n"
+"    public Publisher<Double> prices() {\n"
+"        // get the next three prices from the price stream\n"
+"        return Multi.createFrom().publisher(prices)\n"
+"                .transform().byTakingFirstItems(3)\n"
+"                .map(price -> {\n"
+"                    // store each price before we send them\n"
+"                    Price priceEntity = new Price();\n"
+"                    priceEntity.value = price;\n"
+"                    // here we are all in the same transaction\n"
+"                    // thanks to context propagation\n"
+"                    priceEntity.persist();\n"
+"                    return price;\n"
+"                    // the transaction is committed once the stream completes\n"
+"                });\n"
+"    }\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/context-propagation.adoc:96
+msgid "Notice that thanks to Mutiny support for context propagation, this works out of the box.  The 3 items are persisted using the same transaction and this transaction is committed when the stream completes."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/1.7/guides/context-propagation.adoc:97
+#, no-wrap
+msgid "Usage example for `CompletionStage`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/context-propagation.adoc:105
+msgid "If you are using link:https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/concurrent/CompletionStage.html[`CompletionStage`] you need manual context propagation. You can do that by injecting a `ThreadContext` or `ManagedExecutor` that will propagate every context. For example, here we use the link:vertx[Vert.x Web Client] to get the list of Star Wars people, then store them in the database using link:hibernate-orm-panache[Hibernate ORM with Panache] (all in the same transaction) before returning them to the client as JSON using link:rest-json[JSON-B or Jackson]:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/context-propagation.adoc:111
+#, no-wrap
+msgid ""
+"    @Inject ThreadContext threadContext;\n"
+"    @Inject ManagedExecutor managedExecutor;\n"
+"    @Inject Vertx vertx;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/context-propagation.adoc:139
+#, no-wrap
+msgid ""
+"    @Transactional\n"
+"    @GET\n"
+"    @Path(\"/people\")\n"
+"    @Produces(MediaType.APPLICATION_JSON)\n"
+"    public CompletionStage<List<Person>> people() throws SystemException {\n"
+"        // Create a REST client to the Star Wars API\n"
+"        WebClient client = WebClient.create(vertx,\n"
+"                         new WebClientOptions()\n"
+"                          .setDefaultHost(\"swapi.dev\")\n"
+"                          .setDefaultPort(443)\n"
+"                          .setSsl(true));\n"
+"        // get the list of Star Wars people, with context capture\n"
+"        return threadContext.withContextCapture(client.get(\"/api/people/\").send())\n"
+"                .thenApplyAsync(response -> {\n"
+"                    JsonObject json = response.bodyAsJsonObject();\n"
+"                    List<Person> persons = new ArrayList<>(json.getInteger(\"count\"));\n"
+"                    // Store them in the DB\n"
+"                    // Note that we're still in the same transaction as the outer method\n"
+"                    for (Object element : json.getJsonArray(\"results\")) {\n"
+"                        Person person = new Person();\n"
+"                        person.name = ((JsonObject) element).getString(\"name\");\n"
+"                        person.persist();\n"
+"                        persons.add(person);\n"
+"                    }\n"
+"                    return persons;\n"
+"                }, managedExecutor);\n"
+"    }\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/context-propagation.adoc:143
+msgid "Using `ThreadContext` or `ManagedExecutor` you can wrap most useful functional types and `CompletionStage` in order to get context propagated."
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/1.7/guides/context-propagation.adoc:147
+msgid "The injected `ManagedExecutor` uses the Quarkus thread pool."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/1.7/guides/context-propagation.adoc:149
+#, no-wrap
+msgid "Adding support for RxJava2"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/context-propagation.adoc:152
+msgid "You need to include the following modules to get RxJava2 support:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/context-propagation.adoc:175
+#, no-wrap
+msgid ""
+"<dependencies>\n"
+"    <!-- Automatic context propagation for RxJava2 -->\n"
+"    <dependency>\n"
+"        <groupId>io.smallrye</groupId>\n"
+"        <artifactId>smallrye-context-propagation-propagators-rxjava2</artifactId>\n"
+"    </dependency>\n"
+"    <!-- \n"
+"    Required if you want transactions extended to the end of methods returning\n"
+"    an RxJava2 type.\n"
+"     -->\n"
+"    <dependency>\n"
+"        <groupId>io.smallrye.reactive</groupId>\n"
+"        <artifactId>smallrye-reactive-converter-rxjava2</artifactId>\n"
+"    </dependency>\n"
+"    <!-- Required if you return RxJava2 types from your REST endpoints -->\n"
+"    <dependency>\n"
+"        <groupId>org.jboss.resteasy</groupId>\n"
+"        <artifactId>resteasy-rxjava2</artifactId>\n"
+"    </dependency>\n"
+"</dependencies>\n"
+msgstr ""

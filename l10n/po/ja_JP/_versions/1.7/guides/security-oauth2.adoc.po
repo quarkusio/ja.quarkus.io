@@ -1,0 +1,870 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2021-03-03 20:09+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. This guide is maintained in the main Quarkus repository
+#. and pull requests should be submitted there:
+#. https://github.com/quarkusio/quarkus/tree/master/docs/src/main/asciidoc
+#. type: Title =
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:6
+#, no-wrap
+msgid "Quarkus - Using OAuth2 RBAC"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:13
+msgid "This guide explains how your Quarkus application can utilize OAuth2 tokens to provide secured access to the JAX-RS endpoints."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:16
+msgid "OAuth2 is an authorization framework that enables applications to obtain access to an HTTP resource on behalf of a user.  It can be used to implement an application authentication mechanism based on tokens by delegating to an external server (the authentication server) the user authentication and providing a token for the authentication context."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:18
+msgid "This extension provides a light-weight support for using the opaque Bearer Tokens and validating them by calling an introspection endpoint."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:21
+msgid "If the OAuth2 Authentication server provides JWT Bearer Tokens then you should consider using either link:security-openid-connect[OpenId Connect] or link:security-jwt[MicroProfile JWT RBAC] extensions instead.  OpenId Connect extension has to be used if the Quarkus application needs to authenticate the users using OIDC Authorization Code Flow, please read link:security-openid-connect-web-authentication[Using OpenID Connect to Protect Web Applications] guide for more information."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:24
+#, no-wrap
+msgid "Solution"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:28
+msgid "We recommend that you follow the instructions in the next sections and create the application step by step.  However, you can go right to the completed example."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:30
+msgid "Clone the Git repository: git clone https://github.com/quarkusio/quarkus-quickstarts.git, or download an archive."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:33
+msgid "The solution is located in the `security-oauth2-quickstart` {quickstarts-tree-url}/security-oauth2-quickstart[directory].  It contains a very simple UI to use the JAX-RS resources created here, too."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:34
+#, no-wrap
+msgid "Creating the Maven project"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:37
+msgid "First, we need a new project. Create a new project with the following command:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:47
+#, no-wrap
+msgid ""
+"mvn io.quarkus:quarkus-maven-plugin:{quarkus-version}:create \\\n"
+"    -DprojectGroupId=org.acme \\\n"
+"    -DprojectArtifactId=security-oauth2-quickstart \\\n"
+"    -DclassName=\"org.acme.security.oauth2.TokenSecuredResource\" \\\n"
+"    -Dpath=\"/secured\" \\\n"
+"    -Dextensions=\"resteasy-jsonb, security-oauth2\"\n"
+"cd security-oauth2-quickstart\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:50
+msgid "This command generates the Maven project with a REST endpoint and imports the `elytron-security-oauth2` extension, which includes the OAuth2 opaque token support."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:52
+msgid "If you don't want to use the Maven plugin, you can just include the dependency in your pom.xml:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:58
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-elytron-security-oauth2</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:61
+#, no-wrap
+msgid "Examine the JAX-RS resource"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:64
+msgid "Open the `src/main/java/org/acme/security/oauth2/TokenSecuredResource.java` file and see the following content:"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:65
+#, no-wrap
+msgid "Basic REST Endpoint"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:69
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:93
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:177
+#, no-wrap
+msgid "package org.acme.security.oauth2;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:74
+#, no-wrap
+msgid ""
+"import javax.ws.rs.GET;\n"
+"import javax.ws.rs.Path;\n"
+"import javax.ws.rs.Produces;\n"
+"import javax.ws.rs.core.MediaType;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:77
+#, no-wrap
+msgid ""
+"@Path(\"/secured\")\n"
+"public class TokenSecuredResource {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:84
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @Produces(MediaType.TEXT_PLAIN)\n"
+"    public String hello() {\n"
+"        return \"hello\";\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:87
+msgid "This is a basic REST endpoint that does not have any of the {extension-name} specific features, so let's add some."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:89
+msgid "We will use the JSR 250 common security annotations, they are described in the link:security[Using Security] guide."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:95
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:179
+#, no-wrap
+msgid "import java.security.Principal;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:104
+#, no-wrap
+msgid ""
+"import javax.annotation.security.PermitAll;\n"
+"import javax.inject.Inject;\n"
+"import javax.ws.rs.GET;\n"
+"import javax.ws.rs.Path;\n"
+"import javax.ws.rs.Produces;\n"
+"import javax.ws.rs.core.Context;\n"
+"import javax.ws.rs.core.MediaType;\n"
+"import javax.ws.rs.core.SecurityContext;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:108
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:193
+#, no-wrap
+msgid ""
+"@Path(\"/secured\")\n"
+"@ApplicationScoped\n"
+"public class TokenSecuredResource {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:121
+#, no-wrap
+msgid ""
+"    @GET()\n"
+"    @Path(\"permit-all\")\n"
+"    @PermitAll // <1>\n"
+"    @Produces(MediaType.TEXT_PLAIN)\n"
+"    public String hello(@Context SecurityContext ctx) { // <2>\n"
+"        Principal caller =  ctx.getUserPrincipal(); <3>\n"
+"        String name = caller == null ? \"anonymous\" : caller.getName();\n"
+"        String helloReply = String.format(\"hello + %s, isSecure: %s, authScheme: %s\", name, ctx.isSecure(), ctx.getAuthenticationScheme());\n"
+"        return helloReply; // <4>\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:123
+msgid "`@PermitAll` indicates that the given endpoint is accessible by any caller, authenticated or not."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:124
+msgid "Here we inject the JAX-RS `SecurityContext` to inspect the security state of the call."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:125
+msgid "Here we obtain the current request user/caller `Principal`. For an unsecured call this will be null, so we build the user name by checking `caller` against null."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:126
+msgid "The reply we build up makes use of the caller name, the `isSecure()` and `getAuthenticationScheme()` states of the request `SecurityContext`."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:127
+#, no-wrap
+msgid "Run the application"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:130
+msgid "Now we are ready to run our application. Use:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:134
+#, no-wrap
+msgid "./mvnw compile quarkus:dev\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:137
+msgid "and you should see output similar to:"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:138
+#, no-wrap
+msgid "quarkus:dev Output"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:154
+#, no-wrap
+msgid ""
+"$ ./mvnw clean compile quarkus:dev\n"
+"[INFO] Scanning for projects...\n"
+"[INFO] \n"
+"[INFO] ---------------------< org.acme:security-oauth2-quickstart >---------------------\n"
+"[INFO] Building security-oauth2-quickstart 1.0-SNAPSHOT\n"
+"[INFO] --------------------------------[ jar ]---------------------------------\n"
+"...\n"
+"[INFO] --- quarkus-maven-plugin:999-SNAPSHOT:dev (default-cli) @ security-oauth2-quickstart ---\n"
+"Listening for transport dt_socket at address: 5005\n"
+"2019-07-16 09:58:09,753 INFO  [io.qua.dep.QuarkusAugmentor] (main) Beginning quarkus augmentation\n"
+"2019-07-16 09:58:10,884 INFO  [io.qua.dep.QuarkusAugmentor] (main) Quarkus augmentation completed in 1131ms\n"
+"2019-07-16 09:58:11,385 INFO  [io.quarkus] (main) Quarkus 0.20.0 started in 1.813s. Listening on: http://[::]:8080\n"
+"2019-07-16 09:58:11,391 INFO  [io.quarkus] (main) Installed features: [cdi, resteasy, resteasy-jsonb, security, security-oauth2]\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:158
+msgid "Now that the REST endpoint is running, we can access it using a command line tool like curl:"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:159
+#, no-wrap
+msgid "curl command for /secured/permit-all"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:164
+#, no-wrap
+msgid ""
+"$ curl http://127.0.0.1:8080/secured/permit-all; echo\n"
+"hello + anonymous, isSecure: false, authScheme: null\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:167
+msgid "We have not provided any token in our request, so we would not expect that there is any security state seen by the endpoint, and the response is consistent with that:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:169
+msgid "user name is anonymous"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:170
+msgid "`isSecure` is false as https is not used"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:171
+msgid "`authScheme` is null"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:173
+msgid "So now let's actually secure something. Take a look at the new endpoint method `helloRolesAllowed` in the following:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:189
+#, no-wrap
+msgid ""
+"import javax.annotation.security.PermitAll;\n"
+"import javax.annotation.security.RolesAllowed;\n"
+"import javax.inject.Inject;\n"
+"import javax.ws.rs.GET;\n"
+"import javax.ws.rs.Path;\n"
+"import javax.ws.rs.Produces;\n"
+"import javax.ws.rs.core.Context;\n"
+"import javax.ws.rs.core.MediaType;\n"
+"import javax.ws.rs.core.SecurityContext;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:204
+#, no-wrap
+msgid ""
+"    @GET()\n"
+"    @Path(\"permit-all\")\n"
+"    @PermitAll\n"
+"    @Produces(MediaType.TEXT_PLAIN)\n"
+"    public String hello(@Context SecurityContext ctx) {\n"
+"        Principal caller =  ctx.getUserPrincipal();\n"
+"        String name = caller == null ? \"anonymous\" : caller.getName();\n"
+"        String helloReply = String.format(\"hello + %s, isSecure: %s, authScheme: %s\", name, ctx.isSecure(), ctx.getAuthenticationScheme());\n"
+"        return helloReply;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:216
+#, no-wrap
+msgid ""
+"    @GET()\n"
+"    @Path(\"roles-allowed\") // <1>\n"
+"    @RolesAllowed({\"Echoer\", \"Subscriber\"}) // <2>\n"
+"    @Produces(MediaType.TEXT_PLAIN)\n"
+"    public String helloRolesAllowed(@Context SecurityContext ctx) {\n"
+"        Principal caller =  ctx.getUserPrincipal();\n"
+"        String name = caller == null ? \"anonymous\" : caller.getName();\n"
+"        String helloReply = String.format(\"hello + %s, isSecure: %s, authScheme: %s\", name, ctx.isSecure(), ctx.getAuthenticationScheme());\n"
+"        return helloReply;\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:218
+msgid "This new endpoint will be located at `/secured/roles-allowed`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:219
+msgid "`@RolesAllowed` indicates that the given endpoint is accessible by a caller if they have either a \"Echoer\" or \"Subscriber\" role assigned."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:221
+msgid "After you make this addition to your `TokenSecuredResource`, try `curl -v http://127.0.0.1:8080/secured/roles-allowed; echo` to attempt to access the new endpoint. Your output should be:"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:222
+#, no-wrap
+msgid "curl command for /secured/roles-allowed"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:242
+#, no-wrap
+msgid ""
+"$ curl -v http://127.0.0.1:8080/secured/roles-allowed; echo\n"
+"*   Trying 127.0.0.1...\n"
+"* TCP_NODELAY set\n"
+"* Connected to 127.0.0.1 (127.0.0.1) port 8080 (#0)\n"
+"> GET /secured/roles-allowed HTTP/1.1\n"
+"> Host: 127.0.0.1:8080\n"
+"> User-Agent: curl/7.54.0\n"
+"> Accept: */*\n"
+">\n"
+"< HTTP/1.1 401 Unauthorized\n"
+"< Connection: keep-alive\n"
+"< Content-Type: text/html;charset=UTF-8\n"
+"< Content-Length: 14\n"
+"< Date: Sun, 03 Mar 2019 16:32:34 GMT\n"
+"<\n"
+"* Connection #0 to host 127.0.0.1 left intact\n"
+"Not authorized\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:245
+msgid "Excellent, we have not provided any OAuth2 token in the request, so we should not be able to access the endpoint, and we were not. Instead we received an HTTP 401 Unauthorized error. We need to obtain and pass in a valid OAuth2 token to access that endpoint. There are two steps to this, 1) configuring our {extension-name} extension with information on how to validate the token, and 2) generating a matching token with the appropriate claims."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:246
+#, no-wrap
+msgid "Configuring the {extension-name} Extension Security Information"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:250
+#, no-wrap
+msgid "Setting up application.properties"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:253
+msgid "For part A of step 1, create a `security-oauth2-quickstart/src/main/resources/application.properties` with the following content:"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:254
+#, no-wrap
+msgid "application.properties for TokenSecuredResource"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:260
+#, no-wrap
+msgid ""
+"quarkus.oauth2.client-id=client_id\n"
+"quarkus.oauth2.client-secret=secret\n"
+"quarkus.oauth2.introspection-url=http://oauth-server/introspect\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:263
+msgid "You need to specify the introspection URL of your authentication server and the `client-id` / `client-secret` that your application will use to authenticate itself to the authentication server."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:265
+msgid "The extension will then use this information to validate the token and recover the information associate with it."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:267
+#, no-wrap
+msgid "Generating a token"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:270
+msgid "You need to obtain the token from a standard OAuth2 authentication server (https://www.keycloak.org/[Keycloak] for example) using the token endpoint."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:272
+msgid "You can find below a curl example of such call for a `client_credential` flow:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:277
+#, no-wrap
+msgid ""
+"curl -X POST \"http://oauth-server/token?grant_type=client_credentials\" \\\n"
+"-H  \"Accept: application/json\" -H  \"Authorization: Basic Y2xpZW50X2lkOmNsaWVudF9zZWNyZXQ=\"\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:280
+msgid "It should respond something like that..."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:284
+#, no-wrap
+msgid "{\"access_token\":\"60acf56d-9daf-49ba-b3be-7a423d9c7288\",\"token_type\":\"bearer\",\"expires_in\":1799,\"scope\":\"READER\"}\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:287
+#, no-wrap
+msgid "Finally, Secured Access to /secured/roles-allowed"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:289
+msgid "Now let's use this to make a secured request to the `/secured/roles-allowed` endpoint"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:290
+#, no-wrap
+msgid "curl Command for /secured/roles-allowed With a token"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:295
+#, no-wrap
+msgid ""
+"$ curl -H \"Authorization: Bearer 60acf56d-9daf-49ba-b3be-7a423d9c7288\" http://127.0.0.1:8080/secured/roles-allowed; echo\n"
+"hello + client_id isSecure: false, authScheme: OAuth2\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:298
+msgid "Success! We now have:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:300
+msgid "a non-anonymous caller name of client_id"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:301
+msgid "an authentication scheme of OAuth2"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:302
+#, no-wrap
+msgid "Roles mapping"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:305
+msgid "Roles are mapped from one of the claims of the introspection endpoint response. By default, it's the `scope` claim. Roles are obtained by splitting the claim with a space separator. If the claim is an array, no splitting is done, the roles are obtained from the array."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:307
+msgid "You can customize the name of the claim to use for the roles with the `quarkus.oauth2.role-claim` property."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:308
+#, no-wrap
+msgid "Package and run the application"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:311
+msgid "As usual, the application can be packaged using `./mvnw clean package` and executed using the `-runner.jar` file:"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:311
+#, no-wrap
+msgid "Runner jar Example"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:320
+#, no-wrap
+msgid ""
+"$ ./mvnw clean package\n"
+"[INFO] Scanning for projects...\n"
+"...\n"
+"$ java -jar target/security-oauth2-quickstart-runner.jar\n"
+"2019-03-28 14:27:48,839 INFO  [io.quarkus] (main) Quarkus 0.20.0 started in 0.796s. Listening on: http://[::]:8080\n"
+"2019-03-28 14:27:48,841 INFO  [io.quarkus] (main) Installed features: [cdi, resteasy, resteasy-jsonb, security, security-oauth2]\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:323
+msgid "You can also generate the native executable with `./mvnw clean package -Pnative`."
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:323
+#, no-wrap
+msgid "Native Executable Example"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:343
+#, no-wrap
+msgid ""
+"$ ./mvnw clean package -Pnative\n"
+"[INFO] Scanning for projects...\n"
+"...\n"
+"[security-oauth2-quickstart-runner:25602]     universe:     493.17 ms\n"
+"[security-oauth2-quickstart-runner:25602]      (parse):     660.41 ms\n"
+"[security-oauth2-quickstart-runner:25602]     (inline):   1,431.10 ms\n"
+"[security-oauth2-quickstart-runner:25602]    (compile):   7,301.78 ms\n"
+"[security-oauth2-quickstart-runner:25602]      compile:  10,542.16 ms\n"
+"[security-oauth2-quickstart-runner:25602]        image:   2,797.62 ms\n"
+"[security-oauth2-quickstart-runner:25602]        write:     988.24 ms\n"
+"[security-oauth2-quickstart-runner:25602]      [total]:  43,778.16 ms\n"
+"[INFO] ------------------------------------------------------------------------\n"
+"[INFO] BUILD SUCCESS\n"
+"[INFO] ------------------------------------------------------------------------\n"
+"[INFO] Total time:  51.500 s\n"
+"[INFO] Finished at: 2019-06-28T14:30:56-07:00\n"
+"[INFO] ------------------------------------------------------------------------\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:347
+#, no-wrap
+msgid ""
+"$ ./target/security-oauth2-quickstart-runner\n"
+"2019-03-28 14:31:37,315 INFO  [io.quarkus] (main) Quarkus 0.20.0 started in 0.006s. Listening on: http://[::]:8080\n"
+"2019-03-28 14:31:37,316 INFO  [io.quarkus] (main) Installed features: [cdi, resteasy, resteasy-jsonb, security, security-oauth2]\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:350
+#, no-wrap
+msgid "Integration testing"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:354
+msgid "If you don't want to use a real OAuth2 authorization server for your integration tests, you can use the link:security-properties[Properties based security] extension for your test, or mock an authorization server using Wiremock."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:356
+msgid "First of all, Wiremock needs to be added as a test dependency. For a Maven project that would happen like so:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:365
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"    <groupId>com.github.tomakehurst</groupId>\n"
+"    <artifactId>wiremock-jre8</artifactId>\n"
+"    <scope>test</scope>\n"
+"    <version>${wiremock.version}</version> // <1>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:368
+msgid "Use a proper Wiremock version. All available versions can be found link:https://search.maven.org/artifact/com.github.tomakehurst/wiremock-jre8[here]."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:372
+msgid "In Quarkus tests when some service needs to be started before the Quarkus tests are ran, we utilize the `@io.quarkus.test.common.QuarkusTestResource` annotation to specify a `io.quarkus.test.common.QuarkusTestResourceLifecycleManager` which can start the service and supply configuration values that Quarkus will use."
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:376
+msgid "For more details about `@QuarkusTestResource` refer to link:getting-started-testing#quarkus-test-resource[this part of the documentation]."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:379
+msgid "Let's create an implementation of `QuarkusTestResourceLifecycleManager` called `MockAuthorizationServerTestResource` like so:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:385
+#, no-wrap
+msgid ""
+"import com.github.tomakehurst.wiremock.WireMockServer;\n"
+"import com.github.tomakehurst.wiremock.client.WireMock;\n"
+"import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:388
+#, no-wrap
+msgid ""
+"import java.util.Collections;\n"
+"import java.util.Map;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:390
+#, no-wrap
+msgid "public class MockAuthorizationServerTestResource implements QuarkusTestResourceLifecycleManager {  // <1>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:392
+#, no-wrap
+msgid "    private WireMockServer wireMockServer;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:397
+#, no-wrap
+msgid ""
+"    @Override\n"
+"    public Map<String, String> start() {\n"
+"        wireMockServer = new WireMockServer();\n"
+"        wireMockServer.start(); // <2>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:402
+#, no-wrap
+msgid ""
+"        // define the mock for the introspect endpoint\n"
+"        WireMock.stubFor(WireMock.post(\"/introspect\").willReturn(WireMock.aResponse() // <3>\n"
+"                .withBody(\n"
+"                        \"{\\\"active\\\":true,\\\"scope\\\":\\\"Echoer\\\",\\\"username\\\":null,\\\"iat\\\":1562315654,\\\"exp\\\":1562317454,\\\"expires_in\\\":1458,\\\"client_id\\\":\\\"my_client_id\\\"}\")));\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:406
+#, no-wrap
+msgid ""
+"        return Collections.singletonMap(\"quarkus.oauth2.introspection-url\", wireMockServer.baseUrl() + \"/introspect\"); // <4>\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:414
+#, no-wrap
+msgid ""
+"    @Override\n"
+"    public void stop() {\n"
+"        if (null != wireMockServer) {\n"
+"            wireMockServer.stop();  // <5>\n"
+"        }\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:417
+msgid "The `start` method is invoked by Quarkus before any test is run and returns a `Map` of configuration properties that apply during the test execution."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:418
+msgid "Launch Wiremock."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:419
+msgid "Configure Wiremock to stub the calls to `/introspect` by returning an OAuth2 introspect response. You need to customize this line to return what's needed for your application (at least the scope property as roles are derived from the scope)."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:420
+msgid "As the `start` method returns configuration that applies for tests, we set the `quarkus.oauth2.introspection-url` property that controls the URL of the introspect endpoint used by the OAuth2 extension."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:421
+msgid "When all tests have finished, shutdown Wiremock."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:424
+msgid "Your test class needs to be annotated like with `@QuarkusTestResource(MockAuthorizationServerTestResource.class)` to use this `QuarkusTestResourceLifecycleManager`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:426
+msgid "Below is an example of a test that uses the `MockAuthorizationServerTestResource`."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:434
+#, no-wrap
+msgid ""
+"@QuarkusTest\n"
+"@QuarkusTestResource(MockAuthorizationServerTestResource.class) // <1>\n"
+"class TokenSecuredResourceTest {\n"
+"    // use whatever token you want as the mock OAuth server will accept all tokens\n"
+"    private static final String BEARER_TOKEN = \"337aab0f-b547-489b-9dbd-a54dc7bdf20d\"; // <2>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:445
+#, no-wrap
+msgid ""
+"    @Test\n"
+"    void testPermitAll() {\n"
+"        RestAssured.given()\n"
+"                .when()\n"
+"                .header(\"Authorization\", \"Bearer: \" + BEARER_TOKEN) // <3>\n"
+"                .get(\"/secured/permit-all\")\n"
+"                .then()\n"
+"                .statusCode(200)\n"
+"                .body(containsString(\"hello\"));\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:457
+#, no-wrap
+msgid ""
+"    @Test\n"
+"    void testRolesAllowed() {\n"
+"        RestAssured.given()\n"
+"                .when()\n"
+"                .header(\"Authorization\", \"Bearer: \" + BEARER_TOKEN)\n"
+"                .get(\"/secured/roles-allowed\")\n"
+"                .then()\n"
+"                .statusCode(200)\n"
+"                .body(containsString(\"hello\"));\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:460
+msgid "Use the previously created `MockAuthorizationServerTestResource` as a Quarkus test resource."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:461
+msgid "Define whatever token you want, it will not be validated by the OAuth2 mock authorization server."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:462
+msgid "Use this token inside the `Authorization` header to trigger OAuth2 authentication."
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:467
+msgid "`@QuarkusTestResource` applies to all tests, not just `TokenSecuredResourceTest`."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:469
+#, no-wrap
+msgid "References"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:472
+msgid "https://tools.ietf.org/html/rfc6749[OAuth2]"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/security-oauth2.adoc:472
+msgid "link:security[Quarkus Security]"
+msgstr ""

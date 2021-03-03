@@ -1,0 +1,444 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2021-03-03 20:10+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. This guide is maintained in the main Quarkus repository
+#. and pull requests should be submitted there:
+#. https://github.com/quarkusio/quarkus/tree/master/docs/src/main/asciidoc
+#. type: Title =
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:6
+#, no-wrap
+msgid "Consuming a gRPC Service"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:11
+msgid "gRPC services can be injected in your application code."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:14
+msgid "Consuming gRPC services requires the gRPC classes to be generated.  Place your `proto` files in `src/main/proto` and run `mvn compile`."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:15
+#, no-wrap
+msgid "Stubs and Injection"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:19
+msgid "gRPC generation provides several stubs, providing different way to consume a service.  Quarkus gRPC can inject:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:21
+msgid "blocking stubs"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:22
+msgid "reactive stubs based on Mutiny"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:24
+msgid "In addition, it also can inject the gRPC `io.grpc.Channel`, that lets you create other types of stubs."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:29
+#, no-wrap
+msgid ""
+"@Inject @GrpcService(\"hello-service\")\n"
+"MutinyGreeterGrpc.MutinyGreeterStub mutiny;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:32
+#, no-wrap
+msgid ""
+"@Inject @GrpcService(\"hello-service\")\n"
+"GreeterGrpc.GreeterBlockingStub blocking;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:35
+#, no-wrap
+msgid ""
+"@Inject @GrpcService(\"hello-service\")\n"
+"Channel channel;\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:39
+msgid "The stub class names are computed from the service name.  For example, if you use `Greeter` as service name as in:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:45
+#, no-wrap
+msgid ""
+"service Greeter {\n"
+"    rpc SayHello (HelloRequest) returns (HelloReply) {}\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:49
+msgid "The Mutiny stub name is: `MutinyGreeterGrpc.MutinyGreeterStub` The blocking stub name is: `GreeterGrpc.GreeterBlockingStub`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:53
+msgid "Client injection must be qualified using `@GrpcService`.  This annotation indicates the configuration prefix used to configure the service.  For example, if you set it to `hello-service`, configuring the host of the service is done using `hello-service.host`."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:54
+#, no-wrap
+msgid "Examples"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:56
+#, no-wrap
+msgid "Using a blocking and mutiny stubs"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:62
+#, no-wrap
+msgid ""
+"@Inject @GrpcService(\"hello\") GreeterGrpc.GreeterBlockingStub blockingHelloService;\n"
+"@Inject @GrpcService(\"hello\") MutinyGreeterGrpc.MutinyGreeterStub mutinyHelloService;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:68
+#, no-wrap
+msgid ""
+"@GET\n"
+"@Path(\"/blocking/{name}\")\n"
+"public String helloBlocking(@PathParam(\"name\") String name) {\n"
+"    return blockingHelloService.sayHello(HelloRequest.newBuilder().setName(name).build()).getMessage();\n"
+"}\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:75
+#, no-wrap
+msgid ""
+"@GET\n"
+"@Path(\"/mutiny/{name}\")\n"
+"public Uni<String> helloMutiny(@PathParam(\"name\") String name) {\n"
+"    return mutinyHelloService.sayHello(HelloRequest.newBuilder().setName(name).build())\n"
+"            .onItem().transform(HelloReply::getMessage);\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:78
+msgid "Note that in this example, the `quarkus.grpc.clients.hello.host` property must be set."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:79
+#, no-wrap
+msgid "Handling streams"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:82
+msgid "gRPC allows sending and receiving streams:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:90
+#, no-wrap
+msgid ""
+"service Streaming {\n"
+"    rpc Source(Empty) returns (stream Item) {} // Returns a stream\n"
+"    rpc Sink(stream Item) returns (Empty) {}   // Reads a stream\n"
+"    rpc Pipe(stream Item) returns (stream Item) {}  // Reads a streams and return a streams\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:93
+msgid "Using the Mutiny stub, you can interact with these as follows:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:97
+#, no-wrap
+msgid "package io.quarkus.grpc.example.streaming;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:103
+#, no-wrap
+msgid ""
+"import io.grpc.examples.streaming.Empty;\n"
+"import io.grpc.examples.streaming.Item;\n"
+"import io.grpc.examples.streaming.MutinyStreamingGrpc;\n"
+"import io.quarkus.grpc.runtime.annotations.GrpcService;\n"
+"import io.smallrye.mutiny.Multi;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:110
+#, no-wrap
+msgid ""
+"import javax.inject.Inject;\n"
+"import javax.ws.rs.GET;\n"
+"import javax.ws.rs.Path;\n"
+"import javax.ws.rs.PathParam;\n"
+"import javax.ws.rs.Produces;\n"
+"import javax.ws.rs.core.MediaType;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:114
+#, no-wrap
+msgid ""
+"@Path(\"/streaming\")\n"
+"@Produces(MediaType.APPLICATION_JSON)\n"
+"public class StreamingEndpoint {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:116
+#, no-wrap
+msgid "    @Inject @GrpcService(\"streaming\") MutinyStreamingGrpc.MutinyStreamingStub client;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:123
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    public Multi<String> invokeSource() {\n"
+"        // Retrieve a stream\n"
+"        return client.source(Empty.newBuilder().build())\n"
+"                .onItem().transform(Item::getValue);\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:133
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @Path(\"sink/{max}\")\n"
+"    public Uni<Void> invokeSink(@PathParam(\"max\") int max) {\n"
+"        // Send a stream and wait for completion\n"
+"        Multi<Item> inputs = Multi.createFrom().range(0, max)\n"
+"                .map(i -> Integer.toString(i))\n"
+"                .map(i -> Item.newBuilder().setValue(i).build());\n"
+"        return client.sink(inputs).onItem().ignore().andContinueWithNull();\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:143
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @Path(\"/{max}\")\n"
+"    public Multi<String> invokePipe(@PathParam(\"max\") int max) {\n"
+"        // Send a stream and retrieve a stream\n"
+"        Multi<Item> inputs = Multi.createFrom().range(0, max)\n"
+"                .map(i -> Integer.toString(i))\n"
+"                .map(i -> Item.newBuilder().setValue(i).build());\n"
+"        return client.pipe(inputs).onItem().transform(Item::getValue);\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:145
+#, no-wrap
+msgid "}\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:148
+#, no-wrap
+msgid "Client configuration"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:151
+msgid "For each gRPC service you inject in your application, you can configure the following attributes:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:155
+msgid "The `service-name` is the name set in the `@GrpcService`."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:156
+#, no-wrap
+msgid "Example of configuration"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:160
+msgid "The 2 following examples uses _hello_ as service name.  Don't forget to replace it with the name you used in in the `@GrpcService` annotation."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:161
+#, no-wrap
+msgid "Enabling TLS"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:166
+msgid "To enable TLS, use the following configuration.  Note that all paths in the configuration may either specify a resource on the classpath (typically from `src/main/resources` or its subfolder) or an external file."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:170
+#, no-wrap
+msgid "quarkus.grpc.clients.hello.host=localhost\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:173
+#, no-wrap
+msgid ""
+"# either a path to a classpath resource or to a file:\n"
+"quarkus.grpc.clients.hello.ssl.trust-store=tls/ca.pem\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:176
+msgid "When SSL/TLS is configured, `plain-text` is automatically disabled."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:177
+#, no-wrap
+msgid "TLS with Mutual Auth"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:180
+msgid "To use TLS with mutual authentication, use the following configuration:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:185
+#, no-wrap
+msgid ""
+"quarkus.grpc.clients.hello.host=localhost\n"
+"quarkus.grpc.clients.hello.plain-text=false\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:190
+#, no-wrap
+msgid ""
+"# all the following may use either a path to a classpath resource or to a file:\n"
+"quarkus.grpc.clients.hello.ssl.certificate=tls/client.pem\n"
+"quarkus.grpc.clients.hello.ssl.key=tls/client.key\n"
+"quarkus.grpc.clients.hello.ssl.trust-store=tls/ca.pem\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:192
+#, no-wrap
+msgid "Client Interceptors"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:195
+msgid "You can implement a gRPC client interceptor by implementing an `@ApplicationScoped` bean implementing `io.grpc.ClientInterceptor`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:200
+#, no-wrap
+msgid ""
+"@ApplicationScoped\n"
+"public class MyInterceptor implements ClientInterceptor {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:207
+#, no-wrap
+msgid ""
+"    @Override\n"
+"    public <ReqT, RespT> ClientCall<ReqT, RespT> interceptCall(MethodDescriptor<ReqT, RespT> method,\n"
+"            CallOptions callOptions, Channel next) {\n"
+"       // ...\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:210
+msgid "Check the https://grpc.github.io/grpc-java/javadoc/io/grpc/ClientInterceptor.html[ClientInterceptor JavaDoc] to properly implement your interceptor."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:212
+msgid "When you have multiple client interceptors, you can order them by implementing the `javax.enterprise.inject.spi.Prioritized` interface:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:214
+msgid "source, java]"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:217
+#, no-wrap
+msgid ""
+"@ApplicationScoped\n"
+"public class MyInterceptor implements ClientInterceptor, Prioritized {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:223
+#, no-wrap
+msgid ""
+"    @Override\n"
+"    public <ReqT, RespT> ClientCall<ReqT, RespT> interceptCall(MethodDescriptor<ReqT, RespT> method,\n"
+"            CallOptions callOptions, Channel next) {\n"
+"       // ...\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:229
+#, no-wrap
+msgid ""
+"    @Override\n"
+"    public int getPriority() {\n"
+"        return 10;\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.11/guides/grpc-service-consumption.adoc:233
+msgid "Interceptors with the highest priority are called first.  The default priority, used if the interceptor does not implement the `Prioritized` interface, is `0`."
+msgstr ""

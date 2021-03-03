@@ -1,0 +1,2213 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2021-03-03 20:10+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. This guide is maintained in the main Quarkus repository
+#. and pull requests should be submitted there:
+#. https://github.com/quarkusio/quarkus/tree/master/docs/src/main/asciidoc
+#. type: Title =
+#: upstream/_versions/1.7/guides/kubernetes.adoc:6
+#, no-wrap
+msgid "Quarkus - Kubernetes extension"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:12
+msgid "This guide covers generating and deploying Kubernetes resources based on sane defaults and user supplied configuration.  In detail, it supports generating resources for <<#kubernetes,Kubernetes>>, <<#openshift,OpenShift>> and <<#knative,Knative>>. Also it supports automatic deployment of these resources to the target platform."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/1.7/guides/kubernetes.adoc:13
+#, no-wrap
+msgid "Prerequisites"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:16
+msgid "To complete this guide, you need:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:18
+msgid "roughly 10 minutes"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:19
+msgid "an IDE"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:20
+msgid "JDK 1.8+ installed with `JAVA_HOME` configured appropriately"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:21
+msgid "Apache Maven 3.6.2+"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:22
+msgid "access to a Kubernetes or cluster (Minikube is a viable options)"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/1.7/guides/kubernetes.adoc:23
+#, no-wrap
+msgid "Creating the Maven project"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:26
+msgid "First, we need a new project that contains the Kubernetes extension and the Jib extension. This can be done using the following command:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/kubernetes.adoc:36
+#, no-wrap
+msgid ""
+"mvn io.quarkus:quarkus-maven-plugin:{quarkus-version}:create \\\n"
+"    -DprojectGroupId=org.acme \\\n"
+"    -DprojectArtifactId=kubernetes-quickstart \\\n"
+"    -DclassName=\"org.acme.rest.GreetingResource\" \\\n"
+"    -Dpath=\"/greeting\" \\\n"
+"    -Dextensions=\"kubernetes, jib\"\n"
+"cd kubernetes-quickstart\n"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/1.7/guides/kubernetes.adoc:39
+#: upstream/_versions/1.7/guides/kubernetes.adoc:358
+#, no-wrap
+msgid "Kubernetes"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:46
+msgid "Quarkus offers the ability to automatically generate Kubernetes resources based on sane defaults and user supplied configuration. The implementation that takes care of generating the actual Kubernetes resources is provided by https://github.com/dekorateio/dekorate/[dekorate]. Currently it supports the generation of resources for vanilla Kubernetes and OpenShift. Furthermore, Quarkus can deploy the application to a target Kubernetes cluster by applying the generated manifests to the target cluster's API Server.  Finally, when either the `quarkus-container-image-jib` or `quarkus-container-container-image-docker` extensions are present (see the link:container-image[container image guide] for more details), Quarkus has the ability to create a container image and push it to a registry *before* deploying the application to the Kubernetes cluster."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:48
+msgid "When we executed the previous command, the following dependencies were added to the `pom.xml`"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/kubernetes.adoc:59
+#, no-wrap
+msgid ""
+"    <dependency>\n"
+"      <groupId>io.quarkus</groupId>\n"
+"      <artifactId>quarkus-kubernetes</artifactId>\n"
+"    </dependency>\n"
+"    <dependency>\n"
+"      <groupId>io.quarkus</groupId>\n"
+"      <artifactId>quarkus-container-image-jib</artifactId>\n"
+"    </dependency>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:64
+msgid "By adding these dependencies, we enable the generation of Kubernetes manifests each time we perform a build while also enabling the build of a container-image.  For example, following the execution of `./mvnw package` you will notice amongst the other files that are created, two files named `kubernetes.json` and `kubernetes.yml` in the `target/kubernetes/` directory."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:66
+msgid "If you look at either file you will see that it contains both a Kubernetes `Deployment` and a `Service`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:68
+msgid "The full source of the `kubernetes.json` file looks something like this:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/kubernetes.adoc:147
+#, no-wrap
+msgid ""
+"{\n"
+"  {\n"
+"    \"apiVersion\" : \"apps/v1\",\n"
+"    \"kind\" : \"Deployment\",\n"
+"    \"metadata\" : {\n"
+"      \"annotations\": {\n"
+"       \"app.quarkus.io/vcs-url\" : \"<some url>\",\n"
+"       \"app.quarkus.io/commit-id\" : \"<some git SHA>\",\n"
+"      },\n"
+"      \"labels\" : {\n"
+"        \"app.kubernetes.io/name\" : \"test-quarkus-app\",\n"
+"        \"app.kubernetes.io/version\" : \"1.0-SNAPSHOT\",\n"
+"      },\n"
+"      \"name\" : \"test-quarkus-app\"\n"
+"    },\n"
+"    \"spec\" : {\n"
+"      \"replicas\" : 1,\n"
+"      \"selector\" : {\n"
+"        \"matchLabels\" : {\n"
+"          \"app.kubernetes.io/name\" : \"test-quarkus-app\",\n"
+"          \"app.kubernetes.io/version\" : \"1.0-SNAPSHOT\",\n"
+"        }\n"
+"      },\n"
+"      \"template\" : {\n"
+"        \"metadata\" : {\n"
+"          \"labels\" : {\n"
+"            \"app.kubernetes.io/name\" : \"test-quarkus-app\",\n"
+"            \"app.kubernetes.io/version\" : \"1.0-SNAPSHOT\"\n"
+"          }\n"
+"        },\n"
+"        \"spec\" : {\n"
+"          \"containers\" : [ {\n"
+"            \"env\" : [ {\n"
+"              \"name\" : \"KUBERNETES_NAMESPACE\",\n"
+"              \"valueFrom\" : {\n"
+"                \"fieldRef\" : {\n"
+"                  \"fieldPath\" : \"metadata.namespace\"\n"
+"                }\n"
+"              }\n"
+"            } ],\n"
+"            \"image\" : \"yourDockerUsername/test-quarkus-app:1.0-SNAPSHOT\",\n"
+"            \"imagePullPolicy\" : \"IfNotPresent\",\n"
+"            \"name\" : \"test-quarkus-app\"\n"
+"          } ]\n"
+"        }\n"
+"      }\n"
+"    }\n"
+"  },\n"
+"  {\n"
+"  \"apiVersion\" : \"v1\",\n"
+"  \"kind\" : \"Service\",\n"
+"    \"metadata\" : {\n"
+"      \"annotations\": {\n"
+"       \"app.quarkus.io/vcs-url\" : \"<some url>\",\n"
+"       \"app.quarkus.io/commit-id\" : \"<some git SHA>\",\n"
+"      },\n"
+"      \"labels\" : {\n"
+"        \"app.kubernetes.io/name\" : \"test-quarkus-app\",\n"
+"        \"app.kubernetes.io/version\" : \"1.0-SNAPSHOT\",\n"
+"      },\n"
+"      \"name\" : \"test-quarkus-app\"\n"
+"    },\n"
+"  \"spec\" : {\n"
+"    \"ports\" : [ {\n"
+"      \"name\" : \"http\",\n"
+"      \"port\" : 8080,\n"
+"      \"targetPort\" : 8080\n"
+"    } ],\n"
+"    \"selector\" : {\n"
+"      \"app.kubernetes.io/name\" : \"test-quarkus-app\",\n"
+"      \"app.kubernetes.io/version\" : \"1.0-SNAPSHOT\"\n"
+"    },\n"
+"    \"type\" : \"ClusterIP\"\n"
+"  }\n"
+" }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:151
+msgid "An important thing to note about the `Deployment` is that is uses `yourDockerUsername/test-quarkus-app:1.0-SNAPSHOT` as the container-image of the `Pod`.  The name of the image is controlled by the `Jib` extension and can be customized using the usual `application.properties`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:153
+msgid "For example with a configuration like:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/kubernetes.adoc:159
+#, no-wrap
+msgid ""
+"quarkus.container-image.group=quarkus #optional, default to the system user name\n"
+"quarkus.container-image.name=demo-app #optional, defaults to the application name\n"
+"quarkus.container-image.tag=1.0       #optional, defaults to the application version\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:162
+msgid "The image that will be used in the generated manifests will be `quarkus/demo-app:1.0`"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/1.7/guides/kubernetes.adoc:163
+#, no-wrap
+msgid "Defining a Docker registry"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:166
+msgid "The Docker registry can be specified with the following property:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/kubernetes.adoc:170
+#, no-wrap
+msgid "quarkus.container-image.registry=http://my.docker-registry.net\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:174
+msgid "By adding this property along with the rest of the container-image properties of the previous section, the generated manifests will use the image `http://my.docker-registry.net/quarkus/demo-app:1.0`.  The image is not the only thing that can be customized in the generated manifests, as will become evident in the following sections."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/1.7/guides/kubernetes.adoc:175
+#, no-wrap
+msgid "Labels and Annotations"
+msgstr ""
+
+#. type: Title ====
+#: upstream/_versions/1.7/guides/kubernetes.adoc:177
+#, no-wrap
+msgid "Labels"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:182
+msgid "The generated manifests use the Kubernetes link:https://kubernetes.io/docs/concepts/overview/working-with-objects/common-labels[recommended labels].  These labels can be customized using `quarkus.kubernetes.name`, `quarkus.kubernetes.version` and `quarkus.kubernetes.part-of`.  For example by adding the following configuration to your `application.properties`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/kubernetes.adoc:188
+#, no-wrap
+msgid ""
+"quarkus.kubernetes.part-of=todo-app\n"
+"quarkus.kubernetes.name=todo-rest\n"
+"quarkus.kubernetes.version=1.0-rc.1\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:191
+msgid "The labels in generated resources will look like:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/kubernetes.adoc:199
+#, no-wrap
+msgid ""
+"  \"labels\" : {\n"
+"    \"app.kubernetes.io/part-of\" : \"todo-app\",\n"
+"    \"app.kubernetes.io/name\" : \"todo-rest\",\n"
+"    \"app.kubernetes.io/version\" : \"1.0-rc.1\"\n"
+"  }\n"
+msgstr ""
+
+#. type: Title ====
+#: upstream/_versions/1.7/guides/kubernetes.adoc:201
+#, no-wrap
+msgid "Custom Labels"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:204
+msgid "To add additional custom labels, for example `foo=bar` just apply the following configuration:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/kubernetes.adoc:208
+#, no-wrap
+msgid "quarkus.kubernetes.labels.foo=bar\n"
+msgstr ""
+
+#. type: Title ====
+#: upstream/_versions/1.7/guides/kubernetes.adoc:210
+#, no-wrap
+msgid "Annotations"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:213
+msgid "Out of the box, the generated resources will be annotated with version control related information that can be used either by tooling, or by the user for troubleshooting purposes."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/kubernetes.adoc:220
+#, no-wrap
+msgid ""
+"  \"annotations\": {\n"
+"    \"app.quarkus.io/vcs-url\" : \"<some url>\",\n"
+"    \"app.quarkus.io/commit-id\" : \"<some git SHA>\",\n"
+"   }\n"
+msgstr ""
+
+#. type: Title ====
+#: upstream/_versions/1.7/guides/kubernetes.adoc:222
+#, no-wrap
+msgid "Custom Annotations"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:225
+msgid "Custom annotations can be added in a way similar to labels. For example to add the annotation `foo=bar` just apply the following configuration:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/kubernetes.adoc:230
+#, no-wrap
+msgid "quarkus.kubernetes.annotations.foo=bar\n"
+msgstr ""
+
+#. type: Title ====
+#: upstream/_versions/1.7/guides/kubernetes.adoc:232
+#, no-wrap
+msgid "Environment variables"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:235
+msgid "Kubernetes provides multiple ways of defining environment variables:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:237
+msgid "key/value pairs"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:238
+msgid "from a Secret"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:239
+msgid "from a ConfigMap"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:240
+msgid "from fields"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:242
+msgid "To add a key/value pair as an environment variable in the generated resources:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/kubernetes.adoc:246
+#, no-wrap
+msgid "quarkus.kubernetes.env-vars.my-env-var.value=foobar\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:250
+msgid "The command above will add `MY_ENV_VAR=foobar` as an environment variable.  Please note that the key `my-env-var` will be converted to uppercase and dashes will be replaced by underscores resulting in `MY_ENV_VAR`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:253
+msgid "You may also have noticed that in contrast to labels and annotations for environment variables you don't just use a `key=value` approach.  That is because for environment variables there are additional options rather than just setting a value."
+msgstr ""
+
+#. type: Title =====
+#: upstream/_versions/1.7/guides/kubernetes.adoc:254
+#, no-wrap
+msgid "Environment variables from Secret"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:257
+msgid "To add all key/value pairs of a `Secret` as environment variables just apply the following configuration:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/kubernetes.adoc:261
+#, no-wrap
+msgid "quarkus.kubernetes.env-vars.my-env-var.secret=my-secret\n"
+msgstr ""
+
+#. type: Title =====
+#: upstream/_versions/1.7/guides/kubernetes.adoc:263
+#, no-wrap
+msgid "Environment variables from ConfigMap"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:266
+msgid "To add all key/value pairs of a `ConfigMap` as environment variables just apply the following configuration:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/kubernetes.adoc:270
+#, no-wrap
+msgid "quarkus.kubernetes.env-vars.my-env-var.configmap=my-secret\n"
+msgstr ""
+
+#. type: Title ====
+#: upstream/_versions/1.7/guides/kubernetes.adoc:273
+#, no-wrap
+msgid "Mounting volumes"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:277
+msgid "The Kubernetes extension allows the user to configure both volumes and mounts for the application.  Any volume can be mounted with a simple configuration:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/kubernetes.adoc:281
+#, no-wrap
+msgid "quarkus.kubernetes.mounts.my-volume.path=/where/to/mount\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:285
+msgid "This will add a mount to my pod for volume `my-volume` to path `/where/to/mount`.  The volumes themselves can be configured as shown in the sections below."
+msgstr ""
+
+#. type: Title =====
+#: upstream/_versions/1.7/guides/kubernetes.adoc:286
+#, no-wrap
+msgid "Secret volumes"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/kubernetes.adoc:291
+#, no-wrap
+msgid "quarkus.kubernetes.secret-volumes.my-volume.secret-name=my-secret\n"
+msgstr ""
+
+#. type: Title =====
+#: upstream/_versions/1.7/guides/kubernetes.adoc:293
+#, no-wrap
+msgid "ConfigMap volumes"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/kubernetes.adoc:298
+#, no-wrap
+msgid "quarkus.kubernetes.config-map-volumes.my-volume.config-map-name=my-secret\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/1.7/guides/kubernetes.adoc:300
+#, no-wrap
+msgid "Changing the number of replicas:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:303
+msgid "To change the number of replicas from 1 to 3:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/kubernetes.adoc:307
+#, no-wrap
+msgid "quarkus.kubernetes.replicas=3\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/1.7/guides/kubernetes.adoc:309
+#, no-wrap
+msgid "Add readiness and liveness probes"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:312
+msgid "By default the Kubernetes resources do not contain readiness and liveness probes in the generated `Deployment`. Adding them however is just a matter of adding the SmallRye Health extension like so:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/kubernetes.adoc:319
+#, no-wrap
+msgid ""
+"    <dependency>\n"
+"      <groupId>io.quarkus</groupId>\n"
+"      <artifactId>quarkus-smallrye-health</artifactId>\n"
+"    </dependency>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:323
+msgid "The values of the generated probes will be determined by the configured health properties: `quarkus.smallrye-health.root-path`, `quarkus.smallrye-health.liveness-path` and `quarkus.smallrye-health.readiness-path`.  More information about the health extension can be found in the relevant link:microprofile-health[guide]."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/1.7/guides/kubernetes.adoc:324
+#, no-wrap
+msgid "Customizing the readiness probe:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:326
+msgid "To set the initial delay of the probe to 20 seconds and the period to 45:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/kubernetes.adoc:331
+#: upstream/_versions/1.7/guides/kubernetes.adoc:400
+#, no-wrap
+msgid ""
+"quarkus.kubernetes.readiness-probe.initial-delay=20s\n"
+"quarkus.kubernetes.readiness-probe.period=45s\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/1.7/guides/kubernetes.adoc:333
+#, no-wrap
+msgid "Using the Kubernetes client"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:336
+msgid "Applications that are deployed to Kubernetes and need to access the API server will usually make use of the `kubernetes-client` extension:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/kubernetes.adoc:343
+#, no-wrap
+msgid ""
+"    <dependency>\n"
+"      <groupId>io.quarkus</groupId>\n"
+"      <artifactId>quarkus-kubernetes-client</artifactId>\n"
+"    </dependency>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:348
+msgid "To access the API server from within a Kubernetes cluster, some RBAC related resources are required (e.g. a ServiceAccount, a RoleBinding etc.).  So, when the `kubernetes-client` extension is present, the `kubernetes` extension is going to create those resources automatically, so that application will be granted the `view` role.  If more roles are required, they will have to be added manually."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/1.7/guides/kubernetes.adoc:349
+#, no-wrap
+msgid "Tuning the generated resources using application.properties"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:353
+msgid "The Kubernetes extension allows tuning the generated manifest, using the `application.properties` file.  Here are some examples:"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/1.7/guides/kubernetes.adoc:354
+#, no-wrap
+msgid "Configuration options"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:357
+msgid "The table below describe all the available configuration options."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:360
+#: upstream/_versions/1.7/guides/kubernetes.adoc:410
+#: upstream/_versions/1.7/guides/kubernetes.adoc:419
+#: upstream/_versions/1.7/guides/kubernetes.adoc:430
+#: upstream/_versions/1.7/guides/kubernetes.adoc:439
+#: upstream/_versions/1.7/guides/kubernetes.adoc:457
+#: upstream/_versions/1.7/guides/kubernetes.adoc:465
+#: upstream/_versions/1.7/guides/kubernetes.adoc:473
+#: upstream/_versions/1.7/guides/kubernetes.adoc:482
+#: upstream/_versions/1.7/guides/kubernetes.adoc:493
+#: upstream/_versions/1.7/guides/kubernetes.adoc:502
+#: upstream/_versions/1.7/guides/kubernetes.adoc:510
+#: upstream/_versions/1.7/guides/kubernetes.adoc:517
+#: upstream/_versions/1.7/guides/kubernetes.adoc:547
+#: upstream/_versions/1.7/guides/kubernetes.adoc:636
+#, no-wrap
+msgid "Property"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:360
+#: upstream/_versions/1.7/guides/kubernetes.adoc:410
+#: upstream/_versions/1.7/guides/kubernetes.adoc:419
+#: upstream/_versions/1.7/guides/kubernetes.adoc:430
+#: upstream/_versions/1.7/guides/kubernetes.adoc:439
+#: upstream/_versions/1.7/guides/kubernetes.adoc:457
+#: upstream/_versions/1.7/guides/kubernetes.adoc:465
+#: upstream/_versions/1.7/guides/kubernetes.adoc:473
+#: upstream/_versions/1.7/guides/kubernetes.adoc:482
+#: upstream/_versions/1.7/guides/kubernetes.adoc:493
+#: upstream/_versions/1.7/guides/kubernetes.adoc:502
+#: upstream/_versions/1.7/guides/kubernetes.adoc:510
+#: upstream/_versions/1.7/guides/kubernetes.adoc:517
+#: upstream/_versions/1.7/guides/kubernetes.adoc:547
+#: upstream/_versions/1.7/guides/kubernetes.adoc:636
+#, no-wrap
+msgid "Type"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:360
+#: upstream/_versions/1.7/guides/kubernetes.adoc:410
+#: upstream/_versions/1.7/guides/kubernetes.adoc:419
+#: upstream/_versions/1.7/guides/kubernetes.adoc:430
+#: upstream/_versions/1.7/guides/kubernetes.adoc:439
+#: upstream/_versions/1.7/guides/kubernetes.adoc:457
+#: upstream/_versions/1.7/guides/kubernetes.adoc:465
+#: upstream/_versions/1.7/guides/kubernetes.adoc:473
+#: upstream/_versions/1.7/guides/kubernetes.adoc:482
+#: upstream/_versions/1.7/guides/kubernetes.adoc:493
+#: upstream/_versions/1.7/guides/kubernetes.adoc:502
+#: upstream/_versions/1.7/guides/kubernetes.adoc:510
+#: upstream/_versions/1.7/guides/kubernetes.adoc:517
+#: upstream/_versions/1.7/guides/kubernetes.adoc:547
+#: upstream/_versions/1.7/guides/kubernetes.adoc:636
+#, no-wrap
+msgid "Description"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:361
+#: upstream/_versions/1.7/guides/kubernetes.adoc:411
+#: upstream/_versions/1.7/guides/kubernetes.adoc:420
+#: upstream/_versions/1.7/guides/kubernetes.adoc:431
+#: upstream/_versions/1.7/guides/kubernetes.adoc:440
+#: upstream/_versions/1.7/guides/kubernetes.adoc:458
+#: upstream/_versions/1.7/guides/kubernetes.adoc:466
+#: upstream/_versions/1.7/guides/kubernetes.adoc:474
+#: upstream/_versions/1.7/guides/kubernetes.adoc:483
+#: upstream/_versions/1.7/guides/kubernetes.adoc:494
+#: upstream/_versions/1.7/guides/kubernetes.adoc:503
+#: upstream/_versions/1.7/guides/kubernetes.adoc:511
+#: upstream/_versions/1.7/guides/kubernetes.adoc:518
+#: upstream/_versions/1.7/guides/kubernetes.adoc:548
+#: upstream/_versions/1.7/guides/kubernetes.adoc:637
+#, no-wrap
+msgid "Default Value"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:361
+#, no-wrap
+msgid "quarkus.kubernetes.name"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:361
+#: upstream/_versions/1.7/guides/kubernetes.adoc:362
+#: upstream/_versions/1.7/guides/kubernetes.adoc:363
+#: upstream/_versions/1.7/guides/kubernetes.adoc:368
+#: upstream/_versions/1.7/guides/kubernetes.adoc:372
+#: upstream/_versions/1.7/guides/kubernetes.adoc:373
+#: upstream/_versions/1.7/guides/kubernetes.adoc:411
+#: upstream/_versions/1.7/guides/kubernetes.adoc:412
+#: upstream/_versions/1.7/guides/kubernetes.adoc:413
+#: upstream/_versions/1.7/guides/kubernetes.adoc:414
+#: upstream/_versions/1.7/guides/kubernetes.adoc:420
+#: upstream/_versions/1.7/guides/kubernetes.adoc:421
+#: upstream/_versions/1.7/guides/kubernetes.adoc:422
+#: upstream/_versions/1.7/guides/kubernetes.adoc:433
+#: upstream/_versions/1.7/guides/kubernetes.adoc:440
+#: upstream/_versions/1.7/guides/kubernetes.adoc:442
+#: upstream/_versions/1.7/guides/kubernetes.adoc:458
+#: upstream/_versions/1.7/guides/kubernetes.adoc:459
+#: upstream/_versions/1.7/guides/kubernetes.adoc:466
+#: upstream/_versions/1.7/guides/kubernetes.adoc:474
+#: upstream/_versions/1.7/guides/kubernetes.adoc:483
+#: upstream/_versions/1.7/guides/kubernetes.adoc:484
+#: upstream/_versions/1.7/guides/kubernetes.adoc:485
+#: upstream/_versions/1.7/guides/kubernetes.adoc:486
+#: upstream/_versions/1.7/guides/kubernetes.adoc:487
+#: upstream/_versions/1.7/guides/kubernetes.adoc:494
+#: upstream/_versions/1.7/guides/kubernetes.adoc:496
+#: upstream/_versions/1.7/guides/kubernetes.adoc:503
+#: upstream/_versions/1.7/guides/kubernetes.adoc:504
+#: upstream/_versions/1.7/guides/kubernetes.adoc:505
+#: upstream/_versions/1.7/guides/kubernetes.adoc:511
+#: upstream/_versions/1.7/guides/kubernetes.adoc:518
+#: upstream/_versions/1.7/guides/kubernetes.adoc:519
+#: upstream/_versions/1.7/guides/kubernetes.adoc:548
+#: upstream/_versions/1.7/guides/kubernetes.adoc:549
+#: upstream/_versions/1.7/guides/kubernetes.adoc:550
+#: upstream/_versions/1.7/guides/kubernetes.adoc:555
+#: upstream/_versions/1.7/guides/kubernetes.adoc:559
+#: upstream/_versions/1.7/guides/kubernetes.adoc:560
+#: upstream/_versions/1.7/guides/kubernetes.adoc:637
+#: upstream/_versions/1.7/guides/kubernetes.adoc:638
+#: upstream/_versions/1.7/guides/kubernetes.adoc:639
+#: upstream/_versions/1.7/guides/kubernetes.adoc:644
+#: upstream/_versions/1.7/guides/kubernetes.adoc:648
+#: upstream/_versions/1.7/guides/kubernetes.adoc:649
+#, no-wrap
+msgid "String"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:362
+#: upstream/_versions/1.7/guides/kubernetes.adoc:549
+#: upstream/_versions/1.7/guides/kubernetes.adoc:638
+#, no-wrap
+msgid "${quarkus.container-image.name}"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:362
+#, no-wrap
+msgid "quarkus.kubernetes.version"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:363
+#: upstream/_versions/1.7/guides/kubernetes.adoc:550
+#: upstream/_versions/1.7/guides/kubernetes.adoc:639
+#, no-wrap
+msgid "${quarkus.container-image.tag}"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:363
+#, no-wrap
+msgid "quarkus.kubernetes.part-of"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:364
+#, no-wrap
+msgid "quarkus.kubernetes.init-containers"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:364
+#: upstream/_versions/1.7/guides/kubernetes.adoc:388
+#: upstream/_versions/1.7/guides/kubernetes.adoc:551
+#: upstream/_versions/1.7/guides/kubernetes.adoc:575
+#: upstream/_versions/1.7/guides/kubernetes.adoc:640
+#: upstream/_versions/1.7/guides/kubernetes.adoc:664
+#, no-wrap
+msgid "Map<String, Container>"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:365
+#, no-wrap
+msgid "quarkus.kubernetes.labels"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:365
+#: upstream/_versions/1.7/guides/kubernetes.adoc:366
+#: upstream/_versions/1.7/guides/kubernetes.adoc:552
+#: upstream/_versions/1.7/guides/kubernetes.adoc:553
+#: upstream/_versions/1.7/guides/kubernetes.adoc:641
+#: upstream/_versions/1.7/guides/kubernetes.adoc:642
+#, no-wrap
+msgid "Map"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:366
+#, no-wrap
+msgid "quarkus.kubernetes.annotations"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:367
+#, no-wrap
+msgid "quarkus.kubernetes.env-vars"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:367
+#: upstream/_versions/1.7/guides/kubernetes.adoc:554
+#: upstream/_versions/1.7/guides/kubernetes.adoc:643
+#, no-wrap
+msgid "Map<String, Env>"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:368
+#, no-wrap
+msgid "quarkus.kubernetes.working-dir"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:369
+#, no-wrap
+msgid "quarkus.kubernetes.command"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:369
+#: upstream/_versions/1.7/guides/kubernetes.adoc:370
+#: upstream/_versions/1.7/guides/kubernetes.adoc:385
+#: upstream/_versions/1.7/guides/kubernetes.adoc:443
+#: upstream/_versions/1.7/guides/kubernetes.adoc:444
+#: upstream/_versions/1.7/guides/kubernetes.adoc:556
+#: upstream/_versions/1.7/guides/kubernetes.adoc:557
+#: upstream/_versions/1.7/guides/kubernetes.adoc:572
+#: upstream/_versions/1.7/guides/kubernetes.adoc:645
+#: upstream/_versions/1.7/guides/kubernetes.adoc:646
+#: upstream/_versions/1.7/guides/kubernetes.adoc:661
+#, no-wrap
+msgid "String[]"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:370
+#, no-wrap
+msgid "quarkus.kubernetes.arguments"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:371
+#, no-wrap
+msgid "quarkus.kubernetes.replicas"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:371
+#: upstream/_versions/1.7/guides/kubernetes.adoc:431
+#: upstream/_versions/1.7/guides/kubernetes.adoc:432
+#: upstream/_versions/1.7/guides/kubernetes.adoc:467
+#: upstream/_versions/1.7/guides/kubernetes.adoc:475
+#: upstream/_versions/1.7/guides/kubernetes.adoc:495
+#: upstream/_versions/1.7/guides/kubernetes.adoc:558
+#: upstream/_versions/1.7/guides/kubernetes.adoc:647
+#, no-wrap
+msgid "int"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:372
+#: upstream/_versions/1.7/guides/kubernetes.adoc:559
+#: upstream/_versions/1.7/guides/kubernetes.adoc:648
+#, no-wrap
+msgid "1"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:372
+#, no-wrap
+msgid "quarkus.kubernetes.service-account"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:373
+#, no-wrap
+msgid "quarkus.kubernetes.host"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:374
+#, no-wrap
+msgid "quarkus.kubernetes.ports"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:374
+#: upstream/_versions/1.7/guides/kubernetes.adoc:561
+#: upstream/_versions/1.7/guides/kubernetes.adoc:650
+#, no-wrap
+msgid "Map<String, Port>"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:375
+#, no-wrap
+msgid "quarkus.kubernetes.service-type"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:375
+#: upstream/_versions/1.7/guides/kubernetes.adoc:562
+#: upstream/_versions/1.7/guides/kubernetes.adoc:651
+#, no-wrap
+msgid "ServiceType"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:376
+#: upstream/_versions/1.7/guides/kubernetes.adoc:563
+#: upstream/_versions/1.7/guides/kubernetes.adoc:652
+#, no-wrap
+msgid "ClusterIP"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:376
+#, no-wrap
+msgid "quarkus.kubernetes.pvc-volumes"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:376
+#: upstream/_versions/1.7/guides/kubernetes.adoc:563
+#: upstream/_versions/1.7/guides/kubernetes.adoc:652
+#, no-wrap
+msgid "Map<String, PersistentVolumeClaimVolume>"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:377
+#, no-wrap
+msgid "quarkus.kubernetes.secret-volumes"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:377
+#: upstream/_versions/1.7/guides/kubernetes.adoc:564
+#: upstream/_versions/1.7/guides/kubernetes.adoc:653
+#, no-wrap
+msgid "Map<String, SecretVolume>"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:378
+#, no-wrap
+msgid "quarkus.kubernetes.config-map-volumes"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:378
+#: upstream/_versions/1.7/guides/kubernetes.adoc:565
+#: upstream/_versions/1.7/guides/kubernetes.adoc:654
+#, no-wrap
+msgid "Map<String, ConfigMapVolume>"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:379
+#, no-wrap
+msgid "quarkus.kubernetes.git-repo-volumes"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:379
+#: upstream/_versions/1.7/guides/kubernetes.adoc:566
+#: upstream/_versions/1.7/guides/kubernetes.adoc:655
+#, no-wrap
+msgid "Map<String, GitRepoVolume>"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:380
+#, no-wrap
+msgid "quarkus.kubernetes.aws-elastic-block-store-volumes"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:380
+#: upstream/_versions/1.7/guides/kubernetes.adoc:567
+#: upstream/_versions/1.7/guides/kubernetes.adoc:656
+#, no-wrap
+msgid "Map<String, AwsElasticBlockStoreVolume>"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:381
+#, no-wrap
+msgid "quarkus.kubernetes.azure-disk-volumes"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:381
+#: upstream/_versions/1.7/guides/kubernetes.adoc:568
+#: upstream/_versions/1.7/guides/kubernetes.adoc:657
+#, no-wrap
+msgid "Map<String, AzureDiskVolume>"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:382
+#, no-wrap
+msgid "quarkus.kubernetes.azure-file-volumes"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:382
+#: upstream/_versions/1.7/guides/kubernetes.adoc:569
+#: upstream/_versions/1.7/guides/kubernetes.adoc:658
+#, no-wrap
+msgid "Map<String, AzureFileVolume>"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:383
+#, no-wrap
+msgid "quarkus.kubernetes.mounts"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:383
+#: upstream/_versions/1.7/guides/kubernetes.adoc:570
+#: upstream/_versions/1.7/guides/kubernetes.adoc:659
+#, no-wrap
+msgid "Map<String, Mount>"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:384
+#, no-wrap
+msgid "quarkus.kubernetes.image-pull-policy"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:384
+#: upstream/_versions/1.7/guides/kubernetes.adoc:447
+#: upstream/_versions/1.7/guides/kubernetes.adoc:571
+#: upstream/_versions/1.7/guides/kubernetes.adoc:660
+#, no-wrap
+msgid "ImagePullPolicy"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:385
+#: upstream/_versions/1.7/guides/kubernetes.adoc:448
+#: upstream/_versions/1.7/guides/kubernetes.adoc:572
+#: upstream/_versions/1.7/guides/kubernetes.adoc:661
+#, no-wrap
+msgid "IfNotPresent"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:385
+#, no-wrap
+msgid "quarkus.kubernetes.image-pull-secrets"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:386
+#, no-wrap
+msgid "quarkus.kubernetes.liveness-probe"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:386
+#: upstream/_versions/1.7/guides/kubernetes.adoc:387
+#: upstream/_versions/1.7/guides/kubernetes.adoc:417
+#: upstream/_versions/1.7/guides/kubernetes.adoc:448
+#: upstream/_versions/1.7/guides/kubernetes.adoc:449
+#: upstream/_versions/1.7/guides/kubernetes.adoc:573
+#: upstream/_versions/1.7/guides/kubernetes.adoc:574
+#: upstream/_versions/1.7/guides/kubernetes.adoc:662
+#: upstream/_versions/1.7/guides/kubernetes.adoc:663
+#, no-wrap
+msgid "Probe"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:387
+#: upstream/_versions/1.7/guides/kubernetes.adoc:388
+#: upstream/_versions/1.7/guides/kubernetes.adoc:574
+#: upstream/_versions/1.7/guides/kubernetes.adoc:575
+#: upstream/_versions/1.7/guides/kubernetes.adoc:663
+#: upstream/_versions/1.7/guides/kubernetes.adoc:664
+#, no-wrap
+msgid "( see Probe )"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:387
+#, no-wrap
+msgid "quarkus.kubernetes.readiness-probe"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:388
+#, no-wrap
+msgid "quarkus.kubernetes.sidecars"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:389
+#, no-wrap
+msgid "quarkus.kubernetes.expose"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:389
+#: upstream/_versions/1.7/guides/kubernetes.adoc:390
+#: upstream/_versions/1.7/guides/kubernetes.adoc:460
+#: upstream/_versions/1.7/guides/kubernetes.adoc:468
+#: upstream/_versions/1.7/guides/kubernetes.adoc:476
+#: upstream/_versions/1.7/guides/kubernetes.adoc:488
+#: upstream/_versions/1.7/guides/kubernetes.adoc:497
+#: upstream/_versions/1.7/guides/kubernetes.adoc:512
+#: upstream/_versions/1.7/guides/kubernetes.adoc:520
+#: upstream/_versions/1.7/guides/kubernetes.adoc:576
+#: upstream/_versions/1.7/guides/kubernetes.adoc:577
+#, no-wrap
+msgid "boolean"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:390
+#: upstream/_versions/1.7/guides/kubernetes.adoc:391
+#: upstream/_versions/1.7/guides/kubernetes.adoc:461
+#: upstream/_versions/1.7/guides/kubernetes.adoc:469
+#: upstream/_versions/1.7/guides/kubernetes.adoc:477
+#: upstream/_versions/1.7/guides/kubernetes.adoc:489
+#: upstream/_versions/1.7/guides/kubernetes.adoc:498
+#: upstream/_versions/1.7/guides/kubernetes.adoc:513
+#: upstream/_versions/1.7/guides/kubernetes.adoc:521
+#: upstream/_versions/1.7/guides/kubernetes.adoc:577
+#: upstream/_versions/1.7/guides/kubernetes.adoc:578
+#, no-wrap
+msgid "false"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:390
+#, no-wrap
+msgid "quarkus.kubernetes.headless"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:395
+msgid "Properties that use non standard types, can be referenced by expanding the property.  For example to define a `kubernetes-readiness-probe` which is of type `Probe`:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:404
+msgid "In this example `initial-delay` and `period` are fields of the type `Probe`.  Below you will find tables describing all available types."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/1.7/guides/kubernetes.adoc:406
+#, no-wrap
+msgid "Basic Types"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/1.7/guides/kubernetes.adoc:408
+#, no-wrap
+msgid "Env"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:411
+#, no-wrap
+msgid "value"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:412
+#, no-wrap
+msgid "secret"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:413
+#, no-wrap
+msgid "configmap"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:414
+#, no-wrap
+msgid "field"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:420
+#, no-wrap
+msgid "http-action-path"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:421
+#, no-wrap
+msgid "exec-action"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:422
+#, no-wrap
+msgid "tcp-socket-action"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:423
+#, no-wrap
+msgid "initial-delay"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:423
+#: upstream/_versions/1.7/guides/kubernetes.adoc:424
+#: upstream/_versions/1.7/guides/kubernetes.adoc:425
+#, no-wrap
+msgid "Duration"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:424
+#: upstream/_versions/1.7/guides/kubernetes.adoc:433
+#, no-wrap
+msgid "0"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:424
+#, no-wrap
+msgid "period"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:425
+#, no-wrap
+msgid "30s"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:425
+#, no-wrap
+msgid "timeout"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:426
+#, no-wrap
+msgid "10s"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/1.7/guides/kubernetes.adoc:428
+#, no-wrap
+msgid "Port"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:431
+#, no-wrap
+msgid "container-port"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:432
+#, no-wrap
+msgid "host-port"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:433
+#: upstream/_versions/1.7/guides/kubernetes.adoc:458
+#, no-wrap
+msgid "path"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:434
+#, no-wrap
+msgid "/"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:434
+#, no-wrap
+msgid "protocol"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:434
+#, no-wrap
+msgid "Protocol"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:435
+#, no-wrap
+msgid "TCP"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/1.7/guides/kubernetes.adoc:437
+#, no-wrap
+msgid "Container"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:440
+#, no-wrap
+msgid "image"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:441
+#, no-wrap
+msgid "env-vars"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:441
+#, no-wrap
+msgid "Env[]"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:442
+#, no-wrap
+msgid "working-dir"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:443
+#, no-wrap
+msgid "command"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:444
+#, no-wrap
+msgid "arguments"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:445
+#, no-wrap
+msgid "ports"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:445
+#, no-wrap
+msgid "Port[]"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:446
+#, no-wrap
+msgid "mounts"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:446
+#, no-wrap
+msgid "Mount[]"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:447
+#, no-wrap
+msgid "image-pull-policy"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:448
+#, no-wrap
+msgid "liveness-probe"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:449
+#, no-wrap
+msgid "readiness-probe"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/1.7/guides/kubernetes.adoc:453
+#, no-wrap
+msgid "Mounts and Volumes"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/1.7/guides/kubernetes.adoc:455
+#, no-wrap
+msgid "Mount"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:459
+#, no-wrap
+msgid "sub-path"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:460
+#: upstream/_versions/1.7/guides/kubernetes.adoc:488
+#: upstream/_versions/1.7/guides/kubernetes.adoc:497
+#: upstream/_versions/1.7/guides/kubernetes.adoc:512
+#: upstream/_versions/1.7/guides/kubernetes.adoc:520
+#, no-wrap
+msgid "read-only"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/1.7/guides/kubernetes.adoc:463
+#, no-wrap
+msgid "ConfigMapVolume"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:466
+#, no-wrap
+msgid "config-map-name"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:467
+#: upstream/_versions/1.7/guides/kubernetes.adoc:475
+#, no-wrap
+msgid "default-mode"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:468
+#: upstream/_versions/1.7/guides/kubernetes.adoc:476
+#, no-wrap
+msgid "0600"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:468
+#: upstream/_versions/1.7/guides/kubernetes.adoc:476
+#, no-wrap
+msgid "optional"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/1.7/guides/kubernetes.adoc:471
+#, no-wrap
+msgid "SecretVolume"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:474
+#: upstream/_versions/1.7/guides/kubernetes.adoc:519
+#, no-wrap
+msgid "secret-name"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/1.7/guides/kubernetes.adoc:480
+#, no-wrap
+msgid "AzureDiskVolume"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:483
+#, no-wrap
+msgid "disk-name"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:484
+#, no-wrap
+msgid "disk-uri"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:485
+#, no-wrap
+msgid "kind"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:486
+#, no-wrap
+msgid "Managed"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:486
+#, no-wrap
+msgid "caching-mode"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:487
+#, no-wrap
+msgid "ReadWrite"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:487
+#: upstream/_versions/1.7/guides/kubernetes.adoc:496
+#, no-wrap
+msgid "fs-type"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:488
+#: upstream/_versions/1.7/guides/kubernetes.adoc:497
+#, no-wrap
+msgid "ext4"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/1.7/guides/kubernetes.adoc:491
+#, no-wrap
+msgid "AwsElasticBlockStoreVolume"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:494
+#, no-wrap
+msgid "volume-id"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:495
+#, no-wrap
+msgid "partition"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/1.7/guides/kubernetes.adoc:500
+#, no-wrap
+msgid "GitRepoVolume"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:503
+#, no-wrap
+msgid "repository"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:504
+#, no-wrap
+msgid "directory"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:505
+#, no-wrap
+msgid "revision"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/1.7/guides/kubernetes.adoc:508
+#, no-wrap
+msgid "PersistentVolumeClaimVolume"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:511
+#, no-wrap
+msgid "claim-name"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/1.7/guides/kubernetes.adoc:515
+#, no-wrap
+msgid "AzureFileVolume"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:518
+#, no-wrap
+msgid "share-name"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/1.7/guides/kubernetes.adoc:524
+#: upstream/_versions/1.7/guides/kubernetes.adoc:545
+#, no-wrap
+msgid "OpenShift"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:527
+msgid "To enable the generation of OpenShift resources, you need to include OpenShift in the target platforms:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/kubernetes.adoc:531
+#, no-wrap
+msgid "quarkus.kubernetes.deployment-target=openshift\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:534
+msgid "If you need to generate resources for both platforms (vanilla Kubernetes and OpenShift), then you need to include both (comma separated)."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/kubernetes.adoc:538
+#, no-wrap
+msgid "quarkus.kubernetes.deployment-target=kubernetes, openshift\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:542
+msgid "Quarkus also provides the link:openshift[OpenShift] extension. This extension is basically wrapper around the Kubernetes extension and relieves OpenShift users of the necessity of setting the `deployment-target` property to `openshift`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:544
+msgid "The OpenShift resources can be customized in a similar approach with Kubernetes."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:548
+#, no-wrap
+msgid "quarkus.openshift.name"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:549
+#, no-wrap
+msgid "quarkus.openshift.version"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:550
+#, no-wrap
+msgid "quarkus.openshift.part-of"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:551
+#, no-wrap
+msgid "quarkus.openshift.init-containers"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:552
+#, no-wrap
+msgid "quarkus.openshift.labels"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:553
+#, no-wrap
+msgid "quarkus.openshift.annotations"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:554
+#, no-wrap
+msgid "quarkus.openshift.env-vars"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:555
+#, no-wrap
+msgid "quarkus.openshift.working-dir"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:556
+#, no-wrap
+msgid "quarkus.openshift.command"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:557
+#, no-wrap
+msgid "quarkus.openshift.arguments"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:558
+#, no-wrap
+msgid "quarkus.openshift.replicas"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:559
+#, no-wrap
+msgid "quarkus.openshift.service-account"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:560
+#, no-wrap
+msgid "quarkus.openshift.host"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:561
+#, no-wrap
+msgid "quarkus.openshift.ports"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:562
+#, no-wrap
+msgid "quarkus.openshift.service-type"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:563
+#, no-wrap
+msgid "quarkus.openshift.pvc-volumes"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:564
+#, no-wrap
+msgid "quarkus.openshift.secret-volumes"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:565
+#, no-wrap
+msgid "quarkus.openshift.config-map-volumes"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:566
+#, no-wrap
+msgid "quarkus.openshift.git-repo-volumes"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:567
+#, no-wrap
+msgid "quarkus.openshift.aws-elastic-block-store-volumes"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:568
+#, no-wrap
+msgid "quarkus.openshift.azure-disk-volumes"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:569
+#, no-wrap
+msgid "quarkus.openshift.azure-file-volumes"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:570
+#, no-wrap
+msgid "quarkus.openshift.mounts"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:571
+#, no-wrap
+msgid "quarkus.openshift.image-pull-policy"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:572
+#, no-wrap
+msgid "quarkus.openshift.image-pull-secrets"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:573
+#, no-wrap
+msgid "quarkus.openshift.liveness-probe"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:574
+#, no-wrap
+msgid "quarkus.openshift.readiness-probe"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:575
+#, no-wrap
+msgid "quarkus.openshift.sidecars"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:576
+#, no-wrap
+msgid "quarkus.openshift.expose"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:577
+#, no-wrap
+msgid "quarkus.openshift.headless"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/1.7/guides/kubernetes.adoc:581
+#: upstream/_versions/1.7/guides/kubernetes.adoc:634
+#, no-wrap
+msgid "Knative"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:584
+msgid "To enable the generation of Quarkus.Knative.resources, you need to include Knative in the target platforms:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/kubernetes.adoc:588
+#, no-wrap
+msgid "quarkus.kubernetes.deployment-target=knative\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:592
+msgid "Following the execution of `./mvnw package` you will notice amongst the other files that are created, two files named `quarkus.knative.json` and `knative.yml` in the `target/kubernetes/` directory."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:594
+msgid "If you look at either file you will see that it contains a Quarkus.Knative.`Service`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:596
+msgid "The full source of the `quarkus.knative.json` file looks something like this:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/kubernetes.adoc:630
+#, no-wrap
+msgid ""
+"{\n"
+"  {\n"
+"    \"apiVersion\" : \"serving.quarkus.knative.dev/v1alpha1\",\n"
+"    \"kind\" : \"Service\",\n"
+"    \"metadata\" : {\n"
+"      \"annotations\": {\n"
+"       \"app.quarkus.io/vcs-url\" : \"<some url>\",\n"
+"       \"app.quarkus.io/commit-id\" : \"<some git SHA>\"\n"
+"      },\n"
+"      \"labels\" : {\n"
+"        \"app.kubernetes.io/name\" : \"test-quarkus-app\",\n"
+"        \"app.kubernetes.io/version\" : \"1.0-SNAPSHOT\"\n"
+"      },\n"
+"      \"name\" : \"quarkus.knative.\n"
+"    },\n"
+"    \"spec\" : {\n"
+"      \"runLatest\" : {\n"
+"        \"configuration\" : {\n"
+"          \"revisionTemplate\" : {\n"
+"            \"spec\" : {\n"
+"              \"container\" : {\n"
+"                \"image\" : \"dev.local/yourDockerUsername/test-quarkus-app:1.0-SNAPSHOT\",\n"
+"                \"imagePullPolicy\" : \"IfNotPresent\"\n"
+"              }\n"
+"            }\n"
+"          }\n"
+"        }\n"
+"      }\n"
+"    }\n"
+"  }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:633
+msgid "The generated service can be customized using the following properties:"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:637
+#, no-wrap
+msgid "quarkus.knative.name"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:638
+#, no-wrap
+msgid "quarkus.knative.version"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:639
+#, no-wrap
+msgid "quarkus.knative.part-of"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:640
+#, no-wrap
+msgid "quarkus.knative.init-containers"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:641
+#, no-wrap
+msgid "quarkus.knative.labels"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:642
+#, no-wrap
+msgid "quarkus.knative.annotations"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:643
+#, no-wrap
+msgid "quarkus.knative.env-vars"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:644
+#, no-wrap
+msgid "quarkus.knative.working-dir"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:645
+#, no-wrap
+msgid "quarkus.knative.command"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:646
+#, no-wrap
+msgid "quarkus.knative.arguments"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:647
+#, no-wrap
+msgid "quarkus.knative.replicas"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:648
+#, no-wrap
+msgid "quarkus.knative.service-account"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:649
+#, no-wrap
+msgid "quarkus.knative.host"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:650
+#, no-wrap
+msgid "quarkus.knative.ports"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:651
+#, no-wrap
+msgid "quarkus.knative.service-type"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:652
+#, no-wrap
+msgid "quarkus.knative.pvc-volumes"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:653
+#, no-wrap
+msgid "quarkus.knative.secret-volumes"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:654
+#, no-wrap
+msgid "quarkus.knative.config-map-volumes"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:655
+#, no-wrap
+msgid "quarkus.knative.git-repo-volumes"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:656
+#, no-wrap
+msgid "quarkus.knative.aws-elastic-block-store-volumes"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:657
+#, no-wrap
+msgid "quarkus.knative.azure-disk-volumes"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:658
+#, no-wrap
+msgid "quarkus.knative.azure-file-volumes"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:659
+#, no-wrap
+msgid "quarkus.knative.mounts"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:660
+#, no-wrap
+msgid "quarkus.knative.image-pull-policy"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:661
+#, no-wrap
+msgid "quarkus.knative.image-pull-secrets"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:662
+#, no-wrap
+msgid "quarkus.knative.liveness-probe"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:663
+#, no-wrap
+msgid "quarkus.knative.readiness-probe"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/1.7/guides/kubernetes.adoc:664
+#, no-wrap
+msgid "quarkus.knative.sidecars"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/1.7/guides/kubernetes.adoc:668
+#, no-wrap
+msgid "Deprecated configuration"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:671
+msgid "The following categories of configuration properties have been deprecated."
+msgstr ""
+
+#. type: Title ====
+#: upstream/_versions/1.7/guides/kubernetes.adoc:672
+#, no-wrap
+msgid "Properties without the quarkus prefix"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:675
+msgid "In earlier versions of the extension, the `quarkus.` was missing from those properties. These properties are now deprecated."
+msgstr ""
+
+#. type: Title ====
+#: upstream/_versions/1.7/guides/kubernetes.adoc:676
+#, no-wrap
+msgid "Docker and S2i properties"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:679
+msgid "The properties for configuring `docker` and `s2i` are also deprecated in favor of the new container-image extensions."
+msgstr ""
+
+#. type: Title ====
+#: upstream/_versions/1.7/guides/kubernetes.adoc:680
+#, no-wrap
+msgid "Config group arrays"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:683
+msgid "Properties referring to config group arrays (e.g. `kubernetes.labels[0]`, `kubernetes.env-vars[0]` etc) have been converted to maps, to align with the rest of the Quarkus ecosystem."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:685
+msgid "The code below demonstrates the change in `labels` config:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/kubernetes.adoc:691
+#, no-wrap
+msgid ""
+"# Old labels config:\n"
+"kubernetes.labels[0].name=foo\n"
+"kubernetes.labels[0].value=bar\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/kubernetes.adoc:694
+#, no-wrap
+msgid ""
+"# New labels\n"
+"quarkus.kubernetes.labels.foo=bar\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:697
+msgid "The code below demonstrates the change in `env-vars` config:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/kubernetes.adoc:703
+#, no-wrap
+msgid ""
+"# Old env-vars config:\n"
+"kubernetes.env-vars[0].name=foo\n"
+"kubernetes.env-vars[0].configmap=my-configmap\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/kubernetes.adoc:706
+#, no-wrap
+msgid ""
+"# New env-vars\n"
+"quarkus.kubernetes.env-vars.foo.configmap=myconfigmap\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/1.7/guides/kubernetes.adoc:709
+#, no-wrap
+msgid "Deployment"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:713
+msgid "To trigger building and deploying a container image you need to enable the `quarkus.kubernetes.deploy` flag (the flag is disabled by default - furthermore it has no effect during test runs or dev mode).  This can be easily done with the command line:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/kubernetes.adoc:717
+#, no-wrap
+msgid "./mvnw clean package -Dquarkus.kubernetes.deploy=true\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/1.7/guides/kubernetes.adoc:719
+#, no-wrap
+msgid "Building"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:722
+msgid "Building is possible, using any of the 3 available `container-image` extensions:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:724
+msgid "link:container-image#docker[Docker]"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:725
+msgid "link:container-image#jib[Jib]"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:726
+msgid "link:container-image#s2i[s2i]"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:728
+msgid "Each time deployment is requested, a container image build will be implicitly triggered (no additional properties are required when the Kubernetes deployment has been enabled)."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/1.7/guides/kubernetes.adoc:729
+#, no-wrap
+msgid "Deploying"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:734
+msgid "When deployment is enabled, the kubernetes extension will selected the resources specified by `quarkus.kubernetes.deployment.target` and deploy them.  This assumes that a `.kube/config` is available in your user directory that points to the target kubernetes cluster.  In other words the extension will use whatever cluster `kubectl` uses. The same applies to credentials."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/kubernetes.adoc:735
+msgid "At the moment no additional options are provided for further customization."
+msgstr ""

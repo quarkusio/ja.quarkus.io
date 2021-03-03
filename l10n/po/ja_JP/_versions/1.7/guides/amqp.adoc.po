@@ -1,0 +1,741 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2021-03-03 20:09+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. This guide is maintained in the main Quarkus repository
+#. and pull requests should be submitted there:
+#. https://github.com/quarkusio/quarkus/tree/master/docs/src/main/asciidoc
+#. type: Title =
+#: upstream/_versions/1.7/guides/amqp.adoc:6
+#, no-wrap
+msgid "Quarkus - Using AMQP with Reactive Messaging"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/amqp.adoc:12
+msgid "This guide demonstrates how your Quarkus application can utilize MicroProfile Reactive Messaging to interact with AMQP."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/1.7/guides/amqp.adoc:15
+#, no-wrap
+msgid "Prerequisites"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/amqp.adoc:18
+msgid "To complete this guide, you need:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/amqp.adoc:20
+msgid "less than 15 minutes"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/amqp.adoc:21
+msgid "an IDE"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/amqp.adoc:22
+msgid "JDK 1.8+ installed with `JAVA_HOME` configured appropriately"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/amqp.adoc:23
+msgid "Apache Maven {maven-version}"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/amqp.adoc:24
+msgid "A running AMQP 1.0 broker, or Docker Compose to start a development cluster"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/amqp.adoc:25
+msgid "GraalVM installed if you want to run in native mode."
+msgstr ""
+
+#. type: Named 'alt' AttributeList argument for macro 'image'
+#: upstream/_versions/1.7/guides/amqp.adoc:26
+#: upstream/_versions/1.7/guides/amqp.adoc:34
+#, no-wrap
+msgid "Architecture"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/amqp.adoc:33
+msgid "In this guide, we are going to generate (random) prices in one component.  These prices are written in an AMQP queue (`prices`).  A second component reads from the `prices` queue and apply some magic conversion to the price.  The result is sent to an in-memory stream consumed by a JAX-RS resource.  The data is sent to a browser using server-sent events."
+msgstr ""
+
+#. type: Target for macro image
+#: upstream/_versions/1.7/guides/amqp.adoc:34
+#, no-wrap
+msgid "amqp-guide-architecture.png"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/1.7/guides/amqp.adoc:36
+#, no-wrap
+msgid "Solution"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/amqp.adoc:40
+msgid "We recommend that you follow the instructions in the next sections and create the application step by step.  However, you can go right to the completed example."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/amqp.adoc:42
+msgid "Clone the Git repository: `git clone {quickstarts-clone-url}`, or download an {quickstarts-archive-url}[archive]."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/amqp.adoc:44
+msgid "The solution is located in the `amqp-quickstart` {quickstarts-tree-url}/amqp-quickstart[directory]."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/1.7/guides/amqp.adoc:45
+#, no-wrap
+msgid "Creating the Maven Project"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/amqp.adoc:48
+msgid "First, we need a new project. Create a new project with the following command:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/amqp.adoc:56
+#, no-wrap
+msgid ""
+"mvn io.quarkus:quarkus-maven-plugin:{quarkus-version}:create \\\n"
+"    -DprojectGroupId=org.acme \\\n"
+"    -DprojectArtifactId=amqp-quickstart \\\n"
+"    -Dextensions=\"amqp\"\n"
+"cd amqp-quickstart\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/amqp.adoc:59
+msgid "This command generates a Maven project, importing the Reactive Messaging and AMQP connector extensions."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/1.7/guides/amqp.adoc:60
+#, no-wrap
+msgid "Starting an AMQP broker"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/amqp.adoc:64
+msgid "Then, we need an AMQP broker.  You can follow the instructions from the https://activemq.apache.org/components/artemis/[Apache Artemis web site] or create a `docker-compose.yaml` file with the following content:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/amqp.adoc:70
+#, no-wrap
+msgid ""
+"# A docker compose file to start an Artemis AMQP broker\n"
+"# more details on https://github.com/vromero/activemq-artemis-docker.\n"
+"version: '2'\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/amqp.adoc:72
+#, no-wrap
+msgid "services:\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/amqp.adoc:82
+#, no-wrap
+msgid ""
+"  artemis:\n"
+"    image: vromero/activemq-artemis:2.8.0-alpine\n"
+"    ports:\n"
+"      - \"8161:8161\"\n"
+"      - \"61616:61616\"\n"
+"      - \"5672:5672\"\n"
+"    environment:\n"
+"      ARTEMIS_USERNAME: quarkus\n"
+"      ARTEMIS_PASSWORD: quarkus\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/amqp.adoc:85
+msgid "Once created, run `docker-compose up`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/amqp.adoc:87
+msgid "This is a development cluster, do not use in production."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/1.7/guides/amqp.adoc:88
+#, no-wrap
+msgid "The price generator"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/amqp.adoc:91
+msgid "Create the `src/main/java/org/acme/amqp/PriceGenerator.java` file, with the following content:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/amqp.adoc:95
+#: upstream/_versions/1.7/guides/amqp.adoc:135
+#: upstream/_versions/1.7/guides/amqp.adoc:176
+#, no-wrap
+msgid "package org.acme.amqp;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/amqp.adoc:98
+#, no-wrap
+msgid ""
+"import io.reactivex.Flowable;\n"
+"import org.eclipse.microprofile.reactive.messaging.Outgoing;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/amqp.adoc:102
+#, no-wrap
+msgid ""
+"import javax.enterprise.context.ApplicationScoped;\n"
+"import java.util.Random;\n"
+"import java.util.concurrent.TimeUnit;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/amqp.adoc:110
+#, no-wrap
+msgid ""
+"/**\n"
+" * A bean producing random prices every 5 seconds.\n"
+" * The prices are written to an AMQP queue (prices). The AMQP configuration is specified in the\n"
+" * application configuration.\n"
+" */\n"
+"@ApplicationScoped\n"
+"public class PriceGenerator {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/amqp.adoc:112
+#, no-wrap
+msgid "    private Random random = new Random();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/amqp.adoc:118
+#, no-wrap
+msgid ""
+"    @Outgoing(\"generated-price\")                        // <1>\n"
+"    public Flowable<Integer> generate() {               // <2>\n"
+"        return Flowable.interval(5, TimeUnit.SECONDS)\n"
+"                .map(tick -> random.nextInt(100));\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/amqp.adoc:120
+#: upstream/_versions/1.7/guides/amqp.adoc:159
+#, no-wrap
+msgid "}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/amqp.adoc:122
+msgid "Instruct Reactive Messaging to dispatch the items from returned stream to `generated-price`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/amqp.adoc:123
+msgid "The method returns a RX Java 2 _stream_ (`Flowable`) emitting a random _price_ every 5 seconds."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/amqp.adoc:126
+msgid "The method returns a _Reactive Stream_. The generated items are sent to the stream named `generated-price`.  This stream is mapped to an AMQP queue using the `application.properties` file that we will create soon."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/1.7/guides/amqp.adoc:127
+#, no-wrap
+msgid "The price converter"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/amqp.adoc:131
+msgid "The price converter reads the prices from AMQP, and transforms them.  Create the `src/main/java/org/acme/amqp/PriceConverter.java` file with the following content:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/amqp.adoc:139
+#, no-wrap
+msgid ""
+"import io.smallrye.reactive.messaging.annotations.Broadcast;\n"
+"import org.eclipse.microprofile.reactive.messaging.Incoming;\n"
+"import org.eclipse.microprofile.reactive.messaging.Outgoing;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/amqp.adoc:141
+#, no-wrap
+msgid "import javax.enterprise.context.ApplicationScoped;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/amqp.adoc:148
+#, no-wrap
+msgid ""
+"/**\n"
+" * A bean consuming data from the \"prices\" AMQP queue and applying some conversion.\n"
+" * The result is pushed to the \"my-data-stream\" stream which is an in-memory stream.\n"
+" */\n"
+"@ApplicationScoped\n"
+"public class PriceConverter {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/amqp.adoc:150
+#, no-wrap
+msgid "    private static final double CONVERSION_RATE = 0.88;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/amqp.adoc:157
+#, no-wrap
+msgid ""
+"    @Incoming(\"prices\")                                  // <1>\n"
+"    @Outgoing(\"my-data-stream\")                          // <2>\n"
+"    @Broadcast                                           // <3>\n"
+"    public double process(int priceInUsd) {\n"
+"        return priceInUsd * CONVERSION_RATE;\n"
+"    }\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/amqp.adoc:162
+msgid "Indicates that the method consumes the items from the `prices` channel"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/amqp.adoc:163
+msgid "Indicates that the objects returned by the method are sent to the `my-data-stream` channel"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/amqp.adoc:164
+msgid "Indicates that the item are dispatched to all _subscribers_"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/amqp.adoc:167
+msgid "The `process` method is called for every AMQP messages from the `prices` queue (configured in the application configuration).  Every result is sent to the `my-data-stream` in-memory stream."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/1.7/guides/amqp.adoc:168
+#, no-wrap
+msgid "The price resource"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/amqp.adoc:172
+msgid "Finally, let's bind our stream to a JAX-RS resource.  Creates the `src/main/java/org/acme/amqp/PriceResource.java` file with the following content:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/amqp.adoc:179
+#, no-wrap
+msgid ""
+"import io.smallrye.reactive.messaging.annotations.Channel;\n"
+"import org.reactivestreams.Publisher;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/amqp.adoc:185
+#, no-wrap
+msgid ""
+"import javax.inject.Inject;\n"
+"import javax.ws.rs.GET;\n"
+"import javax.ws.rs.Path;\n"
+"import javax.ws.rs.Produces;\n"
+"import javax.ws.rs.core.MediaType;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/amqp.adoc:191
+#, no-wrap
+msgid ""
+"/**\n"
+" * A simple resource retrieving the \"in-memory\" \"my-data-stream\" and sending the items as server-sent events.\n"
+" */\n"
+"@Path(\"/prices\")\n"
+"public class PriceResource {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/amqp.adoc:194
+#, no-wrap
+msgid ""
+"    @Inject\n"
+"    @Channel(\"my-data-stream\") Publisher<Double> prices;         // <1>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/amqp.adoc:200
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @Produces(MediaType.TEXT_PLAIN)\n"
+"    public String hello() {\n"
+"        return \"hello\";\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/amqp.adoc:209
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @Path(\"/stream\")\n"
+"    @Produces(MediaType.SERVER_SENT_EVENTS)                     // <2>\n"
+"    public Publisher<Double> stream() {                         // <3>\n"
+"        return prices;\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/amqp.adoc:211
+msgid "Injects the `my-data-stream` channel using the `@Channel` qualifier"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/amqp.adoc:212
+msgid "Indicates that the content is sent using `Server Sent Events`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/amqp.adoc:213
+msgid "Returns the stream (_Reactive Stream_)"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/1.7/guides/amqp.adoc:214
+#, no-wrap
+msgid "Configuring the AMQP connector"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/amqp.adoc:218
+msgid "We need to configure the AMQP connector. This is done in the `application.properties` file.  The keys are structured as follows:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/amqp.adoc:220
+msgid "`mp.messaging.[outgoing|incoming].{channel-name}.property=value`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/amqp.adoc:222
+msgid "The `channel-name` segment must match the value set in the `@Incoming` and `@Outgoing` annotation:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/amqp.adoc:223
+msgid "`generated-price` -> sink in which we write the prices"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/amqp.adoc:224
+msgid "`prices` -> source in which we read the prices"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/amqp.adoc:230
+#, no-wrap
+msgid ""
+"# Configures the AMQP broker credentials.\n"
+"amqp-username=quarkus\n"
+"amqp-password=quarkus\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/amqp.adoc:234
+#, no-wrap
+msgid ""
+"# Configure the AMQP connector to write to the `prices` address\n"
+"mp.messaging.outgoing.generated-price.connector=smallrye-amqp\n"
+"mp.messaging.outgoing.generated-price.address=prices\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/amqp.adoc:238
+#, no-wrap
+msgid ""
+"# Configure the AMQP connector to read from the `prices` queue\n"
+"mp.messaging.incoming.prices.connector=smallrye-amqp\n"
+"mp.messaging.incoming.prices.durable=true\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/amqp.adoc:241
+msgid "More details about this configuration is available in the https://smallrye.io/smallrye-reactive-messaging/#_interacting_using_amqp[SmallRye Reactive Messaging AMQP connector] documentation."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/amqp.adoc:243
+msgid "What about `my-data-stream`? This is an in-memory stream, not connected to a message broker."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/1.7/guides/amqp.adoc:244
+#, no-wrap
+msgid "The HTML page"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/amqp.adoc:247
+msgid "Final touch, the HTML page reading the converted prices using SSE."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/amqp.adoc:249
+msgid "Create the `src/main/resources/META-INF/resources/prices.html` file, with the following content:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/amqp.adoc:257
+#, no-wrap
+msgid ""
+"<!DOCTYPE html>\n"
+"<html lang=\"en\">\n"
+"<head>\n"
+"    <meta charset=\"UTF-8\">\n"
+"    <title>Prices</title>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/amqp.adoc:265
+#, no-wrap
+msgid ""
+"    <link rel=\"stylesheet\" type=\"text/css\"\n"
+"          href=\"https://cdnjs.cloudflare.com/ajax/libs/patternfly/3.24.0/css/patternfly.min.css\">\n"
+"    <link rel=\"stylesheet\" type=\"text/css\"\n"
+"          href=\"https://cdnjs.cloudflare.com/ajax/libs/patternfly/3.24.0/css/patternfly-additions.min.css\">\n"
+"</head>\n"
+"<body>\n"
+"<div class=\"container\">\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/amqp.adoc:280
+#, no-wrap
+msgid ""
+"    <h2>Last price</h2>\n"
+"    <div class=\"row\">\n"
+"    <p class=\"col-md-12\">The last price is <strong><span id=\"content\">N/A</span>&nbsp;&euro;</strong>.</p>\n"
+"    </div>\n"
+"</div>\n"
+"</body>\n"
+"<script src=\"https://code.jquery.com/jquery-3.3.1.min.js\"></script>\n"
+"<script>\n"
+"    var source = new EventSource(\"/prices/stream\");\n"
+"    source.onmessage = function (event) {\n"
+"        document.getElementById(\"content\").innerHTML = event.data;\n"
+"    };\n"
+"</script>\n"
+"</html>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/amqp.adoc:283
+msgid "Nothing spectacular here. On each received price, it updates the page."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/1.7/guides/amqp.adoc:284
+#, no-wrap
+msgid "Get it running"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/amqp.adoc:288
+msgid "If you followed the instructions, you should have the AMQP broker running.  Then, you just need to run the application using:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/amqp.adoc:292
+#, no-wrap
+msgid "./mvnw quarkus:dev\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/amqp.adoc:295
+msgid "Open `http://localhost:8080/prices.html` in your browser."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/amqp.adoc:297
+msgid "If you started the AMQP broker with docker compose, stop it using `CTRL+C` followed by `docker-compose down`."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/1.7/guides/amqp.adoc:298
+#, no-wrap
+msgid "Running Native"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/amqp.adoc:301
+msgid "You can build the native executable with:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/amqp.adoc:305
+#, no-wrap
+msgid "./mvnw package -Pnative\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/1.7/guides/amqp.adoc:307
+#, no-wrap
+msgid "Imperative usage"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/amqp.adoc:310
+msgid "Sometimes you need to have an imperative way of sending messages."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/amqp.adoc:313
+msgid "For example, if you need to send a message to a stream from inside a REST endpoint when receiving a POST request.  In this case, you cannot use `@Outgoing` because your method has parameters."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/amqp.adoc:315
+msgid "For this, you can use an `Emitter`."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/amqp.adoc:320
+#, no-wrap
+msgid ""
+"import org.eclipse.microprofile.reactive.messaging.Channel;\n"
+"import org.eclipse.microprofile.reactive.messaging.Emitter;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/amqp.adoc:326
+#, no-wrap
+msgid ""
+"import javax.inject.Inject;\n"
+"import javax.ws.rs.POST;\n"
+"import javax.ws.rs.Path;\n"
+"import javax.ws.rs.Consumes;\n"
+"import javax.ws.rs.core.MediaType;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/amqp.adoc:329
+#, no-wrap
+msgid ""
+"@Path(\"/prices\")\n"
+"public class PriceResource {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/amqp.adoc:331
+#, no-wrap
+msgid "    @Inject @Channel(\"price-create\") Emitter<Double> priceEmitter;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/1.7/guides/amqp.adoc:338
+#, no-wrap
+msgid ""
+"    @POST\n"
+"    @Consumes(MediaType.TEXT_PLAIN)\n"
+"    public void addPrice(Double price) {\n"
+"        priceEmitter.send(price);\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/amqp.adoc:342
+msgid "The `Emitter` configuration is done the same way as the other stream configuration used by `@Incoming` and `@Outgoing`.  In addition, you can use `@OnOverflow` to configure a back-pressure strategy."
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/1.7/guides/amqp.adoc:344
+#, no-wrap
+msgid "Deprecation"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/1.7/guides/amqp.adoc:347
+msgid "The `io.smallrye.reactive.messaging.annotations.Emitter`, `io.smallrye.reactive.messaging.annotations.Channel` and `io.smallrye.reactive.messaging.annotations.OnOverflow` classes are now deprecated and replaced by:"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/1.7/guides/amqp.adoc:349
+msgid "`org.eclipse.microprofile.reactive.messaging.Emitter`"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/1.7/guides/amqp.adoc:350
+msgid "`org.eclipse.microprofile.reactive.messaging.Channel`"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/1.7/guides/amqp.adoc:351
+msgid "`org.eclipse.microprofile.reactive.messaging.OnOverflow`"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/1.7/guides/amqp.adoc:353
+msgid "The new `Emitter.send` method returns a `CompletionStage` completed when the produced message is acknowledged."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/1.7/guides/amqp.adoc:355
+#, no-wrap
+msgid "Going further"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/amqp.adoc:359
+msgid "This guide has shown how you can interact with AMQP using Quarkus.  It utilizes MicroProfile Reactive Messaging to build data streaming applications."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/amqp.adoc:362
+msgid "If you did the Kafka quickstart, you have realized that it's the same code.  The only difference is the connector configuration."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/1.7/guides/amqp.adoc:363
+msgid "If you want to go further check the documentation of https://smallrye.io/smallrye-reactive-messaging[SmallRye Reactive Messaging], the implementation used in Quarkus."
+msgstr ""
