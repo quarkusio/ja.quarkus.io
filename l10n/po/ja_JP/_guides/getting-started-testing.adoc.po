@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2021-02-23 11:07+0000\n"
+"POT-Creation-Date: 2021-03-03 16:17+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1720,110 +1720,208 @@ msgid "By simply annotating any test in the test suite with `@QuarkusTestResourc
 msgstr "テストスイート内の任意のテストに `@QuarkusTestResource` をアノテーションするだけで、Quarkusは、テストを実行する前に対応する `QuarkusTestResourceLifecycleManager`  を実行します。テストスイートでは、複数の `@QuarkusTestResource`  アノテーションを自由に利用することもできます。この場合、対応するすべての `QuarkusTestResourceLifecycleManager`  オブジェクトがテストの前に実行されます。"
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:994
+#: upstream/_guides/getting-started-testing.adoc:992
+msgid "test resources are global, even if they are defined on a test class or custom profile, which means they will all be activated for all tests, even though we do remove duplicates. If you want to only enable a test resource on a single test class or test profile, you can use `@QuarkusTestResource(restrictToAnnotatedClass = true)`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/getting-started-testing.adoc:997
 msgid "Quarkus provides a few implementations of `QuarkusTestResourceLifecycleManager` out of the box (see `io.quarkus.test.h2.H2DatabaseTestResource` which starts an H2 database, or `io.quarkus.test.kubernetes.client.KubernetesMockServerTestResource` which starts a mock Kubernetes API server), but it is common to create custom implementations to address specific application needs.  Common cases include starting docker containers using https://www.testcontainers.org/[Testcontainers] (an example of which can be found https://github.com/quarkusio/quarkus-quickstarts/blob/master/kafka-quickstart/src/test/java/org/acme/kafka/KafkaResource.java[here]), or starting a mock HTTP server using http://wiremock.org/[Wiremock] (an example of which can be found https://github.com/geoand/quarkus-test-demo/blob/master/src/test/java/org/acme/getting/started/country/WiremockCountries.java[here])."
 msgstr "Quarkusでは、 `QuarkusTestResourceLifecycleManager`  の実装がいくつか提供されていますが(H2データベースを起動する `io.quarkus.test.h2.H2DatabaseTestResource` や、モックKubernetes APIサーバーを起動する `io.quarkus.test.kubernetes.client.KubernetesMockServerTestResource`  を参照)、特定のアプリケーションのニーズに対応するためにカスタム実装を作成するのが一般的です。一般的なケースとしては、 link:https://www.testcontainers.org/[Testcontainers]を使ってdockerコンテナーを起動したり(その例は link:https://github.com/quarkusio/quarkus-quickstarts/blob/master/kafka-quickstart/src/test/java/org/acme/kafka/KafkaResource.java[こちら]にあります)、 link:http://wiremock.org/[Wiremock]を使ってモックHTTPサーバを起動したり(その例は link:https://github.com/geoand/quarkus-test-demo/blob/master/src/test/java/org/acme/getting/started/country/WiremockCountries.java[こちら]にあります)などがあります。"
 
+#. type: Title ===
+#: upstream/_guides/getting-started-testing.adoc:998
+#, no-wrap
+msgid "Annotation-based test resources"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/getting-started-testing.adoc:1002
+msgid "It is possible to write test resources that are enabled and configured using annotations. This is enabled by placing the `@QuarkusTestResource` on an annotation which will be used to enable and configure the test resource."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/getting-started-testing.adoc:1005
+msgid "For example, this defines the `@WithKubernetesTestServer` annotation, which you can use on your tests to activate the `KubernetesServerTestResource`, but only for the annotated test class. You can also place them on your `QuarkusTestProfile` test profiles."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/getting-started-testing.adoc:1016
+#, no-wrap
+msgid ""
+"@QuarkusTestResource(KubernetesServerTestResource.class)\n"
+"@Retention(RetentionPolicy.RUNTIME)\n"
+"@Target(ElementType.TYPE)\n"
+"public @interface WithKubernetesTestServer {\n"
+"    /**\n"
+"     * Start it with HTTPS\n"
+"     */\n"
+"    boolean https() default false;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/getting-started-testing.adoc:1021
+#, no-wrap
+msgid ""
+"    /**\n"
+"     * Start it in CRUD mode\n"
+"     */\n"
+"    boolean crud() default true;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/getting-started-testing.adoc:1027
+#, no-wrap
+msgid ""
+"    /**\n"
+"     * Port to use, defaults to any available port\n"
+"     */\n"
+"    int port() default 0;\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/getting-started-testing.adoc:1031
+msgid "The `KubernetesServerTestResource` class has to implement the `QuarkusTestResourceConfigurableLifecycleManager` interface in order to be configured using the previous annotation:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/getting-started-testing.adoc:1036
+#, no-wrap
+msgid ""
+"public class KubernetesServerTestResource\n"
+"        implements QuarkusTestResourceConfigurableLifecycleManager<WithKubernetesTestServer> {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/getting-started-testing.adoc:1040
+#, no-wrap
+msgid ""
+"    private boolean https = false;\n"
+"    private boolean crud = true;\n"
+"    private int port = 0;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/getting-started-testing.adoc:1047
+#, no-wrap
+msgid ""
+"    @Override\n"
+"    public void init(WithKubernetesTestServer annotation) {\n"
+"        this.https = annotation.https();\n"
+"        this.crud = annotation.crud();\n"
+"        this.port = annotation.port();\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/getting-started-testing.adoc:1050
+#, no-wrap
+msgid ""
+"    // ...\n"
+"}\n"
+msgstr ""
+
 #. type: Title ==
-#: upstream/_guides/getting-started-testing.adoc:995
+#: upstream/_guides/getting-started-testing.adoc:1052
 #, fuzzy, no-wrap
 msgid "Hang Detection"
 msgstr "ハング検出"
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:1000
+#: upstream/_guides/getting-started-testing.adoc:1057
 #, fuzzy
 msgid "`@QuarkusTest` has support for hang detection to help diagnose any unexpected hangs. If no progress is made for a specified time (i.e. no JUnit callbacks are invoked) then Quarkus will print a stack trace to the console to help diagnose the hang.  The default value for this timeout is 10 minutes."
 msgstr "`@QuarkusTest` は、予期せぬハングを診断するのに役立つハング検出をサポートしています。指定した時間が経過しても何も進展がない (つまり JUnit コールバックが起動されていない) 場合は、スタックトレースをコンソールに出力してハングの診断に役立てます。このタイムアウトのデフォルト値は 10 分です。"
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:1005
+#: upstream/_guides/getting-started-testing.adoc:1062
 #, fuzzy
 msgid "No further action will be taken, and the tests will continue as normal (generally until CI times out), however the printed stack traces should help diagnose why the build has failed. You can control this timeout with the `quarkus.test.hang-detection-timeout` system property (you can also set this in application.properties, but this won't be read until Quarkus has started, so the timeout for Quarkus start will be the default of 10 minutes)."
 msgstr "それ以上のアクションは行われず、テストは通常通り（通常はCIがタイムアウトするまで）継続されますが、スタックトレースの印刷は、ビルドが失敗した理由を診断するのに役立つはずです。このタイムアウトは、 `quarkus.test.hang-detection-timeout` systemプロパティで制御できます（application.propertiesで設定することもできますが、Quarkusが起動するまで読み込まれないので、Quarkus起動時のタイムアウトはデフォルトの10分になります）。"
 
 #. type: Title ==
-#: upstream/_guides/getting-started-testing.adoc:1006
+#: upstream/_guides/getting-started-testing.adoc:1063
 #, no-wrap
 msgid "Native Executable Testing"
 msgstr "ネイティブ実行可能ファイルテスト"
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:1010
+#: upstream/_guides/getting-started-testing.adoc:1067
 msgid "It is also possible to test native executables using `@NativeImageTest`. This supports all the features mentioned in this guide except injecting into tests (and the native executable runs in a separate non-JVM process this is not really possible)."
 msgstr "`@NativeImageTest` を使用してネイティブ実行ファイルをテストすることも可能です。これは、テストに注入すること(そして、ネイティブ実行可能ファイルは別の非JVMプロセスで実行されることーこれは実際には可能ではありません)を除いて、このガイドで述べたすべての機能をサポートしています。"
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:1013
+#: upstream/_guides/getting-started-testing.adoc:1070
 msgid "This is covered in the link:building-native-image[Native Executable Guide]."
 msgstr "これは link:building-native-image[ネイティブ実行可能ファイルガイド] で説明されています。"
 
 #. type: Title ==
-#: upstream/_guides/getting-started-testing.adoc:1015
+#: upstream/_guides/getting-started-testing.adoc:1072
 #, no-wrap
 msgid "Running `@QuarkusTest` from an IDE"
 msgstr "IDE から `@QuarkusTest`  を実行する"
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:1018
+#: upstream/_guides/getting-started-testing.adoc:1075
 msgid "Most IDEs offer the possibility to run a selected class as JUnit test directly. For this you should set a few properties in the settings of your chosen IDE:"
 msgstr "ほとんどの IDE では、選択したクラスを JUnit テストとして直接実行できるようになっています。そのためには、選択した IDE の設定でいくつかのプロパティーを設定する必要があります。"
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:1020
+#: upstream/_guides/getting-started-testing.adoc:1077
 msgid "`java.util.logging.manager` (see link:logging[Logging Guide])"
 msgstr "`java.util.logging.manager`  (ロ link:logging[ギングガイド]を参照)"
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:1022
+#: upstream/_guides/getting-started-testing.adoc:1079
 #, fuzzy
 msgid "`maven.home` (only if there are any custom settings in `${maven.home}/conf/settings.xml`, see link:maven-tooling[Maven Guide])"
 msgstr "`maven.home` ( `${maven.home}/conf/settings.xml` にカスタム設定がある場合のみ、 link:maven-tooling[Mavenガイドを] 参照してください)"
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:1024
+#: upstream/_guides/getting-started-testing.adoc:1081
 msgid "`maven.settings` (in case a custom version of `settings.xml` file should be used for the tests)"
 msgstr "`maven.settings`  (カスタム版の `settings.xml`  ファイルをテストに使用する場合)"
 
 #. type: Title ===
-#: upstream/_guides/getting-started-testing.adoc:1025
+#: upstream/_guides/getting-started-testing.adoc:1082
 #, fuzzy, no-wrap
 msgid "Eclipse separate JRE definition"
 msgstr "Eclipse別のJREの定義"
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:1028
+#: upstream/_guides/getting-started-testing.adoc:1085
 msgid "Copy your current \"Installed JRE\" definition into a new one, where you will add the properties as a new VM arguments:"
 msgstr "現在の\"Installed JRE\"定義を新しい定義にコピーし、新しいVMの引数としてプロパティーを追加します:"
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:1030
+#: upstream/_guides/getting-started-testing.adoc:1087
 msgid "`-Djava.util.logging.manager=org.jboss.logmanager.LogManager`"
 msgstr "`-Djava.util.logging.manager=org.jboss.logmanager.LogManager`"
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:1032
+#: upstream/_guides/getting-started-testing.adoc:1089
 msgid "`-Dmaven.home=<path-to-your-maven-installation>`"
 msgstr "`-Dmaven.home=&amp;lt;path-to-your-maven-installation&amp;gt;`"
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:1034
+#: upstream/_guides/getting-started-testing.adoc:1091
 msgid "Use this JRE definition as your Quarkus project targeted runtime and the workaround will be applied to any \"Run as JUnit\" configuration."
 msgstr "このJRE定義をQuarkusプロジェクトのターゲットランタイムとして使用すると、「Run as JUnit」設定に回避策が適用されます。"
 
 #. type: Title ===
-#: upstream/_guides/getting-started-testing.adoc:1035
+#: upstream/_guides/getting-started-testing.adoc:1092
 #, no-wrap
 msgid "VSCode \"run with\" configuration"
 msgstr "VSCode \"run with\" 設定"
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:1038
+#: upstream/_guides/getting-started-testing.adoc:1095
 msgid "The `settings.json` placed in the root of your project directory or in the workspace will need the workaround in your test configuration:"
 msgstr "プロジェクトディレクトリーやワークスペースのルートにある `settings.json`  は、テスト設定で回避策が必要です。"
 
 #. type: delimited block -
-#: upstream/_guides/getting-started-testing.adoc:1048
+#: upstream/_guides/getting-started-testing.adoc:1105
 #, no-wrap
 msgid ""
 "\"java.test.config\": [\n"
@@ -1837,12 +1935,12 @@ msgid ""
 msgstr ""
 
 #. type: Title ===
-#: upstream/_guides/getting-started-testing.adoc:1050
+#: upstream/_guides/getting-started-testing.adoc:1107
 #, fuzzy, no-wrap
 msgid "IntelliJ JUnit template"
 msgstr "IntelliJ JUnit テンプレート"
 
 #. type: Plain text
-#: upstream/_guides/getting-started-testing.adoc:1052
+#: upstream/_guides/getting-started-testing.adoc:1109
 msgid "Nothing needed in IntelliJ because the IDE will pick the `systemPropertyVariables` from the surefire plugin configuration in `pom.xml`."
 msgstr "IntelliJでは何も必要ありません。なぜなら、IDEは `systemPropertyVariables` を `pom.xml`のsurefireプラグイン設定から取得するからです。"
