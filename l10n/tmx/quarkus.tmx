@@ -35663,6 +35663,246 @@ In this guide, we will explore:
     </tu>
     <tu>
       <tuv xml:lang="en">
+        <seg>Quarkus gRPC</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>Quarkus gRPC</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>https://grpc.io/[gRPC] is a high-performance RPC framework.  It can efficiently connect services implemented using various languages and frameworks.  It is also applicable in the last mile of distributed computing to connect devices, mobile applications, and browsers to backend services.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>link:https://grpc.io/[gRPC] は高性能なRPCフレームワークです。様々な言語やフレームワークを使って実装されたサービスを効率的に接続することができます。また、デバイスやモバイルアプリケーション、ブラウザとバックエンドサービスを接続するために、分散コンピューティングのラストワンマイルにも適用可能です。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>In general, gRPC uses HTTP/2, TLS, and https://developers.google.com/protocol-buffers[Protobuf (Protocol Buffers)].  In a microservice architecture, gRPC is an efficient, type-safe alternative to HTTP.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>一般的に、gRPCはHTTP/2、TLS、 link:https://developers.google.com/protocol-buffers[Protobuf(プロトコルバッファ)] を使用します。マイクロサービスアーキテクチャでは、gRPCはHTTPに代わる効率的で型安全な代替手段です。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>The Quarkus gRPC extension integrate gRPC in Quarkus application.  It:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>QuarkusのgRPCエクステンションは、QuarkusアプリケーションにgRPCを統合します。それは</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>supports implementing gRPC services</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>gRPCサービスの実装をサポートしています</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>supports consuming gRPC services</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>gRPC サービスの利用をサポートしています</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>integrates with the reactive engine from Quarkus as well as the reactive development model</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>Quarkusのリアクティブエンジンやリアクティブ開発モデルと統合されています</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>allows plain-text communication as well as TLS, and TLS with mutual authentication</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>平文通信に加えてTLS、相互認証付きのTLSも可能です</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Quarkus gRPC is based on https://vertx.io/docs/vertx-grpc/java/[Vert.x gRPC].</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>Quarkus gRPCは link:https://vertx.io/docs/vertx-grpc/java/[Vert.x gRPC] をベースにしています。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Quarkus comes with a Transaction Manager and uses it to coordinate and expose transactions to your applications.  Each extension dealing with persistence will integrate with it for you.  And you will explicitly interact with transactions via CDI.  This guide will walk you through all that.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>QuarkusにはTransaction Managerが付属しており、これを使用してトランザクションを調整してアプリケーションに公開します。永続性を扱う各エクステンションは、これと統合されます。そして、CDIを介して明示的にトランザクションと対話することになります。このガイドでは、これらすべてについて説明します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>You don't need to worry about setting it up most of the time as extensions needing it will simply add it as a dependency.  Hibernate ORM for example will include the transaction manager and set it up properly.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>これを必要とするエクステンションは単に依存関係として追加するだけなので、ほとんどの場合、設定について心配する必要はありません。例えばHibernate ORMはトランザクションマネージャーを含んでおり、適切に設定してくれます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>You might need to add it as a dependency explicitly if you are using transactions directly without Hibernate ORM for example.  Add the following to your `pom.xml`:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>例えば、Hibernate ORMを使用せずに直接トランザクションを使用している場合は、明示的に依存関係として追加する必要があるかもしれません。以下を `pom.xml` に追加します:</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Starting and stopping transactions: defining your boundaries</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>トランザクションの開始と停止:境界線の定義</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>You can define your transaction boundaries the easy way, or the less easy way :)</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>トランザクションの境界を定義するには、簡単な方法と比較的簡単ではない方法があります :)</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>The easiest way to define your transaction boundaries is to use the `@Transactional` annotation on your entry method (`javax.transaction.Transactional`).</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>トランザクションの境界を定義する最も簡単な方法は、エントリーメソッド ( `javax.transaction.Transactional` ) で `@Transactional` アノテーションを使用することです。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>This annotation defines your transaction boundaries and will wrap this call within a transaction.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>このアノテーションは、トランザクションの境界を定義し、トランザクション内でこの呼び出しをラップします。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>A `RuntimeException` crossing the transaction boundaries will rollback the transaction.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`RuntimeException` がトランザクションの境界を越えると、トランザクションがロールバックされます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>`@Transactional` can be used to control transaction boundaries on any CDI bean at the method level or at the class level to ensure every method is transactional.  That includes REST endpoints.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`@Transactional` は、メソッドレベルまたはクラスレベルで、すべてのメソッドがトランザクションであることを保証するために、任意の CDI Bean のトランザクション境界を制御するために使用することができます。これにはRESTエンドポイントも含まれます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>You can control whether and how the transaction is started with parameters on `@Transactional`:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`@Transactional` のパラメーターを使用して、トランザクションを開始するかどうか、どのように開始するかを制御することができます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>`@Transactional(REQUIRED)` (default): starts a transaction if none was started, stays with the existing one otherwise.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`@Transactional(REQUIRED)` (デフォルト): 何も開始されていない場合はトランザクションを開始し、そうでない場合は既存のトランザクションを維持します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>`@Transactional(REQUIRES_NEW)`: starts a transaction if none was started ; if an existing one was started, suspends it and starts a new one for the boundary of that method.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`@Transactional(REQUIRES_NEW)` : 何も開始されていない場合はトランザクションを開始し、既存のトランザクションが開始されている場合はそれを一時停止し、そのメソッドの境界で新しいトランザクションを開始します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>`@Transactional(MANDATORY)`: fails if no transaction was started ; works within the existing transaction otherwise.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`@Transactional(MANDATORY)` : トランザクションが開始されていない場合は失敗し、そうでない場合は既存のトランザクション内で動作します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>`@Transactional(SUPPORTS)`: if a transaction was started, joins it ; otherwise works with no transaction.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`@Transactional(SUPPORTS)` : トランザクションが開始されている場合、それに参加します。開始されていない場合はトランザクションなしで動作します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>`@Transactional(NOT_SUPPORTED)`: if a transaction was started, suspends it and works with no transaction for the boundary of the method ; otherwise works with no transaction.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`@Transactional(NOT_SUPPORTED)` : トランザクションが開始されている場合、それを一時停止し、メソッドの境界ではトランザクションなしで動作します。開始されていない場合は、トランザクションなしで動作します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>`@Transactional(NEVER)`: if a transaction was started, raises an exception ; otherwise works with no transaction.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`@Transactional(NEVER)` : トランザクションが開始されている場合は例外を発生させます。開始されていない場合はトランザクションなしで動作します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Transaction Configuration</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>トランザクション設定</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Reactive extensions</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>リアクティブエクステンション</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>The default value is 60 seconds.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>デフォルト値は60秒です。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Configuring transaction node name identifier</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>トランザクションノード名識別子の設定</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Why always having a transaction manager?</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>なぜ常にトランザクションマネージャーを持っているのか?</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
         <seg>As usual, the application can be packaged using `./mvnw clean package` and executed using the `target/quarkus-app/quarkus-run.jar` file.  You can also generate the native executable with `./mvnw clean package -Pnative`.</seg>
       </tuv>
       <tuv xml:lang="ja_JP">
@@ -35751,6 +35991,14 @@ In this guide, we will explore:
     </tu>
     <tu>
       <tuv xml:lang="en">
+        <seg>As usual, the application can be packaged using `./mvnw clean package` and executed using the `target/quarkus-app/quarkus-run.jar` file.  You can also generate the native executable using `./mvnw clean package -Pnative`.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>いつものように、 `./mvnw clean package`  を使ってアプリケーションをパッケージ化し、 `target/quarkus-app/quarkus-run.jar` ファイルを使って実行することができます。また、 `./mvnw clean package -Pnative` を使用してネイティブの実行ファイルを生成することもできます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
         <seg>The application is packaged using `./mvnw package`.  It produces several outputs in `/target`:</seg>
       </tuv>
       <tuv xml:lang="ja_JP">
@@ -35819,6 +36067,14 @@ slow down deployment and cold start time or even cost you more.
     </tu>
     <tu>
       <tuv xml:lang="en">
+        <seg>Main method</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>Main method</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
         <seg>When configuring `quarkus.package.type=fast-jar` (which will become the default soon), then the result of executing `./mvnw package` is a new directory under `target` named `quarkus-app`.</seg>
       </tuv>
       <tuv xml:lang="ja_JP">
@@ -35855,6 +36111,416 @@ slow down deployment and cold start time or even cost you more.
       </tuv>
       <tuv xml:lang="ja_JP">
         <seg>`application.properties` で、その設定プロパティーよりも優先されるプロパティーを上書きすることができます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>layout: publications
+permalink: /publications/
+---
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>layout: publications
+permalink: /publications/
+---
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>{project-name} - Publications</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>{project-name} - 出版物</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Below is a list of articles, blogs, podcast and other tidbits published online around {project-name}.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>以下は、{project-name}関連でオンラインで公開されている記事、ブログ、ポッドキャスト、その他の豆知識のリストです。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>If you believe we are missing an article, blog or video https://github.com/quarkusio/quarkusio.github.io[submit an issue].</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>記事、ブログ、ビデオが不足していると思われる場合は、 link:https://github.com/quarkusio/quarkusio.github.io[Issueを登録] してください。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>layout: community
+permalink: /community/
+---
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>layout: community
+permalink: /community/
+---
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>{project-name} - Community</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>{project-name} - コミュニティ</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Documentation</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>ドキュメント</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Discussions</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>ディスカッション</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Stack Overflow</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>Stack Overflow</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Mailing list</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>メーリングリスト</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>If you prefer live chat with the developers, we have a {quarkus-chat-url}[Zulip chat] where we all hang out.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>開発者とのライブチャットがお好きな方は、{quarkus-chat-url}[Zulip chat]をご利用ください。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Publications</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>出版物</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>We are actively collection interesting blogs, articles, videos and other interesting publications. You can find those on link:{quarkus-site-publications}[Publications] page.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>私たちは積極的に面白いブログ、記事、ビデオ、その他の興味深い出版物を収集しています。あなたは、 link:{quarkus-site-publications}[出版物] のページでそれらを見つけることができます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>An Open Project</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>オープンプロジェクト</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>{project-name} is an Open Source project licensed under the https://www.apache.org/licenses/LICENSE-2.0[Apache License version 2.0]. First and foremost, it is an open community where contributions, ideas and discussions are done in the open and welcome contributors. Let's join forces in building the future of Java applications.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>{project-name} は link:https://www.apache.org/licenses/LICENSE-2.0[Apacheライセンスバージョン2.0] でライセンスされたオープンソースプロジェクトです。まず何よりも、貢献やアイデア、議論がオープンに行われ、貢献者を歓迎するオープンコミュニティです。力を合わせて、Javaアプリケーションの未来を築いていきましょう。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Code and issue tracker</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>コードと課題管理システム</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Contributing</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>貢献</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>There are a lot of ways to contribute to {project-name} development:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>{project-name} の開発に貢献する方法はたくさんあります。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Writing documentation and quickstarts,</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>ドキュメントやクイックスタートを書いたり、</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>{quarkus-issues-url}[Fixing bugs or even just opening an issue],</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>{quarkus-issues-url}[バグを修正したり、Issueを登録するだけでも構いません]。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Writing new extensions.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>新しいエクステンションの作成</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>If you are an extension developer or want to contribute to {project-name} development, join our mailing list either:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>もしあなたがエクステンションの開発者であったり、{project-name}の開発に貢献したい場合は、私たちのメーリングリストに参加してください:</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>by visiting the Google Groups page {quarkus-mailing-list-index}</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>Googleグループのページ{quarkus-mailing-list-index}にアクセス</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Make sure you visit our extensive link:{quarkus-writing-extensions-guide}[extension developer guide].</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>当社の広範な link:{quarkus-writing-extensions-guide}[エクステンション開発者ガイド] を必ずご覧ください。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>quarkus.log.category."&lt;category-name&gt;".leve</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>quarkus.log.category."&lt;category-name&gt;".leve</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>quarkus.log.category."&lt;category-name&gt;".min-leve</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>quarkus.log.category."&lt;category-name&gt;".min-leve</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>quarkus.log.category."&lt;category-name&gt;".use-parent-handler</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>quarkus.log.category."&lt;category-name&gt;".use-parent-handler</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>tru</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>tru</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>quarkus.log.category."&lt;category-name&gt;".handlers=[&lt;handler&gt;]</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>quarkus.log.category."&lt;category-name&gt;".handlers=[&lt;handler&gt;]</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>quarkus.log.leve</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>quarkus.log.leve</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>quarkus.log.min-leve</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>quarkus.log.min-leve</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Symbo</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>Symbo</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>%c</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>%c</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>%d{xxx}</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>d{xxx}.</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Dat</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>Dat</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Exception</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>Exception</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>%i</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>%i</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>%n</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>%n</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>%p</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>%p</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>%r</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>%r</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>%t</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>%t</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>%t{id}</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>%t{id}</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>%z{&lt;zone name&gt;}</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>%z{&lt;zone name&gt;}</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>%X{&lt;MDC property name&gt;}</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>%X{&lt;MDC property name&gt;}</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>%x</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>%x</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>  &lt;dependencies&gt;
+    &lt;!-- ... your other dependencies are here ... --&gt;
+    &lt;dependency&gt;
+      &lt;groupId&gt;io.quarkus&lt;/groupId&gt;
+      &lt;artifactId&gt;quarkus-logging-json&lt;/artifactId&gt;
+    &lt;/dependency&gt;
+  &lt;/dependencies&gt;
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>  &lt;dependencies&gt;
+    &lt;!-- ... your other dependencies are here ... --&gt;
+    &lt;dependency&gt;
+      &lt;groupId&gt;io.quarkus&lt;/groupId&gt;
+      &lt;artifactId&gt;quarkus-logging-json&lt;/artifactId&gt;
+    &lt;/dependency&gt;
+  &lt;/dependencies&gt;
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Log4j:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>Log4j:</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Log4j2:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>Log4j2:</seg>
       </tuv>
     </tu>
     <tu>
