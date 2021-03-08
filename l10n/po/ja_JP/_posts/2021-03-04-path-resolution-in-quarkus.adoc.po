@@ -18,13 +18,13 @@ msgstr ""
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:1
-#, no-wrap
+#, fuzzy, no-wrap
 msgid "---\n"
-msgstr ""
+msgstr "---\n"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:8
-#, no-wrap
+#, fuzzy, no-wrap
 msgid ""
 "layout: post\n"
 "title: Path resolution in Quarkus\n"
@@ -34,192 +34,227 @@ msgid ""
 "author: ebullient\n"
 "---\n"
 msgstr ""
+"layout: post\n"
+"title: Quarkusでのパス解決\n"
+"date: 2021-03-04\n"
+"tags: help web metrics\n"
+"synopsis: Quarkus URIパス解決における最近の変更点をナビゲートする\n"
+"author: ebullient\n"
+"---\n"
 
 #. type: Title =
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:10
-#, no-wrap
+#, fuzzy, no-wrap
 msgid "Path resolution in Quarkus"
-msgstr ""
+msgstr "Quarkusでのパス解決"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:13
+#, fuzzy
 msgid "We have had an unusually bumpy ride the last few weeks. Path resolution can be sneakily complicated, and in trying to make things better, we accidentally made them worse! We've fixed it all now, but you might notice some changes. Hopefully, this post will make clear what those changes are, what they mean, and what you can do to put everything back the way you want it."
-msgstr ""
+msgstr "ここ数週間、私たちは異常に揺れ動いていました。パスの解決はこっそりと複雑になることがあり、物事を良くしようとしているうちに、私たちは誤って悪化させてしまったのです!今はすべて修正しましたが、いくつかの変更点があることに気づくかもしれません。うまくいけば、この記事でその変更が何であるか、その意味、そしてあなたが望むようにすべてを元の状態に戻すために何ができるかを明確にしてくれるでしょう。"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:15
-#, no-wrap
+#, fuzzy, no-wrap
 msgid "**TL;DR:** As of `1.11.5.Final` and `1.12.1.Final`, leading slashes matter in config. So if you use `/endpoint`, that endpoint will be served from the absolute root. If you want it relative to some containing bucket, omit that leading slash. For example, `quarkus.http.non-application-root-path` is now `q` by default, which nests it under `quarkus.http.root-path`, matching the original behavior. You can use an absolute path, e.g. `/q`, to serve non-application endpoints from the absolute root (as a sibling of the http root, if that is set). To remove the non-application endpoint behavior entirely, set `quarkus.http.non-application-root-path` to the same value as `quarkus.http.root-path`. The most foolproof way to do this is using a variable: `quarkus.http.non-application-root-path=${quarkus.http.root-path}`.\n"
-msgstr ""
+msgstr "*TL;DR:* `1.11.5.Final` と `1.12.1.Final` の時点では、設定では先頭のスラッシュは重要です。つまり、 `/endpoint` を使用した場合、そのエンドポイントは絶対ルートから提供されます。もし、バケットを含むものからの相対的なものにしたいのであれば、先頭のスラッシュを省略してください。例えば、 `quarkus.http.non-application-root-path` はデフォルトでは `q` になり、 `quarkus.http.root-path` の下に入れ子になり、元の動作と一致します。アプリケーション以外のエンドポイントを絶対ルートから (設定されている場合は http ルートの兄弟として) 提供するために、例えば `/q` のような絶対パスを使うことができます。アプリケーション以外のエンドポイントの動作を完全に削除するには、 `quarkus.http.non-application-root-path` を `quarkus.http.root-path` と同じ値に設定します。これを行う最も簡単な方法は、変数を使用することです: `quarkus.http.non-application-root-path=${quarkus.http.root-path}`."
 
 #. type: Title ==
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:16
-#, no-wrap
+#, fuzzy, no-wrap
 msgid "The long story"
-msgstr ""
+msgstr "長い話"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:19
+#, fuzzy
 msgid "Once upon a time, Quarkus defined additional endpoints for things like health checks and metrics. They were served from the `quarkus.http.root-path` alongside any endpoints the application defined. This isn't always obvious, as `quarkus.http.root-path` is `/` by default, making it effectively invisible."
-msgstr ""
+msgstr "昔々、Quarkusでは、ヘルスチェックやメトリクスなどのエンドポイントを追加で定義していました。これらは、アプリケーションが定義したエンドポイントと一緒に `quarkus.http.root-path` から提供されていました。デフォルトでは `quarkus.http.root-path` は `/` であり、事実上見えないようになっているため、これは必ずしも明らかではありません。"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:21
+#, fuzzy
 msgid "As these proliferated, we started worrying about link:https://groups.google.com/g/quarkus-dev/c/FMnmlDIcGRY[polluting the application endpoint namespace], and thinking about how we could group these non-application endpoints together to avoid colliding with application endpoints and make it easier to deal with security and access policies. Some users further asked if we could serve these non-application endpoints from link:https://github.com/quarkusio/quarkus/issues/13602[another port entirely] (we haven't gotten there yet)."
-msgstr ""
+msgstr "そして、 link:https://groups.google.com/g/quarkus-dev/c/FMnmlDIcGRY[アプリケーションエンドポイント]との衝突を避け、セキュリティやアクセスポリシーの処理を容易にするために、アプリケーション以外のエンドポイントをどのようにグループ化するかを考え始めました。さらに何人かのユーザからは、これらの非アプリケーションエンドポイントを link:https://github.com/quarkusio/quarkus/issues/13602[別のポート]から link:https://github.com/quarkusio/quarkus/issues/13602[完全に]提供できないかという質問もありました (まだ実現していません)。"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:23
+#, fuzzy
 msgid "The first step was to group all of these extension-defined endpoints together. This was the genesis of the link:https://github.com/quarkusio/quarkus/pull/13601[non-application endpoint path]. The default location of this new path was `/q`, and it was nested under the HTTP root path, just as the other endpoints had been. The effect was to move `/health` to `/q/health`, as an example."
-msgstr ""
+msgstr "最初のステップは、これらの拡張子で定義されたエンドポイントをすべて一緒にグループ化することでした。これが、 link:https://github.com/quarkusio/quarkus/pull/13601[非アプリケーションエンドポイントパス]の始まりでした。この新しいパスのデフォルトの場所は `/q` で、他のエンドポイントと同様に HTTP ルートパスの下に入れ子になっていました。この効果は、例として `/health` を `/q/health` に移動させることでした。"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:25
+#, fuzzy
 msgid "We knew that moving some of these endpoints, like metrics and health, would be problematic for already deployed applications and human muscle memory. To ease the transition, we added redirects for some of these endpoints, so that if you visited `/metrics` you would be redirected to `/q/metrics`."
-msgstr ""
+msgstr "私たちは、メトリクスやヘルスなどのエンドポイントの一部を移動することは、すでに展開されているアプリケーションや人間の筋肉の記憶にとって問題があることを知っていました。移行を容易にするために、これらのエンドポイントの一部にリダイレクトを追加し、 `/metrics` にアクセスした場合は `/q/metrics`."
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:27
+#, fuzzy
 msgid "Non-application endpoint support shipped in `1.11.0.Final`."
-msgstr ""
+msgstr "アプリケーション以外のエンドポイントサポートは `1.11.0.Final` で出荷されます。"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:29
+#, fuzzy
 msgid "And then things started to link:https://github.com/quarkusio/quarkus/pull/14179[go] link:https://github.com/quarkusio/quarkus/issues/15030[sideways]. Some cloud hosting providers only accept `200` as a definition of health, for example, so the redirect (a `301`) didn't have the intended effect. There was also some confusion about how to turn the non-application endpoint off to return to previous behavior, and further questions about how to move specific endpoints out of this non-application endpoint collection."
-msgstr ""
+msgstr "そして、事態は link:https://github.com/quarkusio/quarkus/issues/15030[悪化]  link:https://github.com/quarkusio/quarkus/pull/14179[し]始めました。クラウドホスティングプロバイダの中には、例えば、ヘルスの定義として `200` のみを受け入れるものがあり、リダイレクト ( `301`) は意図した効果を発揮しませんでした。また、アプリケーション以外のエンドポイントをオフにして以前の動作に戻す方法についても混乱があり、特定のエンドポイントをこのアプリケーション以外のエンドポイントコレクションから移動させる方法についても疑問が残りました。"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:31
+#, fuzzy
 msgid "As an aside, how we got into this situation is not helped by differences in how libraries behave. Vert.x always wants segments beginning with leading slashes when creating routes, for example, while JAX-RS effectively ignores leading slashes in `@Path` annotations. Anyone used to Vert.x always adds leading slashes, and anyone using JAX-RS just does whatever and it magically works."
-msgstr ""
+msgstr "余談ですが、どのようにしてこのような状況になったかというと、ライブラリの挙動の違いによるものではありません。Vert.x は、例えばルートを作成する際に、常に先頭のスラッシュで始まるセグメントを求めますが、JAX-RS は `@Path` のアノテーションでは先頭のスラッシュを効果的に無視します。Vert.x に慣れている人は常に先頭のスラッシュを追加し、JAX-RS を使用している人は何をしても魔法のように動作します。"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:33
+#, fuzzy
 msgid "In Quarkus, an implementation detail was exposed by accident: non-application endpoints defined by extensions are based on Vert.x routes. Default path configuration values started with slashes to enable quick route creation and allow simple append behavior. There wasn't anything in the early days of Quarkus to suggest this was a bad idea, and developers with experience in JAX-RS didn't have any warnings one way or the other, because JAX-RS handles it."
-msgstr ""
+msgstr "Quarkusでは、実装の詳細が偶然にも公開されました。拡張機能によって定義されたアプリケーション以外のエンドポイントは、Vert.xのルートをベースにしています。拡張機能によって定義されたアプリケーション以外のエンドポイントは、Vert.xのルートをベースにしています。Quarkusの初期の頃は、これが悪い考えであることを示唆するようなものは何もなく、JAX-RSの経験がある開発者は、JAX-RSが処理するので、どちらにしても警告を受けることはありませんでした。"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:35
+#, fuzzy
 msgid "Now, however, we were in the situation where paths weren't being resolved as people expected, and the configuration changes required to resolve that situation either weren't intuitive or lead to other problems. We ended up putting all of the possible configuration permutations into a spreadsheet so we could see side by side what happened when you combined different configuration values. The results were not awesome. However, the exercise allowed us to step back and look at the big picture to evaluate what needed to change to allow application and non-application endpoints to behave as you need them to."
-msgstr ""
+msgstr "しかし、人々が期待していた通りにパスが解決されず、その状況を解決するために必要な設定の変更が直感的ではなかったり、別の問題を引き起こしたりする状況に陥りました。そこで私たちは、異なる設定値を組み合わせたときに何が起こるかを並べて見ることができるように、すべての可能な設定の組み合わせをスプレッドシートに入れてみました。結果はそれほど素晴らしいものではありませんでした。しかし、この演習では、アプリケーションと非アプリケーションのエンドポイントが必要な動作をするようにするために何を変更する必要があるかを評価するために、一歩下がって全体像を見ることができました。"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:37
+#, fuzzy
 msgid "While the set of configuration attributes used to configure paths in Quarkus remains unchanged, how configured values are interpreted is different:"
-msgstr ""
+msgstr "Quarkusでパスを設定するために使用される設定属性のセットは変更されませんが、設定された値がどのように解釈されるかは異なります。"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:39
-#, no-wrap
+#, fuzzy, no-wrap
 msgid "**Endpoint path configuration defaults are now relative values.** `/q` is now `q`, `/metrics` is now `metrics`, etc. This means that, out of the box, these endpoints will resolve relative to the containing root, which is what JAX-RS does per spec, and is what we believe most users intuitively expect.\n"
-msgstr ""
+msgstr "*エンドポイントのパス設定のデフォルト値が相対値になり*ました。 `/q` は `q` に、 `/metrics` は `metrics` になりました。これは、箱から出してすぐに、これらのエンドポイントが含まれているルートに対して相対的に解決されることを意味します。"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:40
-#, no-wrap
+#, fuzzy, no-wrap
 msgid "**Leading slashes in explicitly configured values matter.** We know some of you want to move endpoints to specific places, and the most consistent way to express that intent is to allow you to specify the exact uri you want an endpoint to use. If you specify `/metrics`, that is where you will find the metrics endpoint.\n"
-msgstr ""
+msgstr "*明示的に設定された値の先頭のスラッシュは重要です。*エンドポイントを特定の場所に移動させたいと考えている人がいることは承知していますが、その意図を表現する最も一貫した方法は、エンドポイントに使用させたい URI を正確に指定できるようにすることです。 `/metrics` を指定すると、それがメトリクス・エンドポイントを見つける場所になります。"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:42
+#, fuzzy
 msgid "These updates have been made available and the dust should all have settled with `1.11.5.Final` and `1.12.1.Final`."
-msgstr ""
+msgstr "これらのアップデートが利用可能になり、塵も積もれば `1.11.5.Final` と `1.12.1.Final`."
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:44
+#, fuzzy
 msgid "Note that convenience redirects for non-application endpoints are still present, but they can be disabled by setting `quarkus.http.redirect-to-non-application-root-path` to `false`. That hasn't changed at all."
-msgstr ""
+msgstr "アプリケーション以外のエンドポイントのための便利なリダイレクトはまだ存在しますが、 `quarkus.http.redirect-to-non-application-root-path` を `false` に設定することで無効にすることができます。これは全く変わっていません。"
 
 #. type: Title ==
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:45
-#, no-wrap
+#, fuzzy, no-wrap
 msgid "Resolution of configured paths"
-msgstr ""
+msgstr "設定されたパスの解決"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:48
+#, fuzzy
 msgid "Let's go through some examples of how paths resolve using our new rules. We'll start with the following assumptions:"
-msgstr ""
+msgstr "新しいルールを使用してパスがどのように解決されるか、いくつかの例を見てみましょう。まず、以下の前提条件から始めましょう。"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:50
+#, fuzzy
 msgid "We have a Hello World application that defines `@ApplicationPath(\"/hello\")`"
-msgstr ""
+msgstr "Hello World アプリケーションでは、以下のような定義をしています。 `@ApplicationPath(\"/hello\")`"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:51
+#, fuzzy
 msgid "The application specifies two endpoints using `@Path(\"world\")` and `@Path(\"/aliens\")`"
-msgstr ""
+msgstr "アプリケーションは、 `@Path(\"world\")` と `@Path(\"/aliens\")`"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:53
+#, fuzzy
 msgid "The configuration attributes we care most about are:"
-msgstr ""
+msgstr "私たちが最も気にしている設定属性は"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:55
+#, fuzzy
 msgid "`quarkus.http.root-path` - The HTTP root path. All web content is served relative to this root path."
-msgstr ""
+msgstr "`quarkus.http.root-path` - HTTP ルートパス。すべてのウェブコンテンツはこのルートパスからの相対パスで提供されます。"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:56
+#, fuzzy
 msgid "`quarkus.http.non-application-root-path` - The non-application endpoint root path."
-msgstr ""
+msgstr "`quarkus.http.non-application-root-path` - アプリケーション以外のエンドポイントのルートパス。"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:58
+#, fuzzy
 msgid "We'll also highlight some configurable non-application endpoints of interest:"
-msgstr ""
+msgstr "また、設定可能なアプリケーション以外のエンドポイントにも注目してみましょう。"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:60
+#, fuzzy
 msgid "`quarkus.micrometer.export.prometheus.path` - The location of the micrometer metrics endpoint."
-msgstr ""
+msgstr "`quarkus.micrometer.export.prometheus.path` - マイクロメータメトリクスのエンドポイントの場所。"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:61
+#, fuzzy
 msgid "`quarkus.smallrye-health.root-path` - The location of the all-encompassing health endpoint."
-msgstr ""
+msgstr "`quarkus.smallrye-health.root-path` - すべてを網羅した健康エンドポイントの場所。"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:62
+#, fuzzy
 msgid "`quarkus.smallrye-health.liveness-path` - The location of the liveness endpoint."
-msgstr ""
+msgstr "`quarkus.smallrye-health.liveness-path` - liveness エンドポイントの場所。"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:64
+#, fuzzy
 msgid "Let's look at what happens when we start pulling levers. In the examples below, pay attention to punctuation in config, as that will be the key to why things behave the way they do."
-msgstr ""
+msgstr "レバーを引き始めると何が起こるかを見てみましょう。以下の例では、config の句読点に注意を払ってください。"
 
 #. type: Title ===
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:65
-#, no-wrap
+#, fuzzy, no-wrap
 msgid "Defaults"
-msgstr ""
+msgstr "デフォルト"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:68
+#, fuzzy
 msgid "Here are the default configuration values:"
-msgstr ""
+msgstr "デフォルトの設定値は以下の通りです。"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:70
+#, fuzzy
 msgid "`quarkus.http.root-path=/`"
-msgstr ""
+msgstr "`quarkus.http.root-path=/`"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:71
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:94
+#, fuzzy
 msgid "`quarkus.http.non-application-root-path=q`"
-msgstr ""
+msgstr "`quarkus.http.non-application-root-path=q`"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:72
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:95
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:116
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:158
+#, fuzzy
 msgid "`quarkus.micrometer.export.prometheus.path=metrics`"
-msgstr ""
+msgstr "`quarkus.micrometer.export.prometheus.path=metrics`"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:73
@@ -227,259 +262,299 @@ msgstr ""
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:117
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:138
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:159
+#, fuzzy
 msgid "`quarkus.smallrye-health.root-path=health`"
-msgstr ""
+msgstr "`quarkus.smallrye-health.root-path=health`"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:74
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:97
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:118
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:160
+#, fuzzy
 msgid "`quarkus.smallrye-health.liveness-path=liveness`"
-msgstr ""
+msgstr "`quarkus.smallrye-health.liveness-path=liveness`"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:76
+#, fuzzy
 msgid "That configuration (combined with the declared application endpoints) leads to the following valid URLs if our Quarkus application is running in dev mode:"
-msgstr ""
+msgstr "この設定（宣言されたアプリケーションエンドポイントと組み合わせて）は、Quarkusアプリケーションがdevモードで実行されている場合、次のような有効なURLになります。"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:78
+#, fuzzy
 msgid "http://localhost:8080/hello"
-msgstr ""
+msgstr "http://localhost:8080/hello"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:79
+#, fuzzy
 msgid "http://localhost:8080/hello/world"
-msgstr ""
+msgstr "http://localhost:8080/hello/world"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:80
+#, fuzzy
 msgid "http://localhost:8080/hello/aliens"
-msgstr ""
+msgstr "http://localhost:8080/hello/aliens"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:81
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:125
+#, fuzzy
 msgid "http://localhost:8080/q/metrics"
-msgstr ""
+msgstr "http://localhost:8080/q/metrics"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:82
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:126
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:147
+#, fuzzy
 msgid "http://localhost:8080/q/health"
-msgstr ""
+msgstr "http://localhost:8080/q/health"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:83
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:127
+#, fuzzy
 msgid "http://localhost:8080/q/health/liveness"
-msgstr ""
+msgstr "http://localhost:8080/q/health/liveness"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:85
+#, fuzzy
 msgid "Note that the `quarkus.http.root-path` is hiding in this example, because its value is `/`."
-msgstr ""
+msgstr "`/`この例では `quarkus.http.root-path` が隠れていることに注意してください。"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:87
+#, fuzzy
 msgid "There are convenience redirects in this case as `quarkus.http.non-application-root-path` is not the same as `quarkus.http.root-path`. In this configuration, `/metrics` will be redirected to `/q/metrics`."
-msgstr ""
+msgstr "この場合、 `quarkus.http.non-application-root-path` と `quarkus.http.root-path`.は同じではないので、便利なリダイレクトがあります。この設定では、 `/metrics` は `/q/metrics` にリダイレクトされます。"
 
 #. type: Title ===
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:88
-#, no-wrap
+#, fuzzy, no-wrap
 msgid "Change the Http Root path"
-msgstr ""
+msgstr "Http ルートパスの変更"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:91
+#, fuzzy
 msgid "Let's change the HTTP root path to `/root` so the impact it has on resource resolution is visible:"
-msgstr ""
+msgstr "HTTP のルートパスを `/root` に変更して、リソース解決への影響が見えるようにしてみましょう。"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:93
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:114
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:135
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:156
+#, fuzzy
 msgid "`quarkus.http.root-path=/root`"
-msgstr ""
+msgstr "`quarkus.http.root-path=/root`"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:99
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:120
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:141
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:162
+#, fuzzy
 msgid "This results in the following dev mode URLs:"
-msgstr ""
+msgstr "その結果、以下のようなdevモードのURLになります。"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:101
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:122
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:143
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:164
+#, fuzzy
 msgid "http://localhost:8080/root/hello"
-msgstr ""
+msgstr "http://localhost:8080/root/hello"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:102
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:123
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:144
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:165
+#, fuzzy
 msgid "http://localhost:8080/root/hello/world"
-msgstr ""
+msgstr "http://localhost:8080/root/hello/world"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:103
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:124
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:145
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:166
+#, fuzzy
 msgid "http://localhost:8080/root/hello/aliens"
-msgstr ""
+msgstr "http://localhost:8080/root/hello/aliens"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:104
+#, fuzzy
 msgid "http://localhost:8080/root/q/metrics"
-msgstr ""
+msgstr "http://localhost:8080/root/q/metrics"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:105
+#, fuzzy
 msgid "http://localhost:8080/root/q/health"
-msgstr ""
+msgstr "http://localhost:8080/root/q/health"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:106
+#, fuzzy
 msgid "http://localhost:8080/root/q/health/liveness"
-msgstr ""
+msgstr "http://localhost:8080/root/q/health/liveness"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:108
+#, fuzzy
 msgid "There are convenience redirects in this case, too, as `quarkus.http.non-application-root-path` is not the same as `quarkus.http.root-path`. In this configuration, `/root/metrics` will be redirected to `/root/q/metrics`. This is consistent with previous behavior, where non-application endpoints were implicitly relative to the HTTP root path."
-msgstr ""
+msgstr "この場合も、 `quarkus.http.non-application-root-path` と `quarkus.http.root-path`.は同じではないので、便利なリダイレクトがあります。この設定では、 `/root/metrics` は `/root/q/metrics` にリダイレクトされます。これは、アプリケーション以外のエンドポイントが暗黙のうちに HTTP ルートパスから相対化されていた以前の動作と一致しています。"
 
 #. type: Title ===
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:109
-#, no-wrap
+#, fuzzy, no-wrap
 msgid "Move the non-application root path (/q)"
-msgstr ""
+msgstr "アプリケーション以外のルートパスを移動 (/q)"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:112
+#, fuzzy
 msgid "Let's try something we couldn't do before. We'll move the non-application endpoint outside of the HTTP root path by specifying an absolute path, `/q`:"
-msgstr ""
+msgstr "今までできなかったことをやってみましょう。 `/q`絶対パスを指定して、アプリケーション以外のエンドポイントをHTTPルートパスの外側に移動させます。"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:115
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:136
+#, fuzzy
 msgid "`quarkus.http.non-application-root-path=/q`"
-msgstr ""
+msgstr "`quarkus.http.non-application-root-path=/q`"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:129
+#, fuzzy
 msgid "There are still convenience redirects in this case, as `quarkus.http.non-application-root-path` is not the same as `quarkus.http.root-path`. Redirected URLs are still relative to HTTP root, so `/root/metrics` will be redirected to `/q/metrics`."
-msgstr ""
+msgstr "この場合も、 `quarkus.http.non-application-root-path` と `quarkus.http.root-path`.リダイレクトされた URL はまだ HTTP ルートに対する相対的なものなので、 `/root/metrics` は `/q/metrics` にリダイレクトされます。"
 
 #. type: Title ===
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:130
-#, no-wrap
+#, fuzzy, no-wrap
 msgid "Move individual non-application endpoints (/metrics and /liveness)"
-msgstr ""
+msgstr "アプリケーション以外のエンドポイントを個別に移動 (/metrics と /liveness)"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:133
+#, fuzzy
 msgid "This is is another configuration that was not previously possible. We can individually move configurable non-application endpoints to a specified absolute path, specifically `/metrics` and `/liveness` in this example:"
-msgstr ""
+msgstr "これは、以前は不可能だった別の設定です。設定可能なアプリケーション以外のエンドポイントを、指定された絶対パス、特にこの例では `/metrics` と `/liveness` に個別に移動させることができます。"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:137
+#, fuzzy
 msgid "`quarkus.micrometer.export.prometheus.path=/metrics`"
-msgstr ""
+msgstr "`quarkus.micrometer.export.prometheus.path=/metrics`"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:139
+#, fuzzy
 msgid "`quarkus.smallrye-health.liveness-path=/liveness`"
-msgstr ""
+msgstr "`quarkus.smallrye-health.liveness-path=/liveness`"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:146
+#, fuzzy
 msgid "http://localhost:8080/metrics"
-msgstr ""
+msgstr "http://localhost:8080/metrics"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:148
+#, fuzzy
 msgid "http://localhost:8080/liveness"
-msgstr ""
+msgstr "http://localhost:8080/liveness"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:150
+#, fuzzy
 msgid "There are still convenience redirects in this case, as `quarkus.http.non-application-root-path` is not the same as `quarkus.http.root-path`. However, these redirects only apply to non-application endpoints controlled by the non-application endpoint root. We've essentially removed the metrics and liveness endpoints from that root, so they won't be redirected. In this configuration, if you request `/root/health`, it will be redirected to `/q/health`. A redirect will not be provided for `/root/health/liveness` or `/root/metrics`."
-msgstr ""
+msgstr "`quarkus.http.non-application-root-path` は `quarkus.http.root-path` と同じではないので、この場合も便利なリダイレクトがあります。しかし、これらのリダイレクトは、非アプリケーションエンドポイントのルートによって制御される非アプリケーションエンドポイントにのみ適用されます。私たちは、基本的にそのルートからメトリクスと活性化のエンドポイントを削除しているので、リダイレクトされることはありません。この設定では、 `/root/health` をリクエストすると `/q/health` にリダイレクトされます。 `/root/health/liveness` や `/root/metrics` にはリダイレクトされません。"
 
 #. type: Title ===
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:151
-#, no-wrap
+#, fuzzy, no-wrap
 msgid "Remove the non-application endpoint root"
-msgstr ""
+msgstr "非アプリケーションエンドポイントのルートを削除する"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:154
+#, fuzzy
 msgid "Some of you have asked how to turn this non-application endpoint root stuff off entirely. A clear expression of your intent is best. To disable the non-application endpoint, make it identical to the HTTP root path. In essence, you are telling the runtime to \"serve all non-application endpoints from the HTTP root\". This example uses a variable to ensure the values remain the same:"
-msgstr ""
+msgstr "何人かの方から、このアプリケーション以外のエンドポイントルートのものを完全にオフにするにはどうすればよいかという質問を受けました。あなたの意図を明確に表現するのがベストです。非アプリケーションエンドポイントを無効にするには、HTTPルートパスと同じにしてください。要するに、ランタイムに「HTTPルートからすべての非アプリケーションエンドポイントを提供する」ように指示していることになります。この例では、値が同じであることを保証するために変数を使用しています。"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:157
+#, fuzzy
 msgid "`quarkus.http.non-application-root-path=${quarkus.http.root-path}`"
-msgstr ""
+msgstr "`quarkus.http.non-application-root-path=${quarkus.http.root-path}`"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:167
+#, fuzzy
 msgid "http://localhost:8080/root/metrics"
-msgstr ""
+msgstr "http://localhost:8080/root/metrics"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:168
+#, fuzzy
 msgid "http://localhost:8080/root/health"
-msgstr ""
+msgstr "http://localhost:8080/root/health"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:169
+#, fuzzy
 msgid "http://localhost:8080/root/health/liveness"
-msgstr ""
+msgstr "http://localhost:8080/root/health/liveness"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:171
+#, fuzzy
 msgid "There are no convenience redirects in this scenario, as the non-application endpoint behavior has been disabled entirely."
-msgstr ""
+msgstr "このシナリオでは、アプリケーション以外のエンドポイントの動作が完全に無効化されているため、利便性の高いリダイレクトはありません。"
 
 #. type: Title ==
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:172
-#, no-wrap
+#, fuzzy, no-wrap
 msgid "Knock-on effects"
-msgstr ""
+msgstr "ノックオン効果"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:175
+#, fuzzy
 msgid "For the most part, we hope this will be transparent. We discovered some very inconsistent path handling along the way, which lead us to believe that many (or even most) of these values are never customized."
-msgstr ""
+msgstr "ほとんどの部分では、これが透明であることを願っています。途中で非常に一貫性のないパス処理を発見し、これらの値の多く（あるいはほとんど）がカスタマイズされることはないと考えさせられました。"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:177
+#, fuzzy
 msgid "You are most likely to see a behavior change if you have customized the HTTP root path. In that case, we hope the new rules and examples above will help you understand how to tweak your configuration to get everything to behave the way you want it to."
-msgstr ""
+msgstr "HTTP ルートパスをカスタマイズしている場合は、動作の変化が見られる可能性が高いでしょう。その場合は、上記の新しいルールと例が、設定を微調整してすべてを思い通りに動作させる方法を理解するのに役立つことを願っています。"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:179
+#, fuzzy
 msgid "Extension writers will see the biggest change. The link:https://quarkus.io/guides/writing-extensions#extension-defined-endpoints[Writing extensions guide] has been updated to describe changes to the build items used to create non-application endpoints. The general rule, however, is to avoid constructing your own endpoint paths, and rely on `NonApplicationRootPathBuildItem` and `HttpRootPathBuildItem` to construct them for you."
-msgstr ""
+msgstr "拡張機能ライターは最も大きな変更点を目にすることになるでしょう。拡張 link:https://quarkus.io/guides/writing-extensions#extension-defined-endpoints[機能の書き方ガイド]が更新され、アプリケーション以外のエンドポイントを作成するために使用されるビルド項目の変更が記述されています。しかし、一般的なルールとしては、自分でエンドポイントパスを構築することは避け、 `NonApplicationRootPathBuildItem` と `HttpRootPathBuildItem` に頼って構築してもらうようにしましょう。"
 
 #. type: Title ==
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:180
-#, no-wrap
+#, fuzzy, no-wrap
 msgid "Parting thoughts"
-msgstr ""
+msgstr "別れの想い"
 
 #. type: Plain text
 #: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:183
+#, fuzzy
 msgid "While we know it is impossible to make everyone happy, we hope we have at least managed to acheive a pattern for configuration that leads to more predictable and consistent results. And we apologize (again), for any behavior changes you may have observed as we sorted this out."
-msgstr ""
+msgstr "すべての人を幸せにすることは不可能であることはわかっていますが、少なくとも、より予測可能で一貫性のある結果につながる設定のパターンを達成することができたことを願っています。また、この問題を解決した際に観察された挙動の変化については、（再度）お詫び申し上げます。"
