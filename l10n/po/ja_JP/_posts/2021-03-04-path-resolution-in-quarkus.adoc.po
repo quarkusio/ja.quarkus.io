@@ -1,0 +1,485 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2021-03-08 20:12+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:1
+#, no-wrap
+msgid "---\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:8
+#, no-wrap
+msgid ""
+"layout: post\n"
+"title: Path resolution in Quarkus\n"
+"date: 2021-03-04\n"
+"tags: help web metrics\n"
+"synopsis: Navigating recent changes in Quarkus URI path resolution\n"
+"author: ebullient\n"
+"---\n"
+msgstr ""
+
+#. type: Title =
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:10
+#, no-wrap
+msgid "Path resolution in Quarkus"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:13
+msgid "We have had an unusually bumpy ride the last few weeks. Path resolution can be sneakily complicated, and in trying to make things better, we accidentally made them worse! We've fixed it all now, but you might notice some changes. Hopefully, this post will make clear what those changes are, what they mean, and what you can do to put everything back the way you want it."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:15
+#, no-wrap
+msgid "**TL;DR:** As of `1.11.5.Final` and `1.12.1.Final`, leading slashes matter in config. So if you use `/endpoint`, that endpoint will be served from the absolute root. If you want it relative to some containing bucket, omit that leading slash. For example, `quarkus.http.non-application-root-path` is now `q` by default, which nests it under `quarkus.http.root-path`, matching the original behavior. You can use an absolute path, e.g. `/q`, to serve non-application endpoints from the absolute root (as a sibling of the http root, if that is set). To remove the non-application endpoint behavior entirely, set `quarkus.http.non-application-root-path` to the same value as `quarkus.http.root-path`. The most foolproof way to do this is using a variable: `quarkus.http.non-application-root-path=${quarkus.http.root-path}`.\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:16
+#, no-wrap
+msgid "The long story"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:19
+msgid "Once upon a time, Quarkus defined additional endpoints for things like health checks and metrics. They were served from the `quarkus.http.root-path` alongside any endpoints the application defined. This isn't always obvious, as `quarkus.http.root-path` is `/` by default, making it effectively invisible."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:21
+msgid "As these proliferated, we started worrying about link:https://groups.google.com/g/quarkus-dev/c/FMnmlDIcGRY[polluting the application endpoint namespace], and thinking about how we could group these non-application endpoints together to avoid colliding with application endpoints and make it easier to deal with security and access policies. Some users further asked if we could serve these non-application endpoints from link:https://github.com/quarkusio/quarkus/issues/13602[another port entirely] (we haven't gotten there yet)."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:23
+msgid "The first step was to group all of these extension-defined endpoints together. This was the genesis of the link:https://github.com/quarkusio/quarkus/pull/13601[non-application endpoint path]. The default location of this new path was `/q`, and it was nested under the HTTP root path, just as the other endpoints had been. The effect was to move `/health` to `/q/health`, as an example."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:25
+msgid "We knew that moving some of these endpoints, like metrics and health, would be problematic for already deployed applications and human muscle memory. To ease the transition, we added redirects for some of these endpoints, so that if you visited `/metrics` you would be redirected to `/q/metrics`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:27
+msgid "Non-application endpoint support shipped in `1.11.0.Final`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:29
+msgid "And then things started to link:https://github.com/quarkusio/quarkus/pull/14179[go] link:https://github.com/quarkusio/quarkus/issues/15030[sideways]. Some cloud hosting providers only accept `200` as a definition of health, for example, so the redirect (a `301`) didn't have the intended effect. There was also some confusion about how to turn the non-application endpoint off to return to previous behavior, and further questions about how to move specific endpoints out of this non-application endpoint collection."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:31
+msgid "As an aside, how we got into this situation is not helped by differences in how libraries behave. Vert.x always wants segments beginning with leading slashes when creating routes, for example, while JAX-RS effectively ignores leading slashes in `@Path` annotations. Anyone used to Vert.x always adds leading slashes, and anyone using JAX-RS just does whatever and it magically works."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:33
+msgid "In Quarkus, an implementation detail was exposed by accident: non-application endpoints defined by extensions are based on Vert.x routes. Default path configuration values started with slashes to enable quick route creation and allow simple append behavior. There wasn't anything in the early days of Quarkus to suggest this was a bad idea, and developers with experience in JAX-RS didn't have any warnings one way or the other, because JAX-RS handles it."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:35
+msgid "Now, however, we were in the situation where paths weren't being resolved as people expected, and the configuration changes required to resolve that situation either weren't intuitive or lead to other problems. We ended up putting all of the possible configuration permutations into a spreadsheet so we could see side by side what happened when you combined different configuration values. The results were not awesome. However, the exercise allowed us to step back and look at the big picture to evaluate what needed to change to allow application and non-application endpoints to behave as you need them to."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:37
+msgid "While the set of configuration attributes used to configure paths in Quarkus remains unchanged, how configured values are interpreted is different:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:39
+#, no-wrap
+msgid "**Endpoint path configuration defaults are now relative values.** `/q` is now `q`, `/metrics` is now `metrics`, etc. This means that, out of the box, these endpoints will resolve relative to the containing root, which is what JAX-RS does per spec, and is what we believe most users intuitively expect.\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:40
+#, no-wrap
+msgid "**Leading slashes in explicitly configured values matter.** We know some of you want to move endpoints to specific places, and the most consistent way to express that intent is to allow you to specify the exact uri you want an endpoint to use. If you specify `/metrics`, that is where you will find the metrics endpoint.\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:42
+msgid "These updates have been made available and the dust should all have settled with `1.11.5.Final` and `1.12.1.Final`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:44
+msgid "Note that convenience redirects for non-application endpoints are still present, but they can be disabled by setting `quarkus.http.redirect-to-non-application-root-path` to `false`. That hasn't changed at all."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:45
+#, no-wrap
+msgid "Resolution of configured paths"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:48
+msgid "Let's go through some examples of how paths resolve using our new rules. We'll start with the following assumptions:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:50
+msgid "We have a Hello World application that defines `@ApplicationPath(\"/hello\")`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:51
+msgid "The application specifies two endpoints using `@Path(\"world\")` and `@Path(\"/aliens\")`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:53
+msgid "The configuration attributes we care most about are:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:55
+msgid "`quarkus.http.root-path` - The HTTP root path. All web content is served relative to this root path."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:56
+msgid "`quarkus.http.non-application-root-path` - The non-application endpoint root path."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:58
+msgid "We'll also highlight some configurable non-application endpoints of interest:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:60
+msgid "`quarkus.micrometer.export.prometheus.path` - The location of the micrometer metrics endpoint."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:61
+msgid "`quarkus.smallrye-health.root-path` - The location of the all-encompassing health endpoint."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:62
+msgid "`quarkus.smallrye-health.liveness-path` - The location of the liveness endpoint."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:64
+msgid "Let's look at what happens when we start pulling levers. In the examples below, pay attention to punctuation in config, as that will be the key to why things behave the way they do."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:65
+#, no-wrap
+msgid "Defaults"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:68
+msgid "Here are the default configuration values:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:70
+msgid "`quarkus.http.root-path=/`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:71
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:94
+msgid "`quarkus.http.non-application-root-path=q`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:72
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:95
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:116
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:158
+msgid "`quarkus.micrometer.export.prometheus.path=metrics`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:73
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:96
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:117
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:138
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:159
+msgid "`quarkus.smallrye-health.root-path=health`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:74
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:97
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:118
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:160
+msgid "`quarkus.smallrye-health.liveness-path=liveness`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:76
+msgid "That configuration (combined with the declared application endpoints) leads to the following valid URLs if our Quarkus application is running in dev mode:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:78
+msgid "http://localhost:8080/hello"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:79
+msgid "http://localhost:8080/hello/world"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:80
+msgid "http://localhost:8080/hello/aliens"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:81
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:125
+msgid "http://localhost:8080/q/metrics"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:82
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:126
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:147
+msgid "http://localhost:8080/q/health"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:83
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:127
+msgid "http://localhost:8080/q/health/liveness"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:85
+msgid "Note that the `quarkus.http.root-path` is hiding in this example, because its value is `/`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:87
+msgid "There are convenience redirects in this case as `quarkus.http.non-application-root-path` is not the same as `quarkus.http.root-path`. In this configuration, `/metrics` will be redirected to `/q/metrics`."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:88
+#, no-wrap
+msgid "Change the Http Root path"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:91
+msgid "Let's change the HTTP root path to `/root` so the impact it has on resource resolution is visible:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:93
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:114
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:135
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:156
+msgid "`quarkus.http.root-path=/root`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:99
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:120
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:141
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:162
+msgid "This results in the following dev mode URLs:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:101
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:122
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:143
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:164
+msgid "http://localhost:8080/root/hello"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:102
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:123
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:144
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:165
+msgid "http://localhost:8080/root/hello/world"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:103
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:124
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:145
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:166
+msgid "http://localhost:8080/root/hello/aliens"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:104
+msgid "http://localhost:8080/root/q/metrics"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:105
+msgid "http://localhost:8080/root/q/health"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:106
+msgid "http://localhost:8080/root/q/health/liveness"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:108
+msgid "There are convenience redirects in this case, too, as `quarkus.http.non-application-root-path` is not the same as `quarkus.http.root-path`. In this configuration, `/root/metrics` will be redirected to `/root/q/metrics`. This is consistent with previous behavior, where non-application endpoints were implicitly relative to the HTTP root path."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:109
+#, no-wrap
+msgid "Move the non-application root path (/q)"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:112
+msgid "Let's try something we couldn't do before. We'll move the non-application endpoint outside of the HTTP root path by specifying an absolute path, `/q`:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:115
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:136
+msgid "`quarkus.http.non-application-root-path=/q`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:129
+msgid "There are still convenience redirects in this case, as `quarkus.http.non-application-root-path` is not the same as `quarkus.http.root-path`. Redirected URLs are still relative to HTTP root, so `/root/metrics` will be redirected to `/q/metrics`."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:130
+#, no-wrap
+msgid "Move individual non-application endpoints (/metrics and /liveness)"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:133
+msgid "This is is another configuration that was not previously possible. We can individually move configurable non-application endpoints to a specified absolute path, specifically `/metrics` and `/liveness` in this example:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:137
+msgid "`quarkus.micrometer.export.prometheus.path=/metrics`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:139
+msgid "`quarkus.smallrye-health.liveness-path=/liveness`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:146
+msgid "http://localhost:8080/metrics"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:148
+msgid "http://localhost:8080/liveness"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:150
+msgid "There are still convenience redirects in this case, as `quarkus.http.non-application-root-path` is not the same as `quarkus.http.root-path`. However, these redirects only apply to non-application endpoints controlled by the non-application endpoint root. We've essentially removed the metrics and liveness endpoints from that root, so they won't be redirected. In this configuration, if you request `/root/health`, it will be redirected to `/q/health`. A redirect will not be provided for `/root/health/liveness` or `/root/metrics`."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:151
+#, no-wrap
+msgid "Remove the non-application endpoint root"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:154
+msgid "Some of you have asked how to turn this non-application endpoint root stuff off entirely. A clear expression of your intent is best. To disable the non-application endpoint, make it identical to the HTTP root path. In essence, you are telling the runtime to \"serve all non-application endpoints from the HTTP root\". This example uses a variable to ensure the values remain the same:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:157
+msgid "`quarkus.http.non-application-root-path=${quarkus.http.root-path}`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:167
+msgid "http://localhost:8080/root/metrics"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:168
+msgid "http://localhost:8080/root/health"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:169
+msgid "http://localhost:8080/root/health/liveness"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:171
+msgid "There are no convenience redirects in this scenario, as the non-application endpoint behavior has been disabled entirely."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:172
+#, no-wrap
+msgid "Knock-on effects"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:175
+msgid "For the most part, we hope this will be transparent. We discovered some very inconsistent path handling along the way, which lead us to believe that many (or even most) of these values are never customized."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:177
+msgid "You are most likely to see a behavior change if you have customized the HTTP root path. In that case, we hope the new rules and examples above will help you understand how to tweak your configuration to get everything to behave the way you want it to."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:179
+msgid "Extension writers will see the biggest change. The link:https://quarkus.io/guides/writing-extensions#extension-defined-endpoints[Writing extensions guide] has been updated to describe changes to the build items used to create non-application endpoints. The general rule, however, is to avoid constructing your own endpoint paths, and rely on `NonApplicationRootPathBuildItem` and `HttpRootPathBuildItem` to construct them for you."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:180
+#, no-wrap
+msgid "Parting thoughts"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-04-path-resolution-in-quarkus.adoc:183
+msgid "While we know it is impossible to make everyone happy, we hope we have at least managed to acheive a pattern for configuration that leads to more predictable and consistent results. And we apologize (again), for any behavior changes you may have observed as we sorted this out."
+msgstr ""
