@@ -1,8 +1,8 @@
-# ja-quarkusio
+# ja.quarkus.io
 
-Localization project for [https://github.com/quarkusio/quarkusio.github.io](https://github.com/quarkusio/quarkusio.github.io) (The repository for [quarkus.io website](https://quarkus.io))
+Japanese Localization project for [https://github.com/quarkusio/quarkusio.github.io](https://github.com/quarkusio/quarkusio.github.io) (The repository for [quarkus.io website](https://quarkus.io))
 
-Localized site: [https://ja-quarkusio.surge.sh/](https://ja-quarkusio.surge.sh)
+Localized site: [https://ja.quarkus.io/](https://ja.quarkus.io)
 
 ## Localization architecture
 
@@ -37,7 +37,7 @@ please remove "fuzzy" mark and correct inappropriate sentences if needed.
 When you send a pull-request, GitHub Actions workflow automatically apply translations in .po files to .adoc files,
 build a localized site and deploy it to surge.sh with preview domain. When the deploy finish, GitHub Actions comment 
 the URL to the pull-request. Reviewers can check the deployed site for review.
-When the pull-request is merged into `master`, it is automatically deployed to the production site.
+When the pull-request is merged into `master`, it is automatically deployed to the production site (https://ja.quarkus.io).
 
 #### Build a localized site locally
 
