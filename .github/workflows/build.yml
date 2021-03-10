@@ -64,7 +64,7 @@ jobs:
         run: bin/push-changes "Update override stats"
 
   deploy-ja:
-    name: Deploy Japanese translation to surge.sh
+    name: Deploy Japanese translation to GitHub pages
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout
@@ -89,6 +89,22 @@ jobs:
 
       - name: Exec jekyll
         run: bin/exec-jekyll
+
+      - name: Deploy to GitHub Pages
+        run: |
+          git add -f docs
+
+          set +e
+          git diff --cached --exit-code --quiet
+
+          if [[ $? -eq 1 ]] ; then
+            set -e
+            git checkout -b docs
+            git commit -m "Update GitHub Pages"
+            git fetch
+            git push -f origin docs
+          fi
+          set -e
 
       - name: Deploy to surge.sh
         run: |
