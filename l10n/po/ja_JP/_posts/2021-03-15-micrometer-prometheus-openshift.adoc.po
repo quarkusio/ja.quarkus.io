@@ -1,0 +1,401 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2021-03-16 13:21+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. type: Plain text
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:1
+#, no-wrap
+msgid "---\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:8
+#, no-wrap
+msgid ""
+"layout: post\n"
+"title: Monitoring Quarkus apps using Micrometer and Prometheus into OpenShift \n"
+"date: 2021-03-15\n"
+"tags: extension\n"
+"synopsis: Expose Quarkus Apps metrics into OpenShift using Micrometer and Prometheus\n"
+"author: jcarvaja\n"
+"---\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:11
+msgid "Metrics are the measurements of any aspect of an application such as resource usage or behaviors. We can expose these metrics from our Quarkus applications by using the https://quarkus.io/guides/micrometer[Micrometer] extension via the `/q/metrics` endpoint."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:13
+msgid "What metrics will be exposed? Only by adding the Micrometer extension, a lot of metrics are exposed by default for example metrics about the JVM engine like the number of current live threads `jvm_threads_live_threads` or metrics about the system itself like the current CPU usage `system_cpu_usage`. Additionally, more metrics will automatically be exposed depending on other Quarkus extensions we might be using. For example, if we are using a Quarkus REST extension such as Resteasy, it will automatically expose metrics about your running services:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:18
+msgid "``` http_server_requests_seconds_count{method=\"GET\",outcome=\"SUCCESS\",status=\"200\",uri=\"/hello\",} 1.0 http_server_requests_seconds_sum{method=\"GET\",outcome=\"SUCCESS\",status=\"200\",uri=\"/hello\",} 0.018198043 ```"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:20
+msgid "The same will happen if we're using the Kafka extension. All this configuration is well documented in https://quarkus.io/guides/micrometer[the Quarkus Micrometer guide]."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:22
+msgid "__How are these metrics consumed?__ As said, Micrometer exposes the metrics on the `/q/metrics` endpoint in order to be consumed by third parties like https://prometheus.io/[Prometheus]. OpenShift provides an embedded Prometheus instance that we can use. So, let's see what we need to do to integrate our Quarkus Applications metrics and the Prometheus embedded instance provided in OpenShift."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:24
+msgid "Basically, we need to complete the next following steps:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:26
+msgid "Enable Monitoring for user-defined projects in OpenShift"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:27
+msgid "Deploy our Quarkus application"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:28
+msgid "Create a Service monitor in our project"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:29
+#, no-wrap
+msgid "Requirements"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:32
+msgid "https://docs.openshift.com/container-platform/4.7/cli_reference/openshift_cli/getting-started-cli.html[Openshift CLI]"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:33
+msgid "An Openshift instance"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:34
+#, no-wrap
+msgid "Step 1 - Enable Monitoring for user-defined projects in OpenShift"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:37
+msgid "In order to enable the Monitoring for user-defined projects, we need to follow the instructions https://docs.openshift.com/container-platform/4.7/monitoring/enabling-monitoring-for-user-defined-projects.html[from OpenShift documentation]."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:39
+msgid "In essence, we need to create a ConfigMap in the namespace `openshift-monitoring`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:41
+msgid "`cluster-monitoring-config.yaml`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:51
+#, no-wrap
+msgid ""
+"apiVersion: v1\n"
+"kind: ConfigMap\n"
+"metadata:\n"
+"    name: cluster-monitoring-config\n"
+"    namespace: openshift-monitoring\n"
+"data:\n"
+"    config.yaml: |\n"
+"    enableUserWorkload: true\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:54
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:193
+msgid "And apply it:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:58
+#, no-wrap
+msgid "oc apply -f cluster-monitoring-config.yaml\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:61
+msgid "For 4.5 or previous versions of OpenShift, you need to use instead:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:73
+#, no-wrap
+msgid ""
+"apiVersion: v1\n"
+"kind: ConfigMap\n"
+"metadata:\n"
+"    name: cluster-monitoring-config\n"
+"    namespace: openshift-monitoring\n"
+"data:\n"
+"    config.yaml: |\n"
+"    techPreviewUserWorkload:\n"
+"        enabled: true\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:76
+msgid "Openshift will automatically create the `openshift-user-workload-monitoring` namespace and deploy the required resources for Prometheus to it."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:77
+#, no-wrap
+msgid "2. Deploy our Quarkus application"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:80
+msgid "After the required infrastructure in OpenShift is ready, then let's continue with the Quarkus application. We'll implement a REST API and enable micrometer with prometheus which requires the addition of two Quarkus extensions to our `pom.xml` file:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:91
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-resteasy</artifactId>\n"
+"</dependency>\n"
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-micrometer-registry-prometheus</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:94
+msgid "And we'll add the Greeting resource:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:101
+#, no-wrap
+msgid ""
+"import javax.inject.Inject;\n"
+"import javax.ws.rs.GET;\n"
+"import javax.ws.rs.Path;\n"
+"import javax.ws.rs.PathParam;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:104
+#, no-wrap
+msgid ""
+"import io.micrometer.core.instrument.MeterRegistry;\n"
+"import io.micrometer.core.instrument.Tags;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:107
+#, no-wrap
+msgid ""
+"@Path(\"/hello\")\n"
+"public class GreetingsResource {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:110
+#, no-wrap
+msgid ""
+"    @Inject\n"
+"    MeterRegistry registry;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:115
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @Path(\"/{name}\")\n"
+"    public String sayHello(@PathParam(value = \"name\") String name) {\n"
+"        registry.counter(\"greeting_counter\", Tags.of(\"name\", name)).increment();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:119
+#, no-wrap
+msgid ""
+"        return \"Hello!\";\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:122
+msgid "As we can see, we use the micrometer registry facade to create a counter with a tag by name that will be incremented every time it's invoked."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:124
+msgid "Let's try this application by running it:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:128
+#, no-wrap
+msgid "mvn compile quarkus:dev\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:131
+msgid "Now, we should be able to call our service:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:135
+#, no-wrap
+msgid "curl http://localhost:8080/hello/quarkus\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:138
+msgid "And it should return `Hello!`. So good so far, we can also see the metrics in `http://localhost:8080/q/metrics` where should see our `greeting_counter` counter:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:144
+#, no-wrap
+msgid ""
+"# HELP greeting_counter_total  \n"
+"# TYPE greeting_counter_total counter\n"
+"greeting_counter_total{name=\"quarkus\",} 1.0\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:147
+msgid "Next, we need to deploy our Quarkus application into OpenShift. For ease this step, Quarkus provides a super useful extension called `quarkus-openshift`, let's add it into our `pom.xml` file:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:154
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-openshift</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:157
+msgid "So, let's deploy our application into a newly created project `my-project` in OpenShift:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:162
+#, no-wrap
+msgid ""
+"oc new-project my-project\n"
+"mvn clean package -Dquarkus.kubernetes.deploy=true -Dquarkus.openshift.expose=true -Dquarkus.openshift.labels.app-with-metrics=quarkus-app\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:165
+msgid "The label `app-with-metrics` will be used in a later step to select the applications to monitor by OpenShift."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:166
+#, no-wrap
+msgid "3. Create a Service monitor in our project"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:169
+msgid "Before moving forward, let's explain first how Prometheus works. Prometheus uses a pull model to get metrics from applications. This means that Prometheus will scrape or watch endpoints to pull metrics from."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:171
+msgid "From the previous step, our service is now running in OpenShift, but we didn't configure anything in Prometheus to scrape our service yet. This is done by the Service Monitor resource:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:173
+msgid "`service-monitor.yaml`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:190
+#, no-wrap
+msgid ""
+"apiVersion: monitoring.coreos.com/v1\n"
+"kind: ServiceMonitor\n"
+"metadata:\n"
+"  labels:\n"
+"    k8s-app: prometheus-app-monitor\n"
+"  name: prometheus-app-monitor\n"
+"  namespace: my-project\n"
+"spec:\n"
+"  endpoints:\n"
+"  - interval: 30s\n"
+"    targetPort: 8080\n"
+"    scheme: http\n"
+"  selector:\n"
+"    matchLabels:\n"
+"      app-with-metrics: 'quarkus-app'\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:197
+#, no-wrap
+msgid "oc apply -f service-monitor.yaml\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:200
+msgid "What we have just done is to create a Service Monitor named `prometheus-app-monitor` that will select apps with the label `app-with-metrics: quarkus-app` that was added in the previous step. Then, OpenShift will call the endpoint `/q/metrics` for all the services labeled with `app-with-metrics: quarkus-app` every 30 seconds."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:201
+#, no-wrap
+msgid "Finally, let's start using it!"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:204
+msgid "First, we need to call our greetings service: `http://quarkus-micrometer-my-project.ocp.host/hello/quarkus`. This will increment the `greeting_counter_total` counter. But where can we see the metrics? Let's browse to OpenShift Console in the `Developer > Monitoring` view, select `Metrics`, then `Custom Query` and type `greeting_counter_total{name = \"quarkus\"}`, we should see now:"
+msgstr ""
+
+#. type: Target for macro image
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:205
+#, no-wrap
+msgid "/assets/images/posts/micrometer-openshift/micrometer-quarkus-io.png"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-03-15-micrometer-prometheus-openshift.adoc:207
+msgid "Great! We are now exposing our Quarkus Application metrics in OpenShift!"
+msgstr ""
