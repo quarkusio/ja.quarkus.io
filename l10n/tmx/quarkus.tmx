@@ -51886,6 +51886,482 @@ Listening for transport dt_socket at address: 5005
     </tu>
     <tu>
       <tuv xml:lang="en">
+        <seg>This guide demonstrates how to use Quarkus OpenID Connect Extension to protect your JAX-RS applications using Bearer Token Authorization where Bearer Tokens are issued by OpenId Connect and OAuth 2.0 compliant Authorization Servers such as https://www.keycloak.org/about.html[Keycloak].</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>このガイドでは、Quarkus OpenID Connect Extensionを使用して、ベアラートークンがOpenId Connectや link:https://www.keycloak.org/about.html[Keycloak] などのOAuth 2.0準拠の認可サーバーによって発行されるベアラートークン認可を使用して、JAX-RSアプリケーションを保護する方法を説明します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Bearer Token Authorization is the process of authorizing HTTP requests based on the existence and validity of a Bearer Token which provides valuable information to determine the subject of the call as well as whether or not an HTTP resource can be accessed.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>ベアラートークン認可とは、ベアラートークンの存在と有効性に基づいて HTTP リクエストを認証するプロセスで、HTTP リソースにアクセスできるかどうかだけでなく、呼び出しの対象を決定するための価値のある情報を提供します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Please read the link:security-openid-connect-web-authentication[Using OpenID Connect to Protect Web Applications] guide if you need to authenticate and authorize the users using OpenId Connect Authorization Code Flow.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>OpenId Connect Authorization Code Flow を使用してユーザーの認証と認可を行う必要がある場合は、 link:security-openid-connect-web-authentication[OpenID Connect を使用したウェブアプリケーションの保護] ガイドをお読みください。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Please read the link:security-openid-connect-multitenancy[Using OpenID Connect Multi-Tenancy] guide how to support multiple tenants.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>マルチテナントへの対応方法については、 link:security-openid-connect-multitenancy[Using OpenID Connect Multi-Tenancy] ガイドをお読みください。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>https://stedolan.github.io/jq/[jq tool]</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>https://stedolan.github.io/jq/[jq tool]</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>These endpoints are protected and can only be accessed if a client is sending a bearer token along with the request, which must be valid (e.g.: signature, expiration and audience) and trusted by the microservice.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>これらのエンドポイントは保護されており、クライアントがリクエストと一緒にベアラートークンを送信している場合にのみアクセスすることができます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>The bearer token is issued by a Keycloak Server and represents the subject to which the token was issued for. For being an OAuth 2.0 Authorization Server, the token also references the client acting on behalf of the user.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>ベアラートークンは、Keycloakサーバーによって発行され、トークンが発行された対象を表します。OAuth 2.0 認可サーバーであるため、トークンはユーザーの代わりに動作するクライアントも参照します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>The `/api/users/me` endpoint can be accessed by any user with a valid token. As a response, it returns a JSON document with details about the user where these details are obtained from the information carried on the token.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`/api/users/me` エンドポイントは、有効なトークンを持つ任意のユーザーがアクセスできます。レスポンスとして、トークンに記録されている情報から取得したユーザーの詳細を含む JSON ドキュメントを返します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>The `/api/admin` endpoint is protected with RBAC (Role-Based Access Control) where only users granted with the `admin` role can access. At this endpoint, we use the `@RolesAllowed` annotation to declaratively enforce the access constraint.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`/api/admin` エンドポイントは RBAC (Role-Based Access Control) で保護されており、 `admin` ロールで許可されたユーザーのみがアクセスできます。このエンドポイントでは、 `@RolesAllowed` アノテーションを使用して、アクセス制約を宣言的に強制します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>The solution is located in the `security-openid-connect-quickstart` {quickstarts-tree-url}/security-openid-connect-quickstart[directory].</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>ソリューションは `security-openid-connect-quickstart` {quickstarts-tree-url}/security-openid-connect-quickstart[directory] にあります。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>This command generates a Maven project, importing the `keycloak` extension which is an implementation of a Keycloak Adapter for Quarkus applications and provides all the necessary capabilities to integrate with a Keycloak Server and perform bearer token authorization.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>このコマンドは、Quarkusアプリケーション用のKeycloakアダプターの実装であり、Keycloakサーバーと統合してベアラートークン認証を実行するために必要なすべての機能を提供する `keycloak` エクステンションをインポートして、Mavenプロジェクトを生成します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>If you already have your Quarkus project configured, you can add the `oidc` extension to your project by running the following command in your project base directory:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>すでにQuarkusプロジェクトが設定されている場合は、プロジェクトのベースディレクトリーで以下のコマンドを実行することで、プロジェクトに `oidc` エクステンションを追加することができます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Let's start by implementing the `/api/users/me` endpoint. As you can see from the source code below it is just a regular JAX-RS resource:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>まずは `/api/users/me` エンドポイントを実装してみましょう。下のソースコードを見るとわかるように、これは通常の JAX-RS リソースです。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Injection of the `SecurityIdentity` is supported in both `@RequestScoped` and `@ApplicationScoped` contexts.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`SecurityIdentity` のインジェクションは、 `@RequestScoped` と `@ApplicationScoped` の両方のコンテキストでサポートされています。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>If you need to access `JsonWebToken` claims, you may simply inject the token itself:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`JsonWebToken` クレームにアクセスする必要がある場合は、トークン自体を注入するだけでOKです。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Injection of the `JsonWebToken` is supported in both `@RequestScoped` and `@ApplicationScoped` contexts.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`JsonWebToken` のインジェクションは、 `@RequestScoped` と `@ApplicationScoped` の両方のコンテキストでサポートされています。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Configuring the application</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>アプリケーションの設定</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>The OpenID Connect extension allows you to define the adapter configuration using the `application.properties` file which should be located at the `src/main/resources` directory.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>OpenID Connect エクステンションを使用すると、`src/main/resources` ディレクトリーに配置される `application.properties` ファイルを使用してアダプター設定を定義することができます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Configuring using the application.properties file</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>application.propertiesファイルを使った設定</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Example configuration:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>設定例:</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>If you plan to consume this application from another application running on a different domain, you will need to configure CORS (Cross-Origin Resource Sharing). Please read the link:http-reference#cors-filter[HTTP CORS documentation] for more details.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>別のドメインで実行されている別のアプリケーションからこのアプリケーションを消費する予定の場合は、CORS (Cross-Origin Resource Sharing) を構成する必要があります。詳細については、 link:http-reference#cors-filter[HTTP CORS のドキュメント] をお読みください。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>To start a Keycloak Server you can use Docker and just run the following command:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>Keycloak サーバーを起動するにはDockerを使用し、以下のコマンドを実行するだけです。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>You should be able to access your Keycloak Server at http://localhost:8180/auth[localhost:8180/auth].</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>Keycloakサーバーには、 link:http://localhost:8180/auth[localhost:8180/auth] でアクセスできるはずです。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Log in as the `admin` user to access the Keycloak Administration Console. Username should be `admin` and password `admin`.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>Keycloak 管理コンソールにアクセスするには、 `admin` ユーザーとしてログインしてください。ユーザー名は `admin` 、パスワードは `admin` です。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Import the {quickstarts-tree-url}/security-openid-connect-quickstart/config/quarkus-realm.json[realm configuration file] to create a new realm. For more details, see the Keycloak documentation about how to https://www.keycloak.org/docs/latest/server_admin/index.html#_create-realm[create a new realm].</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>新しいレルムを作成するには、{quickstarts-tree-url}/security-openid-connect-quickstart/config/quarkus-realm.json[realm設定ファイル]をインポートします。 link:https://www.keycloak.org/docs/latest/server_admin/index.html#_create-realm[新しいレルムを作成する] 方法について詳しくはKeycloakのドキュメントを参照してください。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>If you want to use the Keycloak Admin Client to configure your server from your application you need to include the `quarkus-keycloak-admin-client` extension.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>Keycloak Admin Clientを使用して、アプリケーションからサーバーを設定したい場合は、 `quarkus-keycloak-admin-client` エクステンションを含める必要があります。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Running and Using the Application</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>アプリケーションの実行と使用</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Running in Developer Mode</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>デベロッパーモードでの実行</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>To run the microservice in dev mode, use `./mvnw clean compile quarkus:dev`.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>マイクロサービスをdevモードで実行するには、 `./mvnw clean compile quarkus:dev` を使用します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>When you're done playing with "dev-mode" you can run it as a standard Java application.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>"dev-mode" で遊び終わったら、標準のJavaアプリケーションとして実行することができます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>First compile it:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>まずコンパイルします。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Running in Native Mode</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>ネイティブモードでの実行</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>This same demo can be compiled into native code: no modifications required.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>同じデモをネイティブコードにコンパイルすることができます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>This implies that you no longer need to install a JVM on your production environment, as the runtime technology is included in the produced binary, and optimized to run with minimal resource overhead.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>これは、生成されたバイナリーにランタイム技術が含まれており、最小限のリソースオーバーヘッドで実行できるように最適化されているため、本番環境にJVMをインストールする必要がないことを意味します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Compilation will take a bit longer, so this step is disabled by default; let's build again by enabling the `native` profile:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>コンパイルには少し時間がかかるので、このステップはデフォルトで無効になっています。 `native` プロファイルを有効にして再度ビルドしてみましょう。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>After getting a cup of coffee, you'll be able to run this binary directly:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>コーヒーを飲み終わると、このバイナリーは以下のように直接実行出来るようになります:</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>The application is using bearer token authorization and the first thing to do is obtain an access token from the Keycloak Server in order to access the application resources:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>アプリケーションはベアラートークン認可を使用しており、まず最初に行うべきことは、アプリケーションのリソースにアクセスするためにKeycloak サーバーからアクセストークンを取得することです。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>The example above obtains an access token for user `alice`.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>上記の例では、ユーザー `alice` のアクセストークンを取得しています。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Any user is allowed to access the `http://localhost:8080/api/users/me` endpoint which basically returns a JSON payload with details about the user.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>どのユーザーでも `http://localhost:8080/api/users/me` エンドポイントで、基本的にはユーザーに関する詳細な情報を含む JSON ペイロードを返します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>The `http://localhost:8080/api/admin` endpoint can only be accessed by users with the `admin` role. If you try to access this endpoint with the
+ previously issued access token, you should get a `403` response
+ from the server.
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`http://localhost:8080/api/admin` エンドポイントは、 `admin` ロールを持つユーザーのみがアクセスできます。以前に発行されたアクセストークンを使用してこのエンドポイントにアクセスしようとすると、サーバーから `403` 応答が返ってくるはずです。
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>In order to access the admin endpoint you should obtain a token for the `admin` user:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>admin エンドポイントにアクセスするには、 `admin` ユーザーのトークンを取得する必要があります。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>User Info</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>ユーザー情報</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Set `quarkus.oidc.user-info-required=true` if a UserInfo JSON object from the OIDC userinfo endpoint has to be requested.  A request will be sent to the OpenId Provider UserInfo endpoint and an `io.quarkus.oidc.UserInfo` (a simple `javax.json.JsonObject` wrapper) object will be created.  `io.quarkus.oidc.UserInfo` can be either injected or accessed as a SecurityIdentity `userinfo` attribute.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>OIDC userinfo エンドポイントから UserInfo JSON オブジェクトを要求する必要がある場合は `quarkus.oidc.user-info-required=true` を設定します。リクエストが OpenId Provider UserInfo エンドポイントに送信され、 `io.quarkus.oidc.UserInfo` (単純な `javax.json.JsonObject` ラッパー) オブジェクトが作成されます。 `io.quarkus.oidc.UserInfo` は、SecurityIdentity `userinfo` 属性として注入、アクセスすることもできます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Token Claims And SecurityIdentity Roles</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>トークンクレームとセキュリティーアイデンティティロール</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>SecurityIdentity roles can be mapped from the verified JWT access tokens as follows:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>SecurityIdentity ロールは、検証済みの JWT アクセストークンから以下のようにマッピングすることができます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>If `quarkus.oidc.roles.role-claim-path` property is set and a matching array or string claim is found then the roles are extracted from this claim.  For example, `customroles`, `customroles/array`, `scope`, `"http://namespace-qualified-custom-claim"/roles`, `"http://namespace-qualified-roles"`, etc.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`quarkus.oidc.roles.role-claim-path` プロパティーが設定されており、一致する配列または文字列のクレームが見つかった場合、このクレームからロールが抽出されます。例えば、 `customroles` 、 `customroles/array` 、 `scope` 、 `"http://namespace-qualified-custom-claim"/roles` 、 `"http://namespace-qualified-roles"` 、などです。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>If `groups` claim is available then its value is used</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`groups` クレームが利用可能な場合は、その値が使用されます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>If `realm_access/roles` or `resource_access/client_id/roles` (where `client_id` is the value of the `quarkus.oidc.client-id` property) claim is available then its value is used.  This check supports the tokens issued by Keycloak</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`realm_access/roles` または `resource_access/client_id/roles` (ここで `client_id` は `quarkus.oidc.client-id` プロパティーの値)クレームが利用可能な場合は、その値が使用されます。このチェックは、Keycloakが発行するトークンをサポートします。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>If the token is opaque (binary) then a `scope` property from the remote token introspection response will be used.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>トークンが不透明(バイナリー)の場合は、リモートトークンイントロスペクションレスポンスの `scope` プロパティーが使用されます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>If UserInfo is the source of the roles then set `quarkus.oidc.authentication.user-info-required=true` and `quarkus.oidc.roles.source=userinfo`, and if needed, `quarkus.oidc.roles.role-claim-path`.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>UserInfoがロールのソースである場合は、 `quarkus.oidc.authentication.user-info-required=true` と `quarkus.oidc.roles.source=userinfo` 、必要に応じて `quarkus.oidc.roles.role-claim-path` を設定します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Additionally a custom `SecurityIdentityAugmentor` can also be used to add the roles as documented link:security#security-identity-customization[here].</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>さらに、カスタム `SecurityIdentityAugmentor` を使用して、 link:security#security-identity-customization[ここ] に文書化されているようにロールを追加することもできます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Single Page Applications</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>シングルページアプリケーション</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Single Page Application (SPA) typically uses `XMLHttpRequest`(XHR) and the Java Script utility code provided by the OpenId Connect provider to acquire a bearer token and use it to access Quarkus `service` applications.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>シングルページアプリケーション(SPA)は通常、 `XMLHttpRequest` (XHR)とOpenId Connectプロバイダーが提供するJava Scriptユーティリティーコードを使用してベアラートークンを取得し、それを使用してQuarkus `service` アプリケーションにアクセスします。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>For example, here is how you can use `keycloak.js` to authenticate the users and refresh the expired tokens from the SPA:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>例えば、 `keycloak.js` を使用してユーザーを認証し、SPA から期限切れのトークンをリフレッシュする方法は以下の通りです。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Token Propagation</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>トークンの伝播</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Please see link:security-openid-connect-client#token-propagation[Token Propagation] section about the Bearer access token propagation to the downstream services.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>下流サービスへのベアラアクセストークンの伝播については、 link:security-openid-connect-client#token-propagation[トークン伝播] の項を参照してください。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>https://openid.net/connect/[OpenID Connect]</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>https://openid.net/connect/[OpenID Connect]</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>https://tools.ietf.org/html/rfc7519[JSON Web Token]</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>https://tools.ietf.org/html/rfc7519[JSON Web Token]</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>link:security-openid-connect-client[Quarkus - Using OpenID Connect and OAuth2 Client and Filters to manage access tokens]</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>マルチテナントへの対応方法については、 link:security-openid-connect-multitenancy[OpenID Connectマルチテナンシーの利用] ガイドをお読みください。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
         <seg>Embedding a configuration file inside a dependency</seg>
       </tuv>
       <tuv xml:lang="ja_JP">
