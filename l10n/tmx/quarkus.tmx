@@ -32427,6 +32427,302 @@ public class FruitResource {
     </tu>
     <tu>
       <tuv xml:lang="en">
+        <seg>This guide explains how you can send your logs to a centralized log management system like Graylog, Logstash (inside the Elastic Stack or ELK - Elasticsearch, Logstash, Kibana) or Fluentd (inside EFK - Elasticsearch, Fluentd, Kibana).</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>このガイドでは、Graylog、Logstash(Elastic StackやELK - Elasticsearch、Logstash、Kibanaの内部)、Fluentd(EFK - Elasticsearch、Fluentd、Kibanaの内部)のような集中型ログ管理システムにログを送信する方法を説明します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>There are a lot of different ways to centralize your logs (if you are using Kubernetes, the simplest way is to log to the console and ask you cluster administrator to integrate a central log manager inside your cluster).  In this guide, we will expose how to send them to an external tool using the `quarkus-logging-gelf` extension that can use TCP or UDP to send logs in the Graylog Extended Log Format (GELF).</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>ログを一元化する方法はたくさんあります(Kubernetesを使用している場合、最も簡単な方法はコンソールにログインして、クラスター管理者にクラスター内に一元化されたログマネージャーを統合するように依頼することです)。このガイドでは、TCPまたはUDPを使用してGraylog Extended Log Format (GELF)でログを送信できる `quarkus-logging-gelf` エクステンションを使用して外部ツールに送信する方法を公開します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>The `quarkus-logging-gelf` extension will add a GELF log handler to the underlying logging backend that Quarkus uses (jboss-logmanager).  By default, it is disabled, if you enable it but still use another handler (by default the console handler is enabled), your logs will be sent to both handlers.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`quarkus-logging-gelf` エクステンションは、Quarkusが使用する基礎となるロギングバックエンド(jboss-logmanager)にGELFログハンドラーを追加します。デフォルトでは無効になっており、有効にした場合も別のハンドラーも使用している場合(デフォルトではコンソールハンドラーが有効になっています)、ログは両方のハンドラーに送信されます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Example application</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>アプリケーション例</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>The following examples will all be based on the same example application that you can create with the following steps.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>以下の例はすべて、以下の手順で作成できる同じアプリケーションの例を基にしています。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Create an application with the `quarkus-logging-gelf` extension. You can use the following Maven command to create it:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`quarkus-logging-gelf` のエクステンションを持つアプリケーションを作成します。以下のMavenコマンドを使って作成します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>If you already have your Quarkus project configured, you can add the `logging-gelf` extension to your project by running the following command in your project base directory:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>すでにQuarkusプロジェクトが設定されている場合は、プロジェクトのベースディレクトリーで以下のコマンドを実行することで、プロジェクトに `logging-gelf` エクステンションを追加することができます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>For demonstration purposes, we create an endpoint that does nothing but log a sentence. You don't need to do this inside your application.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>デモのために、文をログに記録するだけのエンドポイントを作成します。これをアプリケーション内で行う必要はありません。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Configure the GELF log handler to send logs to an external UDP endpoint on the port 12201:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>GELF ログハンドラーを構成して、ポート 12201 の外部 UDP エンドポイントにログを送信します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Send logs to Graylog</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>ログをGraylogに送信</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>To send logs to Graylog, you first need to launch the components that compose the Graylog stack:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>ログをGraylogに送信するには、まずGraylogスタックを構成するコンポーネントを起動する必要があります。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Elasticsearch</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>Elasticsearch</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Graylog</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>Graylog</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>You can do this via the following docker-compose file that you can launch via `docker-compose run -d`:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>これは、 `docker-compose run -d` から起動できる以下の docker-compose ファイルを使って行うことができます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Then, you need to create a UDP input in Graylog.  You can do it from the Graylog web console (System -&gt; Input -&gt; Select GELF UDP) available at http://localhost:9000 or via the API.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>次に、GraylogでUDP入力を作成する必要があります。これは、http://localhost:9000 の GraylogのWebコンソール(System → Input → Select GELF UDP)から、 またはAPI経由で行うことができます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>This curl example will create a new Input of type GELF UDP, it uses the default login from Graylog (admin/admin).</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>この curl の例では、Graylog (admin/admin) からのデフォルトのログインを使用し、GELF UDP タイプの新しい入力を作成します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Launch your application, you should see your logs arriving inside Graylog.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>アプリケーションを起動すると、Graylog内にログが届くのがわかるはずです。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Logstash comes by default with an Input plugin that can understand the GELF format, we will first create a pipeline that enables this plugin.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>LogstashにはGELF形式を理解できるInputプラグインがデフォルトで付属しているので、まずこのプラグインを有効にするパイプラインを作成します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Create the following file in `$HOME/pipelines/gelf.conf`:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`$HOME/pipelines/gelf.conf` に以下のファイルを作成します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Finally, launch the components that compose the Elastic Stack:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>最後に、Elastic Stackを構成するコンポーネントを起動します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Logstash</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>Logstash</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Kibana</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>Kibana</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Launch your application, you should see your logs arriving inside the Elastic Stack; you can use Kibana available at http://localhost:5601/ to access them.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>アプリケーションを起動すると、Elastic Stack内にログが到着しているのが確認できるはずです。 http://localhost:5601/ で入手できるKibanaを使ってアクセスすることができます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>First, you need to create a Fluentd image with the needed plugins: elasticsearch and input-gelf.  You can use the following Dockerfile that should be created inside a `fluentd` directory.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>まず、必要なプラグインである elasticsearch と input-elf を使って Fluentd イメージを作成します。 以下の Dockerfile を使用することができます。このファイルは `fluentd` ディレクトリー内に作成する必要があります。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>You can build the image or let docker-compose build it for you.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>イメージをビルドするか、docker-composeにビルドを任せることができます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Then you need to create a fluentd configuration file inside `$HOME/fluentd/fluent.conf`</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>それから、fluentd 設定ファイルを `$HOME/fluentd/fluent.conf` に作成する必要があります。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Finally, launch the components that compose the EFK Stack:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>最後に、EFKスタックを構成するコンポーネントを起動します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Fluentd</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>Fluentd</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Launch your application, you should see your logs arriving inside EFK: you can use Kibana available at http://localhost:5601/ to access them.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>アプリケーションを起動すると、EFK内にログが到着しているのが確認できるはずです: それらにアクセスするには、 http://localhost:5601/ で利用可能な Kibana を使用することができます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Fluentd alternative: use Syslog</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>Fluentdの代替:Syslogの使用</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>You can also send your logs to Fluentd using a Syslog input.  As opposed to the GELF input, the Syslog input will not render multiline logs in one event, that's why we advise to use the GELF input that we implement in Quarkus.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>Syslog入力を使ってFluentdにログを送ることもできます。GELF入力とは対照的に、Syslog入力は1つのイベントで複数行のログをレンダリングすることができないため、Quarkusで実装されているGELF入力を使用することをお勧めします。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>First, you need to create a Fluentd image with the elasticsearch plugin.  You can use the following Dockerfile that should be created inside a `fluentd` directory.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>まず、elasticsearchプラグインでFluentdイメージを作成する必要があります。 以下の Dockerfile を使用することができます。このファイルは `fluentd` ディレクトリー内に作成する必要があります。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Then, you need to create a fluentd configuration file inside `$HOME/fluentd/fluent.conf`</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>次に、fluentd設定ファイルを `$HOME/fluentd/fluent.conf` 内に作成する必要があります。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Then, launch the components that compose the EFK Stack:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>そして、EFKスタックを構成するコンポーネントを起動します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Finally, configure your application to send logs to EFK using Syslog:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>最後に、Syslogを使用してEFKにログを送信するようにアプリケーションを設定します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Configuration is done through the usual `application.properties` file.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>設定は通常の `application.properties` ファイルから行います。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>This extension uses the `logstash-gelf` library that allow more configuration options via system properties, you can access its documentation here: https://logging.paluch.biz/ .</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>このエクステンションは、システムプロパティーを介してより多くの設定オプションを提供する `logstash-gelf` ライブラリを使用しています。ドキュメントにはこちら: https://logging.paluch.biz/ からアクセスできます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
         <seg>This guide covers:</seg>
       </tuv>
       <tuv xml:lang="ja_JP">
@@ -57427,302 +57723,6 @@ Eclipse Che</seg>
     </tu>
     <tu>
       <tuv xml:lang="en">
-        <seg>This guide explains how you can send your logs to a centralized log management system like Graylog, Logstash (inside the Elastic Stack or ELK - Elasticsearch, Logstash, Kibana) or Fluentd (inside EFK - Elasticsearch, Fluentd, Kibana).</seg>
-      </tuv>
-      <tuv xml:lang="ja_JP">
-        <seg>このガイドでは、Graylog、Logstash(Elastic StackやELK - Elasticsearch、Logstash、Kibanaの内部)、Fluentd(EFK - Elasticsearch、Fluentd、Kibanaの内部)のような集中型ログ管理システムにログを送信する方法を説明します。</seg>
-      </tuv>
-    </tu>
-    <tu>
-      <tuv xml:lang="en">
-        <seg>There are a lot of different ways to centralize your logs (if you are using Kubernetes, the simplest way is to log to the console and ask you cluster administrator to integrate a central log manager inside your cluster).  In this guide, we will expose how to send them to an external tool using the `quarkus-logging-gelf` extension that can use TCP or UDP to send logs in the Graylog Extended Log Format (GELF).</seg>
-      </tuv>
-      <tuv xml:lang="ja_JP">
-        <seg>ログを一元化する方法はたくさんあります(Kubernetesを使用している場合、最も簡単な方法はコンソールにログインして、クラスター管理者にクラスター内に一元化されたログマネージャーを統合するように依頼することです)。このガイドでは、TCPまたはUDPを使用してGraylog Extended Log Format (GELF)でログを送信できる `quarkus-logging-gelf` エクステンションを使用して外部ツールに送信する方法を公開します。</seg>
-      </tuv>
-    </tu>
-    <tu>
-      <tuv xml:lang="en">
-        <seg>The `quarkus-logging-gelf` extension will add a GELF log handler to the underlying logging backend that Quarkus uses (jboss-logmanager).  By default, it is disabled, if you enable it but still use another handler (by default the console handler is enabled), your logs will be sent to both handlers.</seg>
-      </tuv>
-      <tuv xml:lang="ja_JP">
-        <seg>`quarkus-logging-gelf` エクステンションは、Quarkusが使用する基礎となるロギングバックエンド(jboss-logmanager)にGELFログハンドラーを追加します。デフォルトでは無効になっており、有効にした場合も別のハンドラーも使用している場合(デフォルトではコンソールハンドラーが有効になっています)、ログは両方のハンドラーに送信されます。</seg>
-      </tuv>
-    </tu>
-    <tu>
-      <tuv xml:lang="en">
-        <seg>Example application</seg>
-      </tuv>
-      <tuv xml:lang="ja_JP">
-        <seg>アプリケーション例</seg>
-      </tuv>
-    </tu>
-    <tu>
-      <tuv xml:lang="en">
-        <seg>The following examples will all be based on the same example application that you can create with the following steps.</seg>
-      </tuv>
-      <tuv xml:lang="ja_JP">
-        <seg>以下の例はすべて、以下の手順で作成できる同じアプリケーションの例を基にしています。</seg>
-      </tuv>
-    </tu>
-    <tu>
-      <tuv xml:lang="en">
-        <seg>Create an application with the `quarkus-logging-gelf` extension. You can use the following Maven command to create it:</seg>
-      </tuv>
-      <tuv xml:lang="ja_JP">
-        <seg>`quarkus-logging-gelf` のエクステンションを持つアプリケーションを作成します。以下のMavenコマンドを使って作成します。</seg>
-      </tuv>
-    </tu>
-    <tu>
-      <tuv xml:lang="en">
-        <seg>If you already have your Quarkus project configured, you can add the `logging-gelf` extension to your project by running the following command in your project base directory:</seg>
-      </tuv>
-      <tuv xml:lang="ja_JP">
-        <seg>すでにQuarkusプロジェクトが設定されている場合は、プロジェクトのベースディレクトリーで以下のコマンドを実行することで、プロジェクトに `logging-gelf` エクステンションを追加することができます。</seg>
-      </tuv>
-    </tu>
-    <tu>
-      <tuv xml:lang="en">
-        <seg>For demonstration purposes, we create an endpoint that does nothing but log a sentence. You don't need to do this inside your application.</seg>
-      </tuv>
-      <tuv xml:lang="ja_JP">
-        <seg>デモのために、文をログに記録するだけのエンドポイントを作成します。これをアプリケーション内で行う必要はありません。</seg>
-      </tuv>
-    </tu>
-    <tu>
-      <tuv xml:lang="en">
-        <seg>Configure the GELF log handler to send logs to an external UDP endpoint on the port 12201:</seg>
-      </tuv>
-      <tuv xml:lang="ja_JP">
-        <seg>GELF ログハンドラーを構成して、ポート 12201 の外部 UDP エンドポイントにログを送信します。</seg>
-      </tuv>
-    </tu>
-    <tu>
-      <tuv xml:lang="en">
-        <seg>Send logs to Graylog</seg>
-      </tuv>
-      <tuv xml:lang="ja_JP">
-        <seg>ログをGraylogに送信</seg>
-      </tuv>
-    </tu>
-    <tu>
-      <tuv xml:lang="en">
-        <seg>To send logs to Graylog, you first need to launch the components that compose the Graylog stack:</seg>
-      </tuv>
-      <tuv xml:lang="ja_JP">
-        <seg>ログをGraylogに送信するには、まずGraylogスタックを構成するコンポーネントを起動する必要があります。</seg>
-      </tuv>
-    </tu>
-    <tu>
-      <tuv xml:lang="en">
-        <seg>Elasticsearch</seg>
-      </tuv>
-      <tuv xml:lang="ja_JP">
-        <seg>Elasticsearch</seg>
-      </tuv>
-    </tu>
-    <tu>
-      <tuv xml:lang="en">
-        <seg>Graylog</seg>
-      </tuv>
-      <tuv xml:lang="ja_JP">
-        <seg>Graylog</seg>
-      </tuv>
-    </tu>
-    <tu>
-      <tuv xml:lang="en">
-        <seg>You can do this via the following docker-compose file that you can launch via `docker-compose run -d`:</seg>
-      </tuv>
-      <tuv xml:lang="ja_JP">
-        <seg>これは、 `docker-compose run -d` から起動できる以下の docker-compose ファイルを使って行うことができます。</seg>
-      </tuv>
-    </tu>
-    <tu>
-      <tuv xml:lang="en">
-        <seg>Then, you need to create a UDP input in Graylog.  You can do it from the Graylog web console (System -&gt; Input -&gt; Select GELF UDP) available at http://localhost:9000 or via the API.</seg>
-      </tuv>
-      <tuv xml:lang="ja_JP">
-        <seg>次に、GraylogでUDP入力を作成する必要があります。これは、http://localhost:9000 の GraylogのWebコンソール(System → Input → Select GELF UDP)から、 またはAPI経由で行うことができます。</seg>
-      </tuv>
-    </tu>
-    <tu>
-      <tuv xml:lang="en">
-        <seg>This curl example will create a new Input of type GELF UDP, it uses the default login from Graylog (admin/admin).</seg>
-      </tuv>
-      <tuv xml:lang="ja_JP">
-        <seg>この curl の例では、Graylog (admin/admin) からのデフォルトのログインを使用し、GELF UDP タイプの新しい入力を作成します。</seg>
-      </tuv>
-    </tu>
-    <tu>
-      <tuv xml:lang="en">
-        <seg>Launch your application, you should see your logs arriving inside Graylog.</seg>
-      </tuv>
-      <tuv xml:lang="ja_JP">
-        <seg>アプリケーションを起動すると、Graylog内にログが届くのがわかるはずです。</seg>
-      </tuv>
-    </tu>
-    <tu>
-      <tuv xml:lang="en">
-        <seg>Logstash comes by default with an Input plugin that can understand the GELF format, we will first create a pipeline that enables this plugin.</seg>
-      </tuv>
-      <tuv xml:lang="ja_JP">
-        <seg>LogstashにはGELF形式を理解できるInputプラグインがデフォルトで付属しているので、まずこのプラグインを有効にするパイプラインを作成します。</seg>
-      </tuv>
-    </tu>
-    <tu>
-      <tuv xml:lang="en">
-        <seg>Create the following file in `$HOME/pipelines/gelf.conf`:</seg>
-      </tuv>
-      <tuv xml:lang="ja_JP">
-        <seg>`$HOME/pipelines/gelf.conf` に以下のファイルを作成します。</seg>
-      </tuv>
-    </tu>
-    <tu>
-      <tuv xml:lang="en">
-        <seg>Finally, launch the components that compose the Elastic Stack:</seg>
-      </tuv>
-      <tuv xml:lang="ja_JP">
-        <seg>最後に、Elastic Stackを構成するコンポーネントを起動します。</seg>
-      </tuv>
-    </tu>
-    <tu>
-      <tuv xml:lang="en">
-        <seg>Logstash</seg>
-      </tuv>
-      <tuv xml:lang="ja_JP">
-        <seg>Logstash</seg>
-      </tuv>
-    </tu>
-    <tu>
-      <tuv xml:lang="en">
-        <seg>Kibana</seg>
-      </tuv>
-      <tuv xml:lang="ja_JP">
-        <seg>Kibana</seg>
-      </tuv>
-    </tu>
-    <tu>
-      <tuv xml:lang="en">
-        <seg>Launch your application, you should see your logs arriving inside the Elastic Stack; you can use Kibana available at http://localhost:5601/ to access them.</seg>
-      </tuv>
-      <tuv xml:lang="ja_JP">
-        <seg>アプリケーションを起動すると、Elastic Stack内にログが到着しているのが確認できるはずです。 http://localhost:5601/ で入手できるKibanaを使ってアクセスすることができます。</seg>
-      </tuv>
-    </tu>
-    <tu>
-      <tuv xml:lang="en">
-        <seg>First, you need to create a Fluentd image with the needed plugins: elasticsearch and input-gelf.  You can use the following Dockerfile that should be created inside a `fluentd` directory.</seg>
-      </tuv>
-      <tuv xml:lang="ja_JP">
-        <seg>まず、必要なプラグインである elasticsearch と input-elf を使って Fluentd イメージを作成します。 以下の Dockerfile を使用することができます。このファイルは `fluentd` ディレクトリー内に作成する必要があります。</seg>
-      </tuv>
-    </tu>
-    <tu>
-      <tuv xml:lang="en">
-        <seg>You can build the image or let docker-compose build it for you.</seg>
-      </tuv>
-      <tuv xml:lang="ja_JP">
-        <seg>イメージをビルドするか、docker-composeにビルドを任せることができます。</seg>
-      </tuv>
-    </tu>
-    <tu>
-      <tuv xml:lang="en">
-        <seg>Then you need to create a fluentd configuration file inside `$HOME/fluentd/fluent.conf`</seg>
-      </tuv>
-      <tuv xml:lang="ja_JP">
-        <seg>それから、fluentd 設定ファイルを `$HOME/fluentd/fluent.conf` に作成する必要があります。</seg>
-      </tuv>
-    </tu>
-    <tu>
-      <tuv xml:lang="en">
-        <seg>Finally, launch the components that compose the EFK Stack:</seg>
-      </tuv>
-      <tuv xml:lang="ja_JP">
-        <seg>最後に、EFKスタックを構成するコンポーネントを起動します。</seg>
-      </tuv>
-    </tu>
-    <tu>
-      <tuv xml:lang="en">
-        <seg>Fluentd</seg>
-      </tuv>
-      <tuv xml:lang="ja_JP">
-        <seg>Fluentd</seg>
-      </tuv>
-    </tu>
-    <tu>
-      <tuv xml:lang="en">
-        <seg>Launch your application, you should see your logs arriving inside EFK: you can use Kibana available at http://localhost:5601/ to access them.</seg>
-      </tuv>
-      <tuv xml:lang="ja_JP">
-        <seg>アプリケーションを起動すると、EFK内にログが到着しているのが確認できるはずです: それらにアクセスするには、 http://localhost:5601/ で利用可能な Kibana を使用することができます。</seg>
-      </tuv>
-    </tu>
-    <tu>
-      <tuv xml:lang="en">
-        <seg>Fluentd alternative: use Syslog</seg>
-      </tuv>
-      <tuv xml:lang="ja_JP">
-        <seg>Fluentdの代替:Syslogの使用</seg>
-      </tuv>
-    </tu>
-    <tu>
-      <tuv xml:lang="en">
-        <seg>You can also send your logs to Fluentd using a Syslog input.  As opposed to the GELF input, the Syslog input will not render multiline logs in one event, that's why we advise to use the GELF input that we implement in Quarkus.</seg>
-      </tuv>
-      <tuv xml:lang="ja_JP">
-        <seg>Syslog入力を使ってFluentdにログを送ることもできます。GELF入力とは対照的に、Syslog入力は1つのイベントで複数行のログをレンダリングすることができないため、Quarkusで実装されているGELF入力を使用することをお勧めします。</seg>
-      </tuv>
-    </tu>
-    <tu>
-      <tuv xml:lang="en">
-        <seg>First, you need to create a Fluentd image with the elasticsearch plugin.  You can use the following Dockerfile that should be created inside a `fluentd` directory.</seg>
-      </tuv>
-      <tuv xml:lang="ja_JP">
-        <seg>まず、elasticsearchプラグインでFluentdイメージを作成する必要があります。 以下の Dockerfile を使用することができます。このファイルは `fluentd` ディレクトリー内に作成する必要があります。</seg>
-      </tuv>
-    </tu>
-    <tu>
-      <tuv xml:lang="en">
-        <seg>Then, you need to create a fluentd configuration file inside `$HOME/fluentd/fluent.conf`</seg>
-      </tuv>
-      <tuv xml:lang="ja_JP">
-        <seg>次に、fluentd設定ファイルを `$HOME/fluentd/fluent.conf` 内に作成する必要があります。</seg>
-      </tuv>
-    </tu>
-    <tu>
-      <tuv xml:lang="en">
-        <seg>Then, launch the components that compose the EFK Stack:</seg>
-      </tuv>
-      <tuv xml:lang="ja_JP">
-        <seg>そして、EFKスタックを構成するコンポーネントを起動します。</seg>
-      </tuv>
-    </tu>
-    <tu>
-      <tuv xml:lang="en">
-        <seg>Finally, configure your application to send logs to EFK using Syslog:</seg>
-      </tuv>
-      <tuv xml:lang="ja_JP">
-        <seg>最後に、Syslogを使用してEFKにログを送信するようにアプリケーションを設定します。</seg>
-      </tuv>
-    </tu>
-    <tu>
-      <tuv xml:lang="en">
-        <seg>Configuration is done through the usual `application.properties` file.</seg>
-      </tuv>
-      <tuv xml:lang="ja_JP">
-        <seg>設定は通常の `application.properties` ファイルから行います。</seg>
-      </tuv>
-    </tu>
-    <tu>
-      <tuv xml:lang="en">
-        <seg>This extension uses the `logstash-gelf` library that allow more configuration options via system properties, you can access its documentation here: https://logging.paluch.biz/ .</seg>
-      </tuv>
-      <tuv xml:lang="ja_JP">
-        <seg>このエクステンションは、システムプロパティーを介してより多くの設定オプションを提供する `logstash-gelf` ライブラリを使用しています。ドキュメントにはこちら: https://logging.paluch.biz/ からアクセスできます。</seg>
-      </tuv>
-    </tu>
-    <tu>
-      <tuv xml:lang="en">
         <seg>BigDecimalAdapter.java</seg>
       </tuv>
       <tuv xml:lang="ja_JP">
@@ -57791,6 +57791,236 @@ Eclipse Che</seg>
       </tuv>
       <tuv xml:lang="ja_JP">
         <seg>いつものように、 `./mvnw clean package`  を使ってアプリケーションをパッケージ化し、 `target/quarkus-app/quarkus-run.jar` ファイルを使って実行することができます。また、 `./mvnw clean package -Pnative` を使用してネイティブの実行ファイルを生成することもできます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>OAuth2 is an authorization framework that enables applications to obtain access to an HTTP resource on behalf of a user.  It can be used to implement an application authentication mechanism based on tokens by delegating to an external server (the authentication server) the user authentication and providing a token for the authentication context.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>OAuth2は、アプリケーションがユーザーに代わってHTTPリソースへのアクセスを取得することを可能にする認可フレームワークです。ユーザー認証を外部サーバー(認証サーバー)に委譲し、認証コンテキストにトークンを提供することで、トークンに基づくアプリケーション認証の仕組みを実装することができます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>This extension provides a light-weight support for using the opaque Bearer Tokens and validating them by calling an introspection endpoint.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>このエクステンションは、不透明なベアラートークンを使用してイントロスペクションエンドポイントを呼び出して検証するための軽量なサポートを提供します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Clone the Git repository: git clone https://github.com/quarkusio/quarkus-quickstarts.git, or download an archive.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>Git リポジトリのクローン: git clone https://github.com/quarkusio/quarkus-quickstarts.git 、またはアーカイブをダウンロードしてください。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>The solution is located in the `security-oauth2-quickstart` {quickstarts-tree-url}/security-oauth2-quickstart[directory].  It contains a very simple UI to use the JAX-RS resources created here, too.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>ソリューションは `security-oauth2-quickstart` {quickstarts-tree-url}/security-oauth2-quickstart[directory] にあります。ここで作成したJAX-RSリソースを利用するための非常にシンプルなUIも含まれています。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>This command generates the Maven project with a REST endpoint and imports the `elytron-security-oauth2` extension, which includes the OAuth2 opaque token support.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>このコマンドは、RESTエンドポイントを持つMavenプロジェクトを生成し、OAuth2不透明トークンのサポートを含む `elytron-security-oauth2` エクステンションをインポートします。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>If you don't want to use the Maven plugin, you can just include the dependency in your pom.xml:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>Mavenプラグインを使用したくない場合は、pom.xmlに依存関係を含めるだけです。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Open the `src/main/java/org/acme/security/oauth2/TokenSecuredResource.java` file and see the following content:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`src/main/java/org/acme/security/oauth2/TokenSecuredResource.java` ファイルを開くと、以下のような内容が表示されます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>This is a basic REST endpoint that does not have any of the {extension-name} specific features, so let's add some.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>これは{extension-name}特有の機能を持たない基本的なRESTエンドポイントなので、いくつか追加してみましょう。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>We will use the JSR 250 common security annotations, they are described in the link:security[Using Security] guide.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>JSR 250の共通 link:security[セキュリティーアノテーション] を使用する。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>https://tools.ietf.org/html/rfc6749[OAuth2]</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>https://tools.ietf.org/html/rfc6749[OAuth2]</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Zero Config Setup (DevServices)</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>ゼロコンフィグ設定（DevServices）</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>When testing or running in dev mode Quarkus can even provide you with a zero config database out of the box, a feature we refer to as DevServices. Depending on your database type you may need docker installed in order to use this feature. DevServices is supported for the following open source databases:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>Quarkusでは、テストや開発モードで実行する際に、ゼロコンフィグでデータベースをすぐに提供することができます。これは、私たちがDevServicesと呼ぶ機能です。データベースの種類によっては、この機能を使用するためにdockerをインストールする必要があります。DevServicesは以下のオープンソースデータベースでサポートされています。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>DB2 (container) (requires license acceptance)</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>DB2 (コンテナ)(要ライセンス承諾)</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>MSSQL (container) (requires license acceptance)</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>MSSQL (コンテナ)(要ライセンス承諾)</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>If you want to use DevServices then all you need to do is include the relevant extension for the type of database you want (either reactive or JDBC, or both), and don't configure a database URL, username and password, Quarkus will provide the database and you can just start coding without worrying about config.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>DevServicesを使用する場合、必要なのは使用するデータベースの種類（リアクティブまたはJDBC、またはその両方）に応じた関連するエクステンションを含めることだけで、データベースのURLやユーザー名、パスワードを設定する必要はありません。Quarkusがデータベースを提供するので、ユーザーは設定に煩わされることなく、ただコーディングを開始することが出来ます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>If you are using a proprietary database such as DB2 or MSSQL you will need to accept the license agreement. To do this create a `src/main/resources/container-license-acceptance.txt` files in your project and add a line with the image name and tag of the database. By default Quarkus uses the default image for the current version of Testcontainers, if you attempt to start Quarkus the resulting failure will tell you the exact image name in use for you to add to the file.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>DB2やMSSQLなどのプロプライエタリなデータベースを使用している場合は、使用許諾契約書に同意する必要があります。これを行うには、プロジェクト内に `src/main/resources/container-license-acceptance.txt` ファイルを作成し、データベースのイメージ名とタグを記載した行を追加します。デフォルトでは、Quarkusは現在のバージョンのTestcontainersのデフォルトイメージを使用しますが、Quarkusを起動しようとすると、失敗したときに使用されている正確なイメージ名が表示されるので、ファイルに追加してください。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>An example file is shown below:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>ファイルの例を以下に示します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>src/main/resources/container-license-acceptance.txt</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>src/main/resources/container-license-acceptance.txt</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>quarkus.datasource.db-kind=postgresql &lt;1&gt;
+quarkus.datasource.username=&lt;your username&gt;
+quarkus.datasource.password=&lt;your password&gt;
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>quarkus.datasource.db-kind=postgresql &lt;1&gt;
+quarkus.datasource.username=&lt;your username&gt;
+quarkus.datasource.password=&lt;your password&gt;
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>If you only have a single JDBC extension, or you are running tests and only have a single test scoped JDBC extension installed then this is optional. If there is only one possible extension we assume this is the correct one, and if a driver has been added with test scope then we assume that this should be used in testing.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>JDBCエクステンションが1つしかない場合や、テストを実行していてテストスコープ付きのJDBCエクステンションが1つしかインストールされていない場合は、これはオプションです。利用可能なエクステンションがひとつしかない場合は、それが正しいものであると仮定します。また、テストスコープでドライバが追加されている場合は、それをテストで使用すべきであると仮定します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>As specified above this is optional.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>上述の通り、これはオプションです。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>To define a datasource, start with the following (note that this is only required if you have more than one database type installed):</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>データソースを定義するには、まず以下のようにします（複数のデータベースタイプがインストールされている場合にのみ必要となりますのでご注意ください）。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Even when only one database extension is installed, named databases need to specify at least one build time property so that Quarkus knows they exist. Generally this will be the `db-kind` property, although you can also specify DevServices properties to create named datasources (covered later in this guide).</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>データベースエクステンションが1つしかインストールされていない場合でも、名前付きデータベースは、Quarkusがその存在を認識できるように、少なくとも1つのビルドタイムプロパティを指定する必要があります。通常、これは `db-kind` プロパティになりますが、名前付きデータソースを作成するためにDevServicesプロパティを指定することもできます（このガイドで後述します）。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>As mentioned above Quarkus supports a feature called DevServices that allows you to create datasources without any config. If you have a database extension that supports it and no config is provided, Quarkus will automatically start a database (either using Testcontainers, or by starting a Java DB in process), and automatically configure a connection to this database.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>前述の通り、QuarkusはDevServicesと呼ばれる機能をサポートしており、設定なしでデータソースを作成することができます。サポートしているデータベースエクステンションがあり、設定が提供されていない場合、Quarkusは自動的にデータベースを起動し（Testcontainersを使用するか、インプロセスのJava DBを起動する）、このデータベースへの接続を自動的に設定します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Production databases need to be configured as normal, so if you want to include a production database config in your application.properties and continue to use DevServices we recommend that you use the `%prod.` profile to define your database settings.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>本番環境のデータベースは通常通り構成する必要があります。そのため、本番環境のデータベースの構成をapplication.propertiesに含めてDevServicesを継続して使用したい場合は、 `%prod.` プロファイルを使用してデータベースの設定を定義することをお勧めします。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>DevServices supports the following config options:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>DevServicesは、以下の構成オプションをサポートしています。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Named Datasources</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>名前付きデータソース</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>When using DevServices the default datasource will always be created, but to specify a named datasource you need to have at least one build time property so Quarkus knows to create the datasource. In general you will usually either specify the `db-kind` property, or explicitly enable DevDb: `quarkus.datasource."named".devservices=true`.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>DevServicesを使用する場合、デフォルトのデータソースは常に作成されますが、名前付きのデータソースを指定するには、Quarkusがデータソースの作成を認識できるように、少なくとも1つのビルドタイムプロパティが必要です。一般的には、 `db-kind` プロパティを指定するか、明示的にDevDb: `quarkus.datasource."named".devservices=true` を有効にします。</seg>
       </tuv>
     </tu>
     <tu>
