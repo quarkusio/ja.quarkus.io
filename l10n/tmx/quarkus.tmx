@@ -57851,6 +57851,568 @@ Eclipse Che</seg>
     </tu>
     <tu>
       <tuv xml:lang="en">
+        <seg>`quarkus-oidc-client` and `quarkus-oidc-client-filter` extensions to acquire and refresh access tokens from OpenId Connect and OAuth 2.0 compliant Authorization Servers such as https://www.keycloak.org/about.html[Keycloak]</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`quarkus-oidc-client` および `quarkus-oidc-client-filter` エクステンションを使用して、OpenId Connect および link:https://www.keycloak.org/about.html[Keycloak] などの OAuth 2.0 準拠の認可サーバーからアクセストークンを取得し、更新することができます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>The access tokens managed by these extensions can be used as HTTP Authorization Bearer tokens to access the remote services.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>これらのエクステンションで管理されているアクセストークンをHTTP Authorization Bearerトークンとして使用して、リモートサービスにアクセスすることができます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Here is how `OidcClient` can be configured to use the `password` grant:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`OidcClient` が `password` グラントを使用するように設定する方法は以下の通りです。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>quarkus.oidc-client.auth-server-url=${keycloak.url}/realms/quarkus2/
+quarkus.oidc-client.client-id=quarkus-app
+quarkus.oidc-client.credentials.secret=secret
+quarkus.oidc-client.grant.type=password
+quarkus.oidc-client.grant-options.password.username=alice
+quarkus.oidc-client.grant-options.password.password=alice
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>quarkus.oidc-client.auth-server-url=${keycloak.url}/realms/quarkus2/
+quarkus.oidc-client.client-id=quarkus-app
+quarkus.oidc-client.credentials.secret=secret
+quarkus.oidc-client.grant.type=password
+quarkus.oidc-client.grant-options.password.username=alice
+quarkus.oidc-client.grant-options.password.password=alice
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>In both cases `OidcClient` will auto-discover the token endpoint URL and use it to acquire the tokens.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>どちらの場合も、 `OidcClient` はトークンのエンドポイントURLを自動検出し、それを使ってトークンを取得します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>One can use `OidcClient` directly as follows:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>以下のように `OidcClient` を直接使用することができます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>import javax.inject.PostConstruct;
+import javax.inject.Inject;
+import javax.ws.rs.GET;
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>import javax.inject.PostConstruct;
+import javax.inject.Inject;
+import javax.ws.rs.GET;
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>import io.quarkus.oidc.client.OidcClient;
+import io.quarkus.oidc.client.Tokens;
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>import io.quarkus.oidc.client.OidcClient;
+import io.quarkus.oidc.client.Tokens;
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>@Path("/service")
+public class OidcClientResource {
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>@Path("/service")
+public class OidcClientResource {
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>        Tokens tokens = currentTokens;
+        if (tokens.isAccessTokenExpired()) {
+            tokens = client.refreshTokens(tokens.getRefreshToken()).await().indefinitely();
+            currentTokens = tokens;
+        } 
+        // use tokens.getAccessToken() to configure MP RestClient Authorization header/etc
+    }
+}
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>        Tokens tokens = currentTokens;
+        if (tokens.isAccessTokenExpired()) {
+            tokens = client.refreshTokens(tokens.getRefreshToken()).await().indefinitely();
+            currentTokens = tokens;
+        } 
+        // use tokens.getAccessToken() to configure MP RestClient Authorization header/etc
+    }
+}
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>You can selectively register `OidcClientRequestFilter` by using either `io.quarkus.oidc.client.filter.OidcClientFilter` or `org.eclipse.microprofile.rest.client.annotation.RegisterProvider` annotations:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`io.quarkus.oidc.client.filter.OidcClientFilter` または `org.eclipse.microprofile.rest.client.annotation.RegisterProvider` アノテーションを使用して `OidcClientRequestFilter` を選択的に登録することができます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
+import io.quarkus.oidc.client.filter.OidcClientFilter;
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
+import io.quarkus.oidc.client.filter.OidcClientFilter;
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>@RegisterRestClient
+@OidcClientFilter
+@Path("/")
+public interface ProtectedResourceService {
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>@RegisterRestClient
+@OidcClientFilter
+@Path("/")
+public interface ProtectedResourceService {
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>    @GET
+    String getUserName();
+}
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>    @GET
+    String getUserName();
+}
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>import org.eclipse.microprofile.rest.client.annotation.RegisterProvider;
+import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
+import io.quarkus.oidc.client.filter.OidcClientRequestFilter;
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>import org.eclipse.microprofile.rest.client.annotation.RegisterProvider;
+import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
+import io.quarkus.oidc.client.filter.OidcClientRequestFilter;
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>@RegisterRestClient
+@RegisterProvider(OidcClientRequestFilter.class)
+@Path("/")
+public interface ProtectedResourceService {
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>@RegisterRestClient
+@RegisterProvider(OidcClientRequestFilter.class)
+@Path("/")
+public interface ProtectedResourceService {
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>@Provider
+@Priority(Priorities.AUTHENTICATION)
+@RequestScoped
+public class OidcClientRequestCustomFilter implements ClientRequestFilter {
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>@Provider
+@Priority(Priorities.AUTHENTICATION)
+@RequestScoped
+public class OidcClientRequestCustomFilter implements ClientRequestFilter {
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>    @Override
+    public void filter(ClientRequestContext requestContext) throws IOException {
+        requestContext.getHeaders().add(HttpHeaders.AUTHORIZATION, "Bearer " + tokens.getAccessToken());
+    }
+}
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>    @Override
+    public void filter(ClientRequestContext requestContext) throws IOException {
+        requestContext.getHeaders().add(HttpHeaders.AUTHORIZATION, "Bearer " + tokens.getAccessToken());
+    }
+}
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Refreshing Access Tokens</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>アクセストークンの更新</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>quarkus.oidc-client.client-enabled=false
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>quarkus.oidc-client.client-enabled=false
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>quarkus.oidc-client.jwt-secret.auth-server-url=${keycloak.url}/realms/quarkus2/
+quarkus.oidc-client.jwt-secret.client-id=quarkus-app
+quarkus.oidc-client.jwt-secret.credentials.jwt.secret=AyM1SysPpbyDfgZld3umj1qzKObwVMkoqQ-EstJQLr_T-1qS0gZH75aKtMN3Yj0iPS4hcgUuTwjAzZr1Z9CAow
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>quarkus.oidc-client.jwt-secret.auth-server-url=${keycloak.url}/realms/quarkus2/
+quarkus.oidc-client.jwt-secret.client-id=quarkus-app
+quarkus.oidc-client.jwt-secret.credentials.jwt.secret=AyM1SysPpbyDfgZld3umj1qzKObwVMkoqQ-EstJQLr_T-1qS0gZH75aKtMN3Yj0iPS4hcgUuTwjAzZr1Z9CAow
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Note in this case the default client is disabled with a `client-enabled=false` property. The `jwt-secret` client can be accessed like this:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>この場合、デフォルトのクライアントは `client-enabled=false` プロパティーで無効になっていることに注意してください。 `jwt-secret` クライアントは以下のようにアクセスできます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>If you also use link:security-openid-connect-multitenancy[OIDC multitenancy] and each OIDC tenant has its own associated `OidcClient` then you can use a Vert.x `RoutingContext` `tenantId` attribute, for example:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>link:security-openid-connect-multitenancy[OIDC マルチテナンシーを] 使用し、各 OIDC テナントが独自の関連する `OidcClient` を持っている場合は、 Vert.x `RoutingContext` `tenantId` 属性を例えば次のように使用することができます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>quarkus.oidc-client.auth-server-url=${keycloak.url}/realms/quarkus/
+quarkus.oidc-client.client-id=quarkus-app
+quarkus.oidc-client.credentials.secret=mysecret
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>quarkus.oidc-client.auth-server-url=${keycloak.url}/realms/quarkus/
+quarkus.oidc-client.client-id=quarkus-app
+quarkus.oidc-client.credentials.secret=mysecret
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>quarkus.oidc-client.auth-server-url=${keycloak.url}/realms/quarkus/
+quarkus.oidc-client.client-id=quarkus-app
+quarkus.oidc-client.credentials.client-secret.value=mysecret
+quarkus.oidc-client.credentials.client-secret.method=post
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>quarkus.oidc-client.auth-server-url=${keycloak.url}/realms/quarkus/
+quarkus.oidc-client.client-id=quarkus-app
+quarkus.oidc-client.credentials.client-secret.value=mysecret
+quarkus.oidc-client.credentials.client-secret.method=post
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>quarkus.oidc-client.auth-server-url=${keycloak.url}/realms/quarkus/
+quarkus.oidc-client.client-id=quarkus-app
+quarkus.oidc-client.credentials.jwt.secret=AyM1SysPpbyDfgZld3umj1qzKObwVMkoqQ-EstJQLr_T-1qS0gZH75aKtMN3Yj0iPS4hcgUuTwjAzZr1Z9CAow
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>quarkus.oidc-client.auth-server-url=${keycloak.url}/realms/quarkus/
+quarkus.oidc-client.client-id=quarkus-app
+quarkus.oidc-client.credentials.jwt.secret=AyM1SysPpbyDfgZld3umj1qzKObwVMkoqQ-EstJQLr_T-1qS0gZH75aKtMN3Yj0iPS4hcgUuTwjAzZr1Z9CAow
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>`private_key_jwt` with the PEM key file:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`private_key_jwt` with the PEM key file:</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>quarkus.oidc-client.auth-server-url=${keycloak.url}/realms/quarkus/
+quarkus.oidc-client.client-id=quarkus-app
+quarkus.oidc-client.credentials.jwt.key-file=privateKey.pem
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>quarkus.oidc-client.auth-server-url=${keycloak.url}/realms/quarkus/
+quarkus.oidc-client.client-id=quarkus-app
+quarkus.oidc-client.credentials.jwt.key-file=privateKey.pem
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>`private_key_jwt` with the key store file:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`private_key_jwt` with the key store file:</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>quarkus.oidc-client.auth-server-url=${keycloak.url}/realms/quarkus/
+quarkus.oidc-client.client-id=quarkus-app
+quarkus.oidc-client.credentials.jwt.key-store-file=keystore.jks
+quarkus.oidc-client.credentials.jwt.key-store-password=mypassword
+quarkus.oidc-client.credentials.jwt.key-password=mykeypassword
+quarkus.oidc-client.credentials.jwt.key-id=mykey
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>quarkus.oidc-client.auth-server-url=${keycloak.url}/realms/quarkus/
+quarkus.oidc-client.client-id=quarkus-app
+quarkus.oidc-client.credentials.jwt.key-store-file=keystore.jks
+quarkus.oidc-client.credentials.jwt.key-store-password=mypassword
+quarkus.oidc-client.credentials.jwt.key-password=mykeypassword
+quarkus.oidc-client.credentials.jwt.key-id=mykey
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Using `private_key_jwt` or `private_key_jwt` authentication methods ensures that no client secret goes over the wire.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`private_key_jwt` または `private_key_jwt` 認証方法を使用することで、クライアントシークレットが漏れることはありません。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Add the following dependencies to your test project:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>テストプロジェクトに以下の依存関係を追加します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Write Wiremock based `QuarkusTestResourceLifecycleManager`, for example:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>Wiremockベースの `QuarkusTestResourceLifecycleManager` を例えば以下のように書きます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>    @Override
+    public Map&lt;String, String&gt; start() {
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>    @Override
+    public Map&lt;String, String&gt; start() {
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Set `application.properties`, for example:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`application.properties` を次のように設定します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>quarkus.oidc-client.auth-server-url=${keycloak.url}
+quarkus.oidc-client.discovery-enabled=false
+quarkus.oidc-client.token-path=/tokens
+quarkus.oidc-client.client-id=quarkus-app
+quarkus.oidc-client.credentials.secret=secret
+quarkus.oidc-client.grant.type=password
+quarkus.oidc-client.grant-options.password.username=alice
+quarkus.oidc-client.grant-options.password.password=alice
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>quarkus.oidc-client.auth-server-url=${keycloak.url}
+quarkus.oidc-client.discovery-enabled=false
+quarkus.oidc-client.token-path=/tokens
+quarkus.oidc-client.client-id=quarkus-app
+quarkus.oidc-client.credentials.secret=secret
+quarkus.oidc-client.grant.type=password
+quarkus.oidc-client.grant-options.password.username=alice
+quarkus.oidc-client.grant-options.password.password=alice
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
+import io.quarkus.oidc.token.propagation.AccessToken;
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
+import io.quarkus.oidc.token.propagation.AccessToken;
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>@RegisterRestClient
+@AccessToken
+@Path("/")
+public interface ProtectedResourceService {
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>@RegisterRestClient
+@AccessToken
+@Path("/")
+public interface ProtectedResourceService {
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>import org.eclipse.microprofile.rest.client.annotation.RegisterProvider;
+import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
+import io.quarkus.oidc.token.propagation.AccessTokenRequestFilter;
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>import org.eclipse.microprofile.rest.client.annotation.RegisterProvider;
+import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
+import io.quarkus.oidc.token.propagation.AccessTokenRequestFilter;
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>@RegisterRestClient
+@RegisterProvider(AccessTokenRequestFilter.class)
+@Path("/")
+public interface ProtectedResourceService {
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>@RegisterRestClient
+@RegisterProvider(AccessTokenRequestFilter.class)
+@Path("/")
+public interface ProtectedResourceService {
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>JsonWebTokenRequestFilter</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>JsonWebTokenRequestFilter</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
+import io.quarkus.oidc.token.propagation.JsonWebToken;
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
+import io.quarkus.oidc.token.propagation.JsonWebToken;
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>import org.eclipse.microprofile.rest.client.annotation.RegisterProvider;
+import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
+import io.quarkus.oidc.token.propagation.JsonWebTokenRequestFilter;
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>import org.eclipse.microprofile.rest.client.annotation.RegisterProvider;
+import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
+import io.quarkus.oidc.token.propagation.JsonWebTokenRequestFilter;
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>quarkus.oidc-token-propagation.secure-json-web-token=true
+smallrye.jwt.sign.key.location=/privateKey.pem
+# Set a new issuer
+smallrye.jwt.new-token.issuer=http://frontend-resource
+# Set a new audience
+smallrye.jwt.new-token.audience=http://downstream-resource
+# Override the existing token issuer and audience claims if they are already set
+smallrye.jwt.new-token.override-matching-claims=true
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>quarkus.oidc-token-propagation.secure-json-web-token=true
+smallrye.jwt.sign.key.location=/privateKey.pem
+# Set a new issuer
+smallrye.jwt.new-token.issuer=http://frontend-resource
+# Set a new audience
+smallrye.jwt.new-token.audience=http://downstream-resource
+# Override the existing token issuer and audience claims if they are already set
+smallrye.jwt.new-token.override-matching-claims=true
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
         <seg>The plugin also exposes a `quarkusDev` configuration. Using this configuration to declare a dependency will restrict the usage of that dependency to development mode.  The `quarkusDev` configuration can be used as following:</seg>
       </tuv>
       <tuv xml:lang="ja_JP">
