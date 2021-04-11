@@ -33381,6 +33381,286 @@ an open standard since 2015.
     </tu>
     <tu>
       <tuv xml:lang="en">
+        <seg>Interacting with a datastore typically implies first connecting using credentials.  Those credentials will allow the client to be identified, authenticated and eventually authorized.  Username/password based authentication is very common, but that is not by any means the only one.  Such credentials information may appear in the application configuration, but it is becoming increasingly popular to store this type of sensitive information in secure stores, such as HashiCorp Vault, Azure Key Vault or the AWS Secrets Manager to name just a few.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>データストアとのやりとりは、通常、最初にクレデンシャルを使用して接続することを意味します。これらのクレデンシャルによって、クライアントは識別され、認証され、最終的には認可されるようになります。ユーザー名/パスワードベースの認証は非常に一般的ですが、それだけではありません。このようなクレデンシャル情報はアプリケーションの設定に存在するかもしれませんが、HashiCorp Vault、Azure Key Vault、AWS Secrets Managerなどのセキュアなストアにこのタイプの機密情報を保存することが一般的になってきています。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>To bridge datastores that consume credentials, which can take different forms, and secure stores that provide those credentials, Quarkus introduces an intermediate abstraction called `Credentials Provider`, that some extensions may support to consume credentials (e.g. `agroal`), and some others may implement to produce credentials (e.g. `vault`).</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>さまざまな形式をとることができるクレデンシャルを消費するデータストアと、それらのクレデンシャルを提供する安全なストアの橋渡しをするために、Quarkusでは、 `Credentials Provider` と呼ばれる中間的な抽象化を導入しています。これは、一部のエクステンションがクレデンシャルを消費するためにサポートしている場合もあれば(例: `agroal` )、クレデンシャルを生成するために実装している場合もあります(例: `vault` )。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>This Service Programming Interface (SPI) may also be used by implementers that want to support custom providers not yet implemented in Quarkus (e.g. Azure Key Vault).</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>このService Programming Interface(SPI)は、Quarkusにまだ実装されていないカスタムプロバイダ(Azure Key Vaultなど)をサポートしたい実装者が使用することもできます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Currently, the `Credentials Provider` interface is implemented by the `vault` extension, and is supported by the following credentials consumer extensions:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>現在、 `Credentials Provider` インターフェイスは `vault` エクステンションによって実装されており、以下のクレデンシャルコンシューマーエクステンションによってサポートされています。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>`agroal`</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`agroal`</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>`reactive-db2-client`</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`reactive-db2-client`</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>`reactive-mysql-client`</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`reactive-mysql-client`</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>`reactive-pg-client`</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`reactive-pg-client`</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>All extensions that rely on username/password authentication also allow setting configuration properties in the `application.properties` as an alternative. But the `Credentials Provider` is the only option if credentials are generated (e.g. `Vault Dynamic DB Credentials`) or if a custom credentials provider is required.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>ユーザー名/パスワード認証に依存するすべてのエクステンションでは、代替として `application.properties` で設定プロパティーを設定することもできます。しかし、クレデンシャルが生成されている場合 (例: `Vault Dynamic DB Credentials` ) やカスタムのクレデンシャルプロバイダが必要な場合は `Credentials Provider` が唯一のオプションです。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>This guide will show how to use the `Credentials Provider` provided in the `vault` extension, then we will look at implementing a custom `Credentials Provider`, and finally we will talk about additional considerations regarding implementing a `Credentials Provider` in a new extension.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>このガイドでは、 `vault` エクステンションで提供されている `Credentials Provider` の使い方を紹介し、次にカスタム `Credentials Provider` の実装について見ていき、最後に新しいエクステンションで `Credentials Provider` を実装する際の追加考慮事項について説明します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Vault Credentials Provider</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>Vault Credentials Provider</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>To configure a `Vault Credentials Provider` you need to provide the following properties:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`Vault Credentials Provider` を設定するには、以下のプロパティーを提供する必要があります。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>The `&lt;name&gt;` will be used in the consumer to refer to this provider. The `&lt;property&gt;` and `&lt;value&gt;` fields are specific to the `Vault Credentials Provider`. For complete details, please refer to the {vault-datasource-guide}.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`&lt;name&gt;` は、コンシューマーがこのプロバイダーを参照するために使用されます。 `&lt;property&gt;` および `&lt;value&gt;` フィールドは、 `Vault Credentials Provider` に特有です。完全な詳細については、{vault-datasource-guide}を参照してください。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>For instance:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>例えば</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Once defined, the `mydatabase` provider can be used in any extension that supports the `Credentials Provider` interface. For instance in `agroal`:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>一度定義すると、 `mydatabase` プロバイダーは `Credentials Provider` インターフェイスをサポートするすべてのエクステンションで使用することができます。例えば、 `agroal` の場合次のようになります:</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Note that `quarkus.datasource.username` is the original `agroal` property, whereas the `password` property is not included because the value will come from the `mydatabase` credentials provider we just defined.  An alternative is to define both username and password in Vault and drop the `quarkus.datasource.username` property from configuration. All consuming extensions do support the ability to fetch both the username and password from the provider, or just the password.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`quarkus.datasource.username` はオリジナルの `agroal` プロパティですが、値は先ほど定義した `mydatabase`クレデンシャルプロバイダーから取得されるため、`password` プロパティは含まれていません。 別の方法としては、Vault でユーザー名とパスワードの両方を定義し、設定から プロパティーを削除する方法があります。すべてのコンシューマーエクステンションは、ユーザー名とパスワードの両方をプロバイダから取得する機能、またはパスワードのみを取得する機能をサポートしています。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Custom Credentials Provider</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>カスタムクレデンシャルプロバイダー</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Implementing a custom credentials provider is the only option when a vault product is not yet supported in Quarkus, or if credentials need to be retrieved from a custom store.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>カスタムクレデンシャルプロバイダーの実装は、QuarkusでVault製品がまだサポートされていない場合や、カスタムストアからクレデンシャルを取得する必要がある場合の唯一のオプションです。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>The only interface to implement is:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>実装するインターフェースはこれだけです。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>`USER_PROPERTY_NAME` and `PASSWORD_PROPERTY_NAME` are standard properties that should be recognized by any consuming extension that support username/password based authentication.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`USER_PROPERTY_NAME` と `PASSWORD_PROPERTY_NAME` は、ユーザー名/パスワードベースの認証をサポートするすべてのコンシューマーエクステンションで認識されるべき標準的なプロパティーです。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>It is required that implementations be valid `@ApplicationScoped` CDI beans.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>実装は有効な `@ApplicationScoped` CDI Beanであることが要求されます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Here is a simple example:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>簡単な例を挙げてみます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Note that we decided here to return both the username and the password.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>ここでは、ユーザー名とパスワードの両方を返すことにしました。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>This provider may be used in a datasource definition like this:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>このプロバイダは、次のようなデータソースの定義で使用することができます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>It is also possible to pass configuration properties to the provider using standard MicroProfile Config injection:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>標準的なMicroProfile Configインジェクションを使用して、設定プロパティーをプロバイダに渡すことも可能です。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>And in the provider implementation:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>そして、プロバイダの実装では</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>New Credentials Provider extension</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>新しいクレデンシャルプロバイダーエクステンション</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>When creating a custom credentials provider in a new extension, there are a few additional considerations.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>新しいエクステンションでカスタムクレデンシャルプロバイダーを作成する際には、いくつかの追加考慮事項があります。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>First, you need to name it to avoid collisions in case multiple credentials providers are available in the project:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>まず、プロジェクト内で複数のクレデンシャルプロバイダーが利用可能な場合の衝突を避けるために、名前を付ける必要があります。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>It is the responsibility of the consumer to allow a `credentials-provider-name` property:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`credentials-provider-name` のプロパティを許可するのはコンシューマーの責任です。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>The extension should allow runtime config, such as the `CredentialsProviderConfig` from the `vault` extension to configure any custom property in the provider. For an AWS Secrets Manager extension, this could be:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>エクステンションでは、 `vault` エクステンションの `CredentialsProviderConfig` のように、ランタイム設定でプロバイダー内の任意のカスタムプロパティーを設定できるようにしておく必要があります。AWS Secrets Managerエクステンションの場合は、次のようになります。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>`region`</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`region`</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>`credentials-type`</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`credentials-type`</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>`secrets-id`</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`secrets-id`</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Note also that some consumers such as `agroal` will add to their connection configuration any properties returned by the credentials provider, not just the username and password. So when you design the new credentials provider limit the properties to what would be understood by consumers, or provide appropriate configuration options to support different modes.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>また、 `agroal` のようなコンシューマーの中には、ユーザー名とパスワードだけでなく、クレデンシャル・プロバイダが返すプロパティーを接続設定に追加するものがあることにも注意してください。したがって、新しいクレデンシャル・プロバイダーを設計する際には、プロパティーをコンシューマーが理解できるものに限定するか、または異なるモードをサポートするための適切な設定オプションを提供してください。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
         <seg>Kogito is a next generation business automation toolkit that originates from well known Open Source projects Drools (for business rules) and jBPM (for business processes). Kogito aims at providing another approach to business automation where the main message is to expose your business knowledge (processes, rules and decisions)  in a domain specific way.</seg>
       </tuv>
       <tuv xml:lang="ja_JP">
@@ -45579,7 +45859,7 @@ slow down deployment and cold start time or even cost you more.
         <seg>For a full list of possible extension statuses, check our https://quarkus.io/faq/#extension-status[FAQ entry].</seg>
       </tuv>
       <tuv xml:lang="ja_JP">
-        <seg>とりうるエクステンションステータスの完全なリストについては、 link:https://quarkus.io/faq/#extension-status[FAQの項目を] 参照してください。</seg>
+        <seg>とりうるエクステンションステータスの完全なリストについては、 link:https://quarkus.io/faq/#extension-status[FAQの項目] を参照してください。</seg>
       </tuv>
     </tu>
     <tu>
