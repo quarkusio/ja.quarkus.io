@@ -8889,6 +8889,334 @@ author: maxandersen
     </tu>
     <tu>
       <tuv xml:lang="en">
+        <seg>layout: post
+title: Adding Eyecandy to your Quarkus App with React and Patternfly 
+date: 2021-04-15
+tags: web gui react patternfly
+synopsis: Find out how to easily integrate the React and Patternfly GUI frameworks into your projects for development as well as production      
+author: dbrintzi
+---
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>layout: post
+title: ReactとPatternflyでQuarkusアプリの外観を改善する
+date: 2021-04-15
+tags: web gui react patternfly
+synopsis: ReactとPatternflyのGUIフレームワークを、開発や生産のためにプロジェクトに簡単に統合する方法をご紹介します。
+author: dbrintzi
+---
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>A common pattern for containerized and distributed Quarkus applications is to serve as an efficient and scalable backend for a separate frontend application.  In the Kubernetes world a frontend application could be a pure web layer pod such as React, Angular or Vue.js, delegating all REST calls to these Quarkus service layer pods.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>コンテナ化された分散型のQuarkusアプリケーションで一般的なパターンとして、別のフロントエンドアプリケーションのための効率的でスケーラブルなバックエンドとして機能することがあります。Kubernetesの世界では、フロントエンドアプリケーションはReact、Angular、Vue.jsなどの純粋なウェブレイヤーPodであり、すべてのRESTコールをQuarkusのサービスレイヤーPodに委ねることができます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>While this approach has the benefit of independent container scaling as well as an independent lifecycle it may sometimes be over engineered for small applications.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>このアプローチには、独立したコンテナのスケーリングと独立したライフサイクルという利点がありますが、小規模なアプリケーションには過剰なエンジニアリングとなる場合があります。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Perhaps you just want to create a small self-contained CRUD application without compromising in modern web GUI technologies? We have seen how to achieve this with https://quarkus.io/blog/quarkus-and-web-ui-development-mode/[Angular] but what about React which at least according to GitHub stars has surpassed Angular in terms of popularity? It is all about choice and I will show you how you can not only integrate React but also use a web component framework called https://www.patternfly.org/[Patternfly].  Patternfly is a collection of patterns, components and styles for creating rich, consistent and interactive GUIs.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>最新のWeb GUI技術に妥協することなく、自己完結型の小さなCRUDアプリケーションを作りたいと思っているのではないでしょうか？ link:https://quarkus.io/blog/quarkus-and-web-ui-development-mode/[Angular]でこれを実現する方法を見てきましたが、少なくともGitHubの星の数において、人気の点でAngularを上回っているReactはどうでしょうか？今回は、Reactを統合するだけでなく、 link:https://www.patternfly.org/[Patternfly]と呼ばれるWebコンポーネントフレームワークを使用する方法を紹介します。Patternflyは、リッチで一貫性のあるインタラクティブなGUIを作成するためのパターン、コンポーネント、スタイルを集めたものです。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Let's create a Quarkus App with a REST endpoint that serves atomic particle objects to be displayed in a React/Patternfly table.  The sourcecode for the final application can be found https://github.com/nexus-Six/quarkus-gui-react-patternfly[here].</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>React/Patternflyのテーブルに表示される原子パーティクルオブジェクトを提供するRESTエンドポイントを持つQuarkus Appを作成してみましょう。最終的なアプリケーションのソースコードは link:https://github.com/nexus-Six/quarkus-gui-react-patternfly[こちら]にあります。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Step 1 - Generate the Quarkus Project</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>ステップ1 - Quarkusプロジェクトの生成</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>To generate a starter project go to https://code.quarkus.io. Enter 'io.quarkus' as Maven Group and 'quarkus-react' as Artifact.  In the list of extensions choose *RESTEasy JAX-RS* and *RESTEasy JSON-B*. Then generate and download the project, unzip it on your local machine and open the project folder in your favorite IDE.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>スタータープロジェクトを生成するには、 https://code.quarkus.io  にアクセスします。Maven Groupとして "io.quarkus" 、Artifactとして "quarkus-react" を入力します。エクステンションのリストで、 *RESTEasy JAX-RS* と *RESTEasy JSON-B* を選択します。その後、プロジェクトを生成してダウンロードし、ローカル・マシンで解凍して、お気に入りのIDEでプロジェクト・フォルダを開きます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Step 2 - Add the Quarkus REST Endpoint</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>ステップ2 - Quarkus RESTエンドポイントの追加</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>In the Java package folder /src/main/java/io/quarkus where the sample *GreetingResource.java* resides, create a new bean class called *Particle.java* with the following content:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>サンプルの *GreetingResource.java* が存在するJavaパッケージフォルダ/src/main/java/io/quarkusに、 *Particle.java* という名前の新しいBeanクラスを以下の内容で作成します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Now create a new REST resource class called *ParticleResource.java* where we return some test particles (neglecting any atomic physics implications here).</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>ここで、 *ParticleResource.java* という新しいRESTリソースクラスを作成し、いくつかのテストパーティクルを返します（ここでは原子物理学的な意味合いは無視します）。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Test if everything works by starting up Quarkus in dev mode:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>開発モードでQuarkusを起動して、すべてが動作するかどうかをテストします。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>In a new terminal call the endpoint to see your particle response:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>新しい端末で、エンドポイントを呼び出して、パーティクルの応答を確認します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Our Quarkus data layer is now ready, so let's create the React GUI next.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>Quarkusのデータレイヤーの準備ができたので、次はReactのGUIを作りましょう。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Step 3 - Generate the React Project</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>ステップ3 - Reactプロジェクトの生成</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Make sure you have installed *Node.js* and *npm* on your system.  Refer to the https://nodejs.org/en/download/[official documentation] for more information if required.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>お使いのシステムに *Node.js* と *npm* がインストールされていることを確認してください。必要に応じて、 link:https://nodejs.org/en/download/[公式ドキュメント]を参照してください。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Create a new folder in your project /src/main/*webapp* which will be the base folder for your React project. Now open another terminal in this folder, run the React project initializer and then add the Patternfly node module:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>プロジェクト内に新しいフォルダ/src/main/ *webapp* を作成し、これをReactプロジェクトのベースフォルダとします。このフォルダで別のターミナルを開き、Reactプロジェクトイニシャライザを実行して、Patternfly Nodeモジュールを追加します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>When starting the React app it will run on port 3000 by default. When we then try to access our Quarkus endpoint on port 8080 the browser will prevent this due to https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS[CORS security policies].  In production this will not matter as the compiled static React app will be served from Quarkus over port 8080 as well but during development this is an issue.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>Reactアプリを起動すると、デフォルトではポート3000で実行されます。その後、ポート8080でQuarkusのエンドポイントにアクセスしようとすると、 link:https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS[CORSセキュリティポリシー]のためにブラウザがこれを阻止します。本番環境では、コンパイルされた静的なReactアプリがポート8080でQuarkusから提供されるため、これは問題になりませんが、開発中はこれが問題になります。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Fortunately React has a neat little feature called *proxy* which forwards all requests for unknown endpoints to another URL. In the */webapp* folder open the file *package.json* and add the proxy line forwarding everything to our Quarkus port on 8080:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>幸いなことに、Reactには未知のエンドポイントへのすべてのリクエストを別のURLに転送する *proxy* というちょっとした機能があります。 *webapp* フォルダで *package.json* ファイルを開き、proxyの行を追加して、すべてのリクエストをQuarkusのポート8080に転送します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Step 4 - Create a Patternfly Table Component to Populate with our Data</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>ステップ4 - Patternflyのテーブルコンポーネントを作成して、データで埋める</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Import the Patternfly CSS in the React project in */webapp/src/index.js*</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>Reactプロジェクトの */webapp/index.js* にPatternflyのCSSをインポートします。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>In /webapp/src create a new folder called *components*, inside create a file called *particles.js* and generate a Patternfly table by looping over a list of particle objects:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>webapp/srcに *components* という新しいフォルダを作り、その中に *particles.js* というファイルを作り、パーティクルオブジェクトのリストをループさせてPatternflyのテーブルを生成します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Next adjust */webapp/src/App.js* to call our Quarkus service endpoint and render our particle component with the response data:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>次に、 */webapp/src/App.js* を調整して、Quarkusサービスのエンドポイントを呼び出し、レスポンスデータを使ってパーティクルコンポーネントをレンダリングします。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>We are now ready to test our GUI in React development mode.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>これで、Reactの開発モードでGUIをテストする準備が整いました。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Make sure Quarkus is still running in another terminal.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>別のターミナルでQuarkusがまだ起動していることを確認します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>In the */webapp* folder execute :</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>*/webapp* フォルダ内で実行します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>A browser will open to http://localhost:3000.  If not navigate to that URL.  You should see our table dynamically populated from your Quarkus particle backend.  In the developer tools of your browser you will see that the data is actually retrieved from http://localhost:3000/particles</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>ブラウザで http://localhost:3000 を開きます。開かない場合は、そのURLに移動してください。Quarkusのパーティクルバックエンドからテーブルが動的に入力されているのがわかると思います。ブラウザの開発者ツールでは、データが実際に http://localhost:3000/particles から取得されていることがわかります。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>We are running in a double developer mode now. Any changes made to either your Java or Javascript code will be applied immediately.  Isn't that developer bliss?</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>現在、ダブルデベロッパーモードで運用しています。JavaとJavascriptのどちらかのコードに加えられた変更は、すぐに適用されます。これは開発者にとって至福の時ではないでしょうか。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>But what about containerized deployment you ask? Well, once your shiny new GUI app is ready for primetime there are some last adjustments that we need to build runnable jars and images.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>しかし、コンテナを使ったデプロイについてはどうでしょうか？新しいGUIアプリが完成したら、実行可能なjarやイメージを作成するために、いくつかの調整が必要になります。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Step 5 - Prepare our Project for Production Build</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>ステップ5 - プロジェクトの本番ビルドへの準備</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>In */webapp/package.json* add a prod build phase:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>*webapp/package.json* にprodのビルドフェーズを追加:</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>This will do a production build of the static React assets and copy them over into the default Quarkus directory for static files.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>これにより、静的なReactアセットのプロダクションビルドが行われ、Quarkusのデフォルトの静的ファイル用ディレクトリにコピーされます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>The rsync command is specific for Linux.  For other operating systems please substitute with an equivalent command.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>rsyncコマンドは、Linux専用です。他のOSの場合は、同等のコマンドで代用してください。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>For the last step we will add the excellent https://github.com/eirslett/frontend-maven-plugin[frontend-maven-plugin] to our pom.xml that will trigger these React build phases from a normal maven build. Adjust the npm and node versions to match your locally installed ones. The maven install phase would actually install these two packages which can be handy for a CI/CD build or when starting with this project.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>最後のステップでは、優れた link:https://github.com/eirslett/frontend-maven-plugin[frontend-maven-plugin]を pom.xml に追加して、通常の maven ビルドから React のビルドフェーズを起動します。npmとnodeのバージョンを、ローカルにインストールされているものに合わせて調整します。mavenのインストールフェーズでは、実際にこれらの2つのパッケージがインストールされますが、これはCI/CDビルドやこのプロジェクトの起動時に便利です。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Now let's build our runnable jar:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>それでは、実行可能なjarをビルドしてみましょう。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Stop all other running environments to free up the ports and run:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>他の稼働中の環境をすべて停止してポートを空け、実行します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Open your browser to http://localhost:8080 to see you table again, now running from a single optimized Quarkus jar.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>ブラウザで http://localhost:8080 を開くと、最適化された単一のQuarkus jarから実行されているテーブルが表示されます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Take Away</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>まとめ</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>There you go. With just a few easy steps you can use the power of React and Patternfly to add slick looking interactive GUIs to your Quarkus apps.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>いくつかの簡単なステップで、ReactとPatternflyの力を使って、Quarkusアプリに洗練された見た目のインタラクティブなGUIを追加することができます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>How about compiling this app to https://quarkus.io/guides/building-native-image[native] next to deploy an extremely lightweight webapp? Or you may want to look at some of other https://www.patternfly.org/v4/get-started/develop/[Patternfly components] to create a more sophisticated web interface. Either way there no boundaries except for your creativity to make you Quarkus apps shine.       
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>このアプリを次は link:https://quarkus.io/guides/building-native-image[ネイティブ]にコンパイルして、極めて軽量なWebアプリを展開するのはどうでしょうか。あるいは、他の link:https://www.patternfly.org/v4/get-started/develop/[Patternflyコンポーネント]を使用して、より洗練されたウェブインターフェイスを作成することもできます。いずれにしても、Quarkusアプリを輝かせるためには、あなたの創造性以外に制限はありません。
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
         <seg>1.12.2.Final is a maintenance release fixing bugs and improving the documentation.</seg>
       </tuv>
       <tuv xml:lang="ja_JP">
