@@ -14,46 +14,60 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout
+        # Checkout target revision from git repository
         uses: actions/checkout@v2
       - name: Setup build env
+        # Setup build environment(install runtime, library, etc.)
         run: |
           bin/setup-build-env
       - name: Set up JDK 11
+        # Setup JDK 11
         uses: actions/setup-java@v1
         with:
           java-version: 11
       - name: Configure git
+        # Setup git configuration
         run: |
           bin/configure-git
 
       - name: Sync submodule
+        # Sync submodule, which points the upstream repository to a latest revision
         run: bin/sync-submodule
       - name: Push changes
+        # Commit and Push the upstream submodule change
         run: bin/push-changes "Update upstream"
 
       - name: Exec po4a-updatepo
+        # Execute po4a-updatepo to extract texts from the original source files and update .po files
         run: |
           bin/exec-po4a-updatepo
 
       - name: Push changes
+        # Commit and Push the updated .po files
         run: bin/push-changes "Update .po files"
 
       - name: Update translation stats
+        # Update the translation stats .csv file, which is used as an simplified dashboard ( https://github.com/quarkusio/ja.quarkus.io/blob/master/l10n/stats/translation.csv )
         run: bin/update-translation-stats
 
       - name: Push changes
+        # Commit and Push the translation stats .csv file
         run: bin/push-changes "Update translation stats"
 
       - name: Apply tmx
+        # Apply tmx file to .po files to fill known translations
         run: bin/apply-tmx
 
       - name: Push changes
+        # Commit and Push the .po files updated by tmx
         run: bin/push-changes "Apply translation memory"
 
       - name: Machine translate
+        # Apply machine-translation with DeepL API
         run: bin/machine-translate
         env:
           TRANSLATOR_DEEPL_APIKEY: ${{ secrets.TRANSLATOR_DEEPL_APIKEY }}
 
       - name: Push changes
+        # Commit and Push the .po files updated by DeepL machine-translation
         run: bin/push-changes "Add machine translation"

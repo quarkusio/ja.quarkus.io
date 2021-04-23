@@ -7,43 +7,56 @@ jobs:
     name: Deploy Japanese translation to surge.sh
     runs-on: ubuntu-20.04
     steps:
-      # To avoid GitHub Secrets compromise, checkouts merged commit to 'merged' dir and copy its l10n dir to base branch code base
       - name: Checkout base branch
+        # To avoid GitHub Secrets compromise, checkout base branch to get reliable (untainted) build scripts
         uses: actions/checkout@v2
       - name: Checkout merged commit to 'merged' dir
+        # Checkout merged commit to 'merged' dir
         uses: actions/checkout@v2
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           path: merged
       - name: Copy l10n dir
+        # Copy the merged commit's l10n dir to base branch code base for build
         run: |
           rm -rf l10n
           cp -r merged/l10n ./
       - name: Cache bundle directory
+        # Cache ruby bundle directory to speed up build
         uses: actions/cache@v2
         with:
           path: vendor/bundle
           key: ${{ runner.os }}-gem-${{ hashFiles('**/Gemfile.lock') }}
       - name: Setup build env
+        # Setup build environment(install runtime, library, etc.)
         run: |
           bin/setup-build-env
       - name: Configure git
+        # Setup git configuration
         run: |
           bin/configure-git
 
       - name: Exec po4a-translate
+        # Execute po4a-translate to translate files based on .po files
         run: bin/exec-po4a-translate
       - name: Apply override files
+        # Some files cannot be translated by po4a utility.
+        # In that case, the files are copied to `l10n/override/<locale>/` directory and translated manually
+        # This step copies the stored translated files to corresponding location.
         run: bin/exec-override
       - name: Exec jekyll
+        # Execute jekyll to build a localized site
         run: bin/exec-jekyll
       - name: Deploy to surge
+        # Deploy the site to surge.sh
+        # We use surge.sh for pull-request preview because surge.sh supports custom sub-domain and it fits pull-request preview site.
         run: |
           surge docs pr-preview-"${{ github.event.pull_request.number }}"-ja-quarkusio.surge.sh
         env:
           SURGE_LOGIN: ${{ secrets.SURGE_LOGIN }}
           SURGE_TOKEN: ${{ secrets.SURGE_TOKEN }}
       - name: Add comment
+        # Add comment to the pull request to announce the deployed preview site URL.
         uses: actions/github-script@v3.1.0
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}

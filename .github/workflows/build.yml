@@ -21,76 +21,103 @@ on:
 jobs:
   update:
     name: Update files
+    # Update job evaluates changes introduced in current revision and create cascading changes (commits) if necessary
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout
+        # Checkout target revision from git repository
         uses: actions/checkout@v2
         with:
           fetch-depth: 0 # all history (required for getting last modified time of files)
       - name: Cache bundle directory
+        # Cache ruby bundle directory to speed up build
         uses: actions/cache@v2
         with:
           path: vendor/bundle
           key: ${{ runner.os }}-gem-${{ hashFiles('**/Gemfile.lock') }}
       - name: Configure git
+        # Setup git configuration
         run: |
           bin/configure-git
       - name: Setup build env
+        # Setup build environment(install runtime, library, etc.)
         run: |
           bin/setup-build-env
       - name: Update tmx
+        # Update .tmx (translation memory) file from .po files
+        # Translation memory is a kind of dictionary consisted by pairs of a original text and a translated text.
+        # It will be used in sync workflow to fill a translated text to the updated .po files.
         run: bin/update-tmx
 
       - name: Push changes
+        # Commit and Push the .tmx file generated
         run: bin/push-changes "Update tmx"
 
       - name: Update translation stats
+        # Update the translation stats .csv file, which is used as an simplified dashboard ( https://github.com/quarkusio/ja.quarkus.io/blob/master/l10n/stats/translation.csv )
         run: bin/update-translation-stats
 
       - name: Push changes
+        # Commit and Push the translation stats .csv file
         run: bin/push-changes "Update translation stats"
 
       - name: Update override stats
+        # Some files cannot be translated by po4a utility.
+        # In that case, the files are copied to `l10n/override/<locale>/` directory and translated manually.
+        # This step updates the override stats .csv file, which depicts override files are up-to-date or not
         run: |
           bin/update-override-stats
 
       - name: Create issue if override files updated
+        # Create a new issue if override files are updated to notify users the override files needs update
         run: |
           .github/steps/create-issue-if-override-files-updated
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Push changes
+        # Commit and Push the override stats .csv file
         run: bin/push-changes "Update override stats"
 
   deploy-ja:
     name: Deploy Japanese translation to GitHub pages
+    # Deploy a localized site to the GitHub pages
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout
+        # Checkout target revision from git repository
         uses: actions/checkout@v2
       - name: Cache bundle directory
+        # Cache ruby bundle directory to speed up build
         uses: actions/cache@v2
         with:
           path: vendor/bundle
           key: ${{ runner.os }}-gem-${{ hashFiles('**/Gemfile.lock') }}
       - name: Setup build env
+        # Setup build environment(install runtime, library, etc.)
         run: |
           bin/setup-build-env
       - name: Configure git
+        # Setup git configuration
         run: |
           bin/configure-git
 
       - name: Exec po4a-translate
+        # Execute po4a-translate to translate files based on .po files
         run: bin/exec-po4a-translate
 
       - name: Apply override files
+        # Some files cannot be translated by po4a utility.
+        # In that case, the files are copied to `l10n/override/<locale>/` directory and translated manually
+        # This step copies the stored translated files to corresponding location.
         run: bin/exec-override
 
       - name: Exec jekyll
+        # Execute jekyll to build a localized site
         run: bin/exec-jekyll
 
       - name: Deploy to GitHub Pages
+        # Deploy the site to GitHub Pages by committing and pushing the site
         run: |
           echo "ja.quarkus.io" > docs/CNAME
           git add -f docs
