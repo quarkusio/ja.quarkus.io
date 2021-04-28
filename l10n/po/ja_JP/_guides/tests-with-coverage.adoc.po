@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2021-03-30 14:04+0000\n"
+"POT-Creation-Date: 2021-04-28 16:09+0000\n"
 "PO-Revision-Date: 2021-04-14 08:26+0900\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -351,136 +351,113 @@ msgstr ""
 msgid "This Quarkus extension takes care of everything that would usually be done via the Jacoco maven plugin, so no additional config is required."
 msgstr "このQuarkusのエクステンションは、通常はJacoco mavenプラグインで行われることをすべて行いますので、追加の設定は必要ありません。"
 
+#. type: Plain text
+#: upstream/_guides/tests-with-coverage.adoc:180
+msgid "Using both the extension and the plugin requires special configuration, if you add both you will get lots of errors about classes already being instrumented. The configuration needed is detailed below."
+msgstr ""
+
 #. type: Title ==
-#: upstream/_guides/tests-with-coverage.adoc:178
+#: upstream/_guides/tests-with-coverage.adoc:181
 #, no-wrap
 msgid "Running the tests with coverage"
 msgstr "カバレッジ付きテストの実行"
 
 #. type: Plain text
-#: upstream/_guides/tests-with-coverage.adoc:182
+#: upstream/_guides/tests-with-coverage.adoc:185
 msgid "Run `mvn verify`, the tests will be run and the results will end up in `target/jacoco-reports`. This is all that is needed, the `quarkus-jacoco` extension allows Jacoco to just work out of the box."
 msgstr "`mvn verify` を実行すると、テストが実行され、その結果が `target/jacoco-reports` に反映されます。必要なのはこれだけで、 `quarkus-jacoco` のエクステンションを使えば、Jacoco はすぐに動作します。"
 
 #. type: Plain text
-#: upstream/_guides/tests-with-coverage.adoc:184
+#: upstream/_guides/tests-with-coverage.adoc:187
 msgid "There are some config options that affect this:"
 msgstr "これにはいくつかの設定オプションがあります。"
 
 #. type: Title ==
-#: upstream/_guides/tests-with-coverage.adoc:187
+#: upstream/_guides/tests-with-coverage.adoc:190
 #, no-wrap
 msgid "Coverage for tests not using @QuarkusTest"
 msgstr "QuarkusTestを使用していないテストのカバレッジ"
 
 #. type: Plain text
-#: upstream/_guides/tests-with-coverage.adoc:191
+#: upstream/_guides/tests-with-coverage.adoc:194
 msgid "The Quarkus automatic Jacoco config will only work for tests that are annotated with `@QuarkusTest`. If you want to check the coverage of other tests as well then you will need to fall back to the Jacoco maven plugin."
 msgstr "Quarkusの自動Jacoco設定は、 `@QuarkusTest` でアノテーションされたテストに対してのみ機能します。他のテストのカバレッジもチェックしたい場合は、Jacoco mavenプラグインを利用する必要があります。"
 
 #. type: Plain text
-#: upstream/_guides/tests-with-coverage.adoc:194
-msgid "Because Quarkus uses class file transformation it is not possible to use online transformation with the Jacoco agent.  Instead we need to use offline transformation."
-msgstr "Quarkusはクラスファイル変換を使用しているため、Jacocoエージェントでオンライン変換を使用することはできません。代わりにオフライン変換を使用する必要があります。"
-
-#. type: Plain text
 #: upstream/_guides/tests-with-coverage.adoc:196
-msgid "Instead of including the `quarkus-jacoco` extension in your pom you will need the following config:"
+#, fuzzy
+#| msgid "Instead of including the `quarkus-jacoco` extension in your pom you will need the following config:"
+msgid "In addition to including the `quarkus-jacoco` extension in your pom you will need the following config:"
 msgstr "`quarkus-jacoco` エクステンションをpomに含める代わりに、以下のような設定が必要になります。"
 
 #. type: delimited block -
-#: upstream/_guides/tests-with-coverage.adoc:246
+#: upstream/_guides/tests-with-coverage.adoc:230
 #, no-wrap
 msgid ""
 "<project>\n"
-"    ...\n"
-"    <dependencies>\n"
-"    ...\n"
-"        <dependency>\n"
-"          <groupId>org.jacoco</groupId>\n"
-"          <artifactId>org.jacoco.agent</artifactId>\n"
-"          <classifier>runtime</classifier>\n"
-"          <scope>test</scope>\n"
-"          <version>${jacoco.version}</version>\n"
-"        </dependency>\n"
-"    ...\n"
-"    </dependencies>\n"
 "    <build>\n"
 "        <plugins>\n"
 "            ...\n"
-"            <plugin>\n"
-"                <groupId>org.jacoco</groupId>\n"
-"                <artifactId>jacoco-maven-plugin</artifactId>\n"
-"                <version>${jacoco.version}</version>\n"
-"                <executions>\n"
-"                    <execution>\n"
-"                        <id>instrument-ut</id>\n"
-"                        <goals>\n"
-"                            <goal>instrument</goal>\n"
-"                        </goals>\n"
-"                    </execution>\n"
-"                    <execution>\n"
-"                        <id>restore-ut</id>\n"
-"                        <goals>\n"
-"                            <goal>restore-instrumented-classes</goal>\n"
-"                        </goals>\n"
-"                    </execution>\n"
-"                    <execution>\n"
-"                        <id>report-ut</id>\n"
-"                        <goals>\n"
-"                            <goal>report</goal>\n"
-"                        </goals>\n"
-"                        <configuration>\n"
-"                            <outputDirectory>${project.reporting.outputDirectory}/jacoco-reports</outputDirectory>\n"
-"                        </configuration>\n"
-"                    </execution>\n"
-"                </executions>\n"
-"            </plugin>\n"
+"          <plugin>\n"
+"            <groupId>org.jacoco</groupId>\n"
+"            <artifactId>jacoco-maven-plugin</artifactId>\n"
+"            <executions>\n"
+"              <execution>\n"
+"                <id>default-prepare-agent</id>\n"
+"                <goals>\n"
+"                  <goal>prepare-agent</goal>\n"
+"                </goals>\n"
+"                <configuration>\n"
+"                  <exclClassLoaders>*QuarkusClassLoader</exclClassLoaders>  <1>\n"
+"                </configuration>\n"
+"              </execution>\n"
+"              <execution>\n"
+"                <id>default-prepare-agent-integration</id> <2>\n"
+"                <goals>\n"
+"                  <goal>prepare-agent-integration</goal>\n"
+"                </goals>\n"
+"                <configuration>\n"
+"                  <exclClassLoaders>*QuarkusClassLoader</exclClassLoaders>\n"
+"                </configuration>\n"
+"              </execution>\n"
+"            </executions>\n"
+"          </plugin>\n"
 "        </plugins>\n"
 "    </build>\n"
 "</project>\n"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_guides/tests-with-coverage.adoc:249
-msgid "It also requires a small change in the Surefire configuration. Note below that we specified `jacoco-agent.destfile` as a system property in the default case (unit tests) and for the integration tests."
-msgstr "また、Surefireの設定を少し変更する必要があります。デフォルトの場合(ユニットテスト)と統合テストでは、システムのプロパティーとして `jacoco-agent.destfile` を指定していることに注意してください。"
+#: upstream/_guides/tests-with-coverage.adoc:232
+msgid "This config tells it to ignore `@QuarkusTest` related classes, as they are loaded by `QuarkusClassLoader`"
+msgstr ""
 
-#. type: delimited block -
-#: upstream/_guides/tests-with-coverage.adoc:271
-#, no-wrap
-msgid ""
-"<project>\n"
-"    ...\n"
-"    <build>\n"
-"        <plugins>\n"
-"            ...\n"
-"            <plugin>\n"
-"                <artifactId>maven-surefire-plugin</artifactId>\n"
-"                <version>${surefire-plugin.version}</version>\n"
-"                <configuration>\n"
-"                    <systemPropertyVariables>\n"
-"                        <jacoco-agent.destfile>${project.build.directory}/jacoco.exec</jacoco-agent.destfile>\n"
-"                        <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>\n"
-"                        <maven.home>${maven.home}</maven.home>\n"
-"                    </systemPropertyVariables>\n"
-"                </configuration>\n"
-"            </plugin>\n"
-"        </plugins>\n"
-"    </build>\n"
-"</project>\n"
+#. type: Plain text
+#: upstream/_guides/tests-with-coverage.adoc:233
+msgid "This is only needed if you are using Failsafe to run integration tests"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/tests-with-coverage.adoc:236
+msgid "This config will only work if at least one `@QuarkusTest` is being run. If you are not using `@QuarkusTest` then you can simply use the Jacoco plugin in the standard manner with no additional config."
 msgstr ""
 
 #. type: Title ==
-#: upstream/_guides/tests-with-coverage.adoc:273
+#: upstream/_guides/tests-with-coverage.adoc:238
 #, no-wrap
 msgid "Conclusion"
 msgstr "まとめ"
 
 #. type: Plain text
-#: upstream/_guides/tests-with-coverage.adoc:276
+#: upstream/_guides/tests-with-coverage.adoc:241
 msgid "You now have all the information you need to study the coverage of your tests! But remember, some code that is not covered is certainly not well tested. But some code that is covered is not necessarily *well* tested. Make sure to write good tests!"
 msgstr "これで、テストのカバレッジを研究するために必要なすべての情報を手に入れることができました!しかし、カバーされていないコードは、確かに十分にテストされていないものがありますが、カバーされているコードの中には、必ずしも *十分に* テストされていないものもあることを覚えておいてください。良いテストを書くようにしましょう!"
+
+#~ msgid "Because Quarkus uses class file transformation it is not possible to use online transformation with the Jacoco agent.  Instead we need to use offline transformation."
+#~ msgstr "Quarkusはクラスファイル変換を使用しているため、Jacocoエージェントでオンライン変換を使用することはできません。代わりにオフライン変換を使用する必要があります。"
+
+#~ msgid "It also requires a small change in the Surefire configuration. Note below that we specified `jacoco-agent.destfile` as a system property in the default case (unit tests) and for the integration tests."
+#~ msgstr "また、Surefireの設定を少し変更する必要があります。デフォルトの場合(ユニットテスト)と統合テストでは、システムのプロパティーとして `jacoco-agent.destfile` を指定していることに注意してください。"
 
 #, fuzzy
 #~ msgid "But also a `@QuarkusTest`:"
