@@ -1,0 +1,865 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2021-05-07 17:34+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. This guide is maintained in the main Quarkus repository
+#. and pull requests should be submitted there:
+#. https://github.com/quarkusio/quarkus/tree/main/docs/src/main/asciidoc
+#. type: Title =
+#: upstream/_versions/main/guides/micrometer.adoc:6
+#, no-wrap
+msgid "Quarkus - Micrometer Metrics"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:12
+msgid "This guide demonstrates how your Quarkus application can utilize the Micrometer metrics library for runtime and application metrics."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:16
+msgid "Apart from application-specific metrics, which are described in this guide, you may also utilize built-in metrics exposed by various Quarkus extensions. These are described in the guide for each particular extension that supports built-in metrics."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:18
+msgid "Micrometer is the recommended approach to metrics for Quarkus."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/micrometer.adoc:19
+#, no-wrap
+msgid "Prerequisites"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:22
+msgid "To complete this guide, you need:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:24
+msgid "less than 15 minutes"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:25
+msgid "an IDE"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:26
+msgid "JDK 11+ installed with `JAVA_HOME` configured appropriately"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:27
+msgid "Apache Maven {maven-version}"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/micrometer.adoc:28
+#, no-wrap
+msgid "Architecture"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:36
+msgid "Micrometer defines a core library providing a registration mechanism for Metrics, and core metric types (Counters, Gauges, Timers, Distribution Summaries, etc.). These core types provide an abstraction layer that can be adapted to different backend monitoring systems. In essence, your application (or a library) can `register` a `Counter`, `Gauge`, `Timer`, or `DistributionSummary` with a `MeterRegistry`. Micrometer will then delegate that registration to one or more implementations, where each implementation handles the unique considerations for the associated monitoring stack."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:42
+msgid "Micrometer uses naming conventions to translate between registered Meters and the conventions used by various backend registries. Meter names, for example, should be created and named using dots to separate segments, `a.name.like.this`.  Micrometer then translates that name into the format that the selected registry prefers. Prometheus uses underscores, which means the previous name will appear as `a_name_like_this` in Prometheus-formatted metrics output."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/micrometer.adoc:43
+#, no-wrap
+msgid "Solution"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:47
+msgid "We recommend that you follow the instructions in the next sections and create the application step by step.  You can skip right to the solution if you prefer. Either:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:49
+msgid "Clone the git repository: `git clone {quickstarts-clone-url}`, or"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:50
+msgid "Download an {quickstarts-archive-url}[archive]."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:52
+msgid "The solution is located in the `micrometer-quickstart` {quickstarts-tree-url}/micrometer-quickstart[directory]."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/micrometer.adoc:53
+#, no-wrap
+msgid "Creating the Maven Project"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:58
+msgid "Quarkus Micrometer extensions are structured similarly to Micrometer itself: `quarkus-micrometer` provides core micrometer support and runtime integration and other Quarkus and Quarkiverse extensions bring in additional dependencies and requirements to support specific monitoring systems."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:60
+msgid "For this example, we'll use the Prometheus registry."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:62
+msgid "First, we need a new project. Create a new project with the following command:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/micrometer.adoc:72
+#, no-wrap
+msgid ""
+"mvn io.quarkus:quarkus-maven-plugin:{quarkus-version}:create \\\n"
+"    -DprojectGroupId=org.acme \\\n"
+"    -DprojectArtifactId=micrometer-quickstart \\\n"
+"    -DclassName=\"org.acme.micrometer.ExampleResource\" \\\n"
+"    -Dpath=\"/\" \\\n"
+"    -Dextensions=\"resteasy,micrometer-registry-prometheus\"\n"
+"cd micrometer-quickstart\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:77
+msgid "This command generates a Maven project, that imports the `micrometer-registry-prometheus` extension as a dependency.  This extension will load the core `micrometer` extension as well as additional library dependencies required to support prometheus."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:80
+msgid "If you already have your Quarkus project configured, you can add the `micrometer-registry-prometheus` extension to your project by running the following command in your project base directory:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/micrometer.adoc:84
+#, no-wrap
+msgid "./mvnw quarkus:add-extension -Dextensions=\"micrometer-registry-prometheus\"\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:87
+msgid "This will add the following to your `pom.xml`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/micrometer.adoc:94
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-micrometer-registry-prometheus</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/micrometer.adoc:96
+#, no-wrap
+msgid "Writing the application"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:101
+msgid "Micrometer provides an API that allows you to construct your own custom metrics. The most common types of meters supported by monitoring systems are gauges, counters, and summaries. The following sections build an example endpoint, and observes endpoint behavior using these basic meter types."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:104
+msgid "To register meters, you need a reference to a `MeterRegistry`, which is configured and maintained by the Micrometer extension. The `MeterRegistry` can be injected into your application as follows:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/micrometer.adoc:108
+#, no-wrap
+msgid "package org.acme.micrometer;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/micrometer.adoc:110
+#, no-wrap
+msgid "import io.micrometer.core.instrument.MeterRegistry;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/micrometer.adoc:115
+#, no-wrap
+msgid ""
+"import javax.ws.rs.GET;\n"
+"import javax.ws.rs.Path;\n"
+"import javax.ws.rs.PathParam;\n"
+"import javax.ws.rs.Produces;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/micrometer.adoc:119
+#, no-wrap
+msgid ""
+"@Path(\"/example\")\n"
+"@Produces(\"text/plain\")\n"
+"public class ExampleResource {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/micrometer.adoc:121
+#, no-wrap
+msgid "    private final MeterRegistry registry;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/micrometer.adoc:126
+#, no-wrap
+msgid ""
+"    ExampleResource(MeterRegistry registry) {\n"
+"        this.registry = registry;\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:131
+msgid "Micrometer maintains an internal mapping between unique metric identifier and tag combinations and specific meter instances. Using `register`, `counter`, or other methods to increment counters or record values does not create a new instance of a meter unless that combination of identifier and tag/label values hasn't been seen before."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/main/guides/micrometer.adoc:132
+#, no-wrap
+msgid "Gauges"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:137
+msgid "Gauges measure a value that can increase or decrease over time, like the speedometer on a car. Gauges can be useful when monitoring the statistics for a cache or collection. Consider the following simple example that observes the size of a list:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/micrometer.adoc:141
+#, no-wrap
+msgid "    LinkedList<Long> list = new LinkedList<>();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/micrometer.adoc:147
+#, no-wrap
+msgid ""
+"    // Update the constructor to create the gauge\n"
+"    ExampleResource(MeterRegistry registry) {\n"
+"        this.registry = registry;\n"
+"        registry.gaugeCollectionSize(\"example.list.size\", Tags.empty(), list);\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/micrometer.adoc:164
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @Path(\"gauge/{number}\")\n"
+"    public Long checkListSize(@PathParam(\"number\") long number) {\n"
+"        if (number == 2 || number % 2 == 0) {\n"
+"            // add even numbers to the list\n"
+"            list.add(number);\n"
+"        } else {\n"
+"            // remove items from the list for odd numbers\n"
+"            try {\n"
+"                number = list.removeFirst();\n"
+"            } catch (NoSuchElementException nse) {\n"
+"                number = 0;\n"
+"            }\n"
+"        }\n"
+"        return number;\n"
+"    }\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:168
+msgid "Note that even numbers are added to the list, and odd numbers remove an element from the list. Try the following sequence and look for `example_list_size` in the plain text output:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/micrometer.adoc:173
+#, no-wrap
+msgid ""
+"# Compile and run the app in dev mode:\n"
+"./mvnw compile quarkus:dev\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/micrometer.adoc:182
+#, no-wrap
+msgid ""
+"curl http://localhost:8080/example/gauge/1\n"
+"curl http://localhost:8080/example/gauge/2\n"
+"curl http://localhost:8080/example/gauge/4\n"
+"curl http://localhost:8080/q/metrics\n"
+"curl http://localhost:8080/example/gauge/6\n"
+"curl http://localhost:8080/example/gauge/5\n"
+"curl http://localhost:8080/example/gauge/7\n"
+"curl http://localhost:8080/q/metrics\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:187
+msgid "It is important to note that gauges are sampled rather than set; there is no record of how the value associated with a gauge might have changed between measurements. In this example, the size of the list is observed when the Prometheus endpoint is visited."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:191
+msgid "Micrometer provides a few additional mechanisms for creating gauges. Note that Micrometer does not create strong references to the objects it observes by default. Depending on the registry, Micrometer either omits gauges that observe objects that have been garbage-collected entirely or uses `NaN` (not a number) as the observed value."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:195
+msgid "When should you use a Gauge? Only if you can't use something else. Never gauge something you can count. Gauges can be less straight-forward to use than counters. If what you are measuring can be counted (because the value always increments), use a counter instead."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/main/guides/micrometer.adoc:196
+#, no-wrap
+msgid "Counters"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:200
+msgid "Counters are used to measure values that only increase. In the example below, you will count the number of times you test a number to see if it is prime:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/micrometer.adoc:212
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @Path(\"prime/{number}\")\n"
+"    public String checkIfPrime(@PathParam(\"number\") long number) {\n"
+"        if (number < 1) {\n"
+"            return \"Only natural numbers can be prime numbers.\";\n"
+"        }\n"
+"        if (number == 1 || number == 2 || number % 2 == 0) {\n"
+"            return number + \" is not prime.\";\n"
+"        }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/micrometer.adoc:219
+#, no-wrap
+msgid ""
+"        if ( testPrimeNumber(number) ) {\n"
+"            return number + \" is prime.\";\n"
+"        } else {\n"
+"            return number + \" is not prime.\";\n"
+"        }\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/micrometer.adoc:230
+#, no-wrap
+msgid ""
+"    protected boolean testPrimeNumber(long number) {\n"
+"        // Count the number of times we test for a prime number\n"
+"        registry.counter(\"example.prime.number\").increment();\n"
+"        for (int i = 3; i < Math.floor(Math.sqrt(number)) + 1; i = i + 2) {\n"
+"            if (number % i == 0) {\n"
+"                return false;\n"
+"            }\n"
+"        }\n"
+"        return true;\n"
+"    }\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:236
+msgid "It might be tempting to add a label or tag to the counter indicating what value was checked, but remember that each unique combination of metric name (`example.prime.number`) and label value produces a unique time series. Using an unbounded set of data as label values can lead to a \"cardinality explosion\", an exponential increase in the creation of new time series."
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/main/guides/micrometer.adoc:243
+msgid "Label and tag can be used interchangably. You may also see \"attribute\" used in this context in some documentation.  The gist is each that each label or tag or attribute defines an additional bit of information associated with the single numerical measurement that helps you classify, group, or aggregate the measured value later. The Micrometer API uses `Tag` as the mechanism for specifying this additional data."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:247
+msgid "It is possible to add a tag that would convey a little more information, however. Let's adjust our code, and move the counter to add some tags to convey additional information."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/micrometer.adoc:265
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @Path(\"prime/{number}\")\n"
+"    public String checkIfPrime(@PathParam(\"number\") long number) {\n"
+"        if (number < 1) {\n"
+"            registry.counter(\"example.prime.number\", \"type\", \"not-natural\").increment();\n"
+"            return \"Only natural numbers can be prime numbers.\";\n"
+"        }\n"
+"        if (number == 1 ) {\n"
+"            registry.counter(\"example.prime.number\", \"type\", \"one\").increment();\n"
+"            return number + \" is not prime.\";\n"
+"        }\n"
+"        if (number == 2 || number % 2 == 0) {\n"
+"            registry.counter(\"example.prime.number\", \"type\", \"even\").increment();\n"
+"            return number + \" is not prime.\";\n"
+"        }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/micrometer.adoc:274
+#, no-wrap
+msgid ""
+"        if ( testPrimeNumber(number) ) {\n"
+"            registry.counter(\"example.prime.number\", \"type\", \"prime\").increment();\n"
+"            return number + \" is prime.\";\n"
+"        } else {\n"
+"            registry.counter(\"example.prime.number\", \"type\", \"not-prime\").increment();\n"
+"            return number + \" is not prime.\";\n"
+"        }\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/micrometer.adoc:283
+#, no-wrap
+msgid ""
+"    protected boolean testPrimeNumber(long number) {\n"
+"        for (int i = 3; i < Math.floor(Math.sqrt(number)) + 1; i = i + 2) {\n"
+"            if (number % i == 0) {\n"
+"                return false;\n"
+"            }\n"
+"        }\n"
+"        return true;\n"
+"    }\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:289
+msgid "Looking at the data produced by this counter, you can tell how often a negative number was checked, or the number one, or an even number, and so on. Try the following sequence and look for `example_prime_number_total` in the plain text output. Note that the `_total` suffix is added when Micrometer applies Prometheus naming conventions to `example.prime.number`, the originally specified counter name."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/micrometer.adoc:294
+#: upstream/_versions/main/guides/micrometer.adoc:345
+#, no-wrap
+msgid ""
+"# If you did not leave quarkus running in dev mode, start it again:\n"
+"./mvnw compile quarkus:dev\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/micrometer.adoc:302
+#, no-wrap
+msgid ""
+"curl http://localhost:8080/example/prime/-1\n"
+"curl http://localhost:8080/example/prime/0\n"
+"curl http://localhost:8080/example/prime/1\n"
+"curl http://localhost:8080/example/prime/2\n"
+"curl http://localhost:8080/example/prime/3\n"
+"curl http://localhost:8080/example/prime/15\n"
+"curl http://localhost:8080/q/metrics\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:308
+msgid "When should you use a counter? Only if you are doing something that can not be either timed (or summarized).  Counters only record a count, which may be all that is needed. However, if you want to understand more about how a value is changing, a timer (when the base unit of measurement is time) or a distribution summary might be more appropriate."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/main/guides/micrometer.adoc:309
+#, no-wrap
+msgid "Summaries and Timers"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:314
+msgid "Timers and distribution summaries in Micrometer are very similar. Both allow you to record an observed value, which will be aggregated with other recorded values and stored as a sum. Micrometer also increments a counter to indicate the number of measurements that have been recorded and tracks the maximum observed value (within a decaying interval)."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:319
+msgid "Distribution summaries are populated by calling the `record` method to record observed values, while timers provide additional capabilities specific to working with time and measuring durations. For example, we can use a timer to measure how long it takes to calculate prime numbers using one of the `record` methods that wraps the invocation of a Supplier function:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/micrometer.adoc:333
+#, no-wrap
+msgid ""
+"    protected boolean testPrimeNumber(long number) {\n"
+"        Timer timer = registry.timer(\"example.prime.number.test\");\n"
+"        return timer.record(() -> {\n"
+"            for (int i = 3; i < Math.floor(Math.sqrt(number)) + 1; i = i + 2) {\n"
+"                if (number % i == 0) {\n"
+"                    return false;\n"
+"                }\n"
+"            }\n"
+"            return true;\n"
+"        });\n"
+"    }\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:340
+msgid "Micrometer will apply Prometheus conventions when emitting metrics for this timer. Prometheus measures time in seconds.  Micrometer converts measured durations into seconds and includes the unit in the metric name, per convention. After visiting the prime endpoint a few more times, look in the plain text output for the following three entries: `example_prime_number_test_seconds_count`, `example_prime_number_test_seconds_sum`, and `example_prime_number_test_seconds_max`."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/micrometer.adoc:350
+#, no-wrap
+msgid ""
+"curl http://localhost:8080/example/prime/256\n"
+"curl http://localhost:8080/q/metrics\n"
+"curl http://localhost:8080/example/prime/7919\n"
+"curl http://localhost:8080/q/metrics\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:355
+msgid "Both timers and distribution summaries can be configured to emit additional statistics, like histogram data, precomputed percentiles, or service level objective (SLO) boundaries. Note that the count, sum, and histogram data can be re-aggregated across dimensions (or across a series of instances), while precomputed percentile values cannot."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/main/guides/micrometer.adoc:356
+#, no-wrap
+msgid "Review automatically generated metrics"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:359
+msgid "To view metrics, execute `curl localhost:8080/q/metrics/`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:364
+msgid "The Micrometer extension automatically times HTTP server requests. Following Prometheus naming conventions for timers, look for `http_server_requests_seconds_count`, `http_server_requests_seconds_sum`, and `http_server_requests_seconds_max`. Dimensional labels have been added for the requested uri, the HTTP method (GET, POST, etc.), the status code (200, 302, 404, etc.), and a more general outcome field."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/micrometer.adoc:375
+#, no-wrap
+msgid ""
+"# HELP http_server_requests_seconds\n"
+"# TYPE http_server_requests_seconds summary\n"
+"http_server_requests_seconds_count{method=\"GET\",outcome=\"SUCCESS\",status=\"200\",uri=\"/example/prime/{number}\",} 1.0\n"
+"http_server_requests_seconds_sum{method=\"GET\",outcome=\"SUCCESS\",status=\"200\",uri=\"/example/prime/{number}\",} 0.017385896\n"
+"# HELP http_server_requests_seconds_max\n"
+"# TYPE http_server_requests_seconds_max gauge\n"
+"http_server_requests_seconds_max{method=\"GET\",outcome=\"SUCCESS\",status=\"200\",uri=\"/example/prime/{number}\",} 0.017385896\n"
+"#\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:379
+msgid "Note that metrics appear lazily, you often won't see any data for your endpoint until something tries to access it, etc."
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/main/guides/micrometer.adoc:380
+#, no-wrap
+msgid "Ignoring endpoints"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:387
+msgid "You can disable measurement of HTTP endpoints using the `quarkus.micrometer.binder.http-server.ignore-patterns` property. This property accepts a comma-separated list of simple regex match patterns identifying URI paths that should be ignored. For example, setting `quarkus.micrometer.binder.http-server.ignore-patterns=/example/prime/[0-9]+` will ignore a request to `http://localhost:8080/example/prime/7919`. A request to `http://localhost:8080/example/gauge/7919` would still be measured."
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/main/guides/micrometer.adoc:388
+#, no-wrap
+msgid "URI templates"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:393
+msgid "The micrometer extension will make a best effort at representing URIs containing path parameters in templated form.  Using examples from above, a request to `http://localhost:8080/example/prime/7919` should appear as an attribute of `http_server_requests_seconds_*` metrics with a value of `uri=/example/prime/{number}`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:399
+msgid "Use the `quarkus.micrometer.binder.http-server.match-patterns` property if the correct URL can not be determined. This property accepts a comma-separated list defining an association between a simple regex match pattern and a replacement string. For example, setting `quarkus.micrometer.binder.http-server.match-patterns=/example/prime/[0-9]+=/example/{jellybeans}` would use the value `/example/{jellybeans}` for the uri attribute any time the requested uri matches `/example/prime/[0-9]+`."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/micrometer.adoc:400
+#, no-wrap
+msgid "Using MeterFilter to configure metrics"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:405
+msgid "Micrometer uses `MeterFilter` instances to customize the metrics emitted by `MeterRegistry` instances.  The Micrometer extension will detect `MeterFilter` CDI beans and use them when initializing `MeterRegistry` instances."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/micrometer.adoc:410
+#, no-wrap
+msgid ""
+"@Singleton\n"
+"public class CustomConfiguration {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/micrometer.adoc:413
+#, no-wrap
+msgid ""
+"    @ConfigProperty(name = \"deployment.env\")\n"
+"    String deploymentEnv;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/micrometer.adoc:422
+#, no-wrap
+msgid ""
+"    /** Define common tags that apply only to a Prometheus Registry */\n"
+"    @Produces\n"
+"    @Singleton\n"
+"    @MeterFilterConstraint(applyTo = PrometheusMeterRegistry.class)\n"
+"    public MeterFilter configurePrometheusRegistries() {\n"
+"        return MeterFilter.commonTags(Arrays.asList(\n"
+"                Tag.of(\"registry\", \"prometheus\")));\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/micrometer.adoc:430
+#, no-wrap
+msgid ""
+"    /** Define common tags that apply globally */\n"
+"    @Produces\n"
+"    @Singleton\n"
+"    public MeterFilter configureAllRegistries() {\n"
+"        return MeterFilter.commonTags(Arrays.asList(\n"
+"                Tag.of(\"env\", deploymentEnv)));\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/micrometer.adoc:450
+#, no-wrap
+msgid ""
+"    /** Enable histogram buckets for a specific timer */\n"
+"    @Produces\n"
+"    @Singleton\n"
+"    public MeterFilter enableHistogram() {\n"
+"        return new MeterFilter() {\n"
+"            @Override\n"
+"            public DistributionStatisticConfig configure(Meter.Id id, DistributionStatisticConfig config) {\n"
+"                if(id.getName().startsWith(\"myservice\")) {\n"
+"                    return DistributionStatisticConfig.builder()\n"
+"                        .percentiles(0.5, 0.95)     // median and 95th percentile, not aggregable\n"
+"                        .percentilesHistogram(true) // histogram buckets (e.g. prometheus histogram_quantile)\n"
+"                        .build()\n"
+"                        .merge(config);\n"
+"                }\n"
+"                return config;\n"
+"            }\n"
+"        };\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:457
+msgid "In this example, a singleton CDI bean will produce two different `MeterFilter` beans. One will be applied only to Prometheus `MeterRegistry` instances (using the `@MeterFilterConstraint` qualifier), and another will be applied to all `MeterRegistry` instances. An application configuration property is also injected and used as a tag value.  Additional examples of MeterFilters can be found in the link:https://micrometer.io/docs/concepts[official documentation]."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/micrometer.adoc:458
+#, no-wrap
+msgid "Does Micrometer support annotations?"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:463
+msgid "Micrometer does define two annotations, `@Counted` and `@Timed`, that can be added to methods. The `@Timed` annotation will wrap the execution of a method and will emit the following tags in addition to any tags defined on the annotation itself: class, method, and exception (either \"none\" or the simple class name of a detected exception)."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:466
+msgid "Using annotations is limited, as you can't dynamically assign meaningful tag values. Also note that many methods, e.g.  REST endpoint methods or Vert.x Routes, are counted and timed by the micrometer extension out of the box."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/micrometer.adoc:467
+#, no-wrap
+msgid "Using other Registry implementations"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:474
+msgid "If you aren't using Prometheus, you have a few options. Some Micrometer registry implementations have been wrapped in https://github.com/quarkiverse/quarkiverse-micrometer-registry[Quarkiverse extensions].  To use the Micrometer StackDriver MeterRegistry, for example, you would use the `quarkus-micrometer-registry-stackdriver` extension:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/micrometer.adoc:481
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"    <groupId>io.quarkiverse</groupId>\n"
+"    <artifactId>quarkus-micrometer-registry-stackdriver</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:485
+msgid "If the Micrometer registry you would like to use does not yet have an associated extension, use the `quarkus-micrometer` extension and bring in the packaged MeterRegistry dependency directly:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/micrometer.adoc:496
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-micrometer</artifactId>\n"
+"</dependency>\n"
+"<dependency>\n"
+"    <groupId>com.acme</groupId>\n"
+"    <artifactId>custom-micrometer-registry</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:500
+msgid "You will then need to specify your own provider to configure and initialize the MeterRegistry, as discussed in the next section."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/micrometer.adoc:501
+#, no-wrap
+msgid "Creating a customized MeterRegistry"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:504
+msgid "Use a custom `@Produces` method to create and configure a customized `MeterRegistry` if you need to."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:506
+msgid "The following example customizes the line format used for StatsD:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/micrometer.adoc:514
+#, no-wrap
+msgid ""
+"@Produces\n"
+"@Singleton\n"
+"public StatsdMeterRegistry createStatsdMeterRegistry(StatsdConfig statsdConfig, Clock clock) {\n"
+"    // define what to do with lines\n"
+"    Consumer<String> lineLogger = line -> logger.info(line);\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/micrometer.adoc:521
+#, no-wrap
+msgid ""
+"    // inject a configuration object, and then customize the line builder\n"
+"    return StatsdMeterRegistry.builder(statsdConfig)\n"
+"          .clock(clock)\n"
+"          .lineSink(lineLogger)\n"
+"          .build();\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:525
+msgid "This example corresponds to the following instructions in the Micrometer documentation: https://micrometer.io/docs/registry/statsD#_customizing_the_metrics_sink"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:530
+msgid "Note that the method returns the specific type of `MeterRegistry` as a `@Singleton`. Use MicroProfile Config to inject any configuration attributes you need to configure the registry. Most Micrometer registry extensions, like `quarkus-micrometer-registry-statsd`, define a producer for registry-specific configuration objects that are integrated with the Quarkus configuration model."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/micrometer.adoc:531
+#, no-wrap
+msgid "Support for the MicroProfile Metrics API"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:537
+msgid "If you use the MicroProfile Metrics API in your application, the Micrometer extension will create an adaptive layer to map those metrics into the Micrometer registry. Note that naming conventions between the two systems is different, so the metrics that are emitted when using MP Metrics with Micrometer will change.  You can use a `MeterFilter` to remap names or tags according to your conventions."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/micrometer.adoc:544
+#, no-wrap
+msgid ""
+"@Produces\n"
+"@Singleton\n"
+"public MeterFilter renameApplicationMeters() {\n"
+"    final String targetMetric = MPResourceClass.class.getName() + \".mpAnnotatedMethodName\";\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/micrometer.adoc:559
+#, no-wrap
+msgid ""
+"    return MeterFilter() {\n"
+"        @Override\n"
+"        public Meter.Id map(Meter.Id id) {\n"
+"            if (id.getName().equals(targetMetric)) {\n"
+"                // Drop the scope tag (MP Registry type: application, vendor, base)\n"
+"                List<Tag> tags = id.getTags().stream().filter(x -> !\"scope\".equals(x.getKey()))\n"
+"                        .collect(Collectors.toList());\n"
+"                // rename the metric\n"
+"                return id.withName(\"my.metric.name\").replaceTags(tags);\n"
+"            }\n"
+"            return id;\n"
+"        }\n"
+"    };\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:562
+msgid "Ensure the following dependency is present in your `pom.xml` file if you require the Microprofile Metrics API:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/micrometer.adoc:569
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"  <groupId>org.eclipse.microprofile.metrics</groupId>\n"
+"  <artifactId>microprofile-metrics-api</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/micrometer.adoc:572
+msgid "The MP Metrics API compatibility layer will be moved to a different extension in the future."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/micrometer.adoc:573
+#, no-wrap
+msgid "Configuration Reference"
+msgstr ""

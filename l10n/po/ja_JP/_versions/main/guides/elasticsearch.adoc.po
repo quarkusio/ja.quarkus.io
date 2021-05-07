@@ -1,0 +1,873 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2021-05-07 17:34+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. This guide is maintained in the main Quarkus repository
+#. and pull requests should be submitted there:
+#. https://github.com/quarkusio/quarkus/tree/main/docs/src/main/asciidoc
+#. type: Title =
+#: upstream/_versions/main/guides/elasticsearch.adoc:6
+#, no-wrap
+msgid "Quarkus - Connecting to an Elasticsearch cluster"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:11
+msgid "Elasticsearch is a well known full text search engine and NoSQL datastore."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:13
+msgid "In this guide, we will see how you can get your REST services to use an Elasticsearch cluster."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:16
+msgid "Quarkus provides two ways of accessing Elasticsearch: via the lower level `RestClient` or via the `RestHighLevelClient` we will call them the low level and the high level clients."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/elasticsearch.adoc:19
+#, no-wrap
+msgid "Prerequisites"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:22
+msgid "To complete this guide, you need:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:24
+msgid "less than 15 minutes"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:25
+msgid "an IDE"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:26
+msgid "JDK 11+ installed with `JAVA_HOME` configured appropriately"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:27
+msgid "Apache Maven {maven-version}"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:28
+msgid "Elasticsearch installed or Docker installed"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/elasticsearch.adoc:29
+#, no-wrap
+msgid "Architecture"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:32
+msgid "The application built in this guide is quite simple: the user can add elements in a list using a form and the list is updated."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:34
+msgid "All the information between the browser and the server is formatted as JSON."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:36
+msgid "The elements are stored in Elasticsearch."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/elasticsearch.adoc:37
+#, no-wrap
+msgid "Solution"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:41
+msgid "We recommend that you follow the instructions in the next sections and create the application step by step.  However, you can go right to the completed example."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:43
+msgid "Clone the Git repository: `git clone {quickstarts-clone-url}`, or download an {quickstarts-archive-url}[archive]."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:45
+msgid "The solution for the low level client is located in the `elasticsearch-rest-client-quickstart` {quickstarts-tree-url}/elasticsearch-rest-client-quickstart[directory]."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:47
+msgid "The solution for the high level client is located in the `elasticsearch-rest-high-level-client-quickstart` {quickstarts-tree-url}/elasticsearch-rest-high-level-client-quickstart[directory]."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/elasticsearch.adoc:48
+#, no-wrap
+msgid "Creating the Maven project"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:51
+msgid "First, we need a new project. Create a new project with the following command:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/elasticsearch.adoc:61
+#, no-wrap
+msgid ""
+"mvn io.quarkus:quarkus-maven-plugin:{quarkus-version}:create \\\n"
+"    -DprojectGroupId=org.acme \\\n"
+"    -DprojectArtifactId=elasticsearch-quickstart \\\n"
+"    -DclassName=\"org.acme.elasticsearch.FruitResource\" \\\n"
+"    -Dpath=\"/fruits\" \\\n"
+"    -Dextensions=\"resteasy,resteasy-jackson,elasticsearch-rest-client\"\n"
+"cd elasticsearch-quickstart\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:65
+msgid "This command generates a Maven structure importing the RESTEasy/JAX-RS, Jackson, and the Elasticsearch low level client extensions.  After this, the `quarkus-elasticsearch-rest-client` extension has been added to your `pom.xml`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:67
+msgid "If you want to use the high level client instead, replace the `elasticsearch-rest-client` extension by the `elasticsearch-rest-high-level-client` extension."
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/main/guides/elasticsearch.adoc:72
+msgid "We use the `resteasy-jackson` extension here and not the JSON-B variant because we will use the Vert.x `JsonObject` helper to serialize/deserialize our objects to/from Elasticsearch and it uses Jackson under the hood."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:75
+msgid "If you don’t want to generate a new project, add the following dependencies to your pom.xml."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:77
+msgid "For the Elasticsearch low level client, add:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/elasticsearch.adoc:84
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-elasticsearch-rest-client</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:87
+msgid "For the Elasticsearch high level client, add:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/elasticsearch.adoc:94
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-elasticsearch-rest-high-level-client</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/elasticsearch.adoc:96
+#, no-wrap
+msgid "Creating your first JSON REST service"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:99
+msgid "In this example, we will create an application to manage a list of fruits."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:101
+msgid "First, let's create the `Fruit` bean as follows:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/elasticsearch.adoc:105
+#: upstream/_versions/main/guides/elasticsearch.adoc:121
+#, no-wrap
+msgid "package org.acme.elasticsearch;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/elasticsearch.adoc:111
+#, no-wrap
+msgid ""
+"public class Fruit {\n"
+"    public String id;\n"
+"    public String name;\n"
+"    public String color;\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:114
+msgid "Nothing fancy. One important thing to note is that having a default constructor is required by the JSON serialization layer."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:117
+msgid "Now create a `org.acme.elasticsearch.FruitService` that will be the business layer of our application and store/load the fruits from the Elasticsearch instance.  Here we use the low level client, if you want to use the high level client instead follow the instructions in the link:#using-the-high-level-rest-client[Using the High Level REST Client] paragraph instead."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/elasticsearch.adoc:125
+#: upstream/_versions/main/guides/elasticsearch.adoc:355
+#, no-wrap
+msgid ""
+"import java.io.IOException;\n"
+"import java.util.ArrayList;\n"
+"import java.util.List;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/elasticsearch.adoc:128
+#: upstream/_versions/main/guides/elasticsearch.adoc:358
+#, no-wrap
+msgid ""
+"import javax.enterprise.context.ApplicationScoped;\n"
+"import javax.inject.Inject;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/elasticsearch.adoc:133
+#, no-wrap
+msgid ""
+"import org.apache.http.util.EntityUtils;\n"
+"import org.elasticsearch.client.Request;\n"
+"import org.elasticsearch.client.Response;\n"
+"import org.elasticsearch.client.RestClient;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/elasticsearch.adoc:136
+#, no-wrap
+msgid ""
+"import io.vertx.core.json.JsonArray;\n"
+"import io.vertx.core.json.JsonObject;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/elasticsearch.adoc:141
+#, no-wrap
+msgid ""
+"@ApplicationScoped\n"
+"public class FruitService {\n"
+"    @Inject\n"
+"    RestClient restClient; //<1>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/elasticsearch.adoc:149
+#, no-wrap
+msgid ""
+"    public void index(Fruit fruit) throws IOException {\n"
+"        Request request = new Request(\n"
+"                \"PUT\",\n"
+"                \"/fruits/_doc/\" + fruit.id); //<2>\n"
+"        request.setJsonEntity(JsonObject.mapFrom(fruit).toString()); //<3>\n"
+"        restClient.performRequest(request); //<4>\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/elasticsearch.adoc:159
+#, no-wrap
+msgid ""
+"    public Fruit get(String id) throws IOException {\n"
+"        Request request = new Request(\n"
+"                \"GET\",\n"
+"                \"/fruits/_doc/\" + id);\n"
+"        Response response = restClient.performRequest(request);\n"
+"        String responseBody = EntityUtils.toString(response.getEntity());\n"
+"        JsonObject json = new JsonObject(responseBody); //<5>\n"
+"        return json.getJsonObject(\"_source\").mapTo(Fruit.class);\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/elasticsearch.adoc:163
+#: upstream/_versions/main/guides/elasticsearch.adoc:400
+#, no-wrap
+msgid ""
+"    public List<Fruit> searchByColor(String color) throws IOException {\n"
+"        return search(\"color\", color);\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/elasticsearch.adoc:167
+#: upstream/_versions/main/guides/elasticsearch.adoc:404
+#, no-wrap
+msgid ""
+"    public List<Fruit> searchByName(String name) throws IOException {\n"
+"        return search(\"name\", name);\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/elasticsearch.adoc:179
+#, no-wrap
+msgid ""
+"    private List<Fruit> search(String term, String match) throws IOException {\n"
+"        Request request = new Request(\n"
+"                \"GET\",\n"
+"                \"/fruits/_search\");\n"
+"        //construct a JSON query like {\"query\": {\"match\": {\"<term>\": \"<match\"}}\n"
+"        JsonObject termJson = new JsonObject().put(term, match);\n"
+"        JsonObject matchJson = new JsonObject().put(\"match\", termJson);\n"
+"        JsonObject queryJson = new JsonObject().put(\"query\", matchJson);\n"
+"        request.setJsonEntity(queryJson.encode());\n"
+"        Response response = restClient.performRequest(request);\n"
+"        String responseBody = EntityUtils.toString(response.getEntity());\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/elasticsearch.adoc:191
+#, no-wrap
+msgid ""
+"        JsonObject json = new JsonObject(responseBody);\n"
+"        JsonArray hits = json.getJsonObject(\"hits\").getJsonArray(\"hits\");\n"
+"        List<Fruit> results = new ArrayList<>(hits.size());\n"
+"        for (int i = 0; i < hits.size(); i++) {\n"
+"            JsonObject hit = hits.getJsonObject(i);\n"
+"            Fruit fruit = hit.getJsonObject(\"_source\").mapTo(Fruit.class);\n"
+"            results.add(fruit);\n"
+"        }\n"
+"        return results;\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:194
+#: upstream/_versions/main/guides/elasticsearch.adoc:425
+msgid "In this example you can note the following:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:196
+msgid "We inject an Elasticsearch low level `RestClient` into our service."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:197
+msgid "We create an Elasticsearch request."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:198
+#: upstream/_versions/main/guides/elasticsearch.adoc:429
+msgid "We use Vert.x `JsonObject` to serialize the object before sending it to Elasticsearch, you can use whatever you want to serialize to JSON."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:199
+msgid "We send the request (indexing request here) to Elasticsearch."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:200
+#: upstream/_versions/main/guides/elasticsearch.adoc:431
+msgid "In order to deserialize the object from Elasticsearch, we again use Vert.x `JsonObject`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:202
+msgid "Now, edit the `org.acme.elasticsearch.FruitResource` class as follows:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/elasticsearch.adoc:209
+#, no-wrap
+msgid ""
+"@Path(\"/fruits\")\n"
+"public class FruitResource {\n"
+"    @Inject\n"
+"    FruitService fruitService;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/elasticsearch.adoc:218
+#, no-wrap
+msgid ""
+"    @POST\n"
+"    public Response index(Fruit fruit) throws IOException {\n"
+"        if (fruit.id == null) {\n"
+"            fruit.id = UUID.randomUUID().toString();\n"
+"        }\n"
+"        fruitService.index(fruit);\n"
+"        return Response.created(URI.create(\"/fruits/\" + fruit.id)).build();\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/elasticsearch.adoc:224
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @Path(\"/{id}\")\n"
+"    public Fruit get(@PathParam(\"id\") String id) throws IOException {\n"
+"        return fruitService.get(id);\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/elasticsearch.adoc:236
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @Path(\"/search\")\n"
+"    public List<Fruit> search(@QueryParam(\"name\") String name, @QueryParam(\"color\") String color) throws IOException {\n"
+"        if (name != null) {\n"
+"            return fruitService.searchByName(name);\n"
+"        } else if (color != null) {\n"
+"            return fruitService.searchByColor(color);\n"
+"        } else {\n"
+"            throw new BadRequestException(\"Should provide name or color query parameter\");\n"
+"        }\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/elasticsearch.adoc:238
+#, no-wrap
+msgid "}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:241
+msgid "The implementation is pretty straightforward and you just need to define your endpoints using the JAX-RS annotations and use the `FruitService` to list/add new fruits."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/elasticsearch.adoc:242
+#, no-wrap
+msgid "Configuring Elasticsearch"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:244
+msgid "The main property to configure is the URL to connect to the Elasticsearch cluster."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:246
+msgid "A sample configuration should look like this:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/elasticsearch.adoc:251
+#, no-wrap
+msgid ""
+"# configure the Elasticsearch client for a cluster of two nodes\n"
+"quarkus.elasticsearch.hosts = elasticsearch1:9200,elasticsearch2:9200\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:254
+msgid "In this example, we are using a single instance running on localhost:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/elasticsearch.adoc:259
+#, no-wrap
+msgid ""
+"# configure the Elasticsearch client for a single instance on localhost\n"
+"quarkus.elasticsearch.hosts = localhost:9200\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:262
+msgid "If you need a more advanced configuration, you can find the comprehensive list of supported configuration properties at the end of this guide."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/elasticsearch.adoc:263
+#, no-wrap
+msgid "Programmatically Configuring Elasticsearch"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:265
+msgid "On top of the parametric configuration, you can also programmatically apply additional configuration to the client by implementing a `RestClientBuilder.HttpClientConfigCallback` and annotating it with `ElasticsearchClientConfig`. You may provide multiple implementations and configuration provided by each implementation will be applied in a randomly ordered cascading manner."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:267
+msgid "For example, when accessing an Elasticsearch cluster that is set up for TLS on the HTTP layer, the client needs to trust the certificate that Elasticsearch is using. The following is an example of setting up the client to trust the CA that has signed the certificate that Elasticsearch is using, when that CA certificate is available in a PKCS#12 keystore."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/elasticsearch.adoc:275
+#, no-wrap
+msgid ""
+"import io.quarkus.elasticsearch.restclient.lowlevel.ElasticsearchClientConfig;\n"
+"import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;\n"
+"import org.apache.http.ssl.SSLContextBuilder;\n"
+"import org.apache.http.ssl.SSLContexts;\n"
+"import org.elasticsearch.client.RestClientBuilder;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/elasticsearch.adoc:283
+#, no-wrap
+msgid ""
+"import javax.enterprise.context.Dependent;\n"
+"import javax.net.ssl.SSLContext;\n"
+"import java.io.InputStream;\n"
+"import java.nio.file.Files;\n"
+"import java.nio.file.Path;\n"
+"import java.nio.file.Paths;\n"
+"import java.security.KeyStore;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/elasticsearch.adoc:302
+#, no-wrap
+msgid ""
+"@ElasticsearchClientConfig\n"
+"public class SSLContextConfigurator implements RestClientBuilder.HttpClientConfigCallback {\n"
+"    @Override\n"
+"    public HttpAsyncClientBuilder customizeHttpClient(HttpAsyncClientBuilder httpClientBuilder) {\n"
+"        try {\n"
+"            String keyStorePass = \"password-for-keystore\";\n"
+"            Path trustStorePath = Paths.get(\"/path/to/truststore.p12\");\n"
+"            KeyStore truststore = KeyStore.getInstance(\"pkcs12\");\n"
+"            try (InputStream is = Files.newInputStream(trustStorePath)) {\n"
+"                truststore.load(is, keyStorePass.toCharArray());\n"
+"            }\n"
+"            SSLContextBuilder sslBuilder = SSLContexts.custom()\n"
+"                    .loadTrustMaterial(truststore, null);\n"
+"            SSLContext sslContext = sslBuilder.build();\n"
+"            httpClientBuilder.setSSLContext(sslContext);\n"
+"        } catch (Exception e) {\n"
+"            throw new RuntimeException(e);\n"
+"        }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/elasticsearch.adoc:306
+#, no-wrap
+msgid ""
+"        return httpClientBuilder;\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:308
+msgid "See https://www.elastic.co/guide/en/elasticsearch/client/java-rest/current/_encrypted_communication.html[Elasticsearch documentation] for more details on this particular example."
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/main/guides/elasticsearch.adoc:313
+msgid "Classes marked with `@ElasticsearchClientConfig` are made application scoped CDI beans by default.  You can override the scope at the class level if you prefer a different scope."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/elasticsearch.adoc:315
+#, no-wrap
+msgid "Running an Elasticsearch cluster"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:319
+msgid "As by default, the Elasticsearch client is configured to access a local Elasticsearch cluster on port 9200 (the default Elasticsearch port), if you have a local running instance on this port, there is nothing more to do before being able to test it!"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:321
+msgid "If you want to use Docker to run an Elasticsearch instance, you can use the following command to launch one:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/elasticsearch.adoc:326
+#, no-wrap
+msgid ""
+"docker run --name elasticsearch  -e \"discovery.type=single-node\" -e \"ES_JAVA_OPTS=-Xms512m -Xmx512m\"\\\n"
+"       --rm -p 9200:9200 docker.elastic.co/elasticsearch/elasticsearch-oss:{elasticsearch-version}\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/elasticsearch.adoc:328
+#, no-wrap
+msgid "Creating a frontend"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:333
+msgid "Now let's add a simple web page to interact with our `FruitResource`.  Quarkus automatically serves static resources located under the `META-INF/resources` directory.  In the `src/main/resources/META-INF/resources` directory, add a `fruits.html` file with the content from this {quickstarts-blob-url}/elasticsearch-low-level-client-quickstart/src/main/resources/META-INF/resources/fruits.html[fruits.html] file in it."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:335
+msgid "You can now interact with your REST service:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:337
+msgid "start Quarkus with `./mvnw quarkus:dev`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:338
+msgid "open a browser to `http://localhost:8080/fruits.html`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:339
+msgid "add new fruits to the list via the 'Add fruit' form"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:340
+msgid "search for fruits by name or color via the 'Search Fruit' form"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/elasticsearch.adoc:341
+#, no-wrap
+msgid "Using the High Level REST Client"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:344
+msgid "Quarkus provides support for the Elasticsearch High Level REST Client but keep in mind that it comes with some caveats:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:346
+msgid "It drags a lot of dependencies - especially Lucene -, which doesn't fit well with Quarkus philosophy. The Elasticsearch team is aware of this issue and it might improve sometime in the future."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:347
+msgid "It is tied to a certain version of the Elasticsearch server: you cannot use a High Level REST Client version 7 to access a server version 6."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:349
+msgid "Here is a version of the `FruitService` using the high level client instead of the low level one:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/elasticsearch.adoc:371
+#, no-wrap
+msgid ""
+"import org.elasticsearch.action.get.GetRequest;\n"
+"import org.elasticsearch.action.get.GetResponse;\n"
+"import org.elasticsearch.action.index.IndexRequest;\n"
+"import org.elasticsearch.action.search.SearchRequest;\n"
+"import org.elasticsearch.action.search.SearchResponse;\n"
+"import org.elasticsearch.client.RequestOptions;\n"
+"import org.elasticsearch.client.RestHighLevelClient;\n"
+"import org.elasticsearch.common.xcontent.XContentType;\n"
+"import org.elasticsearch.index.query.QueryBuilders;\n"
+"import org.elasticsearch.search.SearchHit;\n"
+"import org.elasticsearch.search.SearchHits;\n"
+"import org.elasticsearch.search.builder.SearchSourceBuilder;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/elasticsearch.adoc:373
+#, no-wrap
+msgid "import io.vertx.core.json.JsonObject;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/elasticsearch.adoc:378
+#, no-wrap
+msgid ""
+"@ApplicationScoped\n"
+"public class FruitService {\n"
+"    @Inject\n"
+"    RestHighLevelClient restHighLevelClient; // <1>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/elasticsearch.adoc:385
+#, no-wrap
+msgid ""
+"    public void index(Fruit fruit) throws IOException {\n"
+"        IndexRequest request = new IndexRequest(\"fruits\"); // <2>\n"
+"        request.id(fruit.id);\n"
+"        request.source(JsonObject.mapFrom(fruit).toString(), XContentType.JSON); // <3>\n"
+"        restHighLevelClient.index(request, RequestOptions.DEFAULT); // <4>\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/elasticsearch.adoc:396
+#, no-wrap
+msgid ""
+"    public Fruit get(String id) throws IOException {\n"
+"        GetRequest getRequest = new GetRequest(\"fruits\", id);\n"
+"        GetResponse getResponse = restHighLevelClient.get(getRequest, RequestOptions.DEFAULT);\n"
+"        if (getResponse.isExists()) {\n"
+"            String sourceAsString = getResponse.getSourceAsString();\n"
+"            JsonObject json = new JsonObject(sourceAsString); // <5>\n"
+"            return json.mapTo(Fruit.class);\n"
+"        }\n"
+"        return null;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/elasticsearch.adoc:410
+#, no-wrap
+msgid ""
+"    private List<Fruit> search(String term, String match) throws IOException {\n"
+"        SearchRequest searchRequest = new SearchRequest(\"fruits\");\n"
+"        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();\n"
+"        searchSourceBuilder.query(QueryBuilders.matchQuery(term, match));\n"
+"        searchRequest.source(searchSourceBuilder);\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/elasticsearch.adoc:422
+#, no-wrap
+msgid ""
+"        SearchResponse searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);\n"
+"        SearchHits hits = searchResponse.getHits();\n"
+"        List<Fruit> results = new ArrayList<>(hits.getHits().length);\n"
+"        for (SearchHit hit : hits.getHits()) {\n"
+"            String sourceAsString = hit.getSourceAsString();\n"
+"            JsonObject json = new JsonObject(sourceAsString);\n"
+"            results.add(json.mapTo(Fruit.class));\n"
+"        }\n"
+"        return results;\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:427
+msgid "We inject an Elasticsearch `RestHighLevelClient` inside the service."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:428
+msgid "We create an Elasticsearch index request."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:430
+msgid "We send the request to Elasticsearch."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/elasticsearch.adoc:432
+#, no-wrap
+msgid "Hibernate Search Elasticsearch"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:435
+msgid "Quarkus supports Hibernate Search with Elasticsearch via the `hibernate-search-orm-elasticsearch` extension."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:437
+msgid "Hibernate Search Elasticsearch allows to synchronize your JPA entities to an Elasticsearch cluster and offers a way to query your Elasticsearch cluster using the Hibernate Search API."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:439
+msgid "If you're interested in it, you can read the link:hibernate-search-orm-elasticsearch[Hibernate Search with Elasticsearch guide]."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/elasticsearch.adoc:440
+#, no-wrap
+msgid "Cluster Health Check"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:444
+msgid "If you are using the `quarkus-smallrye-health` extension, both the extension will automatically add a readiness health check to validate the health of the cluster."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:447
+msgid "So when you access the `/q/health/ready` endpoint of your application you will have information about the cluster status.  It uses the cluster health endpoint, the check will be down if the status of the cluster is **red**, or the cluster is not available."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:449
+msgid "This behavior can be disabled by setting the `quarkus.elasticsearch.health.enabled` property to `false` in your `application.properties`."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/elasticsearch.adoc:450
+#, no-wrap
+msgid "Building a native executable"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:453
+msgid "You can use both clients in a native executable."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:455
+msgid "You can build a native executable with the usual command `./mvnw package -Pnative`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:457
+msgid "Running it is as simple as executing `./target/elasticsearch-low-level-client-quickstart-1.0.0-SNAPSHOT-runner`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:459
+msgid "You can then point your browser to `http://localhost:8080/fruits.html` and use your application."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/elasticsearch.adoc:460
+#, no-wrap
+msgid "Conclusion"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/elasticsearch.adoc:463
+msgid "Accessing an Elasticsearch cluster from a low level or a high level client is easy with Quarkus as it provides easy configuration, CDI integration and native support for it."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/elasticsearch.adoc:464
+#, no-wrap
+msgid "Configuration Reference"
+msgstr ""

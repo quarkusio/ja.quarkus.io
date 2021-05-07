@@ -1,0 +1,1467 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2021-05-07 17:34+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. This guide is maintained in the main Quarkus repository
+#. and pull requests should be submitted there:
+#. https://github.com/quarkusio/quarkus/tree/main/docs/src/main/asciidoc
+#. type: Title =
+#: upstream/_versions/main/guides/amazon-sns.adoc:6
+#, no-wrap
+msgid "Quarkus - Amazon SNS Client"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:15
+msgid "Amazon Simple Notification Service (SNS) is a highly available and fully managed pub/sub messaging service.  It provides topics for high-throughput, push-based, many-to-many messaging. Messages can fan out to a large number of subscriber endpoints for parallel processing, including Amazon SQS queues, AWS Lambda functions, and HTTP/S webhooks. Additionally, SNS can be used to fan out notifications to end users using mobile push, SMS and email."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:17
+msgid "You can find more information about SNS at https://aws.amazon.com/sns/[the Amazon SNS website]."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:20
+msgid "The SNS extension is based on https://docs.aws.amazon.com/sdk-for-java/v2/developer-guide/welcome.html[AWS Java SDK 2.x].  It's a major rewrite of the 1.x code base that offers two programming models (Blocking & Async)."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:24
+msgid "The Quarkus extension supports two programming models:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:26
+msgid "Blocking access using URL Connection HTTP client (by default) or the Apache HTTP Client"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:27
+msgid "https://docs.aws.amazon.com/sdk-for-java/v2/developer-guide/basics-async.html[Asynchronous programming] based on JDK's `CompletableFuture` objects and the Netty HTTP client."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:29
+msgid "In this guide, we see how you can get your REST services to use SNS locally and on AWS."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/amazon-sns.adoc:30
+#, no-wrap
+msgid "Prerequisites"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:33
+msgid "To complete this guide, you need:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:35
+msgid "JDK 11+ installed with `JAVA_HOME` configured appropriately"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:36
+msgid "an IDE"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:37
+msgid "Apache Maven {maven-version}"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:38
+msgid "An AWS Account to access the SNS service"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:39
+msgid "Optionally, Docker for your system to run SNS locally for testing purposes"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/main/guides/amazon-sns.adoc:40
+#, no-wrap
+msgid "Set up SNS locally"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:43
+msgid "The easiest way to start working with SNS is to run a local instance as a container."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:47
+#, no-wrap
+msgid "docker run -it --publish 8009:4575 -e SERVICES=sns -e START_WEB=0 localstack/localstack:0.11.1\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:49
+msgid "This starts a SNS instance that is accessible on port `8009`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:51
+msgid "Create an AWS profile for your local instance using AWS CLI:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:58
+#, no-wrap
+msgid ""
+"$ aws configure --profile localstack\n"
+"AWS Access Key ID [None]: test-key\n"
+"AWS Secret Access Key [None]: test-secret\n"
+"Default region name [None]: us-east-1\n"
+"Default output format [None]:\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/main/guides/amazon-sns.adoc:60
+#, no-wrap
+msgid "Create a SNS topic"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:63
+msgid "Create a SNS topic using AWS CLI and store in `TOPIC_ARN` environment variable"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:67
+#, no-wrap
+msgid "TOPIC_ARN=`aws sns create-topic --name=QuarksCollider --profile localstack --endpoint-url=http://localhost:8009`\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:70
+msgid "If you want to run the demo using SNS on your AWS account, you can create a topic using AWS default profile"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:73
+#, no-wrap
+msgid "TOPIC_ARN=`aws sns create-topic --name=QuarksCollider`\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/amazon-sns.adoc:75
+#, no-wrap
+msgid "Solution"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:78
+msgid "The application built here allows to shoot elementary particles (quarks) into a `QuarksCollider` topic of the AWS SNS.  Additionally, we create a resource that allows to subscribe to the `QuarksCollider` topic in order to receive published quarks."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:81
+msgid "We recommend that you follow the instructions in the next sections and create the application step by step.  However, you can go right to the completed example."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:83
+msgid "Clone the Git repository: `git clone {quickstarts-clone-url}`, or download an {quickstarts-archive-url}[archive]."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:85
+msgid "The solution is located in the `amazon-sns-quickstart` {quickstarts-tree-url}/amazon-sns-quickstart[directory]."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/amazon-sns.adoc:86
+#, no-wrap
+msgid "Creating the Maven project"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:89
+msgid "First, we need a new project. Create a new project with the following command:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:99
+#, no-wrap
+msgid ""
+"mvn io.quarkus:quarkus-maven-plugin:{quarkus-version}:create \\\n"
+"    -DprojectGroupId=org.acme \\\n"
+"    -DprojectArtifactId=amazon-sns-quickstart \\\n"
+"    -DclassName=\"org.acme.sns.QuarksCannonSyncResource\" \\\n"
+"    -Dpath=\"/sync-cannon\" \\\n"
+"    -Dextensions=\"resteasy,resteasy-jackson,amazon-sns,resteasy-mutiny\"\n"
+"cd amazon-sns-quickstart\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:103
+msgid "This command generates a Maven structure importing the RESTEasy/JAX-RS, Mutiny and Amazon SNS Client extensions.  After this, the `amazon-sns` extension has been added to your `pom.xml` as well as the Mutiny support for RESTEasy."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/amazon-sns.adoc:104
+#, no-wrap
+msgid "Creating JSON REST service"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:107
+msgid "In this example, we will create an application that allows to publish quarks. The example application will demonstrate the two programming models supported by the extension."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:109
+msgid "First, let's create the `Quark` bean as follows:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:113
+#: upstream/_versions/main/guides/amazon-sns.adoc:219
+#: upstream/_versions/main/guides/amazon-sns.adoc:343
+#, no-wrap
+msgid "package org.acme.sns.model;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:116
+#, no-wrap
+msgid ""
+"import io.quarkus.runtime.annotations.RegisterForReflection;\n"
+"import java.util.Objects;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:119
+#, no-wrap
+msgid ""
+"@RegisterForReflection\n"
+"public class Quark {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:122
+#, no-wrap
+msgid ""
+"    private String flavor;\n"
+"    private String spin;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:125
+#, no-wrap
+msgid ""
+"    public Quark() {\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:129
+#, no-wrap
+msgid ""
+"    public String getFlavor() {\n"
+"        return flavor;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:133
+#, no-wrap
+msgid ""
+"    public void setFlavor(String flavor) {\n"
+"        this.flavor = flavor;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:137
+#, no-wrap
+msgid ""
+"    public String getSpin() {\n"
+"        return spin;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:141
+#, no-wrap
+msgid ""
+"    public void setSpin(String spin) {\n"
+"        this.spin = spin;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:147
+#, no-wrap
+msgid ""
+"    @Override\n"
+"    public boolean equals(Object obj) {\n"
+"        if (!(obj instanceof Quark)) {\n"
+"            return false;\n"
+"        }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:149
+#, no-wrap
+msgid "        Quark other = (Quark) obj;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:152
+#, no-wrap
+msgid ""
+"        return Objects.equals(other.flavor, this.flavor);\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:158
+#, no-wrap
+msgid ""
+"    @Override\n"
+"    public int hashCode() {\n"
+"        return Objects.hash(this.flavor);\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:160
+msgid "Then, create a `org.acme.sns.QuarksCannonSyncResource` that will provide an API to shoot quarks into the SNS topic via the SNS synchronous client."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:162
+msgid "The `@RegisterForReflection` annotation instructs Quarkus to keep the class and its members during the native compilation. More details about the `@RegisterForReflection` annotation can be found on the xref:writing-native-applications-tips.adoc#registerForReflection[native application tips] page."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:167
+#: upstream/_versions/main/guides/amazon-sns.adoc:471
+#: upstream/_versions/main/guides/amazon-sns.adoc:670
+#: upstream/_versions/main/guides/amazon-sns.adoc:721
+#, no-wrap
+msgid "package org.acme.sns;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:182
+#, no-wrap
+msgid ""
+"import com.fasterxml.jackson.databind.ObjectMapper;\n"
+"import com.fasterxml.jackson.databind.ObjectWriter;\n"
+"import javax.inject.Inject;\n"
+"import javax.ws.rs.Consumes;\n"
+"import javax.ws.rs.POST;\n"
+"import javax.ws.rs.Path;\n"
+"import javax.ws.rs.Produces;\n"
+"import javax.ws.rs.core.MediaType;\n"
+"import javax.ws.rs.core.Response;\n"
+"import org.acme.sns.model.Quark;\n"
+"import org.eclipse.microprofile.config.inject.ConfigProperty;\n"
+"import org.jboss.logging.Logger;\n"
+"import software.amazon.awssdk.services.sns.SnsClient;\n"
+"import software.amazon.awssdk.services.sns.model.PublishResponse;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:186
+#, no-wrap
+msgid ""
+"@Path(\"/sync/cannon\")\n"
+"@Produces(MediaType.TEXT_PLAIN)\n"
+"public class QuarksCannonSyncResource {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:188
+#, no-wrap
+msgid "    private static final Logger LOGGER = Logger.getLogger(QuarksCannonSyncResource.class);\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:191
+#: upstream/_versions/main/guides/amazon-sns.adoc:503
+#, no-wrap
+msgid ""
+"    @Inject\n"
+"    SnsClient sns;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:194
+#: upstream/_versions/main/guides/amazon-sns.adoc:506
+#: upstream/_versions/main/guides/amazon-sns.adoc:699
+#: upstream/_versions/main/guides/amazon-sns.adoc:757
+#, no-wrap
+msgid ""
+"    @ConfigProperty(name = \"topic.arn\")\n"
+"    String topicArn;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:196
+#: upstream/_versions/main/guides/amazon-sns.adoc:701
+#, no-wrap
+msgid "    static ObjectWriter QUARK_WRITER = new ObjectMapper().writerFor(Quark.class);\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:207
+#, no-wrap
+msgid ""
+"    @POST\n"
+"    @Path(\"/shoot\")\n"
+"    @Consumes(MediaType.APPLICATION_JSON)\n"
+"    public Response publish(Quark quark) throws Exception {\n"
+"        String message = QUARK_WRITER.writeValueAsString(quark);\n"
+"        PublishResponse response = sns.publish(p -> p.topicArn(topicArn).message(message));\n"
+"        LOGGER.infov(\"Fired Quark[{0}, {1}}]\", quark.getFlavor(), quark.getSpin());\n"
+"        return Response.ok().entity(response.messageId()).build();\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:210
+msgid "Because of the fact that messages published must be simply a `String` we're using Jackson's `ObjectWriter` in order to serialize our `Quark` objects into a `String`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:212
+msgid "The missing piece is the subscriber that will receive the messages published to our topic. Before implementing subscribers, we need to define POJO classes representing messages posted by the AWS SNS."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:214
+msgid "Let's create two classes that represent SNS Notification and SNS Subscription Confirmation messages based on the https://docs.aws.amazon.com/sns/latest/dg/sns-message-and-json-formats.html[AWS SNS Message and JSON formats]"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:216
+msgid "Create `org.acme.sns.model.SnsNotification` class"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:222
+#, no-wrap
+msgid ""
+"import com.fasterxml.jackson.annotation.JsonIgnoreProperties;\n"
+"import com.fasterxml.jackson.annotation.JsonProperty;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:225
+#, no-wrap
+msgid ""
+"@JsonIgnoreProperties(ignoreUnknown = true)\n"
+"public class SnsNotification {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:228
+#: upstream/_versions/main/guides/amazon-sns.adoc:350
+#, no-wrap
+msgid ""
+"    @JsonProperty(\"Message\")\n"
+"    private String message;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:231
+#: upstream/_versions/main/guides/amazon-sns.adoc:353
+#, no-wrap
+msgid ""
+"    @JsonProperty(\"MessageId\")\n"
+"    private String messageId;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:234
+#: upstream/_versions/main/guides/amazon-sns.adoc:356
+#, no-wrap
+msgid ""
+"    @JsonProperty(\"Signature\")\n"
+"    private String signature;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:237
+#: upstream/_versions/main/guides/amazon-sns.adoc:359
+#, no-wrap
+msgid ""
+"    @JsonProperty(\"SignatureVersion\")\n"
+"    private String signatureVersion;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:240
+#, no-wrap
+msgid ""
+"    @JsonProperty(\"SigningCertURL\")\n"
+"    private String signinCertUrl;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:243
+#, no-wrap
+msgid ""
+"    @JsonProperty(\"Subject\")\n"
+"    private String subject;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:246
+#: upstream/_versions/main/guides/amazon-sns.adoc:368
+#, no-wrap
+msgid ""
+"    @JsonProperty(\"Timestamp\")\n"
+"    private String timestamp;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:249
+#: upstream/_versions/main/guides/amazon-sns.adoc:374
+#, no-wrap
+msgid ""
+"    @JsonProperty(\"TopicArn\")\n"
+"    private String topicArn;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:252
+#: upstream/_versions/main/guides/amazon-sns.adoc:377
+#, no-wrap
+msgid ""
+"    @JsonProperty(\"Type\")\n"
+"    private String type;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:255
+#, no-wrap
+msgid ""
+"    @JsonProperty(\"UnsubscribeURL\")\n"
+"    private String unsubscribeURL;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:259
+#: upstream/_versions/main/guides/amazon-sns.adoc:381
+#, no-wrap
+msgid ""
+"    public String getMessage() {\n"
+"        return message;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:263
+#: upstream/_versions/main/guides/amazon-sns.adoc:385
+#, no-wrap
+msgid ""
+"    public void setMessage(String message) {\n"
+"        this.message = message;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:267
+#: upstream/_versions/main/guides/amazon-sns.adoc:389
+#, no-wrap
+msgid ""
+"    public String getMessageId() {\n"
+"        return messageId;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:271
+#: upstream/_versions/main/guides/amazon-sns.adoc:393
+#, no-wrap
+msgid ""
+"    public void setMessageId(String messageId) {\n"
+"        this.messageId = messageId;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:275
+#: upstream/_versions/main/guides/amazon-sns.adoc:397
+#, no-wrap
+msgid ""
+"    public String getSignature() {\n"
+"        return signature;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:279
+#: upstream/_versions/main/guides/amazon-sns.adoc:401
+#, no-wrap
+msgid ""
+"    public void setSignature(String signature) {\n"
+"        this.signature = signature;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:283
+#: upstream/_versions/main/guides/amazon-sns.adoc:405
+#, no-wrap
+msgid ""
+"    public String getSignatureVersion() {\n"
+"        return signatureVersion;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:287
+#: upstream/_versions/main/guides/amazon-sns.adoc:409
+#, no-wrap
+msgid ""
+"    public void setSignatureVersion(String signatureVersion) {\n"
+"        this.signatureVersion = signatureVersion;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:291
+#, no-wrap
+msgid ""
+"    public String getSigninCertUrl() {\n"
+"        return signinCertUrl;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:295
+#, no-wrap
+msgid ""
+"    public void setSigninCertUrl(String signinCertUrl) {\n"
+"        this.signinCertUrl = signinCertUrl;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:299
+#, no-wrap
+msgid ""
+"    public String getSubject() {\n"
+"        return subject;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:303
+#, no-wrap
+msgid ""
+"    public void setSubject(String subject) {\n"
+"        this.subject = subject;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:307
+#: upstream/_versions/main/guides/amazon-sns.adoc:429
+#, no-wrap
+msgid ""
+"    public String getTimestamp() {\n"
+"        return timestamp;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:311
+#: upstream/_versions/main/guides/amazon-sns.adoc:433
+#, no-wrap
+msgid ""
+"    public void setTimestamp(String timestamp) {\n"
+"        this.timestamp = timestamp;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:315
+#: upstream/_versions/main/guides/amazon-sns.adoc:445
+#, no-wrap
+msgid ""
+"    public String getTopicArn() {\n"
+"        return topicArn;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:319
+#: upstream/_versions/main/guides/amazon-sns.adoc:449
+#, no-wrap
+msgid ""
+"    public void setTopicArn(String topicArn) {\n"
+"        this.topicArn = topicArn;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:323
+#: upstream/_versions/main/guides/amazon-sns.adoc:453
+#, no-wrap
+msgid ""
+"    public String getType() {\n"
+"        return type;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:327
+#, no-wrap
+msgid ""
+"    public void setType(String type) {\n"
+"        this.type = type;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:331
+#, no-wrap
+msgid ""
+"    public String getUnsubscribeURL() {\n"
+"        return unsubscribeURL;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:336
+#, no-wrap
+msgid ""
+"    public void setUnsubscribeURL(String unsubscribeURL) {\n"
+"        this.unsubscribeURL = unsubscribeURL;\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:339
+msgid "Then, create `org.acme.sns.SnsSubscriptionConfirmation`"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:345
+#, no-wrap
+msgid "import com.fasterxml.jackson.annotation.JsonProperty;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:347
+#, no-wrap
+msgid "public class SnsSubscriptionConfirmation {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:362
+#, no-wrap
+msgid ""
+"    @JsonProperty(\"SigningCertURL\")\n"
+"    private String signingCertUrl;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:365
+#, no-wrap
+msgid ""
+"    @JsonProperty(\"SubscribeURL\")\n"
+"    private String subscribeUrl;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:371
+#, no-wrap
+msgid ""
+"    @JsonProperty(\"Token\")\n"
+"    private String token;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:413
+#, no-wrap
+msgid ""
+"    public String getSigningCertUrl() {\n"
+"        return signingCertUrl;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:417
+#, no-wrap
+msgid ""
+"    public void setSigningCertUrl(String signingCertUrl) {\n"
+"        this.signingCertUrl = signingCertUrl;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:421
+#, no-wrap
+msgid ""
+"    public String getSubscribeUrl() {\n"
+"        return subscribeUrl;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:425
+#, no-wrap
+msgid ""
+"    public void setSubscribeUrl(String subscribeUrl) {\n"
+"        this.subscribeUrl = subscribeUrl;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:437
+#, no-wrap
+msgid ""
+"    public String getToken() {\n"
+"        return token;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:441
+#, no-wrap
+msgid ""
+"    public void setToken(String token) {\n"
+"        this.token = token;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:458
+#, no-wrap
+msgid ""
+"    public void setType(String type) {\n"
+"        this.type = type;\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:461
+msgid "Now, create `org.acme.QuarksShieldSyncResource` REST resources that:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:462
+msgid "Allows to subscribe itself to our SNS topic"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:463
+msgid "Unsubscribe from the SNS topic"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:464
+msgid "Receive notifications from the subscribed SNS topic"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:467
+msgid "Keep in mind that AWS SNS supports multiple types of subscribers (that is web servers, email addresses, AWS SQS queues, AWS Lambda functions, and many more), but for the sake of the quickstart we will show how to subscribe an HTTP endpoint served by our application."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:491
+#, no-wrap
+msgid ""
+"import com.fasterxml.jackson.core.JsonProcessingException;\n"
+"import com.fasterxml.jackson.databind.ObjectMapper;\n"
+"import com.fasterxml.jackson.databind.ObjectReader;\n"
+"import java.util.HashMap;\n"
+"import java.util.Map;\n"
+"import javax.inject.Inject;\n"
+"import javax.ws.rs.Consumes;\n"
+"import javax.ws.rs.HeaderParam;\n"
+"import javax.ws.rs.POST;\n"
+"import javax.ws.rs.Path;\n"
+"import javax.ws.rs.core.MediaType;\n"
+"import javax.ws.rs.core.Response;\n"
+"import org.acme.sns.model.Quark;\n"
+"import org.acme.sns.model.SnsNotification;\n"
+"import org.acme.sns.model.SnsSubscriptionConfirmation;\n"
+"import org.eclipse.microprofile.config.inject.ConfigProperty;\n"
+"import org.jboss.logging.Logger;\n"
+"import software.amazon.awssdk.services.sns.SnsClient;\n"
+"import software.amazon.awssdk.services.sns.model.SubscribeResponse;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:494
+#, no-wrap
+msgid ""
+"@Path(\"/sync/shield\")\n"
+"public class QuarksShieldSyncResource {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:496
+#, no-wrap
+msgid "    private static final Logger LOGGER = Logger.getLogger(QuarksShieldSyncResource.class);\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:500
+#: upstream/_versions/main/guides/amazon-sns.adoc:751
+#, no-wrap
+msgid ""
+"    private static final String NOTIFICATION_TYPE = \"Notification\";\n"
+"    private static final String SUBSCRIPTION_CONFIRMATION_TYPE = \"SubscriptionConfirmation\";\n"
+"    private static final String UNSUBSCRIPTION_CONFIRMATION_TYPE = \"UnsubscribeConfirmation\";\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:509
+#: upstream/_versions/main/guides/amazon-sns.adoc:760
+#, no-wrap
+msgid ""
+"    @ConfigProperty(name = \"quarks.shield.base.url\")\n"
+"    String quarksShieldBaseUrl;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:511
+#: upstream/_versions/main/guides/amazon-sns.adoc:762
+#, no-wrap
+msgid "    private volatile String subscriptionArn;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:513
+#: upstream/_versions/main/guides/amazon-sns.adoc:764
+#, no-wrap
+msgid "    static Map<Class<?>, ObjectReader> READERS = new HashMap<>();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:519
+#: upstream/_versions/main/guides/amazon-sns.adoc:770
+#, no-wrap
+msgid ""
+"    static {\n"
+"        READERS.put(SnsNotification.class, new ObjectMapper().readerFor(SnsNotification.class));\n"
+"        READERS.put(SnsSubscriptionConfirmation.class, new ObjectMapper().readerFor(SnsSubscriptionConfirmation.class));\n"
+"        READERS.put(Quark.class, new ObjectMapper().readerFor(Quark.class));\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:526
+#, no-wrap
+msgid ""
+"    @POST\n"
+"    @Consumes({MediaType.TEXT_PLAIN})\n"
+"    public Response notificationEndpoint(@HeaderParam(\"x-amz-sns-message-type\") String messageType, String message) throws JsonProcessingException {\n"
+"        if (messageType == null) {\n"
+"            return Response.status(400).build();\n"
+"        }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:540
+#, no-wrap
+msgid ""
+"        if (messageType.equals(NOTIFICATION_TYPE)) {\n"
+"            SnsNotification notification = readObject(SnsNotification.class, message);\n"
+"            Quark quark = readObject(Quark.class, notification.getMessage());\n"
+"            LOGGER.infov(\"Quark[{0}, {1}] collision with the shield.\", quark.getFlavor(), quark.getSpin());\n"
+"        } else if (messageType.equals(SUBSCRIPTION_CONFIRMATION_TYPE)) {\n"
+"            SnsSubscriptionConfirmation subConf = readObject(SnsSubscriptionConfirmation.class, message);\n"
+"            sns.confirmSubscription(cs -> cs.topicArn(topicArn).token(subConf.getToken()));\n"
+"            LOGGER.info(\"Subscription confirmed. Ready for quarks collisions.\");\n"
+"        } else if (messageType.equals(UNSUBSCRIPTION_CONFIRMATION_TYPE)) {\n"
+"            LOGGER.info(\"We are unsubscribed\");\n"
+"        } else {\n"
+"            return Response.status(400).entity(\"Unknown messageType\").build();\n"
+"        }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:543
+#, no-wrap
+msgid ""
+"        return Response.ok().build();\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:553
+#, no-wrap
+msgid ""
+"    @POST\n"
+"    @Path(\"/subscribe\")\n"
+"    public Response subscribe() {\n"
+"        String notificationEndpoint = notificationEndpoint();\n"
+"        SubscribeResponse response = sns.subscribe(s -> s.topicArn(topicArn).protocol(\"http\").endpoint(notificationEndpoint));\n"
+"        subscriptionArn = response.subscriptionArn();\n"
+"        LOGGER.infov(\"Subscribed Quarks shield <{0}> : {1} \", notificationEndpoint, response.subscriptionArn());\n"
+"        return Response.ok().entity(response.subscriptionArn()).build();\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:566
+#, no-wrap
+msgid ""
+"    @POST\n"
+"    @Path(\"/unsubscribe\")\n"
+"    public Response unsubscribe() {\n"
+"        if (subscriptionArn != null) {\n"
+"            sns.unsubscribe(s -> s.subscriptionArn(subscriptionArn));\n"
+"            LOGGER.infov(\"Unsubscribed quarks shield for id = {0}\", subscriptionArn);\n"
+"            return Response.ok().build();\n"
+"        } else {\n"
+"            LOGGER.info(\"Not subscribed yet\");\n"
+"            return Response.status(400).entity(\"Not subscribed yet\").build();\n"
+"        }\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:570
+#, no-wrap
+msgid ""
+"    private String notificationEndpoint() {\n"
+"        return quarksShieldBaseUrl + \"/sync/shield\";\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:582
+#: upstream/_versions/main/guides/amazon-sns.adoc:843
+#, no-wrap
+msgid ""
+"    private <T> T readObject(Class<T> clazz, String message) {\n"
+"        T object = null;\n"
+"        try {\n"
+"            object = READERS.get(clazz).readValue(message);\n"
+"        } catch (JsonProcessingException e) {\n"
+"            LOGGER.errorv(\"Unable to deserialize message <{0}> to Class <{1}>\", message, clazz.getSimpleName());\n"
+"            throw new RuntimeException(e);\n"
+"        }\n"
+"        return object;\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:585
+msgid "`subscribe()` endpoint subscribes to our topic by providing the URL to the POST endpoint receiving SNS notification requests."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:586
+msgid "`unsubscribe()` simply removes our subscription, so any messages published to the topic will not be routed to our endpoint anymore"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:588
+msgid "`notificationEndpoint()` is called by SNS on new message if endpoint is subscribed.  See https://docs.aws.amazon.com/sns/latest/dg/sns-message-and-json-formats.html[Amazon SNS message and JSON formats] for details about the format of the messages SNS can submit."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/amazon-sns.adoc:590
+#, no-wrap
+msgid "Configuring SNS clients"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:595
+msgid "Both SNS clients (sync and async) are configurable via the `application.properties` file that can be provided in the `src/main/resources` directory.  Additionally, you need to add to the classpath a proper implementation of the sync client. By default the extension uses URL connection HTTP client, so you need to add a URL connection client dependency to the `pom.xml` file:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:602
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"    <groupId>software.amazon.awssdk</groupId>\n"
+"    <artifactId>url-connection-client</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:605
+msgid "If you want to use Apache HTTP client instead, configure it as follows:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:608
+#, no-wrap
+msgid "quarkus.sns.sync-client.type=apache\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:611
+msgid "And add the following dependency to the application `pom.xml`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:621
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"    <groupId>software.amazon.awssdk</groupId>\n"
+"    <artifactId>apache-client</artifactId>\n"
+"</dependency>\n"
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-apache-httpclient</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:624
+msgid "If you're going to use a local SNS instance, configure it as follows:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:628
+#, no-wrap
+msgid "quarkus.sns.endpoint-override=http://localhost:8009\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:633
+#, no-wrap
+msgid ""
+"quarkus.sns.aws.region=us-east-1\n"
+"quarkus.sns.aws.credentials.type=static\n"
+"quarkus.sns.aws.credentials.static-provider.access-key-id=test-key\n"
+"quarkus.sns.aws.credentials.static-provider.secret-access-key=test-secret\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:636
+msgid "`quarkus.sns.aws.region` - It's required by the client, but since you're using a local SNS instance you can pick any valid AWS region."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:637
+msgid "`quarkus.sns.aws.credentials.type` - Set `static` credentials provider with any values for `access-key-id` and `secret-access-key`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:638
+msgid "`quarkus.sns.endpoint-override` - Override the SNS client to use a local instance instead of an AWS service"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:640
+msgid "If you want to work with an AWS account, you'd need to set it with:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:644
+#, no-wrap
+msgid ""
+"quarkus.sns.aws.region=<YOUR_REGION>\n"
+"quarkus.sns.aws.credentials.type=default\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:647
+msgid "`quarkus.sns.aws.region` you should set it to the region where you provisioned the SNS table,"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:648
+msgid "`quarkus.sns.aws.credentials.type` - use the `default` credentials provider chain that looks for credentials in this order:"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/amazon-sns.adoc:651
+#, no-wrap
+msgid "Next steps"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/main/guides/amazon-sns.adoc:653
+#, no-wrap
+msgid "Packaging"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:657
+msgid "Packaging your application is as simple as `./mvnw clean package`.  It can be run with `java -Dtopic.arn=$TOPIC_ARN -jar target/quarkus-app/quarkus-run.jar`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:660
+msgid "With GraalVM installed, you can also create a native executable binary: `./mvnw clean package -Dnative`.  Depending on your system, that will take some time."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/main/guides/amazon-sns.adoc:661
+#, no-wrap
+msgid "Going asynchronous"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:664
+msgid "Thanks to the AWS SDK v2.x used by the Quarkus extension, you can use the asynchronous programming model out of the box."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:666
+msgid "Create a `org.acme.sns.QuarksCannonAsyncResource` REST resource that will be similar to our `QuarksCannonSyncResource` but using an asynchronous programming model."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:686
+#, no-wrap
+msgid ""
+"import com.fasterxml.jackson.databind.ObjectMapper;\n"
+"import com.fasterxml.jackson.databind.ObjectWriter;\n"
+"import io.smallrye.mutiny.Uni;\n"
+"import javax.inject.Inject;\n"
+"import javax.ws.rs.Consumes;\n"
+"import javax.ws.rs.POST;\n"
+"import javax.ws.rs.Path;\n"
+"import javax.ws.rs.Produces;\n"
+"import javax.ws.rs.core.MediaType;\n"
+"import javax.ws.rs.core.Response;\n"
+"import org.acme.sns.model.Quark;\n"
+"import org.eclipse.microprofile.config.inject.ConfigProperty;\n"
+"import org.jboss.logging.Logger;\n"
+"import software.amazon.awssdk.services.sns.SnsAsyncClient;\n"
+"import software.amazon.awssdk.services.sns.model.PublishResponse;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:691
+#, no-wrap
+msgid ""
+"@Path(\"/async/cannon\")\n"
+"@Produces(MediaType.APPLICATION_JSON)\n"
+"@Consumes(MediaType.APPLICATION_JSON)\n"
+"public class QuarksCannonAsyncResource {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:693
+#, no-wrap
+msgid "    private static final Logger LOGGER = Logger.getLogger(QuarksCannonAsyncResource.class);\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:696
+#: upstream/_versions/main/guides/amazon-sns.adoc:754
+#, no-wrap
+msgid ""
+"    @Inject\n"
+"    SnsAsyncClient sns;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:714
+#, no-wrap
+msgid ""
+"    @POST\n"
+"    @Path(\"/shoot\")\n"
+"    @Consumes(MediaType.APPLICATION_JSON)\n"
+"    public Uni<Response> publish(Quark quark) throws Exception {\n"
+"        String message = QUARK_WRITER.writeValueAsString(quark);\n"
+"        return Uni.createFrom()\n"
+"            .completionStage(sns.publish(p -> p.topicArn(topicArn).message(message)))\n"
+"            .onItem().invoke(item -> LOGGER.infov(\"Fired Quark[{0}, {1}}]\", quark.getFlavor(), quark.getSpin()))\n"
+"            .onItem().transform(PublishResponse::messageId)\n"
+"            .onItem().transform(id -> Response.ok().entity(id).build());\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:716
+msgid "We create `Uni` instances from the `CompletionStage` objects returned by the asynchronous SNS client, and then transform the emitted item."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:718
+msgid "And corresponding async subscriber `org.acme.sns.QuarksShieldAsyncResource`"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:742
+#, no-wrap
+msgid ""
+"import com.fasterxml.jackson.core.JsonProcessingException;\n"
+"import com.fasterxml.jackson.databind.ObjectMapper;\n"
+"import com.fasterxml.jackson.databind.ObjectReader;\n"
+"import io.smallrye.mutiny.Uni;\n"
+"import java.util.HashMap;\n"
+"import java.util.Map;\n"
+"import javax.inject.Inject;\n"
+"import javax.ws.rs.Consumes;\n"
+"import javax.ws.rs.HeaderParam;\n"
+"import javax.ws.rs.POST;\n"
+"import javax.ws.rs.Path;\n"
+"import javax.ws.rs.core.MediaType;\n"
+"import javax.ws.rs.core.Response;\n"
+"import org.acme.sns.model.Quark;\n"
+"import org.acme.sns.model.SnsNotification;\n"
+"import org.acme.sns.model.SnsSubscriptionConfirmation;\n"
+"import org.eclipse.microprofile.config.inject.ConfigProperty;\n"
+"import org.jboss.logging.Logger;\n"
+"import software.amazon.awssdk.services.sns.SnsAsyncClient;\n"
+"import software.amazon.awssdk.services.sns.model.SubscribeResponse;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:745
+#, no-wrap
+msgid ""
+"@Path(\"/async/shield\")\n"
+"public class QuarksShieldAsyncResource {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:747
+#, no-wrap
+msgid "    private static final Logger LOGGER = Logger.getLogger(QuarksShieldAsyncResource.class);\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:777
+#, no-wrap
+msgid ""
+"    @POST\n"
+"    @Consumes({MediaType.TEXT_PLAIN})\n"
+"    public Uni<Response> notificationEndpoint(@HeaderParam(\"x-amz-sns-message-type\") String messageType, String message) {\n"
+"        if (messageType == null) {\n"
+"            return Uni.createFrom().item(Response.status(400).build());\n"
+"        }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:795
+#, no-wrap
+msgid ""
+"        if (messageType.equals(NOTIFICATION_TYPE)) {\n"
+"            return Uni.createFrom().item(readObject(SnsNotification.class, message))\n"
+"                .onItem().transform(notification -> readObject(Quark.class, notification.getMessage()))\n"
+"                .onItem().invoke(quark -> LOGGER.infov(\"Quark[{0}, {1}] collision with the shield.\", quark.getFlavor(), quark.getSpin()))\n"
+"                .onItem().transform(quark -> Response.ok().build());\n"
+"        } else if (messageType.equals(SUBSCRIPTION_CONFIRMATION_TYPE)) {\n"
+"            return Uni.createFrom().item(readObject(SnsSubscriptionConfirmation.class, message))\n"
+"                .onItem().transformToUni(msg ->\n"
+"                    Uni.createFrom().completionStage(\n"
+"                        sns.confirmSubscription(confirm -> confirm.topicArn(topicArn).token(msg.getToken())))\n"
+"                )\n"
+"                .onItem().invoke(resp -> LOGGER.info(\"Subscription confirmed. Ready for quarks collisions.\"))\n"
+"                .onItem().transform(resp -> Response.ok().build());\n"
+"        } else if (messageType.equals(UNSUBSCRIPTION_CONFIRMATION_TYPE)) {\n"
+"            LOGGER.info(\"We are unsubscribed\");\n"
+"            return Uni.createFrom().item(Response.ok().build());\n"
+"        }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:798
+#, no-wrap
+msgid ""
+"        return Uni.createFrom().item(Response.status(400).entity(\"Unknown messageType\").build());\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:809
+#, no-wrap
+msgid ""
+"    @POST\n"
+"    @Path(\"/subscribe\")\n"
+"    public Uni<Response> subscribe() {\n"
+"        return Uni.createFrom()\n"
+"            .completionStage(sns.subscribe(s -> s.topicArn(topicArn).protocol(\"http\").endpoint(notificationEndpoint())))\n"
+"            .onItem().transform(SubscribeResponse::subscriptionArn)\n"
+"            .onItem().invoke(this::setSubscriptionArn)\n"
+"            .onItem().invoke(arn -> LOGGER.infov(\"Subscribed Quarks shield with id = {0} \", arn))\n"
+"            .onItem().transform(arn -> Response.ok().entity(arn).build());\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:823
+#, no-wrap
+msgid ""
+"    @POST\n"
+"    @Path(\"/unsubscribe\")\n"
+"    public Uni<Response> unsubscribe() {\n"
+"        if (subscriptionArn != null) {\n"
+"            return Uni.createFrom()\n"
+"                .completionStage(sns.unsubscribe(s -> s.subscriptionArn(subscriptionArn)))\n"
+"                .onItem().invoke(arn -> LOGGER.infov(\"Unsubscribed quarks shield for id = {0}\", subscriptionArn))\n"
+"                .onItem().invoke(arn -> subscriptionArn = null)\n"
+"                .onItem().transform(arn -> Response.ok().build());\n"
+"        } else {\n"
+"            return Uni.createFrom().item(Response.status(400).entity(\"Not subscribed yet\").build());\n"
+"        }\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:827
+#, no-wrap
+msgid ""
+"    private String notificationEndpoint() {\n"
+"        return quarksShieldBaseUrl + \"/async/shield\";\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:831
+#, no-wrap
+msgid ""
+"    private void setSubscriptionArn(String arn) {\n"
+"        this.subscriptionArn = arn;\n"
+"    }\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-sns.adoc:846
+msgid "And we need to add Netty HTTP client dependency to the `pom.xml`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-sns.adoc:853
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"    <groupId>software.amazon.awssdk</groupId>\n"
+"    <artifactId>netty-nio-client</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/amazon-sns.adoc:855
+#, no-wrap
+msgid "Configuration Reference"
+msgstr ""
