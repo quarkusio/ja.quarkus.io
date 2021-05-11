@@ -31148,6 +31148,2148 @@ your jax-rs endpoints won't route correctly.  See &lt;&lt;config-azure-paths&gt;
     </tu>
     <tu>
       <tuv xml:lang="en">
+        <seg>Quarkus extensions enhance your application just as projects dependencies do.  The role of the extensions is to leverage Quarkus paradigms to integrate seamlessly a library into Quarkus architecture - e.g. do more things at build time.  This is how you can use your battle-tested ecosystem and take advantage of Quarkus performance and native compilation.  Go to https://code.quarkus.io/[code.quarkus.io] to get the list of the supported extensions.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>Quarkus のエクステンションは、プロジェクトの依存関係がそうであるように、アプリケーションを強化します。エクステンションの役割は、Quarkus のパラダイムを活用して、ライブラリを Quarkus アーキテクチャにシームレスに統合することです。たとえば、ビルド時に、より多くのことを行います。これが、実績のあるエコシステムを利用して、Quarkus のパフォーマンスとネイティブコンパイルを活用することができる仕組みです。https://code.quarkus.io/[code.quarkus.io] にアクセスして、サポートされているエクステンションのリストを入手してください。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>In this guide we are going to develop the *Sample Greeting Extension*.  The extension will expose a customizable HTTP endpoint which simply greets the visitor.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>このガイドでは、*サンプル Greeting エクステンション* を開発します。このエクステンションは、ビジターに挨拶をするだけのカスタマイズ可能な HTTP エンドポイントを公開します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Disclaimer</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>免責事項</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>To be sure it's extra clear you don't need an extension to add a Servlet to your application.  This guide is a simplified example to explain the concepts of extensions development, see the link:writing-extensions[full documentation] if you need more information.  Keep in mind it's not representative of the power of moving things to build time or simplifying the build of native images.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>アプリケーションにサーブレットを追加するのにエクステンションは必要ありません。このガイドはエクステンション開発の概念を説明するための単純化された例であり、より多くの情報が必要な場合は link:writing-extensions[完全なドキュメント] を参照してください。これは、ビルド時間を短縮したり、ネイティブイメージのビルドを簡略化したりする機能を示すものではないことに注意してください。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Basic Concepts</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>基本概念</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>First things first, we will need to start with some basic concepts.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>まず最初に、いくつかの基本的な概念から始めましょう。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Quarkus is first and foremost a Java framework, that means you can develop, package and run classic JAR applications, that's what we call *JVM mode*.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>Quarkus は最初の Java フレームワークです。つまり、従来の *JAR* アプリケーションの開発、パッケージ化、実行を行うことができます。これは、*JAM モード* と呼ばれます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Thanks to https://graalvm.org/[GraalVM] you can compile your Java application into machine specific code (like you do in Go or C++) and that's what we call *Native mode*.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>link:https://graalvm.org/[GraalVM] により、Java アプリケーションをマシン固有のコード (Go や C++ のように) にコンパイルすることができます。これは、*ネイティブモード* と呼ばれます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>The operation of compiling Java bytecode into a native system-specific machine code is named *Ahead of Time Compilation* (aka AoT).</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>Java バイトコードをネイティブシステム固有のマシンコードにコンパイルする操作は、*Ahead of Time Compilation* (AoT) と呼ばれています。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>The build time corresponds to all the actions you apply to your Java source files to convert them into something runnable (class files, jar/war, native images).</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>ビルド時間は、Java ソースファイルを実行可能なもの (クラスファイル、jar/war、ネイティブイメージ) に変換するために Java ソースファイルに適用するすべてのアクションに対応しています。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Usually this stage is composed by the compilation, annotation processing, bytecode generation, etc. At this point, everything is under the developer's scope and control.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>通常、この段階はコンパイル、アノテーション処理、バイトコード生成などで構成されます。この時点では、すべてが開発者のスコープとコントロール下にあります。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>The runtime is all the actions that happen when you execute your application.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>ランタイムとは、アプリケーションを実行するときに発生するすべてのアクションのことです。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>It's obviously focused on starting your business-oriented actions but it relies on a lot of technical actions like loading libraries and configuration files, scanning the application's classpath, configuring the dependency injection, setting up your Object-Relational Mapping, instantiating your REST controllers, etc.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>これは明らかにビジネス指向のアクションを開始することに焦点を当てていますが、ライブラリや設定ファイルのロード、アプリケーションのクラスパスのスキャン、依存性インジェクションの設定、オブジェクトリレーショナルマッピングの設定、REST コントローラのインスタンス化など、多くの技術的なアクションに依存しています。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Usually, Java frameworks do their bootstrapping during the runtime before actually starting the application "Business oriented layer". During bootstrap, frameworks dynamically collect metadata by scanning the classpath to find configurations, entity definitions, dependency injection binding, etc. in order to instantiate proper objects through reflection. The main consequences are:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>通常、Javaフレームワークは、アプリケーションの "ビジネス志向のレイヤー" を実際に起動する前に、実行時中にブートストラップを行います。ブートストラップの際、フレームワークは、リフレクションによって適切なオブジェクトをインスタンス化するために、設定、エンティティー定義、依存関係の注入バインディングなどを見つけるためにクラスパスをスキャンします。これにより、動的にメタデータを収集します。主な結果は以下の通りです。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Delaying the readiness of your application: you need to wait a couple of seconds before actually serving a business request.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>アプリケーションの準備が遅れる: 実際にビジネスリクエストに対応する前に数秒待つ必要があります。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Having a peak of resource consumption at bootstrap: in a constrained environment, you will need to size the needed resources based on your technical bootstrap needs rather than your actual business needs.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>ブートストラップでリソース消費のピークを持つ: 制約のある環境では、実際のビジネスニーズではなく、技術的なブートストラップのニーズに基づいて、必要なリソースのサイズを決定する必要があります。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Quarkus' philosophy is to prevent as much as possible slow and memory intensive dynamic code execution by shifting left these actions and eventually do them during the build time.  A Quarkus extension is a Java piece of code acting as an adapter layer for your favorite library or technology.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>Quarkus の概念は、これらのアクションの左シフトを行い、最終的にはビルド時に実行することで、可能な限り低速でメモリー集約的な動的コードの実行を防ぐことです。Quarkus のエクステンションは、お気に入りのライブラリやテクノロジーのアダプターレイヤーとして機能する Java のコードです。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>A Quarkus extension consists of two parts:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>Quarkus のエクステンションは、2 つの部分から構成されています。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>The *runtime module* which represents the capabilities the extension developer exposes to the application's developer (an authentication filter, an enhanced data layer API, etc).  Runtime dependencies are the ones the users will add as their application dependencies (in Maven POMs or Gradle build scripts).</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>エクステンション開発者がアプリケーション開発者に公開する機能を表す *ランタイムモジュール* (認証フィルター、強化されたデータ層 API など)。ランタイム依存関係は、ユーザーがアプリケーションの依存関係として追加するものです (Maven POM または Gradle ビルドスクリプト)。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>The *deployment module* which is used during the augmentation phase of the build, it describes how to "deploy" a library following the Quarkus philosophy.  In other words, it applies all the Quarkus optimizations to your application during the build.  The deployment module is also where we prepare things for GraalVM's native compilation.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>ビルドの拡張フェーズで使用される *デプロイモジュール* で、Quarkus の概念に従ったライブラリを「デプロイ」する方法を説明しています。つまり、ビルド中にアプリケーションに Quarkus のすべての最適化を適用します。このデプロイメントモジュールは、GraalVM のネイティブコンパイルのための準備をする場所でもあります。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Users should not be adding the deployment modules of extension as application dependencies. The deployment dependencies are resolved by Quarkus during the augmentation phase from the runtime dependencies of the application.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>ユーザーは、エクステンションのデプロイメントモジュールをアプリケーションの依存関係として追加すべきではありません。デプロイメントの依存関係は、拡張フェーズの間に Quarkus によってアプリケーションの実行時依存関係から解決されます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>At this point, you should have understood that most of the magic will happen at the Augmentation build time thanks to the deployment module.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>この時点で、このデプロイメントモジュールにより、多くのマジックは拡張ビルド時に起こることを理解しているはずです。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>There are three distinct bootstrap phases of a Quarkus application.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>Quarkus アプリケーションには、3 つの異なるブートストラップフェーズがあります。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>*Augmentation*. During the build time, the Quarkus extensions will load and scan your application's bytecode (including the dependencies) and configuration.
+At this stage, the extension can read configuration files, scan classes for specific annotations, etc.
+Once all the metadata has been collected, the extensions can pre-process the libraries bootstrap actions like your ORM, DI or REST controllers configurations.
+The result of the bootstrap is directly recorded into bytecode and will be part of your final application package.
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>*拡張 (Augmentation)*。ビルド時に、Quarkus エクステンションはアプリケーションのバイトコード (依存関係を含む) と設定をロードしてスキャンします。
+この段階で、エクステンションは設定ファイルを読み込んだり、特定のアノテーションのためにクラスをスキャンしたりすることができます。
+すべてのメタデータが収集されたら、エクステンションは、ORM、DI、または REST コントローラーの設定のようなライブラリーのブートストラップアクションを前処理することができます。
+ブートストラップの結果はバイトコードに直接記録され、最終的なアプリケーションパッケージの一部となります。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>*Static Init*. During the run time, Quarkus will execute first a static init method which contains some extensions actions/configurations.
+When you will do your native packaging, this static method will be pre-processed during the build time and the objects it has generated will be serialized into the final native executable, so the initialization code will not be executed in the native mode (imagine you execute a Fibonacci function during this phase, the result of the computation will be directly recorded in the native executable).
+When running the application in JVM mode, this static init phase is executed at the start of the application.
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>*静的 Init* 実行時に、Quarkus は最初に、いくつかの拡張アクション/設定を含む最初の静的 init メソッドを実行します。
+ネイティブパッケージングを行う場合、このスタティックメソッドはビルド時に前処理され、生成されたオブジェクトは最終的なネイティブ実行ファイルにシリアライズされるため、初期化コードはネイティブモードでは実行されません (このフェーズではフィボナッチ関数を実行すると想像してください。計算の結果は、ネイティブ実行ファイルに直接記録されます)。
+JVM モードでアプリケーションを実行している場合、この静的 init フェーズはアプリケーションの開始時に実行されます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>*Runtime Init*. Well nothing fancy here, we do classic run time code execution.
+So, the more code you run during the two phases above, the faster your application will start.
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>*ランタイム Init* このフェーズでは特に目立つことはありません。従来的なランタイムコード実行を行います。
+つまり、上記の 2 つのフェーズでより多くのコードを実行すればするほど、アプリケーションの起動が速くなります。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Now that everything is explained, we can start coding!</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>これで全てが説明されたので、さっそくコーディングに取り掛かりましょう</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Quarkus provides `create-extension` Maven Mojo to initialize your extension project.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>Quarkus は、 `create-extension` Maven Mojo を提供し、拡張プロジェクトを初期化します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>It will try to auto-detect its options:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>オプションの自動検出が試行されます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>from `quarkus` (Quarkus Core) or `quarkus/extensions` directory, it will use the 'Quarkus Core' extension layout and defaults.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`quarkus` (Quarkus Core) または `quarkus/extensions` ディレクトリからアクセスすると、'Quarkus Core' エクステンションのレイアウトとデフォルトが使用されます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>with `-DgroupId=io.quarkiverse.[extensionId]`, it will use the 'Quarkiverse' extension layout and defaults.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`-DgroupId=io.quarkiverse.[extensionId]` を使用すると、'Quarkiverse' エクステンションのレイアウトとデフォルトを使用します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>in other cases it will use the 'Standalone' extension layout and defaults.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>それ以外の場合は 'Standalone' エクステンションのレイアウトとデフォルトを使用します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>we may introduce other layout types in the future.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>将来的には他のレイアウトタイプを導入する可能性があります。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>You may call it without any parameter to use the interactive mode: `mvn io.quarkus:quarkus-maven-plugin:{quarkus-version}:create-extension -N`</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>パラメータなしで呼び出してインタラクティブモードを使用することができます。`mvn io.quarkus:quarkus-maven-plugin:{quarkus-version}:create-extension -N`</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>$ mvn io.quarkus:quarkus-maven-plugin:{quarkus-version}:create-extension -N \
+    -DgroupId=org.acme \ #&lt;1&gt;
+    -DextensionId=greeting-extension \  #&lt;2&gt;
+    -DwithoutTests #&lt;3&gt;
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>$ mvn io.quarkus:quarkus-maven-plugin:{quarkus-version}:create-extension -N \
+    -DgroupId=org.acme \ #&lt;1&gt;
+    -DextensionId=greeting-extension \  #&lt;2&gt;
+    -DwithoutTests #&lt;3&gt;
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>[INFO] --- quarkus-maven-plugin:{quarkus-version}:create-extension (default-cli) @ standalone-pom ---
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>[INFO] --- quarkus-maven-plugin:{quarkus-version}:create-extension (default-cli) @ standalone-pom ---
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Detected layout type is 'standalone' #&lt;4&gt;
+Generated runtime artifactId is 'greeting-extension' #&lt;5&gt;
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>Detected layout type is 'standalone' #&lt;4&gt;
+Generated runtime artifactId is 'greeting-extension' #&lt;5&gt;
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>👍 extension has been successfully generated in: --&gt; /Users/ia3andy/workspace/redhat/quarkus/demo/greeting-extension</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg> extension has been successfully generated in: --&gt; /Users/ia3andy/workspace/redhat/quarkus/demo/greeting-extension</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  1.659 s
+[INFO] Finished at: 2021-01-25T16:17:16+01:00
+[INFO] ------------------------------------------------------------------------
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  1.659 s
+[INFO] Finished at: 2021-01-25T16:17:16+01:00
+[INFO] ------------------------------------------------------------------------
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>The extension groupId</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>エクステンション groupId</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>The extension id (not namespaced).</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>エクステンション ID (名前空間ではない)。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Indicate that we don't want to generate any test</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>テスト不要を示す</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>From a directory with no pom.xml and without any further options, the generator will automatically pick the 'standalone' extension layout</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>それ以上のオプションなしで、pom.xml のないディレクトリから、ジェネレーターは自動的に 'standalone' 拡張レイアウトを選択します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>With the 'standalone' layout, the `namespaceId` is empty by default, so the computed runtime module artifactId is the `extensionId`</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>'standalone' レイアウトでは、 `namespaceId` はデフォルトでは空なので、計算されるランタイムモジュールの artifactId は `extensionId` です。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Maven has generated a `greeting-extension` directory containing the extension project which consists of the parent `pom.xml`, the `runtime` and the `deployment` modules.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>Maven は、親 `pom.xml`、`runtime` 、`deployment` モジュールから成る拡張プロジェクトを含む `quarkus-greeting` ディレクトリーを生成しました。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>The parent pom.xml</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>親 pom.xml</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Your extension is a multi-module project. So let's start by checking out the parent POM at `./greeting-extension/pom.xml`.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>お使いのエクステンションはマルチモジュールプロジェクトです。まずは、`./quarkus-greeting/pom.xml` の親 POM から見ていきましょう。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"&gt;
+  &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+  &lt;groupId&gt;org.acme&lt;/groupId&gt;
+  &lt;artifactId&gt;greeting-extension-parent&lt;/artifactId&gt;
+  &lt;version&gt;1.0.0-SNAPSHOT&lt;/version&gt;
+  &lt;packaging&gt;pom&lt;/packaging&gt;
+  &lt;name&gt;Greeting Extension - Parent&lt;/name&gt;
+  &lt;modules&gt;&lt;!--1--&gt;
+    &lt;module&gt;deployment&lt;/module&gt;
+    &lt;module&gt;runtime&lt;/module&gt;
+  &lt;/modules&gt;
+  &lt;properties&gt;
+    &lt;compiler-plugin.version&gt;3.8.1&lt;/compiler-plugin.version&gt;&lt;!--2--&gt;
+    &lt;failsafe-plugin.version&gt;${surefire-plugin.version}&lt;/failsafe-plugin.version&gt;
+    &lt;maven.compiler.parameters&gt;true&lt;/maven.compiler.parameters&gt;
+    &lt;maven.compiler.source&gt;1.8&lt;/maven.compiler.source&gt;
+    &lt;maven.compiler.target&gt;1.8&lt;/maven.compiler.target&gt;
+    &lt;project.build.sourceEncoding&gt;UTF-8&lt;/project.build.sourceEncoding&gt;
+    &lt;project.reporting.outputEncoding&gt;UTF-8&lt;/project.reporting.outputEncoding&gt;
+    &lt;quarkus.version&gt;{quarkus-version}&lt;/quarkus.version&gt;
+    &lt;surefire-plugin.version&gt;2.22.2&lt;/surefire-plugin.version&gt;
+  &lt;/properties&gt;
+  &lt;dependencyManagement&gt;
+    &lt;dependencies&gt;
+      &lt;dependency&gt;&lt;!--3--&gt;
+        &lt;groupId&gt;io.quarkus&lt;/groupId&gt;
+        &lt;artifactId&gt;quarkus-bom&lt;/artifactId&gt;
+        &lt;version&gt;${quarkus.version}&lt;/version&gt;
+        &lt;type&gt;pom&lt;/type&gt;
+        &lt;scope&gt;import&lt;/scope&gt;
+      &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+  &lt;/dependencyManagement&gt;
+  &lt;build&gt;
+    &lt;pluginManagement&gt;
+      &lt;plugins&gt;
+        &lt;plugin&gt;&lt;!--4--&gt;
+          &lt;artifactId&gt;maven-surefire-plugin&lt;/artifactId&gt;
+          &lt;version&gt;${surefire-plugin.version}&lt;/version&gt;
+          &lt;configuration&gt;
+            &lt;systemPropertyVariables&gt;
+              &lt;java.util.logging.manager&gt;org.jboss.logmanager.LogManager&lt;/java.util.logging.manager&gt;
+              &lt;maven.home&gt;${maven.home}&lt;/maven.home&gt;
+              &lt;maven.repo&gt;${settings.localRepository}&lt;/maven.repo&gt;
+            &lt;/systemPropertyVariables&gt;
+          &lt;/configuration&gt;
+        &lt;/plugin&gt;
+        &lt;plugin&gt;&lt;!--4--&gt;
+          &lt;artifactId&gt;maven-failsafe-plugin&lt;/artifactId&gt;
+          &lt;version&gt;${failsafe-plugin.version}&lt;/version&gt;
+          &lt;configuration&gt;
+            &lt;systemPropertyVariables&gt;
+              &lt;java.util.logging.manager&gt;org.jboss.logmanager.LogManager&lt;/java.util.logging.manager&gt;
+              &lt;maven.home&gt;${maven.home}&lt;/maven.home&gt;
+              &lt;maven.repo&gt;${settings.localRepository}&lt;/maven.repo&gt;
+            &lt;/systemPropertyVariables&gt;
+          &lt;/configuration&gt;
+        &lt;/plugin&gt;
+        &lt;plugin&gt;
+          &lt;artifactId&gt;maven-compiler-plugin&lt;/artifactId&gt;
+          &lt;version&gt;${compiler-plugin.version}&lt;/version&gt;
+        &lt;/plugin&gt;
+      &lt;/plugins&gt;
+    &lt;/pluginManagement&gt;
+  &lt;/build&gt;
+&lt;/project&gt;
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"&gt;
+  &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+  &lt;groupId&gt;org.acme&lt;/groupId&gt;
+  &lt;artifactId&gt;greeting-extension-parent&lt;/artifactId&gt;
+  &lt;version&gt;1.0.0-SNAPSHOT&lt;/version&gt;
+  &lt;packaging&gt;pom&lt;/packaging&gt;
+  &lt;name&gt;Greeting Extension - Parent&lt;/name&gt;
+  &lt;modules&gt;&lt;!--1--&gt;
+    &lt;module&gt;deployment&lt;/module&gt;
+    &lt;module&gt;runtime&lt;/module&gt;
+  &lt;/modules&gt;
+  &lt;properties&gt;
+    &lt;compiler-plugin.version&gt;3.8.1&lt;/compiler-plugin.version&gt;&lt;!--2--&gt;
+    &lt;failsafe-plugin.version&gt;${surefire-plugin.version}&lt;/failsafe-plugin.version&gt;
+    &lt;maven.compiler.parameters&gt;true&lt;/maven.compiler.parameters&gt;
+    &lt;maven.compiler.source&gt;1.8&lt;/maven.compiler.source&gt;
+    &lt;maven.compiler.target&gt;1.8&lt;/maven.compiler.target&gt;
+    &lt;project.build.sourceEncoding&gt;UTF-8&lt;/project.build.sourceEncoding&gt;
+    &lt;project.reporting.outputEncoding&gt;UTF-8&lt;/project.reporting.outputEncoding&gt;
+    &lt;quarkus.version&gt;{quarkus-version}&lt;/quarkus.version&gt;
+    &lt;surefire-plugin.version&gt;2.22.2&lt;/surefire-plugin.version&gt;
+  &lt;/properties&gt;
+  &lt;dependencyManagement&gt;
+    &lt;dependencies&gt;
+      &lt;dependency&gt;&lt;!--3--&gt;
+        &lt;groupId&gt;io.quarkus&lt;/groupId&gt;
+        &lt;artifactId&gt;quarkus-bom&lt;/artifactId&gt;
+        &lt;version&gt;${quarkus.version}&lt;/version&gt;
+        &lt;type&gt;pom&lt;/type&gt;
+        &lt;scope&gt;import&lt;/scope&gt;
+      &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+  &lt;/dependencyManagement&gt;
+  &lt;build&gt;
+    &lt;pluginManagement&gt;
+      &lt;plugins&gt;
+        &lt;plugin&gt;&lt;!--4--&gt;
+          &lt;artifactId&gt;maven-surefire-plugin&lt;/artifactId&gt;
+          &lt;version&gt;${surefire-plugin.version}&lt;/version&gt;
+          &lt;configuration&gt;
+            &lt;systemPropertyVariables&gt;
+              &lt;java.util.logging.manager&gt;org.jboss.logmanager.LogManager&lt;/java.util.logging.manager&gt;
+              &lt;maven.home&gt;${maven.home}&lt;/maven.home&gt;
+              &lt;maven.repo&gt;${settings.localRepository}&lt;/maven.repo&gt;
+            &lt;/systemPropertyVariables&gt;
+          &lt;/configuration&gt;
+        &lt;/plugin&gt;
+        &lt;plugin&gt;&lt;!--4--&gt;
+          &lt;artifactId&gt;maven-failsafe-plugin&lt;/artifactId&gt;
+          &lt;version&gt;${failsafe-plugin.version}&lt;/version&gt;
+          &lt;configuration&gt;
+            &lt;systemPropertyVariables&gt;
+              &lt;java.util.logging.manager&gt;org.jboss.logmanager.LogManager&lt;/java.util.logging.manager&gt;
+              &lt;maven.home&gt;${maven.home}&lt;/maven.home&gt;
+              &lt;maven.repo&gt;${settings.localRepository}&lt;/maven.repo&gt;
+            &lt;/systemPropertyVariables&gt;
+          &lt;/configuration&gt;
+        &lt;/plugin&gt;
+        &lt;plugin&gt;
+          &lt;artifactId&gt;maven-compiler-plugin&lt;/artifactId&gt;
+          &lt;version&gt;${compiler-plugin.version}&lt;/version&gt;
+        &lt;/plugin&gt;
+      &lt;/plugins&gt;
+    &lt;/pluginManagement&gt;
+  &lt;/build&gt;
+&lt;/project&gt;
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Your extension declares 2 sub-modules `deployment` and `runtime`.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>エクステンションは、2 つのサブモジュール `deployment` と `runtime` を宣言しています。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Quarkus requires a recent version of the Maven compiler plugin supporting the annotationProcessorPaths configuration.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>Quarkus では、annotationProcessorPaths 設定に対応する、最新バージョンの Maven コンパイラープラグインのが必要です。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>The `quarkus-bom` aligns your dependencies with those used by Quarkus during the augmentation phase.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`quarkus-bom` は、オーグメンテーションの段階で Quarkus が使用している依存関係を調整します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Quarkus requires these configs to run tests properly</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>Quarkus では、テストを適切に実行するために、これらの設定が必要です。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Let's have a look at the deployment's `./greeting-extension/deployment/pom.xml`.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>デプロイメントの `./quarkus-greeting/deployment/pom.xml` を見てみましょう。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+    &lt;parent&gt;
+        &lt;groupId&gt;org.acme&lt;/groupId&gt;
+        &lt;artifactId&gt;greeting-extension-parent&lt;/artifactId&gt;
+        &lt;version&gt;1.0.0-SNAPSHOT&lt;/version&gt;
+    &lt;/parent&gt;
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+    &lt;parent&gt;
+        &lt;groupId&gt;org.acme&lt;/groupId&gt;
+        &lt;artifactId&gt;greeting-extension-parent&lt;/artifactId&gt;
+        &lt;version&gt;1.0.0-SNAPSHOT&lt;/version&gt;
+    &lt;/parent&gt;
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>    &lt;artifactId&gt;greeting-extension-deployment&lt;/artifactId&gt; &lt;!--1--&gt;
+    &lt;name&gt;Greeting Extension - Deployment&lt;/name&gt;
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>    &lt;artifactId&gt;greeting-extension-deployment&lt;/artifactId&gt; &lt;!--1--&gt;
+    &lt;name&gt;Greeting Extension - Deployment&lt;/name&gt;
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>    &lt;dependencies&gt;
+        &lt;dependency&gt;
+          &lt;groupId&gt;io.quarkus&lt;/groupId&gt;
+          &lt;artifactId&gt;quarkus-arc-deployment&lt;/artifactId&gt; &lt;!--2--&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.acme&lt;/groupId&gt;
+            &lt;artifactId&gt;greeting-extension&lt;/artifactId&gt; &lt;!--3--&gt;
+            &lt;version&gt;${project.version}&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+          &lt;groupId&gt;io.quarkus&lt;/groupId&gt;
+          &lt;artifactId&gt;quarkus-junit5-internal&lt;/artifactId&gt;
+          &lt;scope&gt;test&lt;/scope&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>    &lt;dependencies&gt;
+        &lt;dependency&gt;
+          &lt;groupId&gt;io.quarkus&lt;/groupId&gt;
+          &lt;artifactId&gt;quarkus-arc-deployment&lt;/artifactId&gt; &lt;!--2--&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.acme&lt;/groupId&gt;
+            &lt;artifactId&gt;greeting-extension&lt;/artifactId&gt; &lt;!--3--&gt;
+            &lt;version&gt;${project.version}&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+          &lt;groupId&gt;io.quarkus&lt;/groupId&gt;
+          &lt;artifactId&gt;quarkus-junit5-internal&lt;/artifactId&gt;
+          &lt;scope&gt;test&lt;/scope&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>    &lt;build&gt;
+        &lt;plugins&gt;
+            &lt;plugin&gt;
+                &lt;artifactId&gt;maven-compiler-plugin&lt;/artifactId&gt;
+                &lt;configuration&gt;
+                    &lt;annotationProcessorPaths&gt;
+                        &lt;path&gt;
+                            &lt;groupId&gt;io.quarkus&lt;/groupId&gt;
+                            &lt;artifactId&gt;quarkus-extension-processor&lt;/artifactId&gt;  &lt;!--4--&gt;
+                            &lt;version&gt;${quarkus.version}&lt;/version&gt;
+                        &lt;/path&gt;
+                    &lt;/annotationProcessorPaths&gt;
+                &lt;/configuration&gt;
+            &lt;/plugin&gt;
+        &lt;/plugins&gt;
+    &lt;/build&gt;
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>    &lt;build&gt;
+        &lt;plugins&gt;
+            &lt;plugin&gt;
+                &lt;artifactId&gt;maven-compiler-plugin&lt;/artifactId&gt;
+                &lt;configuration&gt;
+                    &lt;annotationProcessorPaths&gt;
+                        &lt;path&gt;
+                            &lt;groupId&gt;io.quarkus&lt;/groupId&gt;
+                            &lt;artifactId&gt;quarkus-extension-processor&lt;/artifactId&gt;  &lt;!--4--&gt;
+                            &lt;version&gt;${quarkus.version}&lt;/version&gt;
+                        &lt;/path&gt;
+                    &lt;/annotationProcessorPaths&gt;
+                &lt;/configuration&gt;
+            &lt;/plugin&gt;
+        &lt;/plugins&gt;
+    &lt;/build&gt;
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>&lt;/project&gt;
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>&lt;/project&gt;</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>The key points are:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>主なポイント:</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>By convention, the deployment module has the `-deployment` suffix (`greeting-extension-deployment`).</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>決まりとして、配置モジュールのサフィックスは `-deployment` (`greeting-deployment`) です。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>The deployment module depends on the `quarkus-arc-deployment` artifact.  We will see later which dependencies are convenient to add.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>デプロイメントモジュールは `quarkus-core-deployment` アーティファクトに依存しています。どの依存関係を追加するのが便利かは後ほど見ていきます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>The deployment module also *must* depend on the runtime module.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>デプロイメントモジュールも実行時モジュールに依存している *必要があります* 。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>We add the `quarkus-extension-processor` to the compiler annotation processors.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>コンパイラーのアノテーションプロセッサーに `quarkus-extension-processor` を追加します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>In addition to the `pom.xml` `create-extension` also generated the `org.acme.greeting.extension.deployment.GreetingExtensionProcessor` class.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`pom.xml` `create-extension` に加えて `org.acme.quarkus.greeting.deployment.GreetingProcessor` クラスも生成されました。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>package org.acme.greeting.extension.deployment;
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>package org.acme.greeting.extension.deployment;
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>import io.quarkus.deployment.annotations.BuildStep;
+import io.quarkus.deployment.builditem.FeatureBuildItem;
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>import io.quarkus.deployment.annotations.BuildStep;
+import io.quarkus.deployment.builditem.FeatureBuildItem;
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>class GreetingExtensionProcessor {
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>class GreetingExtensionProcessor {
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>    private static final String FEATURE = "greeting-extension";
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>    private static final String FEATURE = "greeting-extension";
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>    @BuildStep
+    FeatureBuildItem feature() {
+        return new FeatureBuildItem(FEATURE);
+    }
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>    @BuildStep
+    FeatureBuildItem feature() {
+        return new FeatureBuildItem(FEATURE);
+    }
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>}
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>}</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>`FeatureBuildItem` represents a functionality provided by an extension.  The name of the feature gets displayed in the log during application bootstrap.  An extension should provide at most one feature.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`FeatureBuildItem` はエクステンションによって提供される機能を表します。機能の名前は、アプリケーションの起動時にログに表示されます。エクステンションは最大でも 1 つの機能を提供しなければなりません。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Be patient, we will explain the `Build Step Processor` concept and all the extension deployment API later on.  At this point, you just need to understand that this class explains to Quarkus how to deploy a feature named `greeting` which is your extension.  In other words, you are augmenting your application to use the `greeting` extension with all the Quarkus benefits (build time optimization, native support, etc.).</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`Build Step Processor` の概念とすべてのエクステンションのデプロイメント API については、後で説明します。この時点では、このクラスは、`greeting` というエクステンションをデプロイする方法を Quarkus に説明していることを理解する必要があります。つまり、アプリケーションを拡張して、Quarkus のすべての利点 (ビルド時間の最適化、ネイティブサポートなど) とともに `greeting` エクステンションを使用することになります。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>The Runtime module</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>ランタイムモジュール</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Finally `./greeting-extension/runtime/pom.xml`.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>最後に `./greeting-extension/runtime/pom.xml` を見ていきます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;project xsi:schemalocation="http://maven.apache.org/pom/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/pom/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/xmlschema-instance"&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+    &lt;parent&gt;
+        &lt;groupId&gt;org.acme&lt;/groupId&gt;
+        &lt;artifactId&gt;greeting-extension-parent&lt;/artifactId&gt;
+        &lt;version&gt;0.0.1-snapshot&lt;/version&gt;
+    &lt;/parent&gt;
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;project xsi:schemalocation="http://maven.apache.org/pom/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/pom/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/xmlschema-instance"&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+    &lt;parent&gt;
+        &lt;groupId&gt;org.acme&lt;/groupId&gt;
+        &lt;artifactId&gt;greeting-extension-parent&lt;/artifactId&gt;
+        &lt;version&gt;0.0.1-snapshot&lt;/version&gt;
+    &lt;/parent&gt;
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>    &lt;artifactId&gt;greeting-extension&lt;/artifactId&gt;  &lt;!--1--&gt;
+    &lt;name&gt;Greeting Extension - Runtime&lt;/name&gt;
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>    &lt;artifactId&gt;greeting-extension&lt;/artifactId&gt;  &lt;!--1--&gt;
+    &lt;name&gt;Greeting Extension - Runtime&lt;/name&gt;
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>    &lt;dependencies&gt;
+        &lt;dependency&gt;
+          &lt;groupid&gt;io.quarkus&lt;/groupid&gt;
+          &lt;artifactid&gt;quarkus-arc&lt;/artifactid&gt; &lt;!--2--&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>    &lt;dependencies&gt;
+        &lt;dependency&gt;
+          &lt;groupid&gt;io.quarkus&lt;/groupid&gt;
+          &lt;artifactid&gt;quarkus-arc&lt;/artifactid&gt; &lt;!--2--&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>    &lt;build&gt;
+        &lt;plugins&gt;
+            &lt;plugin&gt;
+                &lt;groupId&gt;io.quarkus&lt;/groupId&gt;
+                &lt;artifactId&gt;quarkus-bootstrap-maven-plugin&lt;/artifactId&gt;  &lt;!--3--&gt;
+                &lt;version&gt;${quarkus.version}&lt;/version&gt;
+                &lt;executions&gt;
+                    &lt;execution&gt;
+                        &lt;phase&gt;compile&lt;/phase&gt;
+                        &lt;goals&gt;
+                            &lt;goal&gt;extension-descriptor&lt;/goal&gt;
+                        &lt;/goals&gt;
+                        &lt;phase&gt;compile&lt;/phase&gt;
+                        &lt;configuration&gt;
+                            &lt;deployment&gt;${project.groupId}:${project.artifactId}-deployment:${project.version}
+                            &lt;/deployment&gt;
+                        &lt;/configuration&gt;
+                    &lt;/execution&gt;
+                &lt;/executions&gt;
+            &lt;/plugin&gt;
+            &lt;plugin&gt;
+                &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
+                &lt;artifactId&gt;maven-compiler-plugin&lt;/artifactId&gt;
+                &lt;configuration&gt;
+                    &lt;annotationProcessorPaths&gt;
+                        &lt;path&gt;
+                            &lt;groupId&gt;io.quarkus&lt;/groupId&gt;
+                            &lt;artifactId&gt;quarkus-extension-processor&lt;/artifactId&gt; &lt;!--4--&gt;
+                            &lt;version&gt;${quarkus.version}&lt;/version&gt;
+                        &lt;/path&gt;
+                    &lt;/annotationProcessorPaths&gt;
+                &lt;/configuration&gt;
+            &lt;/plugin&gt;
+        &lt;/plugins&gt;
+    &lt;/build&gt;
+&lt;/project&gt;
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>    &lt;build&gt;
+        &lt;plugins&gt;
+            &lt;plugin&gt;
+                &lt;groupId&gt;io.quarkus&lt;/groupId&gt;
+                &lt;artifactId&gt;quarkus-bootstrap-maven-plugin&lt;/artifactId&gt;  &lt;!--3--&gt;
+                &lt;version&gt;${quarkus.version}&lt;/version&gt;
+                &lt;executions&gt;
+                    &lt;execution&gt;
+                        &lt;phase&gt;compile&lt;/phase&gt;
+                        &lt;goals&gt;
+                            &lt;goal&gt;extension-descriptor&lt;/goal&gt;
+                        &lt;/goals&gt;
+                        &lt;phase&gt;compile&lt;/phase&gt;
+                        &lt;configuration&gt;
+                            &lt;deployment&gt;${project.groupId}:${project.artifactId}-deployment:${project.version}
+                            &lt;/deployment&gt;
+                        &lt;/configuration&gt;
+                    &lt;/execution&gt;
+                &lt;/executions&gt;
+            &lt;/plugin&gt;
+            &lt;plugin&gt;
+                &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
+                &lt;artifactId&gt;maven-compiler-plugin&lt;/artifactId&gt;
+                &lt;configuration&gt;
+                    &lt;annotationProcessorPaths&gt;
+                        &lt;path&gt;
+                            &lt;groupId&gt;io.quarkus&lt;/groupId&gt;
+                            &lt;artifactId&gt;quarkus-extension-processor&lt;/artifactId&gt; &lt;!--4--&gt;
+                            &lt;version&gt;${quarkus.version}&lt;/version&gt;
+                        &lt;/path&gt;
+                    &lt;/annotationProcessorPaths&gt;
+                &lt;/configuration&gt;
+            &lt;/plugin&gt;
+        &lt;/plugins&gt;
+    &lt;/build&gt;
+&lt;/project&gt;
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>By convention, the runtime module has no suffix (`greeting-extension`) as it is the artifact exposed to the end user.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>決まりとして、ランタイムモジュールはエンドユーザーに公開されるアーティファクトであるため、接尾辞 (`greeting`) を持たない。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>The runtime module depends on the `quarkus-arc` artifact.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>ランタイムモジュールは `quarkus-arc` アーティファクトに依存しています。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>We add the `quarkus-bootstrap-maven-plugin` to generate the Quarkus extension descriptor included into the runtime artifact which links it with the corresponding deployment artifact.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>ランタイムアーティファクトに含まれる Quarkus 拡張記述子を生成するために `quarkus-bootstrap-maven-plugin` を追加し、これを対応するデプロイメントアーティファクトとリンクさせています。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Basic version of the Sample Greeting extension</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>サンプル Greeting エクステンションの基本バージョン</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>The (killer) feature proposed by our extension is to greet the user.  To do so, our extension will deploy, in the user application, a Servlet exposing the HTTP endpoint `/greeting` which responds to the GET verb with a plain text `Hello`.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>ここでのエクステンションの素晴らしい機能は、ユーザーに挨拶をすることです。これを行うには、このエクステンションはユーザーアプリケーションで、平文 `Hello` で GET 動詞に応答する HTTP エンドポイント `/greeting` を公開するサーブレットを展開します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>The `runtime` module is where you develop the feature you want to propose to your users, so it's time to create our Web Servlet.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>この `ランタイム` モジュールは、ユーザーに提案したい機能を開発するところなので、そろそろ Web Servlet を作成しましょう。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>To use Servlets in your applications you need to have a Servlet Container such as http://undertow.io[Undertow].  Luckily, `quarkus-bom` imported by our parent `pom.xml` already includes the Undertow Quarkus extension.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>アプリケーションでサーブレットを使用するには、 link:http://undertow.io[Undertow] のようなサーブレットコンテナーが必要です。幸い、`pom.xml`にインポートされる `quarkus-bom` には、すでに Undertow Quarkus エクステンションが含まれています。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>All we need to do is add `quarkus-undertow` as dependency to our `./greeting-extension/runtime/pom.xml`:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>必要なのは、 `quarkus-undertow` を依存関係として `./greeting-extension/runtime/pom.xml` に追加することだけです。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>    &lt;dependency&gt;
+        &lt;groupId&gt;io.quarkus&lt;/groupId&gt;
+        &lt;artifactId&gt;quarkus-undertow&lt;/artifactId&gt;
+    &lt;/dependency&gt;
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>    &lt;dependency&gt;
+        &lt;groupId&gt;io.quarkus&lt;/groupId&gt;
+        &lt;artifactId&gt;quarkus-undertow&lt;/artifactId&gt;
+    &lt;/dependency&gt;
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>The dependency on `quarkus-arc` generated by the `create-extension` mojo can now be removed since `quarkus-undertow` already depends on it.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`create-extension` mojo で生成された `quarkus-core-deployment` への依存関係は、`quarkus-undertow-deployment` が既に依存しているため削除できます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Now we can create our Servlet `org.acme.greeting.extension.GreetingExtensionServlet` in the `runtime` module.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>これで、`runtime` モジュールでサーブレット `org.acme.quarkus.greeting.GreetingServlet` を作成することができるようになりました。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>mkdir -p ./greeting-extension/runtime/src/main/java/org/acme/greeting/extension
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>mkdir -p ./greeting-extension/runtime/src/main/java/org/acme/greeting/extension
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>package org.acme.greeting.extension;
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>package org.acme.greeting.extension;
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>@WebServlet
+public class GreetingExtensionServlet extends HttpServlet { // &lt;1&gt;
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>@WebServlet
+public class GreetingExtensionServlet extends HttpServlet { // &lt;1&gt;
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException { // &lt;2&gt;
+        resp.getWriter().write("Hello");
+    }
+}
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException { // &lt;2&gt;
+        resp.getWriter().write("Hello");
+    }
+}
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>As usual, defining a servlet requires to extend `javax.servlet.http.HttpServlet`.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>通常通り、サーブレットを定義するには `javax.servlet.http.HttpServlet` の拡張が必要です。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Since we want to respond to the HTTP GET verb, we override the `doGet` method and write `Hello` in the Servlet response's output stream.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>HTTP GET 動詞に応答したいので、`doGet` メソッドをオーバーライドして、サーブレット応答の出力ストリームに `Hello` を記述します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Quarkus magic relies on bytecode generation at build time rather than waiting for the runtime code evaluation, that's the role of your extension's `deployment` module.  Calm down, we know, bytecode is hard and you don't want to do it manually, Quarkus proposes a high level API to make your life easier.  Thanks to basic concepts, you will describe the items to produce/consume and the corresponding steps in order to generate the bytecode to produce during the deployment time.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`deployment` Quarkus magic は、実行時のコード評価を待つのではなく、ビルド時のバイトコード生成に依存しています。これは、エクステンションの `deployment` モジュールのロールです。安心してください。バイトコードは難しいので、手動での作業は理想的でないことは理解しています。基本的な概念のおかげで、デプロイ時に生成するバイトコード生成のために、生成/消費するアイテムとそれに対応するステップを説明します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>The `io.quarkus.builder.item.BuildItem` concept represents object instances you will produce or consume (and at some point convert into bytecode) thanks to methods annotated with `@io.quarkus.deployment.annotations.BuildStep` which describe your extension's deployment tasks.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`io.quarkus.builder.item.BuildItem` の概念は、`@io.quarkus.deployment.annotations.BuildStep` でアノテーションされたメソッドのおかげで、生成または消費 (そしてある時点でバイトコードに変換したり) するオブジェクトインスタンスを表しています。このアノテーションは、エクステンションのデプロイメントタスクを説明しています。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>See link:all-builditems[the complete list of BuildItem implementations in core] for more information</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>詳細は  link:all-builditems[BuildItem 実装の完全リスト] 参照してください。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Go back to the generated `org.acme.greeting.extension.deployment.GreetingExtensionProcessor` class.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>生成された `org.acme.quarkus.greeting.deployment.GreetingProcessor` クラスに戻ります。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>    @BuildStep // &lt;1&gt;
+    FeatureBuildItem feature() {
+        return new FeatureBuildItem(FEATURE); // &lt;2&gt;
+    }
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>    @BuildStep // &lt;1&gt;
+    FeatureBuildItem feature() {
+        return new FeatureBuildItem(FEATURE); // &lt;2&gt;
+    }
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>`feature()` method is annotated with `@BuildStep` which means it is identified as a deployment task Quarkus will have to execute during the deployment.  `BuildStep` methods are run concurrently at augmentation time to augment the application.  They use a producer/consumer model, where a step is guaranteed not to be run until all the items that it is consuming have been produced.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`feature()` メソッドには `@BuildStep` というアノテーションが付けられています。これは、Quarkus がデプロイ時に実行しなければならないデプロイタスクとして識別されます。`BuildStep` メソッドは、アプリケーションを拡張するための拡張時に同時に実行されます。これらは、プロデューサー/コンシューマーモデルを使用しています。このステップは、消費しているすべての項目が生成されるまで、実行されないことが保証されます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>`io.quarkus.deployment.builditem.FeatureBuildItem` is an implementation of `BuildItem` which represents the description of an extension.  This `BuildItem` will be used by Quarkus to display information to the users when the application is starting.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`io.quarkus.deployment.builditem.FeatureBuildItem` は、エクステンションの説明を表す `BuildItem` の実装です。この `BuildItem` は、アプリケーションの起動時にユーザーに情報を表示するために Quarkus が使用します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>There are many `BuildItem` implementations, each one represents an aspect of the deployment process.  Here are some examples:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>多くの `BuildItem` 実装があり、それぞれが展開プロセスの一面を表しています。ここではいくつかの例を紹介します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>`ServletBuildItem`: describes a Servlet (name, path, etc.) we want to generate during the deployment.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`ServletBuildItem`: デプロイ時に生成したいサーブレット (名前、パスなど) を記述します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>`BeanContainerBuildItem`: describes a container used to store and retrieve object instances during the deployment.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`BeanContainerBuildItem`: デプロイ時にオブジェクトインスタンスを保存・取得するために使用するコンテナーについて説明します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>If you don't find a `BuildItem` for what you want to achieve, you can create your own implementation. Keep in mind that a `BuildItem` should be as fine-grained as possible, representing a specific part of the deployment.  To create your `BuildItem` you can extend:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>実現したいことに対応する `BuildItem` が見つからない場合は、独自の実装を作成することができます。 `BuildItem` は、デプロイメントの特定の部分を表すもので、できるだけ細かいものでなければならないということを覚えておいてください。`BuildItem` を作成する方法:</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>`io.quarkus.builder.item.SimpleBuildItem` if you need only a single instance of the item during the deployment (e.g. `BeanContainerBuildItem`, you only want one container).</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`io.quarkus.builder.item.SimpleBuildItem` デプロイ時にアイテムのインスタンスを1つだけ必要とする場合 (例: `BeanContainerBuildItem`、コンテナーが 1 つのみ必要な場合)。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>`io.quarkus.builder.item.MultiBuildItem` if you want to have multiple instances (e.g. `ServletBuildItem`, you can produce many Servlets during the deployment).</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>複数のインスタンスを使いたい場合は `io.quarkus.builder.item.MultiBuildItem` (例: `ServletBuildItem`、デプロイ時に多くのサーブレットを生成することができます)。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>It's now time to declare our HTTP endpoint. To do so, we need to produce a `ServletBuildItem`.  At this point, we are sure you understood that if the `quarkus-undertow` dependency proposes Servlet support for our `runtime` module, we will need the `quarkus-undertow-deployment` dependency in our `deployment` module to have access to the `io.quarkus.undertow.deployment.ServletBuildItem`.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>次は、HTTP エンドポイントを宣言します。これを行うには、`ServletBuildItem` を生成する必要があります。この時点では、 `quarkus-undertow` 依存関係が `runtime` モジュールの Servlet サポートを提案している場合は、`deployment` モジュールの `quarkus-undertow-deployment` 依存関係が `io.quarkus.undertow.deployment.ServletBuildItem` にアクセスできるようにする必要があることをご理解いただけたと思います。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Let's add `quarkus-undertow-deployment` as dependency to our `./greeting-extension/deployment/pom.xml`:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`quarkus-undertow-deployment` を依存関係として `./greeting-extension/deployment/pom.xml` に追加してみましょう。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>    &lt;dependency&gt;
+        &lt;groupId&gt;io.quarkus&lt;/groupId&gt;
+        &lt;artifactId&gt;quarkus-undertow-deployment&lt;/artifactId&gt;
+    &lt;/dependency&gt;
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>    &lt;dependency&gt;
+        &lt;groupId&gt;io.quarkus&lt;/groupId&gt;
+        &lt;artifactId&gt;quarkus-undertow-deployment&lt;/artifactId&gt;
+    &lt;/dependency&gt;
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>The dependency on `quarkus-arc-deployment` generated by the `create-extension` mojo can now be removed since `quarkus-undertow-deployment` already depends on it.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`create-extension` mojo で生成された `quarkus-core-deployment` への依存は、 `quarkus-undertow-deployment` が既に依存しているので、これで削除できます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>We can now update `org.acme.greeting.extension.deployment.GreetingExtensionProcessor`:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>これで `org.acme.quarkus.greeting.deployment.GreetingProcessor` を更新できるようになりました。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>import io.quarkus.deployment.annotations.BuildStep;
+import io.quarkus.deployment.builditem.FeatureBuildItem;
+import org.acme.greeting.extension.GreetingExtensionServlet;
+import io.quarkus.undertow.deployment.ServletBuildItem;
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>import io.quarkus.deployment.annotations.BuildStep;
+import io.quarkus.deployment.builditem.FeatureBuildItem;
+import org.acme.greeting.extension.GreetingExtensionServlet;
+import io.quarkus.undertow.deployment.ServletBuildItem;
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>    @BuildStep
+    ServletBuildItem createServlet() { // &lt;1&gt;
+      ServletBuildItem servletBuildItem = ServletBuildItem.builder("greeting-extension", GreetingExtensionServlet.class.getName())
+        .addMapping("/greeting")
+        .build(); // &lt;2&gt;
+      return servletBuildItem;
+    }
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>    @BuildStep
+    ServletBuildItem createServlet() { // &lt;1&gt;
+      ServletBuildItem servletBuildItem = ServletBuildItem.builder("greeting-extension", GreetingExtensionServlet.class.getName())
+        .addMapping("/greeting")
+        .build(); // &lt;2&gt;
+      return servletBuildItem;
+    }
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>We add a `createServlet` method which returns a `ServletBuildItem` and annotate it with `@BuildStep`.  Now, Quarkus will process this new task which will result in the bytecode generation of the Servlet registration at build time.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`ServletBuildItem` を返す `createServlet` メソッドを追加し、`@BuildStep` でアノテーションを付けます。これで、Quarkus はこの新しいタスクを処理して、ビルド時にサーブレット登録のバイトコードを生成します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>`ServletBuildItem` proposes a fluent API to instantiate a Servlet named `greeting-extension` of type `GreetingExtensionServlet` (it's our class provided by our extension `runtime` module), and map it the `/greeting` path.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`ServletBuildItem` は、流ちょうな API を処理して `GreetingExtensionServlet` 型の `greeting-extension` というサーブレットをインスタンス化し (エクステンション `runtime` によって提供されるクラスです)、`/greeting` パスにマッピングします。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Testing the Greeting Extension feature</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>グリーティングエクステンションのテスト</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>When developing a Quarkus extension, you mainly want to test your feature is properly deployed in an application and works as expected.  That's why the tests will be hosted in the `deployment` module.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>Quarkus エクステンションを開発する際には、主に機能がアプリケーションに正しくデプロイされ、期待通りに動作するかどうかをテストすることを考える必要があります。そのため、テストは `deployment` モジュールでホストされます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Quarkus proposes facilities to test extensions via the `quarkus-junit5-internal` artifact (which should already be in the deployment pom.xml), in particular the `io.quarkus.test.QuarkusUnitTest` runner which starts an application with your extension.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>Quarkusは、既に deployment pom.xml にある `quarkus-junit5-internal` アーティファクトを介してエクステンションをテストするための機能を処理します (エクステンションでアプリケーションを起動する `io.quarkus.test.QuarkusUnitTest` ランナー)。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>We will use http://rest-assured.io[RestAssured] (massively used in Quarkus) to test our HTTP endpoint.  Let's add the `rest-assured` dependency into the `./greeting-extension/deployment/pom.xml`.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>http://rest-assured.io[RestAssured] (Quarkus で非常によく使われる) を使用して HTTP エンドポイントをテストします。`rest-assured` の依存関係を `./greeting-extension/deployment/pom.xml` に追加しましょう。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>    ...
+    &lt;dependency&gt;
+      &lt;groupId&gt;io.rest-assured&lt;/groupId&gt;
+      &lt;artifactId&gt;rest-assured&lt;/artifactId&gt; &lt;!--2--&gt;
+      &lt;scope&gt;test&lt;/scope&gt;
+    &lt;/dependency&gt;
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>    ...
+    &lt;dependency&gt;
+      &lt;groupId&gt;io.rest-assured&lt;/groupId&gt;
+      &lt;artifactId&gt;rest-assured&lt;/artifactId&gt; &lt;!--2--&gt;
+      &lt;scope&gt;test&lt;/scope&gt;
+    &lt;/dependency&gt;
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>The `create-extension` Maven Mojo can create the test and integration-test structure (drop the `-DwithoutTests`). Here, we'll create it ourselves:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>現在、`create-extension` Maven Mojo はテストと統合テスト構造 (`-DwithoutTests` をドロップ) を作成できます。ここでは、自分たちで作成します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>mkdir -p ./greeting-extension/deployment/src/test/java/org/acme/greeting/extension/deployment
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>mkdir -p ./greeting-extension/deployment/src/test/java/org/acme/greeting/extension/deployment
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>To start testing your extension, create the following `org.acme.greeting.extension.deployment.GreetingExtensionTest` test class:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>エクステンションのテストを開始するには、次の `org.acme.quarkus.greeting.deployment.GreetingTest` テストクラスを作成します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>import io.quarkus.test.QuarkusUnitTest;
+import io.restassured.RestAssured;
+import org.jboss.shrinkwrap.api.ShrinkWrap;
+import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>import io.quarkus.test.QuarkusUnitTest;
+import io.restassured.RestAssured;
+import org.jboss.shrinkwrap.api.ShrinkWrap;
+import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>import static org.hamcrest.Matchers.containsString;
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>import static org.hamcrest.Matchers.containsString;
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>public class GreetingExtensionTest {
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>public class GreetingExtensionTest {
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>  @RegisterExtension
+  static final QuarkusUnitTest config = new QuarkusUnitTest()
+    .setArchiveProducer(() -&gt; ShrinkWrap.create(JavaArchive.class)); // &lt;1&gt;
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>  @RegisterExtension
+  static final QuarkusUnitTest config = new QuarkusUnitTest()
+    .setArchiveProducer(() -&gt; ShrinkWrap.create(JavaArchive.class)); // &lt;1&gt;
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>  @Test
+  public void testGreeting() {
+    RestAssured.when().get("/greeting").then().statusCode(200).body(containsString("Hello")); // &lt;2&gt;
+  }
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>  @Test
+  public void testGreeting() {
+    RestAssured.when().get("/greeting").then().statusCode(200).body(containsString("Hello")); // &lt;2&gt;
+  }
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>We register a Junit Extension which will start a Quarkus application with the Greeting extension.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>Greeting エクステンションで Quarkus アプリを起動する Junit エクステンションを登録します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>We verify the application has a `greeting` endpoint responding to a HTTP GET request with a OK status (200) and a plain text body containing `Hello`</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>アプリケーションが `greeting` エンドポイントから OK ステータス (200) の HTTP GET 要求に応答していることと、`Hello` を含むプレーンテキスト本文があることを確認します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Time to test and install to our local maven repository!</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>テストしてローカルの maven リポジトリーにインストールしてみましょう。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>$ mvn clean install
+[INFO] Scanning for projects...
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Build Order:
+[INFO]
+[INFO] Greeting Extension - Parent                                        [pom]
+[INFO] Greeting Extension - Runtime                                       [jar]
+[INFO] Greeting Extension - Deployment                                    [jar]
+[INFO]
+[INFO] -----------------&lt; org.acme:greeting-extension-parent &gt;-----------------
+[INFO] Building Greeting Extension - Parent 1.0.0-SNAPSHOT                [1/3]
+[INFO] --------------------------------[ pom ]---------------------------------
+...
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running org.acme.greeting.extension.deployment.GreetingExtensionTest
+2021-01-27 10:24:42,506 INFO  [io.quarkus] (main) Quarkus {quarkus-version} on JVM started in 0.470s. Listening on: http://localhost:8081
+2021-01-27 10:24:42,508 INFO  [io.quarkus] (main) Profile test activated.
+2021-01-27 10:24:42,508 INFO  [io.quarkus] (main) Installed features: [cdi, greeting-extension, servlet]
+2021-01-27 10:24:43,764 INFO  [io.quarkus] (main) Quarkus stopped in 0.018s
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 4.799 s - in org.acme.greeting.extension.deployment.GreetingExtensionTest
+[INFO]
+[INFO] Results:
+[INFO]
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0
+[INFO]
+[INFO]
+[INFO] --- maven-jar-plugin:2.4:jar (default-jar) @ greeting-extension-deployment ---
+[INFO] Building jar: /Users/ia3andy/workspace/redhat/quarkus/demo/greeting-extension/deployment/target/greeting-extension-deployment-1.0.0-SNAPSHOT.jar
+[INFO]
+[INFO] --- maven-install-plugin:2.4:install (default-install) @ greeting-extension-deployment ---
+...
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Summary for Greeting Extension - Parent 1.0.0-SNAPSHOT:
+[INFO]
+[INFO] Greeting Extension - Parent ........................ SUCCESS [  0.303 s]
+[INFO] Greeting Extension - Runtime ....................... SUCCESS [  3.345 s]
+[INFO] Greeting Extension - Deployment .................... SUCCESS [  7.365 s]
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  11.246 s
+[INFO] Finished at: 2021-01-27T10:24:44+01:00
+[INFO] ------------------------------------------------------------------------
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>$ mvn clean install
+[INFO] Scanning for projects...
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Build Order:
+[INFO]
+[INFO] Greeting Extension - Parent                                        [pom]
+[INFO] Greeting Extension - Runtime                                       [jar]
+[INFO] Greeting Extension - Deployment                                    [jar]
+[INFO]
+[INFO] -----------------&lt; org.acme:greeting-extension-parent &gt;-----------------
+[INFO] Building Greeting Extension - Parent 1.0.0-SNAPSHOT                [1/3]
+[INFO] --------------------------------[ pom ]---------------------------------
+...
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running org.acme.greeting.extension.deployment.GreetingExtensionTest
+2021-01-27 10:24:42,506 INFO  [io.quarkus] (main) Quarkus {quarkus-version} on JVM started in 0.470s. Listening on: http://localhost:8081
+2021-01-27 10:24:42,508 INFO  [io.quarkus] (main) Profile test activated.
+2021-01-27 10:24:42,508 INFO  [io.quarkus] (main) Installed features: [cdi, greeting-extension, servlet]
+2021-01-27 10:24:43,764 INFO  [io.quarkus] (main) Quarkus stopped in 0.018s
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 4.799 s - in org.acme.greeting.extension.deployment.GreetingExtensionTest
+[INFO]
+[INFO] Results:
+[INFO]
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0
+[INFO]
+[INFO]
+[INFO] --- maven-jar-plugin:2.4:jar (default-jar) @ greeting-extension-deployment ---
+[INFO] Building jar: /Users/ia3andy/workspace/redhat/quarkus/demo/greeting-extension/deployment/target/greeting-extension-deployment-1.0.0-SNAPSHOT.jar
+[INFO]
+[INFO] --- maven-install-plugin:2.4:install (default-install) @ greeting-extension-deployment ---
+...
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Summary for Greeting Extension - Parent 1.0.0-SNAPSHOT:
+[INFO]
+[INFO] Greeting Extension - Parent ........................ SUCCESS [  0.303 s]
+[INFO] Greeting Extension - Runtime ....................... SUCCESS [  3.345 s]
+[INFO] Greeting Extension - Deployment .................... SUCCESS [  7.365 s]
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  11.246 s
+[INFO] Finished at: 2021-01-27T10:24:44+01:00
+[INFO] ------------------------------------------------------------------------
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Looks good! Congratulations you just finished your first extension.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>問題なさそうですね。初めてのエクステンションの作成、おつかれさまでした。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Debugging your extension</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>エクステンションのデバッグ</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>_If debugging is the process of removing bugs, then programming must be the process of putting them in._ Edsger W. Dijkstra</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>デバッグ作業がバグを取り除く作業であるならば、プログラミングとは、バグを入れ込む作業ということになる。エドガー・W・ダイクストラ</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Debugging your application build</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>アプリケーションビルドのデバッグ</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Since your extension deployment is made during the application build, this process is triggered by your build tool.  That means if you want to debug this phase you need to launch your build tool with the remote debug mode switched one.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>エクステンションのデプロイはアプリケーションのビルド中に行われるため、このプロセスはビルドツールによってトリガーされます。つまり、このフェーズをデバッグしたい場合は、リモートデバッグモードを 1 に切り替えてビルドツールを起動する必要があります。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>You can activate Maven remote debugging by using `mvnDebug`.  You can launch your application with the following command line:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`mvnDebug` を使用して、Maven リモートデバッグを有効にすることができます。以下のコマンドラインでアプリケーションを起動できます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>mvnDebug clean compile quarkus:dev
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>mvnDebug clean compile quarkus:dev
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>By default, Maven will wait for a connection on `localhost:8000`.  Now, you can run your IDE `Remote` configuration to attach it to `localhost:8000`.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>デフォルトでは、Maven は、`localhost:8000` 上の接続を待ちます。これで、`localhost:8000` にアタッチするために、IDE `Remote` の設定を実行することができます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Gradle</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>Gradle</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>You can activate Gradle remote debugging by using the flags `org.gradle.debug=true` or `org.gradle.daemon.debug=true` in daemon mode.  You can launch your application with the following command line:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>Gradle のリモートデバッグは、デーモンモードでフラグ `org.gradle.debug=true` または `org.gradle.daemon.debug=true` を使用して有効にすることができます。以下のコマンドラインでアプリケーションを起動することができます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>./gradlew quarkusDev -Dorg.gradle.daemon.debug=true
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>./gradlew quarkusDev -Dorg.gradle.daemon.debug=true
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>By default, Gradle will wait for a connection on `localhost:5005`.  Now, you can run your IDE `Remote` configuration to attach it to `localhost:5005`.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>デフォルトでは、Gradle は、`localhost:5005` 上の接続を待ちます。これで、`localhost:5005` にアタッチするために、IDE `Remote` の設定を実行することができます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Debugging your extension tests</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>エクステンションテストのデバッグ</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>We have seen together how to test your extension and sometimes things don't go so well and you want to debug your tests.  Same principle here, the trick is to enable the Maven Surefire remote debugging in order to attach an IDE `Remote` configuration.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>エクステンションをテストする方法を一緒に見てきましたが、時にはうまくいかず、テストをデバッグしたい場合もあります。ここでも同じ原理で、IDE `Remote` の設定をアタッチするために Maven Surefire リモートデバッグを有効にします。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>cd ./greeting-extension
+mvn clean test -Dmaven.surefire.debug
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>cd ./greeting-extension
+mvn clean test -Dmaven.surefire.debug
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>By default, Maven will wait for a connection on `localhost:5005`.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>デフォルトでは、Maven は `localhost:5005` で接続を待ちます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Time to use your new extension</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>新しいエクステンションの使用</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Now that you just finished building your first extension you should be eager to use it in a Quarkus application!</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>最初のエクステンションを構築し終えたばかりなので、Quarkus アプリケーションで使いたいと思うことでしょう。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>*Classic Maven publication*
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>*お約束の Maven キャッチ*</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>If not already done in the previous step, you should install the `greeting-extension` in your local repository:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>前のステップでまだ行っていない場合は、ローカルリポジトリに `greeting-extension` をインストールする必要があります。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>cd ./greeting-extension
+mvn clean install
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>cd ./greeting-extension
+mvn clean install
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Then from another directory, use our tooling to create a new `greeting-app` Quarkus application with your new extension:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>次に、別のディレクトリから、我々のツールを使用して、新しいエクステンションを持つ新しい `greeting-app` Quarkus アプリケーションを作成します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>mvn io.quarkus:quarkus-maven-plugin:{quarkus-version}:create \
+     -DprojectGroupId=org.acme \
+     -DprojectArtifactId=greeting-app \
+     -Dextensions="org.acme:greeting-extension:1.0.0-SNAPSHOT" \
+     -DnoExamples
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>mvn io.quarkus:quarkus-maven-plugin:{quarkus-version}:create \
+     -DprojectGroupId=org.acme \
+     -DprojectArtifactId=greeting-app \
+     -Dextensions="org.acme:greeting-extension:1.0.0-SNAPSHOT" \
+     -DnoExamples
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>`cd` into `greeting-app`.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`cd` into `greeting-app`.</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>The `greeting-extension` extension has to be installed in the local Maven repository to be usable in the application.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>`quarkus-greeting` エクステンションをアプリケーションで使用できるようにするには、ローカルの Maven リポジトリにインストールする必要があります。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Run the application and notice the `Installed Features` list contains the `greeting-extension` extension.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>アプリケーションを実行して、 `Installed Features` のリストに `quarkus-greeting` のエクステンションが含まれていることに注目してください。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>$ mvn clean compile quarkus:dev
+[INFO] Scanning for projects...
+[INFO]
+[INFO] -----------------------&lt; org.acme:greeting-app &gt;------------------------
+[INFO] Building greeting-app 1.0.0-SNAPSHOT
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO]
+[INFO] --- maven-clean-plugin:2.5:clean (default-clean) @ greeting-app ---
+[INFO]
+[INFO] --- quarkus-maven-plugin:{quarkus-version}:generate-code (default) @ greeting-app ---
+[INFO]
+[INFO] --- maven-resources-plugin:2.6:resources (default-resources) @ greeting-app ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] Copying 1 resource
+[INFO]
+[INFO] --- maven-compiler-plugin:3.8.1:compile (default-compile) @ greeting-app ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO]
+[INFO] --- quarkus-maven-plugin:{quarkus-version}:dev (default-cli) @ greeting-app ---
+Listening for transport dt_socket at address: 5005
+__  ____  __  _____   ___  __ ____  ______
+ --/ __ \/ / / / _ | / _ \/ //_/ / / / __/
+ -/ /_/ / /_/ / __ |/ , _/ ,&lt; / /_/ /\ \
+--\___\_\____/_/ |_/_/|_/_/|_|\____/___/
+2021-01-27 10:28:07,240 INFO  [io.quarkus] (Quarkus Main Thread) greeting-app 1.0.0-SNAPSHOT on JVM (powered by Quarkus {quarkus-version}) started in 0.531s. Listening on: http://localhost:8080
+2021-01-27 10:28:07,242 INFO  [io.quarkus] (Quarkus Main Thread) Profile dev activated. Live Coding activated.
+2021-01-27 10:28:07,243 INFO  [io.quarkus] (Quarkus Main Thread) Installed features: [cdi, greeting-extension, servlet]
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>$ mvn clean compile quarkus:dev
+[INFO] Scanning for projects...
+[INFO]
+[INFO] -----------------------&lt; org.acme:greeting-app &gt;------------------------
+[INFO] Building greeting-app 1.0.0-SNAPSHOT
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO]
+[INFO] --- maven-clean-plugin:2.5:clean (default-clean) @ greeting-app ---
+[INFO]
+[INFO] --- quarkus-maven-plugin:{quarkus-version}:generate-code (default) @ greeting-app ---
+[INFO]
+[INFO] --- maven-resources-plugin:2.6:resources (default-resources) @ greeting-app ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] Copying 1 resource
+[INFO]
+[INFO] --- maven-compiler-plugin:3.8.1:compile (default-compile) @ greeting-app ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO]
+[INFO] --- quarkus-maven-plugin:{quarkus-version}:dev (default-cli) @ greeting-app ---
+Listening for transport dt_socket at address: 5005
+__  ____  __  _____   ___  __ ____  ______
+ --/ __ \/ / / / _ | / _ \/ //_/ / / / __/
+ -/ /_/ / /_/ / __ |/ , _/ ,&lt; / /_/ /\ \
+--\___\_\____/_/ |_/_/|_/_/|_|\____/___/
+2021-01-27 10:28:07,240 INFO  [io.quarkus] (Quarkus Main Thread) greeting-app 1.0.0-SNAPSHOT on JVM (powered by Quarkus {quarkus-version}) started in 0.531s. Listening on: http://localhost:8080
+2021-01-27 10:28:07,242 INFO  [io.quarkus] (Quarkus Main Thread) Profile dev activated. Live Coding activated.
+2021-01-27 10:28:07,243 INFO  [io.quarkus] (Quarkus Main Thread) Installed features: [cdi, greeting-extension, servlet]
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>From an extension developer standpoint the Maven publication strategy is very handy and fast but Quarkus wants to go one step further by also ensuring a reliability of the ecosystem for the people who will use the extensions.  Think about it, we all had a poor Developer Experience with an unmaintained library, an incompatibility between dependencies (and we don't even talk about legal issues).  That's why there is the Quarkus Platform.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>エクステンションの開発者の立場からすると、Maven の公開戦略は非常に便利で高速ですが、Quarkus は、エクステンションを使用する人々のためにエコシステムの信頼性も確保することで、さらに一歩進んでいきたいと考えています。考えてみてください。私たちは皆、メンテナンスされていないライブラリや依存関係間の非互換性 (法的な問題は除く) で、開発体験が著しく低下したことを経験していることでしょう。Quarkus Platform は、そのためのものです。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>*Quarkus Platform*
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>*Quarkus Platform*
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Quarkus proposes a `quarkus-universe-bom` which is a certified list of extensions placed under the Quarkus Platform label. From an application developer, the objectives of the platform are:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>Quarkus は、Quarkus Platform ラベルの下に置かれたエクステンションの認定リストである `quarkus-universe-bom` を提案しています。アプリケーション開発者からすると、このプラットフォームの目的は以下の通りです。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>To guarantee a supportability of the extension (bugfix, security issues, dependency upgrades)</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>エクステンションのサポート性を保証する (バグフィックス、セキュリティー問題、依存関係のアップグレード)</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>To ensure a global consistency of the extension ecosystem</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>エクステンションエコシステムのグローバルな整合性を確保する</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Should I publish my extension to the platform?</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>エクステンションをプラットフォームに公開すべきかどうか</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>If you feel your extensions is for you or a limited group, simply publishing to Maven is fine.  If the extension solves a general problem, it is very handy for Quarkus users to see it on https://code.quarkus.io.  But this comes with some responsibility for you, keeping it up to date with Quarkus minor releases (every month or so at the moment).  When in doubt, have a conversation with the community in the https://groups.google.com/forum/#!forum/quarkus-dev[Quarkus Google Group]. We can make a collective decision.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>エクステンションが自分自信や限定されたグループのためのものだと感じるのであれば、Maven に公開するだけでも構いません。エクステンションが一般的な問題を解決する場合は、Quarkus ユーザーが https://code.quarkus.io で見つけられることは有益です。しかし、これには、Quarkus のマイナーリリース (現時点では 1 か月に 1 回程度) に合わせて最新の状態に保たなければならないという責任が伴います。質問がある場合は、Quarkus の link:https://groups.google.com/forum/#!forum/quarkus-dev[Google グループ] でコミュニティと話してください。ここでは、集団的な決定を行うことができます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>If you want to contribute a new extension, we strongly suggest you to host it in the Quarkiverse Hub.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>新しいエクステンションを提供したい場合は、Quarkiverse Hub でホストすることを強くお勧めします。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>*Quarkiverse Hub*
+</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>*Quarkiverse Hub*
+</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>link:https://github.com/quarkiverse[Quarkiverse Hub] is the GitHub organization that provides repository hosting (including build, CI and release publishing setup) for Quarkus extension projects contributed by the community.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>link:https://github.com/quarkiverse[Quarkiverse Hub] は、コミュニティから投稿された Quarkus エクステンションプロジェクトのリポジトリーホスティング (ビルド、CI、リリースパブリッシングのセットアップを含む) を提供する GitHub 組織です。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>You can get started by creating an link:https://github.com/quarkusio/quarkus/issues/new/choose[Extension Request] issue (check first if one wasn't already submitted link:https://github.com/quarkusio/quarkus/labels/kind%2Fextension-proposal[here]) and asking to lead it.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>link:https://github.com/quarkusio/quarkus/issues/new/choose[エクステンションリクエスト] 投稿を作成 (link:https://github.com/quarkusio/quarkus/labels/kind%2Fextension-proposal[こちら]) で、まだ投稿されていないかどうかを最初に確認してください) し、それをリードするように依頼することから始めることができます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>We'll take care of provisioning a new repository and set it up to:</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>我々は、新しいリポジトリのプロビジョニングを行い、以下のように設定します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Be supported by our tooling;</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>我々のツールでサポート。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Publish the documentation you produce for your extension to the Quarkiverse website;</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>エクステンションのために作成したドキュメントを Quarkiverse の Web サイトに公開します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Configure your extension to use the link:https://github.com/quarkusio/quarkus-ecosystem-ci#quarkus-ecosystem-ci[Quarkus Ecosystem CI] to build against the latest Quarkus Core changes;</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>link:https://github.com/quarkusio/quarkus-ecosystem-ci#quarkus-ecosystem-ci[Quarkus エコシステム CI] を使用して、最新の Quarkus Core の変更に対応してビルドするようにエクステンションを設定します。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Give you the freedom to manage the project and release to Maven Central as you like.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>プロジェクトを管理し、好きなように Maven Central にリリースする自由を与えます。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>For more information, check link:https://github.com/quarkiverse/quarkiverse/wiki[the Quarkiverse Wiki] and link:https://quarkus.io/blog/quarkiverse/[this blog post].</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>詳しくは、link:https://github.com/quarkiverse/quarkiverse/wiki[Quarkiverse Wiki] と link:https://quarkus.io/blog/quarkiverse/[このブログ記事を] チェックしてみてください。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>Creating new extensions may appear to be an intricate task at first but once you understood the Quarkus game-changer paradigm (build time vs runtime) the structure of an extension makes perfectly sense.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>新しいエクステンションの作成は、最初は複雑な作業に見えるかもしれませんが、Quarkus の変革をもたらすパラダイム (ビルド時間とランタイム) を理解してしまえば、エクステンションの構造は完璧に理にかなったものになります。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>As usual, along the path Quarkus simplifies things under the hood (Maven Mojo, bytecode generation or testing) to make it pleasant to develop new features.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>いつものように、Quarkus は地道に、新機能の開発を快適にするために、Maven Mojo、バイトコード生成またはテストといった作業を簡素化するために努めています。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>link:writing-extensions[Writing your own extension] for the full documentation.</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>完全なドキュメント link:writing-extensions[独自のエクステンションを書く]</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
+        <seg>link:dev-console[Quarkus DEV Console] to learn how to support the DEV Console in your extension</seg>
+      </tuv>
+      <tuv xml:lang="ja_JP">
+        <seg>エクステンションで DEV Console をサポートする方法については、link:dev-console[Quarkus DEV Console] を参照してください。</seg>
+      </tuv>
+    </tu>
+    <tu>
+      <tuv xml:lang="en">
         <seg>https://kotlinlang.org/[Kotlin] is a very popular programming language that targets the JVM (amongst other environments). Kotlin has experienced a surge in popularity the last few years making it the most popular JVM language, except for Java of course.</seg>
       </tuv>
       <tuv xml:lang="ja_JP">
@@ -36924,14 +39066,6 @@ your jax-rs endpoints won't route correctly.  See &lt;&lt;config-azure-paths&gt;
       </tuv>
       <tuv xml:lang="ja_JP">
         <seg>タイプセーフメッセージバンドル</seg>
-      </tuv>
-    </tu>
-    <tu>
-      <tuv xml:lang="en">
-        <seg>Basic Concepts</seg>
-      </tuv>
-      <tuv xml:lang="ja_JP">
-        <seg>基本概念</seg>
       </tuv>
     </tu>
     <tu>
