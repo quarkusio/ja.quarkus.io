@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2021-04-14 17:20+0000\n"
+"POT-Creation-Date: 2021-05-12 17:23+0000\n"
 "PO-Revision-Date: 2021-03-31 00:18+0900\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -33,7 +33,7 @@ msgstr "Reactive SQL クライアントは、スケーラビリティと低オ�
 #. type: Title ===
 #: upstream/_guides/reactive-sql-clients.adoc:15
 #: upstream/_guides/reactive-sql-clients.adoc:475
-#: upstream/_guides/reactive-sql-clients.adoc:643
+#: upstream/_guides/reactive-sql-clients.adoc:701
 #, no-wrap
 msgid "DB2"
 msgstr "DB2"
@@ -41,8 +41,8 @@ msgstr "DB2"
 #. type: Title ===
 #: upstream/_guides/reactive-sql-clients.adoc:16
 #: upstream/_guides/reactive-sql-clients.adoc:483
-#: upstream/_guides/reactive-sql-clients.adoc:588
-#: upstream/_guides/reactive-sql-clients.adoc:651
+#: upstream/_guides/reactive-sql-clients.adoc:646
+#: upstream/_guides/reactive-sql-clients.adoc:709
 #, no-wrap
 msgid "PostgreSQL"
 msgstr "PostgreSQL"
@@ -50,8 +50,8 @@ msgstr "PostgreSQL"
 #. type: Title ===
 #: upstream/_guides/reactive-sql-clients.adoc:17
 #: upstream/_guides/reactive-sql-clients.adoc:479
-#: upstream/_guides/reactive-sql-clients.adoc:606
-#: upstream/_guides/reactive-sql-clients.adoc:647
+#: upstream/_guides/reactive-sql-clients.adoc:664
+#: upstream/_guides/reactive-sql-clients.adoc:705
 #, no-wrap
 msgid "MariaDB/MySQL"
 msgstr "MariaDB/MySQL"
@@ -1031,21 +1031,125 @@ msgstr ""
 #. type: Title ==
 #: upstream/_guides/reactive-sql-clients.adoc:534
 #, no-wrap
+msgid "Working with batch query results"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-sql-clients.adoc:538
+msgid "When executing batch queries, reactive SQL clients return a `RowSet` that corresponds to the results of the first element in the batch.  To get the results of the following batch elements, you must invoke the `RowSet#next` method until it returns `null`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-sql-clients.adoc:541
+msgid "Let's say you want to update some rows and compute the total number of affected rows.  You must inspect each `RowSet`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-sql-clients.adoc:545
+#, no-wrap
+msgid "PreparedQuery<RowSet<Row>> preparedQuery = client.preparedQuery(\"UPDATE fruits SET name = $1 WHERE id = $2\");\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-sql-clients.adoc:550
+#, no-wrap
+msgid ""
+"Uni<RowSet<Row>> rowSet = preparedQuery.executeBatch(Arrays.asList(\n"
+"        Tuple.of(\"Orange\", 1),\n"
+"        Tuple.of(\"Pear\", 2),\n"
+"        Tuple.of(\"Apple\", 3)));\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-sql-clients.adoc:558
+#, no-wrap
+msgid ""
+"Uni<Integer> totalAffected = rowSet.onItem().transform(res -> {\n"
+"    int total = 0;\n"
+"    do {\n"
+"        total += res.rowCount(); // <1>\n"
+"    } while ((res = res.next()) != null); // <2>\n"
+"    return total;\n"
+"});\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-sql-clients.adoc:560
+msgid "Compute the sum of `RowSet#rowCount`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-sql-clients.adoc:561
+msgid "Invoke `RowSet#next` until it returns `null`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/reactive-sql-clients.adoc:563
+msgid "As another example, if you want to load all the rows you just inserted, you must concatenate the contents of each `RowSet`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-sql-clients.adoc:567
+#, no-wrap
+msgid "PreparedQuery<RowSet<Row>> preparedQuery = client.preparedQuery(\"INSERT INTO fruits (name) VALUES ($1) RETURNING *\");\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-sql-clients.adoc:572
+#, no-wrap
+msgid ""
+"Uni<RowSet<Row>> rowSet = preparedQuery.executeBatch(Arrays.asList(\n"
+"        Tuple.of(\"Orange\"),\n"
+"        Tuple.of(\"Pear\"),\n"
+"        Tuple.of(\"Apple\")));\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-sql-clients.adoc:587
+#, no-wrap
+msgid ""
+"// Generate a Multi of RowSet items\n"
+"Multi<RowSet<Row>> rowSets = rowSet.onItem().transformToMulti(res -> {\n"
+"    return Multi.createFrom().generator(() -> res, (rs, emitter) -> {\n"
+"        RowSet<Row> next = null;\n"
+"        if (rs != null) {\n"
+"            emitter.emit(rs);\n"
+"            next = rs.next();\n"
+"        }\n"
+"        if (next == null) {\n"
+"            emitter.complete();\n"
+"        }\n"
+"        return next;\n"
+"    });\n"
+"});\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/reactive-sql-clients.adoc:590
+#, no-wrap
+msgid ""
+"// Transform each RowSet into Multi of Row items and Concatenate\n"
+"Multi<Row> rows = rowSets.onItem().transformToMultiAndConcatenate(Multi.createFrom()::iterable);\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/reactive-sql-clients.adoc:592
+#, no-wrap
 msgid "Multiple Datasources"
 msgstr "複数のデータソース"
 
 #. type: Plain text
-#: upstream/_guides/reactive-sql-clients.adoc:537
+#: upstream/_guides/reactive-sql-clients.adoc:595
 msgid "The reactive SQL clients support defining several datasources."
 msgstr "Reactive SQL クライアントは、複数のデータソースの定義をサポートしています。"
 
 #. type: Plain text
-#: upstream/_guides/reactive-sql-clients.adoc:539
+#: upstream/_guides/reactive-sql-clients.adoc:597
 msgid "A typical configuration with several datasources would look like:"
 msgstr "複数のデータソースを使用した典型的な構成は以下のようになります。"
 
 #. type: delimited block -
-#: upstream/_guides/reactive-sql-clients.adoc:546
+#: upstream/_guides/reactive-sql-clients.adoc:604
 #, no-wrap
 msgid ""
 "quarkus.datasource.db-kind=postgresql <1>\n"
@@ -1055,7 +1159,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/reactive-sql-clients.adoc:551
+#: upstream/_guides/reactive-sql-clients.adoc:609
 #, no-wrap
 msgid ""
 "quarkus.datasource.\"additional1\".db-kind=postgresql <2>\n"
@@ -1065,7 +1169,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/reactive-sql-clients.adoc:556
+#: upstream/_guides/reactive-sql-clients.adoc:614
 #, no-wrap
 msgid ""
 "quarkus.datasource.\"additional2\".db-kind=mysql <3>\n"
@@ -1075,31 +1179,31 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: upstream/_guides/reactive-sql-clients.adoc:558
+#: upstream/_guides/reactive-sql-clients.adoc:616
 #, fuzzy
 msgid "The default datasource - using PostgreSQL."
 msgstr "デフォルトのデータソース - PostgreSQLを使用しています。"
 
 #. type: Plain text
-#: upstream/_guides/reactive-sql-clients.adoc:559
+#: upstream/_guides/reactive-sql-clients.adoc:617
 #, fuzzy
 msgid "A named datasource called `additional1` - using PostgreSQL."
 msgstr "`additional1` という名前のデータソース - PostgreSQL を使用しています。"
 
 #. type: Plain text
-#: upstream/_guides/reactive-sql-clients.adoc:560
+#: upstream/_guides/reactive-sql-clients.adoc:618
 #, fuzzy
 msgid "A named datasource called `additional2` - using MySQL."
 msgstr "`additional2` という名前のデータソース - MySQL を使用しています。"
 
 #. type: Plain text
-#: upstream/_guides/reactive-sql-clients.adoc:562
+#: upstream/_guides/reactive-sql-clients.adoc:620
 #, fuzzy
 msgid "You can then inject the clients as follows:"
 msgstr "そして、以下のようにクライアントを注入します。"
 
 #. type: delimited block -
-#: upstream/_guides/reactive-sql-clients.adoc:567
+#: upstream/_guides/reactive-sql-clients.adoc:625
 #, no-wrap
 msgid ""
 "@Inject <1>\n"
@@ -1107,7 +1211,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/reactive-sql-clients.adoc:571
+#: upstream/_guides/reactive-sql-clients.adoc:629
 #, no-wrap
 msgid ""
 "@Inject\n"
@@ -1116,7 +1220,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/reactive-sql-clients.adoc:575
+#: upstream/_guides/reactive-sql-clients.adoc:633
 #, no-wrap
 msgid ""
 "@Inject\n"
@@ -1125,146 +1229,146 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: upstream/_guides/reactive-sql-clients.adoc:577
+#: upstream/_guides/reactive-sql-clients.adoc:635
 #, fuzzy
 msgid "Injecting the client for the default datasource does not require anything special."
 msgstr "デフォルトのデータソースに対してクライアントを注入することは、特別なことを必要としません。"
 
 #. type: Plain text
-#: upstream/_guides/reactive-sql-clients.adoc:578
+#: upstream/_guides/reactive-sql-clients.adoc:636
 #, fuzzy
 msgid "For a named datasource, you use the `@ReactiveDataSource` CDI qualifier with the datasource name as its value."
 msgstr "名前付きデータソースの場合は、データソース名を値として `@ReactiveDataSource` CDI修飾子を使用します。"
 
 #. type: Title ==
-#: upstream/_guides/reactive-sql-clients.adoc:579
+#: upstream/_guides/reactive-sql-clients.adoc:637
 #, fuzzy, no-wrap
 msgid "UNIX Domain Socket connections"
 msgstr "UNIXドメインソケット接続"
 
 #. type: Plain text
-#: upstream/_guides/reactive-sql-clients.adoc:582
+#: upstream/_guides/reactive-sql-clients.adoc:640
 #, fuzzy
 msgid "The PostgreSQL and MariaDB/MySQL clients can be configured to connect to the server through a UNIX domain socket."
 msgstr "PostgreSQLおよびMariaDB/MySQLクライアントは、UNIXドメインソケットを介してサーバーに接続するように設定することができます。"
 
 #. type: Plain text
-#: upstream/_guides/reactive-sql-clients.adoc:584
+#: upstream/_guides/reactive-sql-clients.adoc:642
 #, fuzzy
 msgid "First make sure that link:vertx#native-transport[native transport support] is enabled."
 msgstr "まず、 link:https://quarkus.io/guides/vertx#native-transport[ネイティブトランスポートのサポートが] 有効になっていることを確認します。"
 
 #. type: Plain text
-#: upstream/_guides/reactive-sql-clients.adoc:587
+#: upstream/_guides/reactive-sql-clients.adoc:645
 #, fuzzy
 msgid "Then configure the database connection url.  This step depends on the database type."
 msgstr "次に、データベース接続のURLを設定します。このステップはデータベースの種類によって異なります。"
 
 #. type: Plain text
-#: upstream/_guides/reactive-sql-clients.adoc:591
+#: upstream/_guides/reactive-sql-clients.adoc:649
 #, fuzzy
 msgid "PostgresSQL domain socket paths have the following form: `<directory>/.s.PGSQL.<port>`"
 msgstr "PostgresSQLドメインのソケットパスは、以下のような形式になっています。 `<directory>/.s.PGSQL.<port>`"
 
 #. type: Plain text
-#: upstream/_guides/reactive-sql-clients.adoc:593
+#: upstream/_guides/reactive-sql-clients.adoc:651
 #, fuzzy
 msgid "The database connection url must be configured so that:"
 msgstr "データベース接続のURLは、そのように設定する必要があります。"
 
 #. type: Plain text
-#: upstream/_guides/reactive-sql-clients.adoc:595
+#: upstream/_guides/reactive-sql-clients.adoc:653
 #, fuzzy
 msgid "the `host` is the `directory` in the socket path"
 msgstr "`host` はソケットパスの `directory` です。"
 
 #. type: Plain text
-#: upstream/_guides/reactive-sql-clients.adoc:596
+#: upstream/_guides/reactive-sql-clients.adoc:654
 #, fuzzy
 msgid "the `port` is the `port` in the socket path"
 msgstr "`port` はソケットパスの `port` です。"
 
 #. type: Plain text
-#: upstream/_guides/reactive-sql-clients.adoc:598
+#: upstream/_guides/reactive-sql-clients.adoc:656
 #, fuzzy
 msgid "Consider the following socket path: `/var/run/postgresql/.s.PGSQL.5432`."
 msgstr "以下のソケットパスを考えてみましょう: `/var/run/postgresql/.s.PGSQL.5432` ."
 
 #. type: Plain text
-#: upstream/_guides/reactive-sql-clients.adoc:600
-#: upstream/_guides/reactive-sql-clients.adoc:613
+#: upstream/_guides/reactive-sql-clients.adoc:658
+#: upstream/_guides/reactive-sql-clients.adoc:671
 #, fuzzy
 msgid "In `application.properties` add:"
 msgstr "`application.properties` で追加します。"
 
 #. type: delimited block -
-#: upstream/_guides/reactive-sql-clients.adoc:604
+#: upstream/_guides/reactive-sql-clients.adoc:662
 #, no-wrap
 msgid "quarkus.datasource.reactive.url=postgresql://:5432/quarkus_test?host=/var/run/postgresql\n"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_guides/reactive-sql-clients.adoc:609
+#: upstream/_guides/reactive-sql-clients.adoc:667
 #, fuzzy
 msgid "The database connection url must be configured so that the `host` is the socket path."
 msgstr "データベース接続URLは、 `host` がソケットパスになるように設定する必要があります。"
 
 #. type: Plain text
-#: upstream/_guides/reactive-sql-clients.adoc:611
+#: upstream/_guides/reactive-sql-clients.adoc:669
 #, fuzzy
 msgid "Consider the following socket path: `/var/run/mysqld/mysqld.sock`."
 msgstr "以下のソケットパスを考えてみましょう: `/var/run/mysqld/mysqld.sock` ."
 
 #. type: delimited block -
-#: upstream/_guides/reactive-sql-clients.adoc:617
+#: upstream/_guides/reactive-sql-clients.adoc:675
 #, no-wrap
 msgid "quarkus.datasource.reactive.url=mysql:///quarkus_test?host=/var/run/mysqld/mysqld.sock\n"
 msgstr ""
 
 #. type: Title ==
-#: upstream/_guides/reactive-sql-clients.adoc:619
+#: upstream/_guides/reactive-sql-clients.adoc:677
 #, fuzzy, no-wrap
 msgid "Pooled Connection `idle-timeout`"
 msgstr "TCP接続 `idle-timeout`"
 
 #. type: Plain text
-#: upstream/_guides/reactive-sql-clients.adoc:623
+#: upstream/_guides/reactive-sql-clients.adoc:681
 #, fuzzy
 msgid "Reactive datasources can be configured with an `idle-timeout` (in milliseconds).  It is the maximum time a connection remains unused in the pool before it is closed."
 msgstr "リアクティブなデータソースは、TCP 接続レベルで適用される `idle-timeout` (ミリ秒単位) を使用して構成することができます。"
 
 #. type: Plain text
-#: upstream/_guides/reactive-sql-clients.adoc:625
+#: upstream/_guides/reactive-sql-clients.adoc:683
 #, fuzzy
 msgid "The `idle-timeout` is disabled by default."
 msgstr "`idle-timeout` はデフォルトでは無効になっています。"
 
 #. type: Plain text
-#: upstream/_guides/reactive-sql-clients.adoc:627
+#: upstream/_guides/reactive-sql-clients.adoc:685
 #, fuzzy
 msgid "For example, you could expire idle connections after 60 minutes:"
 msgstr "例えば、アイドル状態の接続を60分後に失効させることができます。"
 
 #. type: delimited block -
-#: upstream/_guides/reactive-sql-clients.adoc:631
+#: upstream/_guides/reactive-sql-clients.adoc:689
 #, no-wrap
 msgid "quarkus.datasource.reactive.idle-timeout=PT60M\n"
 msgstr ""
 
 #. type: Title ==
-#: upstream/_guides/reactive-sql-clients.adoc:633
+#: upstream/_guides/reactive-sql-clients.adoc:691
 #, no-wrap
 msgid "Configuration Reference"
 msgstr "設定リファレンス"
 
 #. type: Title ===
-#: upstream/_guides/reactive-sql-clients.adoc:635
+#: upstream/_guides/reactive-sql-clients.adoc:693
 #, fuzzy, no-wrap
 msgid "Common Datasource"
 msgstr "共通データソース"
 
 #. type: Title ===
-#: upstream/_guides/reactive-sql-clients.adoc:639
+#: upstream/_guides/reactive-sql-clients.adoc:697
 #, fuzzy, no-wrap
 msgid "Reactive Datasource"
 msgstr "リアクティブデータソース"
