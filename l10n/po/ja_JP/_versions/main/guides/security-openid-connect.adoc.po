@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2021-05-07 17:34+0000\n"
+"POT-Creation-Date: 2021-05-14 02:28+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1174,6 +1174,7 @@ msgstr ""
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/security-openid-connect.adoc:654
+#: upstream/_versions/main/guides/security-openid-connect.adoc:734
 #, no-wrap
 msgid "}\n"
 msgstr "}\n"
@@ -1231,13 +1232,15 @@ msgstr ""
 
 #. type: Plain text
 #: upstream/_versions/main/guides/security-openid-connect.adoc:682
-msgid "Please see link:security-jwt#integration-testing-security-annotation[Use TestingSecurity with injected JsonWebToken] section for more information about using `@TestSecurity` for testing the `service` application endpoint code which depends on the injected `JsonWebToken`."
+msgid "You can use `@TestSecurity` and `@OidcSecurity` annotations for testing the `service` application endpoint code which depends on the injected `JsonWebToken` as well as `UserInfo` and `OidcConfigurationMetadata`."
 msgstr ""
 
 #. type: Plain text
 #: upstream/_versions/main/guides/security-openid-connect.adoc:684
-msgid "The only difference is that the following dependency should be used when testing the `service` applications:"
-msgstr ""
+#, fuzzy
+#| msgid "Add the following dependencies to your test project:"
+msgid "Add the following dependency:"
+msgstr "テストプロジェクトに以下の依存関係を追加します。"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/security-openid-connect.adoc:691
@@ -1250,33 +1253,186 @@ msgid ""
 "</dependency>\n"
 msgstr ""
 
+#. type: Plain text
+#: upstream/_versions/main/guides/security-openid-connect.adoc:694
+msgid "and write a test code like this one:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/security-openid-connect.adoc:707
+#, no-wrap
+msgid ""
+"import static org.hamcrest.Matchers.is;\n"
+"import org.junit.jupiter.api.Test;\n"
+"import io.quarkus.test.common.http.TestHTTPEndpoint;\n"
+"import io.quarkus.test.junit.QuarkusTest;\n"
+"import io.quarkus.test.security.TestSecurity;\n"
+"import io.quarkus.test.security.oidc.Claim;\n"
+"import io.quarkus.test.security.oidc.ConfigMetadata;\n"
+"import io.quarkus.test.security.oidc.OidcSecurity;\n"
+"import io.quarkus.test.security.oidc.UserInfo;\n"
+"import io.restassured.RestAssured;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/security-openid-connect.adoc:711
+#, no-wrap
+msgid ""
+"@QuarkusTest\n"
+"@TestHTTPEndpoint(ProtectedResource.class)\n"
+"public class TestSecurityAuthTest {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/security-openid-connect.adoc:718
+#, no-wrap
+msgid ""
+"    @Test\n"
+"    @TestSecurity(user = \"userOidc\", roles = \"viewer\")\n"
+"    public void testOidc() {\n"
+"        RestAssured.when().get(\"test-security-oidc\").then()\n"
+"                .body(is(\"userOidc:viewer\"));\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/security-openid-connect.adoc:732
+#, no-wrap
+msgid ""
+"    @Test\n"
+"    @TestSecurity(user = \"userOidc\", roles = \"viewer\")\n"
+"    @OidcSecurity(claims = {\n"
+"            @Claim(key = \"email\", value = \"user@gmail.com\")\n"
+"    }, userinfo = {\n"
+"            @UserInfo(key = \"sub\", value = \"subject\")\n"
+"    }, config = {\n"
+"            @ConfigMetadata(key = \"issuer\", value = \"issuer\")\n"
+"    })\n"
+"    public void testOidcWithClaimsUserInfoAndMetadata() {\n"
+"        RestAssured.when().get(\"test-security-oidc-claims-userinfo-metadata\").then()\n"
+"                .body(is(\"userOidc:viewer:user@gmail.com:subject:issuer\"));\n"
+"    }\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/security-openid-connect.adoc:737
+msgid "where `ProtectedResource` class may look like this:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/security-openid-connect.adoc:743
+#, no-wrap
+msgid ""
+"@Path(\"/web-app\")\n"
+"@Authenticated\n"
+"public class ProtectedResource {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/security-openid-connect.adoc:750
+#, no-wrap
+msgid ""
+"    @Inject\n"
+"    JsonWebToken accessToken;\n"
+"    @Inject\n"
+"    UserInfo userInfo;\n"
+"    @Inject\n"
+"    OidcConfigurationMetadata configMetadata;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/security-openid-connect.adoc:756
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @Path(\"test-security-oidc\")\n"
+"    public String testSecurityOidc() {\n"
+"        return accessToken.getName() + \":\" + accessToken.getGroups().iterator().next();\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/security-openid-connect.adoc:766
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @Path(\"test-security-oidc-claims-userinfo-metadata\")\n"
+"    public String testSecurityOidcWithClaimsUserInfoMetadata() {\n"
+"        return accessToken.getName() + \":\" + accessToken.getGroups().iterator().next()\n"
+"                + \":\" + accessToken.getClaim(\"email\")\n"
+"                + \":\" + userInfo.getString(\"sub\")\n"
+"                + \":\" + configMetadata.get(\"issuer\");\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/security-openid-connect.adoc:771
+msgid "Note that `@TestSecurity` annotation must always be used and its `user` property is returned as `JsonWebToken.getName()` and `roles` property - as `JsonWebToken.getGroups()`.  `@OidcSecurity` annotation is optional and can be used to set the additional token claims, as well as `UserInfo` and `OidcConfigurationMetadata` properties.  Additionally, if `quarkus.oidc.token.issuer` property is configured then it will be used as an `OidcConfigurationMetadata` `issuer` property value."
+msgstr ""
+
 #. type: Title ==
-#: upstream/_versions/main/guides/security-openid-connect.adoc:693
+#: upstream/_versions/main/guides/security-openid-connect.adoc:772
+#, no-wrap
+msgid "How to check the errors in the logs"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/security-openid-connect.adoc:775
+msgid "Please enable `io.quarkus.oidc.runtime.OidcProvider` `TRACE` level logging to see more details about the token verification errors:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/security-openid-connect.adoc:780
+#, no-wrap
+msgid ""
+"quarkus.log.category.\"io.quarkus.oidc.runtime.OidcProvider\".level=TRACE\n"
+"quarkus.log.category.\"io.quarkus.oidc.runtime.OidcProvider\".min-level=TRACE\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/security-openid-connect.adoc:782
+#, no-wrap
+msgid "External and Internal Access to OpenId Connect Provider"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/security-openid-connect.adoc:785
+msgid "Note that the OpenId Connect Provider externally accessible token and other endpoints may have different HTTP(S) URLs compared to the URLs auto-discovered or configured relative to `quarkus.oidc.auth-server-url` internal URL. For example, if your SPA acquires a token from an external token endpoint address and sends it to Quarkus as a Bearer token then an issuer verification failure may be reported by the endpoint."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/security-openid-connect.adoc:788
+msgid "In such cases, if you work with Keycloak then please start it with a `KEYCLOAK_FRONTEND_URL` system property set to the externally accessible base URL.  If you work with other Openid Connect providers then please check your provider's documentation."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/security-openid-connect.adoc:789
 #, no-wrap
 msgid "References"
 msgstr "リファレンス"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/security-openid-connect.adoc:696
+#: upstream/_versions/main/guides/security-openid-connect.adoc:792
 msgid "https://www.keycloak.org/documentation.html[Keycloak Documentation]"
 msgstr "https://www.keycloak.org/documentation.html[Keycloak Documentation]"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/security-openid-connect.adoc:697
+#: upstream/_versions/main/guides/security-openid-connect.adoc:793
 msgid "https://openid.net/connect/[OpenID Connect]"
 msgstr "https://openid.net/connect/[OpenID Connect]"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/security-openid-connect.adoc:698
+#: upstream/_versions/main/guides/security-openid-connect.adoc:794
 msgid "https://tools.ietf.org/html/rfc7519[JSON Web Token]"
 msgstr "https://tools.ietf.org/html/rfc7519[JSON Web Token]"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/security-openid-connect.adoc:699
+#: upstream/_versions/main/guides/security-openid-connect.adoc:795
 msgid "link:security-openid-connect-client[Quarkus - Using OpenID Connect and OAuth2 Client and Filters to manage access tokens]"
 msgstr "マルチテナントへの対応方法については、 link:security-openid-connect-multitenancy[OpenID Connectマルチテナンシーの利用] ガイドをお読みください。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/security-openid-connect.adoc:699
+#: upstream/_versions/main/guides/security-openid-connect.adoc:795
 msgid "link:security[Quarkus Security]"
 msgstr "link:security[Quarkus Security]"
