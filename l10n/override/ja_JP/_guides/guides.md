@@ -1,5 +1,5 @@
 ---
 layout: guides-index
-title: Quarkus - ガイド
+title: ガイド - 最新
 permalink: /guides/
 ---
