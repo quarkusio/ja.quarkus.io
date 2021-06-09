@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2021-06-04 02:51+0000\n"
+"POT-Creation-Date: 2021-06-09 02:32+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -118,24 +118,24 @@ msgid ""
 "    -DprojectArtifactId=opentelemetry-quickstart \\\n"
 "    -DclassName=\"org.acme.opentelemetry.TracedResource\" \\\n"
 "    -Dpath=\"/hello\" \\\n"
-"    -Dextensions=\"resteasy,quarkus-opentelemetry-exporter-jaeger\"\n"
+"    -Dextensions=\"resteasy,quarkus-opentelemetry-exporter-otlp\"\n"
 "cd opentelemetry-quickstart\n"
 msgstr ""
 
 #. type: Plain text
 #: upstream/_versions/main/guides/opentelemetry.adoc:56
-msgid "This command generates the Maven project with a REST endpoint and imports the `quarkus-opentelemetry-exporter-jaeger` extension, which includes the OpenTelemetry support, and a gRPC span exporter for https://www.jaegertracing.io/[Jaeger]."
+msgid "This command generates the Maven project with a REST endpoint and imports the `quarkus-opentelemetry-exporter-otlp` extension, which includes the OpenTelemetry support, and a gRPC span exporter for https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/protocol/otlp.md[OTLP]."
 msgstr ""
 
 #. type: Plain text
 #: upstream/_versions/main/guides/opentelemetry.adoc:59
-msgid "If you already have your Quarkus project configured, you can add the `quarkus-opentelemetry-exporter-jaeger` extension to your project by running the following command in your project base directory:"
+msgid "If you already have your Quarkus project configured, you can add the `quarkus-opentelemetry-exporter-otlp` extension to your project by running the following command in your project base directory:"
 msgstr ""
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/opentelemetry.adoc:63
 #, no-wrap
-msgid "./mvnw quarkus:add-extension -Dextensions=\"opentelemetry-jaeger-exporter\"\n"
+msgid "./mvnw quarkus:add-extension -Dextensions=\"opentelemetry-otlp-exporter\"\n"
 msgstr ""
 
 #. type: Plain text
@@ -149,7 +149,7 @@ msgstr "これにより、 `pom.xml` に以下が追加されます:"
 msgid ""
 "<dependency>\n"
 "    <groupId>io.quarkus</groupId>\n"
-"    <artifactId>quarkus-opentelemetry-exporter-jaeger</artifactId>\n"
+"    <artifactId>quarkus-opentelemetry-exporter-otlp</artifactId>\n"
 "</dependency>\n"
 msgstr ""
 
@@ -221,7 +221,7 @@ msgstr "設定の作成"
 
 #. type: Plain text
 #: upstream/_versions/main/guides/opentelemetry.adoc:109
-msgid "There are two ways to configure the Jaeger gRPC Exporter within the application."
+msgid "There are two ways to configure the OTLP gRPC Exporter within the application."
 msgstr ""
 
 #. type: Plain text
@@ -235,7 +235,7 @@ msgstr "最初のアプローチは、 `src/main/resources/application.propertie
 msgid ""
 "quarkus.application.name=myservice // <1>\n"
 "quarkus.opentelemetry.enabled=true // <2>\n"
-"quarkus.opentelemetry.tracer.exporter.jaeger.endpoint=http://localhost:14250 // <3>\n"
+"quarkus.opentelemetry.tracer.exporter.otlp.endpoint=http://localhost:55680 // <3>\n"
 msgstr ""
 
 #. type: Plain text
@@ -261,44 +261,137 @@ msgstr "アプリケーションの実行"
 
 #. type: Plain text
 #: upstream/_versions/main/guides/opentelemetry.adoc:126
-msgid "The first step is to start the https://www.jaegertracing.io/[Jaeger] \"all in one\" to collect and display the captured traces:"
-msgstr ""
-
-#. type: delimited block -
-#: upstream/_versions/main/guides/opentelemetry.adoc:130
-#, no-wrap
-msgid "docker run -p 5775:5775/udp -p 6831:6831/udp -p 6832:6832/udp -p 5778:5778 -p 16686:16686 -p 14250:14250 jaegertracing/all-in-one:latest\n"
+msgid "The first step is to configure and start the https://opentelemetry.io/docs/collector/[OpenTelemetry Collector] to receive, process and export telemetry data to https://www.jaegertracing.io/[Jaeger] that will display the captured traces."
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/opentelemetry.adoc:133
+#: upstream/_versions/main/guides/opentelemetry.adoc:128
+msgid "Configure the OpenTelemetry Collector by creating an `otel-collector-config.yaml` file:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/opentelemetry.adoc:135
+#, no-wrap
+msgid ""
+"receivers:\n"
+"  otlp:\n"
+"    protocols:\n"
+"      grpc:\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/opentelemetry.adoc:138
+#, no-wrap
+msgid ""
+"exporters:\n"
+"  logging:\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/opentelemetry.adoc:142
+#, no-wrap
+msgid ""
+"  jaeger:\n"
+"    endpoint: jaeger-all-in-one:14250\n"
+"    insecure: true\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/opentelemetry.adoc:145
+#, no-wrap
+msgid ""
+"processors:\n"
+"  batch:\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/opentelemetry.adoc:148
+#, no-wrap
+msgid ""
+"extensions:\n"
+"  health_check:\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/opentelemetry.adoc:156
+#, no-wrap
+msgid ""
+"service:\n"
+"  extensions: [health_check]\n"
+"  pipelines:\n"
+"    traces:\n"
+"      receivers: [otlp]\n"
+"      processors: [batch]\n"
+"      exporters: [jaeger]\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/opentelemetry.adoc:160
+msgid "Start the OpenTelemetry Collector and Jaeger system via the following docker-compose file that you can launch via `docker-compose run -d`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/opentelemetry.adoc:165
+#, no-wrap
+msgid ""
+"version: \"2\"\n"
+"services:\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/opentelemetry.adoc:185
+#, no-wrap
+msgid ""
+"  # Jaeger\n"
+"  jaeger-all-in-one:\n"
+"    image: jaegertracing/all-in-one:latest\n"
+"    ports:\n"
+"      - \"16686:16686\"\n"
+"      - \"14268\"\n"
+"      - \"14250\"\n"
+"  # Collector\n"
+"  otel-collector:\n"
+"    image: otel/opentelemetry-collector:latest\n"
+"    command: [\"--config=/etc/otel-collector-config.yaml\"]\n"
+"    volumes:\n"
+"      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml\n"
+"    ports:\n"
+"      - \"13133:13133\" # Health_check extension\n"
+"      - \"4317\"        # OTLP gRPC receiver\n"
+"      - \"55680:55680\" # OTLP gRPC receiver alternative port\n"
+"    depends_on:\n"
+"      - jaeger-all-in-one\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/opentelemetry.adoc:188
 msgid "Now we are ready to run our application. If using `application.properties` to configure the tracer:"
 msgstr "これでアプリケーションを実行する準備が整いました。トレーサーの設定に `application.properties` を使用している場合:"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/opentelemetry.adoc:137
+#: upstream/_versions/main/guides/opentelemetry.adoc:192
 #, no-wrap
 msgid "./mvnw compile quarkus:dev\n"
 msgstr "./mvnw compile quarkus:dev\n"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/opentelemetry.adoc:140
-msgid "or if configuring the Jaeger gRPC endpoint via environment variables:"
+#: upstream/_versions/main/guides/opentelemetry.adoc:195
+msgid "or if configuring the OTLP gRPC endpoint via JVM arguments:"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/opentelemetry.adoc:144
+#: upstream/_versions/main/guides/opentelemetry.adoc:199
 #, no-wrap
-msgid "./mvnw compile quarkus:dev -Djvm.args=\"-DQUARKUS_OPENTELEMETRY_TRACER_EXPORTER_JAEGER_ENDPOINT=http://localhost:14250\"\n"
+msgid "./mvnw compile quarkus:dev -Djvm.args=\"-Dquarkus.opentelemetry.tracer.exporter.otlp.endpoint=http://localhost:55680\"\n"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/opentelemetry.adoc:147
-msgid "With the Jaeger system and application running, you can make a request to the provided endpoint:"
+#: upstream/_versions/main/guides/opentelemetry.adoc:202
+msgid "With the OpenTelemetry Collector, Jaeger system and application running, you can make a request to the provided endpoint:"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/opentelemetry.adoc:152
+#: upstream/_versions/main/guides/opentelemetry.adoc:207
 #, no-wrap
 msgid ""
 "$ curl http://localhost:8080/hello\n"
@@ -306,55 +399,55 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/opentelemetry.adoc:155
+#: upstream/_versions/main/guides/opentelemetry.adoc:210
 msgid "Then visit the http://localhost:16686[Jaeger UI] to see the tracing information."
 msgstr "その後、 link:http://localhost:16686[Jaeger UI] にアクセスしてトレース情報を確認します。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/opentelemetry.adoc:157
+#: upstream/_versions/main/guides/opentelemetry.adoc:212
 msgid "Hit `CTRL+C` to stop the application."
 msgstr "`CTRL+C`  を叩いてアプリケーションを停止させます。"
 
 #. type: Title ==
-#: upstream/_versions/main/guides/opentelemetry.adoc:158
+#: upstream/_versions/main/guides/opentelemetry.adoc:213
 #, no-wrap
 msgid "Additional instrumentation"
 msgstr "追加の計器"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/opentelemetry.adoc:162
+#: upstream/_versions/main/guides/opentelemetry.adoc:217
 msgid "Some Quarkus extensions will require additional code to ensure traces are propagated to subsequent execution.  These sections will outline what is necessary to propagate traces across process boundaries."
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/opentelemetry.adoc:164
+#: upstream/_versions/main/guides/opentelemetry.adoc:219
 msgid "The instrumentation documented in this section has been tested with Quarkus and works in both standard and native mode."
 msgstr "このセクションで説明されている計器は、Quarkusでテストされており、標準モードとネイティブモードの両方で動作します。"
 
 #. type: Title ===
-#: upstream/_versions/main/guides/opentelemetry.adoc:165
+#: upstream/_versions/main/guides/opentelemetry.adoc:220
 #, no-wrap
 msgid "SmallRye Reactive Messaging - Kafka"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/opentelemetry.adoc:169
+#: upstream/_versions/main/guides/opentelemetry.adoc:224
 msgid "When using the SmallRye Reactive Messaging extension for Kafka, we are able to propagate the span into the Kafka Record with:"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/opentelemetry.adoc:173
+#: upstream/_versions/main/guides/opentelemetry.adoc:228
 #, no-wrap
 msgid "Metadata.of(TracingMetadata.withPrevious(Context.current()));\n"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/opentelemetry.adoc:177
+#: upstream/_versions/main/guides/opentelemetry.adoc:232
 msgid "The above creates a `Metadata` object we can add to the `Message` being produced, which retrieves the OpenTelemetry `Context` to extract the current span for propagation."
 msgstr ""
 
 #. type: Title ==
-#: upstream/_versions/main/guides/opentelemetry.adoc:179
+#: upstream/_versions/main/guides/opentelemetry.adoc:234
 #, no-wrap
 msgid "OpenTelemetry Configuration Reference"
 msgstr ""
