@@ -1,0 +1,696 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2021-06-30 15:11+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. This guide is maintained in the main Quarkus repository
+#. and pull requests should be submitted there:
+#. https://github.com/quarkusio/quarkus/tree/main/docs/src/main/asciidoc
+#. type: Title =
+#: upstream/_guides/amazon-ssm.adoc:6
+#, no-wrap
+msgid "Quarkus - Amazon SSM Client"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/amazon-ssm.adoc:13
+msgid "AWS Systems Manager (formerly Amazon Simple Systems Manager, or SSM) is a service that you can use to view and control your infrastructure on AWS.  One of the most useful features of SSM for microservices is the https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html[Parameter Store], which provides secure, hierarchical storage for configuration data management and secrets management.."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/amazon-ssm.adoc:15
+msgid "You can find more information about SSM at https://docs.aws.amazon.com/systems-manager/[the AWS Systems Manager website]."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/amazon-ssm.adoc:18
+msgid "The SSM extension is based on https://docs.aws.amazon.com/sdk-for-java/v2/developer-guide/welcome.html[AWS Java SDK 2.x].  It's a major rewrite of the 1.x code base that offers two programming models (Blocking & Async)."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/amazon-ssm.adoc:22
+msgid "The Quarkus extension supports two programming models:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/amazon-ssm.adoc:24
+msgid "Blocking access using URL Connection HTTP client (by default) or the Apache HTTP Client"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/amazon-ssm.adoc:25
+msgid "https://docs.aws.amazon.com/sdk-for-java/v2/developer-guide/basics-async.html[Asynchronous programming] based on JDK's `CompletableFuture` objects and the Netty HTTP client."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/amazon-ssm.adoc:27
+msgid "In this guide, we see how you can get your REST services to use SSM locally and on AWS."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/amazon-ssm.adoc:28
+#, no-wrap
+msgid "Prerequisites"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/amazon-ssm.adoc:31
+msgid "To complete this guide, you need:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/amazon-ssm.adoc:33
+msgid "JDK 11+ installed with `JAVA_HOME` configured appropriately"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/amazon-ssm.adoc:34
+msgid "an IDE"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/amazon-ssm.adoc:35
+msgid "Apache Maven {maven-version}"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/amazon-ssm.adoc:36
+msgid "An AWS Account to access the SSM service"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/amazon-ssm.adoc:37
+msgid "Docker for your system to run SSM locally for testing purposes"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/amazon-ssm.adoc:38
+#, no-wrap
+msgid "Set up SSM locally"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/amazon-ssm.adoc:41
+msgid "The easiest way to start working with SSM is to run a local instance as a container."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/amazon-ssm.adoc:45
+#, no-wrap
+msgid "docker run --rm --name local-ssm --publish 8014:4583 -e SERVICES=ssm -e START_WEB=0 -d localstack/localstack:0.11.1\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/amazon-ssm.adoc:47
+msgid "This starts a SSM instance that is accessible on port `8014`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/amazon-ssm.adoc:49
+msgid "Create an AWS profile for your local instance using AWS CLI:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/amazon-ssm.adoc:56
+#, no-wrap
+msgid ""
+"$ aws configure --profile localstack\n"
+"AWS Access Key ID [None]: test-key\n"
+"AWS Secret Access Key [None]: test-secret\n"
+"Default region name [None]: us-east-1\n"
+"Default output format [None]:\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/amazon-ssm.adoc:58
+#, no-wrap
+msgid "Solution"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/amazon-ssm.adoc:60
+msgid "The application built here allows to store and retrieve parameters using the SSM parameter store."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/amazon-ssm.adoc:63
+msgid "We recommend that you follow the instructions in the next sections and create the application step by step.  However, you can go right to the completed example."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/amazon-ssm.adoc:65
+msgid "Clone the Git repository: `git clone {quickstarts-clone-url}`, or download an {quickstarts-archive-url}[archive]."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/amazon-ssm.adoc:67
+msgid "The solution is located in the `amazon-ssm-quickstart` {quickstarts-tree-url}/amazon-ssm-quickstart[directory]."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/amazon-ssm.adoc:68
+#, no-wrap
+msgid "Creating the Maven project"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/amazon-ssm.adoc:71
+msgid "First, we need a new project. Create a new project with the following command:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/amazon-ssm.adoc:81
+#, no-wrap
+msgid ""
+"mvn io.quarkus:quarkus-maven-plugin:{quarkus-version}:create \\\n"
+"    -DprojectGroupId=org.acme \\\n"
+"    -DprojectArtifactId=amazon-ssm-quickstart \\\n"
+"    -DclassName=\"org.acme.ssm.QuarkusSsmSyncResource\" \\\n"
+"    -Dpath=\"/sync\" \\\n"
+"    -Dextensions=\"resteasy,resteasy-jackson,amazon-ssm,resteasy-mutiny\"\n"
+"cd amazon-ssm-quickstart\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/amazon-ssm.adoc:85
+msgid "This command generates a Maven structure importing the RESTEasy/JAX-RS, Mutiny and Amazon SSM Client extensions.  After this, the `amazon-ssm` extension has been added to your `pom.xml` as well as the Mutiny support for RESTEasy."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/amazon-ssm.adoc:86
+#, no-wrap
+msgid "Creating JSON REST service"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/amazon-ssm.adoc:90
+msgid "In this example, we will create an application that allows us to store and retrieve parameters to and from SSM parameter store using a RESTful API.  The example application will demonstrate the two programming models supported by the extension."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/amazon-ssm.adoc:92
+msgid "Let's start with an abstract `org.acme.ssm.QuarkusSsmResource` class to provide the common functionality we will need for both the synchronous and asynchrounous exposures."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/amazon-ssm.adoc:96 upstream/_guides/amazon-ssm.adoc:169
+#: upstream/_guides/amazon-ssm.adoc:298
+#, no-wrap
+msgid "package org.acme.ssm;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/amazon-ssm.adoc:99
+#, no-wrap
+msgid ""
+"import static java.lang.Boolean.TRUE;\n"
+"import static java.util.stream.Collectors.toMap;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/amazon-ssm.adoc:102
+#, no-wrap
+msgid ""
+"import java.util.Map;\n"
+"import java.util.stream.Collector;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/amazon-ssm.adoc:104
+#, no-wrap
+msgid "import javax.annotation.PostConstruct;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/amazon-ssm.adoc:106
+#, no-wrap
+msgid "import org.eclipse.microprofile.config.inject.ConfigProperty;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/amazon-ssm.adoc:112
+#, no-wrap
+msgid ""
+"import software.amazon.awssdk.services.ssm.model.GetParameterRequest;\n"
+"import software.amazon.awssdk.services.ssm.model.GetParametersByPathRequest;\n"
+"import software.amazon.awssdk.services.ssm.model.Parameter;\n"
+"import software.amazon.awssdk.services.ssm.model.ParameterType;\n"
+"import software.amazon.awssdk.services.ssm.model.PutParameterRequest;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/amazon-ssm.adoc:114
+#, no-wrap
+msgid "public abstract class QuarkusSsmResource {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/amazon-ssm.adoc:117
+#, no-wrap
+msgid ""
+"    @ConfigProperty(name = \"parameters.path\") <1>\n"
+"    String parametersPath;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/amazon-ssm.adoc:127
+#, no-wrap
+msgid ""
+"    @PostConstruct <2>\n"
+"    void normalizePath() {\n"
+"        if (!parametersPath.startsWith(\"/\")) {\n"
+"            parametersPath = \"/\" + parametersPath;\n"
+"        }\n"
+"        if (!parametersPath.endsWith(\"/\")) {\n"
+"            parametersPath = parametersPath + \"/\";\n"
+"        }\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/amazon-ssm.adoc:131
+#, no-wrap
+msgid ""
+"    protected Collector<Parameter, ?, Map<String, String>> parametersToMap() { <3>\n"
+"        return toMap(p -> p.name().substring(parametersPath.length()), Parameter::value);\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/amazon-ssm.adoc:138
+#, no-wrap
+msgid ""
+"    protected GetParametersByPathRequest generateGetParametersByPathRequest() {\n"
+"        return GetParametersByPathRequest.builder() <4>\n"
+"                .path(parametersPath)\n"
+"                .withDecryption(TRUE)\n"
+"                .build();\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/amazon-ssm.adoc:147
+#, no-wrap
+msgid ""
+"    protected PutParameterRequest generatePutParameterRequest(String name, String value, boolean secure) {\n"
+"        return PutParameterRequest.builder() <5>\n"
+"                .name(parametersPath + name)\n"
+"                .value(value)\n"
+"                .type(secure ? ParameterType.SECURE_STRING : ParameterType.STRING)\n"
+"                .overwrite(TRUE)\n"
+"                .build();\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/amazon-ssm.adoc:155
+#, no-wrap
+msgid ""
+"    protected GetParameterRequest generateGetParameterRequest(String name) {\n"
+"        return GetParameterRequest.builder() <6>\n"
+"                .name(parametersPath + name)\n"
+"                .withDecryption(TRUE)\n"
+"                .build();\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/amazon-ssm.adoc:158
+msgid "Inject a configured path under which to store parameters"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/amazon-ssm.adoc:159
+msgid "Ensure the path starts and ends with `/`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/amazon-ssm.adoc:160
+msgid "Collect parameters into a map of simple names and values"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/amazon-ssm.adoc:161
+msgid "Generate a request for all parameters under the configured path"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/amazon-ssm.adoc:162
+msgid "Generate a request to set a specific parameter"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/amazon-ssm.adoc:163
+msgid "Generate a request to get a specific parameter value"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/amazon-ssm.adoc:165
+msgid "Now, we can extend the class and create the synchronous implementation in the `org.acme.ssm.QuarkusSsmSyncResource` class."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/amazon-ssm.adoc:171 upstream/_guides/amazon-ssm.adoc:300
+#, no-wrap
+msgid "import java.util.Map;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/amazon-ssm.adoc:182 upstream/_guides/amazon-ssm.adoc:311
+#, no-wrap
+msgid ""
+"import javax.inject.Inject;\n"
+"import javax.ws.rs.Consumes;\n"
+"import javax.ws.rs.DefaultValue;\n"
+"import javax.ws.rs.GET;\n"
+"import javax.ws.rs.PUT;\n"
+"import javax.ws.rs.Path;\n"
+"import javax.ws.rs.PathParam;\n"
+"import javax.ws.rs.Produces;\n"
+"import javax.ws.rs.QueryParam;\n"
+"import javax.ws.rs.core.MediaType;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/amazon-ssm.adoc:184
+#, no-wrap
+msgid "import software.amazon.awssdk.services.ssm.SsmClient;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/amazon-ssm.adoc:187
+#, no-wrap
+msgid ""
+"@Path(\"/sync\")\n"
+"public class QuarkusSsmSyncResource extends QuarkusSsmResource {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/amazon-ssm.adoc:190
+#, no-wrap
+msgid ""
+"    @Inject <1>\n"
+"    SsmClient ssm;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/amazon-ssm.adoc:197
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @Produces(MediaType.APPLICATION_JSON)\n"
+"    public Map<String, String> getParameters() {\n"
+"        return ssm.getParametersByPath(generateGetParametersByPathRequest())\n"
+"                .parameters().stream().collect(parametersToMap());\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/amazon-ssm.adoc:204
+#, no-wrap
+msgid ""
+"    @PUT\n"
+"    @Path(\"/{name}\")\n"
+"    @Consumes(MediaType.TEXT_PLAIN)\n"
+"    public void setParameter(@PathParam(\"name\") String name,\n"
+"            @QueryParam(\"secure\") @DefaultValue(\"false\") boolean secure,\n"
+"            String value) {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/amazon-ssm.adoc:207
+#, no-wrap
+msgid ""
+"        ssm.putParameter(generatePutParameterRequest(name, value, secure));\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/amazon-ssm.adoc:216
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @Path(\"/{name}\")\n"
+"    @Produces(MediaType.TEXT_PLAIN)\n"
+"    public String getParameter(@PathParam(\"name\") String name) {\n"
+"        return ssm.getParameter(generateGetParameterRequest(name))\n"
+"                .parameter().value();\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/amazon-ssm.adoc:219
+msgid "Inject the client provided by the amazon-ssm extension"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/amazon-ssm.adoc:221
+msgid "Using the Amazon SSM SDK, we can easily store and retrieve arbitrary name/value pairs, and we can optionally store the values in a secure manner."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/amazon-ssm.adoc:222
+#, no-wrap
+msgid "Configuring SSM clients"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/amazon-ssm.adoc:227
+msgid "Both SSM clients (sync and async) are configurable via the `application.properties` file that can be provided in the `src/main/resources` directory.  Additionally, you need to add to the classpath a proper implementation of the sync client. By default the extension uses the URL connection HTTP client, so you need to add a URL connection client dependency to the `pom.xml` file:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/amazon-ssm.adoc:234
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"    <groupId>software.amazon.awssdk</groupId>\n"
+"    <artifactId>url-connection-client</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/amazon-ssm.adoc:237
+msgid "If you want to use Apache HTTP client instead, configure it as follows:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/amazon-ssm.adoc:241
+#, no-wrap
+msgid "quarkus.ssm.sync-client.type=apache\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/amazon-ssm.adoc:244
+msgid "And add the following dependency to the application `pom.xml`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/amazon-ssm.adoc:255
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"    <groupId>software.amazon.awssdk</groupId>\n"
+"    <artifactId>apache-client</artifactId>\n"
+"</dependency>\n"
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-apache-httpclient</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/amazon-ssm.adoc:258
+msgid "If you're going to use a local SSM instance, configure it as follows:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/amazon-ssm.adoc:262
+#, no-wrap
+msgid "quarkus.ssm.endpoint-override=http://localhost:8014 <1>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/amazon-ssm.adoc:267
+#, no-wrap
+msgid ""
+"quarkus.ssm.aws.region=us-east-1 <2>\n"
+"quarkus.ssm.aws.credentials.type=static <3>\n"
+"quarkus.ssm.aws.credentials.static-provider.access-key-id=test-key\n"
+"quarkus.ssm.aws.credentials.static-provider.secret-access-key=test-secret\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/amazon-ssm.adoc:270
+msgid "Override the SSM client to use localstack instead of the actual AWS service"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/amazon-ssm.adoc:271
+msgid "Localstack defaults to `us-east-1`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/amazon-ssm.adoc:272
+msgid "The `static` credentials provider lets you set the `access-key-id` and `secret-access-key` directly"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/amazon-ssm.adoc:274
+msgid "If you want to work with an AWS account, you can simply remove or comment out all Amazon SSM related properties. By default, the SSM client extension will use the `default` credentials provider chain that looks for credentials in this order:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/amazon-ssm.adoc:278
+msgid "And the region from your AWS CLI profile will be used."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/amazon-ssm.adoc:279
+#, no-wrap
+msgid "Next steps"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/amazon-ssm.adoc:281
+#, no-wrap
+msgid "Packaging"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/amazon-ssm.adoc:285
+msgid "Packaging your application is as simple as `./mvnw clean package`.  It can then be run with `java -Dparameters.path=/quarkus/is/awesome/ -jar target/quarkus-app/quarkus-run.jar`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/amazon-ssm.adoc:288
+msgid "With GraalVM installed, you can also create a native executable binary: `./mvnw clean package -Dnative`.  Depending on your system, that will take some time."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/amazon-ssm.adoc:289
+#, no-wrap
+msgid "Going asynchronous"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/amazon-ssm.adoc:292
+msgid "Thanks to the AWS SDK v2.x used by the Quarkus extension, you can use the asynchronous programming model out of the box."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/amazon-ssm.adoc:294
+msgid "Create a `org.acme.ssm.QuarkusSsmAsyncResource` REST resource that will be similar to our `QuarkusSsmSyncResource` but using an asynchronous programming model."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/amazon-ssm.adoc:314
+#, no-wrap
+msgid ""
+"import io.smallrye.mutiny.Uni;\n"
+"import software.amazon.awssdk.services.ssm.SsmAsyncClient;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/amazon-ssm.adoc:317
+#, no-wrap
+msgid ""
+"@Path(\"/async\")\n"
+"public class QuarkusSsmAsyncResource extends QuarkusSsmResource {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/amazon-ssm.adoc:320
+#, no-wrap
+msgid ""
+"    @Inject\n"
+"    SsmAsyncClient ssm;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/amazon-ssm.adoc:327
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @Produces(MediaType.APPLICATION_JSON)\n"
+"    public Uni<Map<String, String>> getParameters() {\n"
+"        return Uni.createFrom().completionStage(ssm.getParametersByPath(generateGetParametersByPathRequest()))\n"
+"                .onItem().transform(r -> r.parameters().stream().collect(parametersToMap()));\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/amazon-ssm.adoc:334
+#, no-wrap
+msgid ""
+"    @PUT\n"
+"    @Path(\"/{name}\")\n"
+"    @Consumes(MediaType.TEXT_PLAIN)\n"
+"    public Uni<Void> setParameter(@PathParam(\"name\") String name,\n"
+"            @QueryParam(\"secure\") @DefaultValue(\"false\") boolean secure,\n"
+"            String value) {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/amazon-ssm.adoc:338
+#, no-wrap
+msgid ""
+"        return Uni.createFrom().completionStage(ssm.putParameter(generatePutParameterRequest(name, value, secure)))\n"
+"                .onItem().transform(r -> null);\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/amazon-ssm.adoc:347
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @Path(\"/{name}\")\n"
+"    @Produces(MediaType.TEXT_PLAIN)\n"
+"    public Uni<String> getParameter(@PathParam(\"name\") String name) {\n"
+"        return Uni.createFrom().completionStage(ssm.getParameter(generateGetParameterRequest(name)))\n"
+"                .onItem().transform(r -> r.parameter().value());\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/amazon-ssm.adoc:350
+msgid "Note that the `SsmAsyncClient` behaves just like the `SsmClient`, but returns `CompletionStage` objects which we use to create `Uni` instances, and then transform the emitted item."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/amazon-ssm.adoc:352
+msgid "To enable the asynchronous client, we also need to add the Netty HTTP client dependency to the `pom.xml`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/amazon-ssm.adoc:359
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"    <groupId>software.amazon.awssdk</groupId>\n"
+"    <artifactId>netty-nio-client</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/amazon-ssm.adoc:361
+#, no-wrap
+msgid "Configuration Reference"
+msgstr ""
