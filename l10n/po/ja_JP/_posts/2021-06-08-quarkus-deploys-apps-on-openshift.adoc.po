@@ -1,0 +1,572 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2021-06-25 08:10+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:1
+#, no-wrap
+msgid "---\n"
+msgstr "—\n"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:8
+#, fuzzy, no-wrap
+msgid ""
+"layout: post\n"
+"title: How Quarkus has been used to deploy applications on OpenShift\n"
+"date: 2021-06-25\n"
+"tags: openShift user-story\n"
+"synopsis: Find out how Quarkus has been used to deploy application components in Kubernetes, and provision satellite systems such as Vault, adfs and others, with a low memory and CPU footprint, while providing a high level abstraction.\n"
+"author: vsevel\n"
+"---\n"
+msgstr ""
+"layout: post\n"
+"title: アプリケーションをOpenShiftに展開するためにQuarkusをどのように使用したか\n"
+"date: 2021-06-25\n"
+"tags: openShift user-story\n"
+"synopsis: QuarkusがどのようにしてKubernetesにアプリケーションコンポーネントを展開し、Vaultやadfsなどのサテライトシステムのプロビジョニングを、高レベルの抽象化を行いながら、少ないメモリとCPUのフットプリントで実現したかをご覧ください。\n"
+"author: vsevel\n"
+"---\n"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:13
+#, fuzzy
+msgid "This post gives some feedback on a particular challenge I have been facing in a professional context with respect to deploying applications on Kubernetes, and how we were able to provide a solution that met our goals using Quarkus."
+msgstr "この記事では、Kubernetes上でのアプリケーションの展開に関して、私が仕事上で直面している特定の課題について、Quarkusを使ってどのように目標を達成するソリューションを提供できたかについてフィードバックしています。"
+
+#. type: Title ==
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:14
+#, fuzzy, no-wrap
+msgid "The challenge"
+msgstr "挑戦"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:17
+#, fuzzy
+msgid "For a few years now I have been involved in a Kubernetes project, aiming at:"
+msgstr "数年前から、私はKubernetesのプロジェクトに参加しています。"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:19
+#, fuzzy
+msgid "Onboarding more easily and more quickly new technologies (either applicative frameworks, or middleware products)."
+msgstr "新しい技術（アプリケーション・フレームワークやミドルウェア製品）をより簡単に、より早く導入する。"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:21
+#, fuzzy
+msgid "Lowering the administrative burden of deploying distributed inter-related services by creating a logical deployment abstraction on top of these services; something like the https://helm.sh/docs/howto/charts_tips_and_tricks/#complex-charts-with-many-dependencies[umbrella chart] pattern."
+msgstr "link:https://helm.sh/docs/howto/charts_tips_and_tricks/#complex-charts-with-many-dependencies[アンブレラチャートパターン]のように、サービスの上に論理的な展開の抽象化を行うことで、相互に関連する分散型サービスを展開する際の管理負担を軽減する。"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:22
+#, fuzzy
+msgid "Limiting the work needed by an application team to deploy a component, and hyper-standardize Kubernetes deployment objects."
+msgstr "アプリケーションチームがコンポーネントをデプロイするために必要な作業を制限し、Kubernetesのデプロイメントオブジェクトを超標準化します。"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:23
+#, fuzzy
+msgid "Transitioning to an hybrid cloud deployment model."
+msgstr "ハイブリッドクラウドの導入モデルに移行する。"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:25
+#, fuzzy
+msgid "In addition to those goals, there was a constraint related to the fact that applications may be deployed by tenant (i.e. they are not multi-tenant, for different reasons, some being regulatory related). Depending on the application, there may be a few dozens tenants, which would translate into deploying the application once per tenant (so if we had 10 tenants for an application, there would be 10 processes running in production). However, if processes needed to be physically separated, often some portions of configuration could be shared between some tenants, and/or IT environments, and/or geographical zones according to different business rules. Highly simplified and factorized bits of configuration would be a true source of simplicity for the development team, and a true source of complexity for the deployment process."
+msgstr "これらの目標に加えて、アプリケーションがテナントごとにデプロイされるという事実に関連した制約がありました（つまり、規制に関連した理由もありますが、マルチテナントではありません）。アプリケーションによっては、数十のテナントが存在する可能性があり、その場合、テナントごとにアプリケーションを1回デプロイすることになります（つまり、あるアプリケーションに10のテナントがあった場合、本番では10のプロセスが実行されることになります）。しかし、物理的にプロセスを分離する必要がある場合は、異なるビジネスルールに基づいて、一部のテナント、IT環境、地理的ゾーンの間で、設定の一部を共有することができます。高度に単純化、因数分解された構成部分は、開発チームにとっては真の意味での単純さの源となり、デプロイメントプロセスにとっては真の意味での複雑さの源となります。"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:27
+#, fuzzy
+msgid "Some projections indicated that at project end, the different clusters in production would contain 10'000 pods."
+msgstr "プロジェクト終了時には、さまざまなクラスターで10,000個のポッドが生産されているという予測もありました。"
+
+#. type: Title ==
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:28
+#, fuzzy, no-wrap
+msgid "First attempts"
+msgstr "最初の試み"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:31
+#, fuzzy
+msgid "Given that complexity we created our own tool for configuration and deployment. The initial version was based on Ansible and ran into Tower workflows. For different reasons we decided to rewrite it in Java a year ago, mainly to:"
+msgstr "その複雑さを考慮して、私たちは設定とデプロイのための独自のツールを作成しました。最初のバージョンはAnsibleをベースにしたもので、Towerのワークフローに対応していました。さまざまな理由から、1年前にJavaで書き直すことにしました。"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:33
+#, fuzzy
+msgid "Get better performances."
+msgstr "パフォーマンスが向上する"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:34
+#, fuzzy
+msgid "Use a high level language that could cope with algorithm complexity."
+msgstr "アルゴリズムの複雑さに対応できる高レベルの言語を使用しています。"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:35
+#, fuzzy
+msgid "Get better support for unit and integration testing."
+msgstr "ユニットテストや統合テストのサポートが充実しています。"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:36
+#, fuzzy
+msgid "Improve productivity with quality development tools (e.g. IDE)."
+msgstr "高品質な開発ツール（IDEなど）による生産性の向上。"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:38
+#, fuzzy
+msgid "One thing we were concerned about though, was memory consumption, CPU usage and startup times since for a given application, each tenant is deployed in isolation in its own deployment process. For that reason we decided to not depend on any application framework when we started the Java rewrite, because if they do offer productivity and standardization, the abstraction they provide comes with a resource cost. So the program was written in plain Java, and it was small enough in size and use cases that we were able get away with it, provided we relied on a few patterns (e.g. constructor based injection by hand) for clean code. This program is called _ocpdeploy_."
+msgstr "しかし、一つ気になったのは、メモリ消費量、CPU使用率、起動時間でした。というのも、あるアプリケーションでは、各テナントがそれぞれのデプロイメントプロセスで独立してデプロイされるからです。というのも、アプリケーションフレームワークは生産性や標準化の面では優れていますが、抽象化の面ではリソースコストがかかるからです。そのため、プログラムはプレーンなJavaで書かれており、サイズもユースケースも十分に小さかったので、クリーンなコードのためにいくつかのパターン（例：コンストラクタベースのインジェクションを手作業で行う）に頼ることを条件に、それで済ませることができました。このプログラムは _ocpdeploy_ といいます。"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:40
+#, fuzzy
+msgid "As we were moving away from Tower, we decided to leverage our Kubernetes infrastructure by running _ocpdeploy_ as tasks in Tekton pipelines. This gave us repeatability, a way to deploy different applications, or even different tenants for the same application with different _ocpdeploy_ versions. The use of java (any other high level language would have been a good fit) provided us with a high level of productivity, and maintainable code, while being able to implement complex algorithms for configuration processing, and raised the level of quality of _ocpdeploy_ releases thanks to our extensive regression testing suite."
+msgstr "Tower からの移行に伴い、Tekton パイプラインのタスクとして _ocpdeploy_を実行することで、Kubernetes インフラストラクチャを活用することにしました。これにより、再現性が得られ、異なるアプリケーションや、同じアプリケーションの異なるテナントを異なる _ocpdeploy_バージョンでデプロイすることができました。java (他のハイレベル言語でも可) を使用することで、設定処理のための複雑なアルゴリズムを実装することができる一方で、高いレベルの生産性と保守可能なコードを提供し、広範なリグレッション・テスト・スイートのおかげで _ocpdeploy_のリリースの品質レベルが向上しました。"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:42
+#, fuzzy
+msgid "All was well... until we started deploying multiple tenants at the same time, and/or different applications. We had sized the _ocpdeploy_ container to `200 millicores` and `280 Mb` of RAM. For some applications there were around 30 tenants, that would be all deployed in parallel. This meant 30 pods, which accounted for `6 cores` and `8 Gb` of RAM. This seems livable, but deployments tend to be done after business hours, between 7 and 8pm for many. And we started being afraid of the impact _ocpdeploy_ itself would have if we were running multiple deployments in parallel, on top of our SpringBoot or WildFly applications, which take their toll on the cluster at startup."
+msgstr "全てが順調だったのは、複数のテナントを同時にデプロイしたり、異なるアプリケーションをデプロイするようになってからです。 _ocpdeploy_コンテナのサイズは `200 millicores` 、RAMは `280 Mb` でした。いくつかのアプリケーションでは、約30のテナントがあり、それらはすべて並行してデプロイされます。これは30ポッドを意味し、 `6 cores` と `8 Gb` のRAMを占めていました。しかし、デプロイは多くの場合、営業時間後の午後7時から8時の間に行われることが多いのです。また、起動時にクラスタに負担をかけるSpringBootやWildFlyのアプリケーションに加えて、複数のデプロイを並行して実行する場合、 _ocpdeploy_自体が受ける影響を心配し始めました。"
+
+#. type: Title ==
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:43
+#, fuzzy, no-wrap
+msgid "Enter the Quarkus Universe"
+msgstr "クォークス・ユニバースへの参加"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:47
+#, fuzzy
+msgid "So less than a year ago we decided to launch a Quarkus POC on _ocpdeploy_, the goal being to deploy it as a GraalVM executable.  The main challenges we ran into were related to the lack of support for GraalVM in some of the libraries we were using: FreeMarker, https://github.com/hierynomus/smbj[SMBJ] (a java client library that implements the Server Message Block SMB2 and SMB3 protocols), the Fabric8 OpenShift client (when instantiating OpenShift specific CRDs), and a home made java agent that ships logs to a proprietary centralized logging system."
+msgstr "1年前、私たちは _Ocpdeploy_でQuarkusのPOCを開始することにしました。その目的は、QuarkusをGraalVMの実行ファイルとしてデプロイすることでした。遭遇した主な課題は、使用していたいくつかのライブラリでGraalVMがサポートされていないことに関連していました。FreeMarker、 link:https://github.com/hierynomus/smbj[SMBJ]（Server Message Block SMB2およびSMB3プロトコルを実装したJavaクライアントライブラリ）、Fabric8 OpenShiftクライアント（OpenShift固有のCRDをインスタンス化する際）、そして独自の集中型ログシステムにログを送信する自作のJavaエージェントです。"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:49
+#, fuzzy
+msgid "Fortunately, other bits were already there in Quarkus, such as support for command mode applications, a rest client, the Vault extension, and support for the Fabric8 Kubernetes Client, which provided a nice base for a new OpenShift Client extension that was added to the core. The Kubernetes Client extension alone was a huge push for the project because when we started we did not have Argo available, so we had to implement _apply_ and _prune_ ourselves."
+msgstr "幸いなことに、コマンドモードアプリケーションのサポート、restクライアント、Vaultエクステンション、Fabric8 Kubernetes Clientのサポートなど、他の部分はすでにQuarkusに存在しており、コアに追加された新しいOpenShift Clientエクステンションのベースとなりました。Kubernetes Clientエクステンションだけでも、プロジェクトにとって大きな後押しとなりました。というのも、スタート時にはArgoが利用できなかったので、 _適用_と _剪定_を自分たちで実装しなければならなかったからです。"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:52
+#, fuzzy
+msgid "For FreeMarker we pushed a new extension to the Quarkiverse, with code largely inspired from work by https://github.com/ppalaga[ppalaga] and https://github.com/carlosthe19916[carlosthe19916].  For SMBJ we created an extension in our internal Quarkiverse. And for our logging client, I was able to draw some inspiration from the `quarkus-logging-gelf` extension, and created an additional internal extension."
+msgstr "FreeMarkerについては、 link:https://github.com/ppalaga[ppalaga]と link:https://github.com/carlosthe19916[carlosthe19916]の作業に大きく影響されたコードで、Quarkiverseに新しい拡張機能を導入しました。SMBJについては、社内のQuarkiverseでエクステンションを作成しました。また、ロギングクライアントについては、 `quarkus-logging-gelf` の拡張機能からヒントを得て、追加の内部拡張機能を作成しました。"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:54
+#, fuzzy
+msgid "Getting a library to run in native was facilitated by the very good documentation that comes from the Quarkus project and support in the framework (e.g. _processors_ and _recorders_): https://quarkus.io/guides/writing-native-applications-tips#native-in-extension[Supporting native in a Quarkus extension]."
+msgstr "ライブラリをネイティブで動作させるには、Quarkusプロジェクトから提供される非常に優れたドキュメントと、フレームワークでのサポート（ _プロセッサ_や _レコーダー_など）が役立ちました。 link:https://quarkus.io/guides/writing-native-applications-tips#native-in-extension[Quarkusの拡張機能でネイティブをサポートする]。"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:56
+#, fuzzy
+msgid "When things got a little hairy (SMBJ was trickier than we thought), we got some help from the https://medium.com/GraalVM/introducingthe-tracing-agent-simplifying-GraalVM-native-image-configuration-c3b56c486271[GraalVM tracing agent]."
+msgstr "ちょっとした問題が発生したとき（SMBJは思ったよりも厄介だった）、 link:https://medium.com/GraalVM/introducingthe-tracing-agent-simplifying-GraalVM-native-image-configuration-c3b56c486271[GraalVMのトレースエージェント]から助けを得ました。"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:58
+#, fuzzy
+msgid "Here is the list of extensions that we happened to use: `cdi, config-yaml, freemarker, hibernate-validator, kubernetes-client, openshift-client, rest-client, restclient-jackson, vault` (plus internal extensions for SMBJ and our internal centralized logging system)."
+msgstr "たまたま使用していた拡張機能のリストは以下の通りです。 `cdi, config-yaml, freemarker, hibernate-validator, kubernetes-client, openshift-client, rest-client, restclient-jackson, vault` (加えて、SMBJと私たちの内部集中型ログシステムのための内部拡張機能)。"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:60
+#, fuzzy
+msgid "Eventually we got all the required libraries to work in native mode, and we could switch efforts toward migrating the application to look like a _real_ Quarkus application:"
+msgstr "最終的には、必要なライブラリがすべてネイティブモードで動作するようになったので、アプリケーションを _本物の_Quarkusアプリケーションのように移行する作業に切り替えることができました。"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:62
+#, fuzzy
+msgid "Using injection, with qualifiers and producers when necessary."
+msgstr "必要に応じて修飾語やプロデューサーを用いたインジェクションを使用。"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:63
+#, fuzzy
+msgid "Rewriting tests to use the different mocking approaches, including the new (at the time) https://quarkus.io/blog/quarkus-test-profiles/[QuarkusTest profiles]."
+msgstr "新しい（当時の） link:https://quarkus.io/blog/quarkus-test-profiles/[QuarkusTestのプロファイル]を含む、さまざまなモッキングアプローチを使用するためのテストの書き換え。"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:65
+#, fuzzy
+msgid "This allowed us to provide extensive testing through Kubernetes yaml generation, _snapshotting_ and _replay_ in a variety of situations transforming all the configuration to be _MP config_ compliant."
+msgstr "これにより、Kubernetesのyaml生成、 _スナップショット_、様々な状況での _再生_を通じた広範なテストが可能となり、すべての設定を _MP config_に準拠したものに変換することができました。"
+
+#. type: Title ==
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:66
+#, fuzzy, no-wrap
+msgid "Benchmarks"
+msgstr "ベンチマーク"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:69
+#, fuzzy
+msgid "Then, we ran some benchmarks to assess resource consumption compared to the old version. We were not really worried about startup time. We knew it would be very good. And as long as it stayed in the few seconds window (which we were experiencing on the plain Java version), we were OK. But memory and CPU consumption was another story. The whole exercise was motivated by hopes for some real gains."
+msgstr "そして、いくつかのベンチマークを実行し、旧バージョンと比較してリソース消費量を評価しました。起動時間についてはあまり気にしていませんでした。非常に優れていることはわかっていましたから。起動時間が数秒以内に収まっていれば（プレーンなJavaバージョンで経験していたことですが）、問題ありませんでした。しかし、メモリとCPUの消費は別の話でした。この試みは、実際に何らかの利益が得られることを期待して行われました。"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:71
+#, fuzzy
+msgid "With the plain Java version we were able to squeeze the container down to `180 Mb` (below that it would either go _OOM_, or the _GC_ would kill the performances). And for the native version, we were able to go as low as `50 Mb`."
+msgstr "プレーンなJavaバージョンでは、 `180 Mb` までコンテナを絞り込むことができました（それ以下では、 _OOM_になるか、 _GC_がパフォーマンスを殺してしまいます）。また、ネイティブ版では、 `50 Mb` まで下げることができました。"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:73
+#, fuzzy
+msgid "Then we executed several runs with different configurations (`plain Java 180 Mb`, `Quarkus native 180 Mb`, `Quarkus jvm 180 Mb`, `Quarkus native 50 Mb` , starting from `50 millicores request=limit`, moving up to `100`, `150`, …"
+msgstr "そして、さまざまな構成（ `plain Java 180 Mb` 、 `Quarkus native 180 Mb` 、 `Quarkus jvm 180 Mb` 、 `Quarkus native 50 Mb` 、 `50 millicores request=limit` から始めて、 `100` 、 `150` 、 ...）で数回の実行を行いました。"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:75
+#, fuzzy
+msgid "At `50 millicores`, `Quarkus native 180 Mb` would run in 20 seconds, `Quarkus native 50 Mb` in 60 seconds, and the others 2 in 300 seconds. This meant that if we allowed `180 Mb` to _ocpdeploy_, we could go from 300 to 20 seconds. A _x15_ times improvement."
+msgstr "`50 millicores` では、 `Quarkus native 180 Mb` が 20 秒、 `Quarkus native 50 Mb` が 60 秒、その他の 2 つが 300 秒で実行されます。つまり、 `180 Mb` に _ocpdeploy_ を許可すれば、300秒から20秒になるということです。 _15_倍の改善です。"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:77
+#, fuzzy
+msgid "At `250 millicores` we had `Quarkus native 180 Mb` under 5 seconds, `Quarkus native 50 Mb` at 10 seconds, and the 2 others around 40 seconds."
+msgstr "`250 millicores` では、 `Quarkus native 180 Mb` が5秒以下、 `Quarkus native 50 Mb` が10秒、その他の2つが40秒前後でした。"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:79
+#, fuzzy
+msgid "We searched also how much CPU was needed to get a deployment under 60 seconds."
+msgstr "また、デプロイメントを60秒以下にするために、どれだけのCPUが必要かを調べました。"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:81
+#, fuzzy
+msgid "For `Quarkus native 50 Mb` it was `50 millicores`, for `plain Java 180 Mb` and `Quarkus jvm 180 Mb` it was `240 millicores` (`Quarkus native 180 Mb` was out of scope since its \"worst\" result was 20 seconds as discussed in the first test). This meant that if time was our constraint, we could go from `240 millicores` to `50 millicores`, while going from `180 Mb` to `50 Mb` by moving to Quarkus native."
+msgstr "`Quarkus native 50 Mb` では `50 millicores` 、 `plain Java 180 Mb` と `Quarkus jvm 180 Mb` では `240 millicores` でした（ `Quarkus native 180 Mb` は、最初のテストで説明したように「最悪」の結果が 20 秒だったため、対象外となりました）。つまり、時間に制約がある場合は、 `240 millicores` から `50 millicores` へ、また、 `180 Mb` から `50 Mb` へは、Quarkus native へ移行することで対応できるということです。"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:83
+#, fuzzy
+msgid "The comparison between `Quarkus native 180 Mb` and `50 Mb` was interesting as well, because it showed that by pushing up and down the memory and CPU knobs we could work on the use case execution duration. It was then up to us to decide where was the sweet spot between execution time and resource consumption."
+msgstr "`Quarkus native 180 Mb` と `50 Mb` の比較も興味深いものでした。というのも、メモリと CPU のノブを上げ下げすることで、ユースケースの実行時間を調整できることがわかったからです。実行時間とリソース消費の間のスイートスポットをどこに設定するかは、私たち次第です。"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:85
+#, fuzzy
+msgid "The last interesting observation we made was that the results for `plain Java 180 Mb` were nearly identical to `Quarkus jvm 180 Mb`. This meant that the cost of the applicative framework, which provides maintainability and productivity, was 0 in our case. It's like having your cake and eating it as well. In our case we did not mind slow executions, as long as we could save a lot on memory and CPU, which we were able to achieve."
+msgstr "最後に興味深い観察結果として、 `plain Java 180 Mb` の結果が `Quarkus jvm 180 Mb` とほぼ同じだったことが挙げられます。これは、保守性と生産性を提供するアプリケーションフレームワークのコストが、私たちのケースでは0だったということです。ケーキを食べているようなものですね。私たちの場合、メモリとCPUを大幅に節約できるのであれば、実行速度が遅くても構わないと考えていましたが、それが実現できました。"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:88
+#, fuzzy
+msgid "Program execution in seconds for different limits (in millicores)  [cols=\"h,,,,\",options=\"header\",width=\"20%]"
+msgstr "異なる制限値（単位：ミリコア）におけるプログラム実行時間（秒） [cols=\"h,,,,\",options=\"header\",width=\"20%]."
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:98
+#, fuzzy
+msgid "||plain Java (180Mb)|Quarkus Native (180Mb)|Quarkus JVM (180Mb)|Quarkus Native (50Mb)  |50m|283|18|306|61 |100m|95|9|120|32 |250m|38|4|43|11 |500m|17|3|21|8 |1000m|11|3|11|5 |1500m|9|3|8|5 |2000m|7|3|7|5 |No Limit|8|3|6|5"
+msgstr "|plain Java (180Mb)|Quarkus Native (180Mb)|Quarkus JVM (180Mb)|Quarkus Native (50Mb) |50m|283|18|306|61100m｜95｜9｜120｜32｜250m｜38｜4｜43｜11｜500m｜17｜3｜21｜8｜1000m｜11｜3｜11｜5｜1500m｜9｜3｜8｜5｜2000m｜7｜3｜7｜5｜制限なし｜8｜3｜6｜5"
+
+#. type: Target for macro image
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:100
+#, no-wrap
+msgid "results.png"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:102
+#, fuzzy, no-wrap
+msgid "A few issues"
+msgstr "いくつかの問題点"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:105
+#, fuzzy
+msgid "Beside the challenges of running ad hoc libraries in GraalVM, there were a few unexpected behaviors or minor pain points we ran into, such as:"
+msgstr "GraalVMでアドホック・ライブラリを動作させる上での課題以外にも、予期せぬ動作やちょっとした問題点がいくつかありました。"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:107
+#, fuzzy
+msgid "Missing warning on unknown application configuration property https://github.com/quarkusio/quarkus/issues/14889[#14889]"
+msgstr "不明なアプリケーション構成プロパティに対する警告の欠落 link:https://github.com/quarkusio/quarkus/issues/14889[#14889]"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:108
+#, fuzzy
+msgid "Default on config pojo should behave the same if set in `src/main/resources/application.yaml` https://github.com/quarkusio/quarkus/issues/13423[#13423]"
+msgstr "`src/main/resources/application.yaml`  link:https://github.com/quarkusio/quarkus/issues/13423[#13423]で設定した場合、pojoの設定上のデフォルトは同じ動作をするようにしてください。"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:109
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:117
+#, fuzzy
+msgid "Warn or fail if an application.yaml is provided without the `quarkus-config-yaml` dependency https://github.com/quarkusio/quarkus/issues/13227[#13227]"
+msgstr "`quarkus-config-yaml` の依存関係がない application.yaml が提供された場合、警告または失敗する link:https://github.com/quarkusio/quarkus/issues/13227[#13227]"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:110
+#, fuzzy
+msgid "Upgrade to _MP Rest Client_ 2.0 https://github.com/quarkusio/quarkus/issues/10520[#10520], which we have been waiting for, to get \"follow redirects\""
+msgstr "待ちに待った _MP Rest Client_2.0 link:https://github.com/quarkusio/quarkus/issues/10520[#10520]へのアップグレードで、\"フォローリダイレクト \"が可能になります。"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:111
+#, fuzzy
+msgid "I wished there was a way to define mock alternatives per test through annotation, but this was answered in https://groups.google.com/g/quarkus-dev/c/IBojyD1BplY/m/NWFmsX3NBwAJ[this thread]"
+msgstr "アノテーションでテストごとにモックを定義する方法があればと思いましたが、これは link:https://groups.google.com/g/quarkus-dev/c/IBojyD1BplY/m/NWFmsX3NBwAJ[このスレッド]で回答されています。"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:112
+#, fuzzy
+msgid "Inability to provide certificates at run time instead of build time (GraalVM limitation) https://github.com/oracle/graal/pull/3091[#3091]"
+msgstr "証明書をビルド時ではなくランタイムに提供できない（GraalVMの制限 link:https://github.com/oracle/graal/pull/3091[） #3091]"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:113
+#, fuzzy
+msgid "Visibility of `src/main/resources/application.properties` in test as discussed in https://groups.google.com/g/Quarkus-dev/c/xCU6Yvw__ks/m/cogHVvNsAwAJ[this thread]; A lot of work has been done since then such as \"Use AbstractLocationConfigSourceLoader to load application.properties and application.yaml\" https://github.com/quarkusio/quarkus/pull/15282[#15282], so I need to recheck"
+msgstr "link:https://groups.google.com/g/Quarkus-dev/c/xCU6Yvw__ks/m/cogHVvNsAwAJ[このスレッド]で議論されているように、テストでの `src/main/resources/application.properties` の可視性; 「Use AbstractLocationConfigSourceLoader to load application.properties and application.yaml」 link:https://github.com/quarkusio/quarkus/pull/15282[#15282] のように、その後多くの作業が行われているので、再確認が必要です。"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:114
+#, fuzzy
+msgid "Optional config property overriden with empty value as discussed in https://groups.google.com/g/Quarkus-dev/c/_g-6qfUFA3A/m/2s9XjTVxAwAJ[this thread]"
+msgstr "link:https://groups.google.com/g/Quarkus-dev/c/_g-6qfUFA3A/m/2s9XjTVxAwAJ[このスレッド]で議論されているように、オプションの設定プロパティが空の値で上書きされます。"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:115
+#, fuzzy
+msgid "Quarkus YAML configuration keys are implicitly escaped https://github.com/quarkusio/quarkus/issues/11744[#11744]"
+msgstr "QuarkusのYAML設定キーは暗黙のうちにエスケープされる link:https://github.com/quarkusio/quarkus/issues/11744[#11744]"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:116
+#, fuzzy
+msgid "https://groups.google.com/g/Quarkus-dev/c/KXzJ2UPGRvI/m/3AEsLvZNBAAJ[application.properties included in archive]"
+msgstr "link:https://groups.google.com/g/Quarkus-dev/c/KXzJ2UPGRvI/m/3AEsLvZNBAAJ[アーカイブに含まれるapplication.properties]"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:119
+#, fuzzy
+msgid "This seems quite a bit, but actually none of those bullet points were major issues, or something we could not work around. Several issues were related to configuration, in part because the program was run as a Tekton task, and there is limited flexibility on how you define optional parameters in Tekton. I have listed only those points that we had to work around. Many issues or questions were actually resolved as we were making progress through answers in the google group, or actual fixes."
+msgstr "これはかなりの量に見えますが、実際にはこれらの箇条書きはどれも大きな問題ではなく、回避できないものでもありませんでした。いくつかの問題は設定に関するものでしたが、これはプログラムがTektonタスクとして実行されていたためで、Tektonではオプションのパラメータを定義する際の柔軟性が限られています。ここに挙げたのは、回避しなければならなかった点のみです。多くの問題や質問は、グーグルグループでの回答や実際の修正により、進行中に解決されました。"
+
+#. type: Title ==
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:120
+#, fuzzy, no-wrap
+msgid "CI for native builds"
+msgstr "ネイティブビルドのためのCI"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:123
+#, fuzzy
+msgid "Another challenge was related to native build time, memory and CPU usage during those builds. The approach we took was to only generate a native executable on master, and run tests in jvm mode on the feature branches. We would still have an option to test against native in a particular feature branch if we needed to. But unless we were integrating a new library, getting the jvm tests to pass gave us sufficient confidence that we would have an identical behavior in native."
+msgstr "もう一つの課題は、ネイティブビルドの時間と、その間のメモリとCPUの使用量に関するものでした。そこで私たちがとった方法は、マスターではネイティブの実行ファイルのみを生成し、機能ブランチではjvmモードでテストを実行するというものでした。必要であれば、特定の機能ブランチでネイティブテストを行うという選択肢もあります。しかし、新しいライブラリを統合するのでなければ、jvmテストを通過させることで、ネイティブでも同様の動作をするという十分な自信を持つことができました。"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:125
+#, fuzzy
+msgid "The other trick we applied was to cancel the current build on _master_ if a new one got triggered; that way we would not have multiple native builds running at the same time. In theory it could be frustrating to get a build killed because another commit was done. In practice this was not an issue because the rate of PRs getting merged on _master_ stayed low."
+msgstr "もう一つの工夫は、新しいビルドが開始されたときに、 _マスター_の現在のビルドをキャンセルすることでした。理論的には、別のコミットが行われたためにビルドがキャンセルされるのはフラストレーションがたまるかもしれません。実際には、PRが _master_にマージされる割合は低いままだったので、この問題はありませんでした。"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:127
+#, fuzzy
+msgid "But there are definitely some questions around sizing a build infrastructure if we had wanted to increase the number of Quarkus applications developed internally."
+msgstr "しかし、社内で開発するQuarkusアプリケーションの数を増やしたいと考えた場合、ビルドインフラのサイズには疑問が残ります。"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:129
+#, fuzzy
+msgid "The only drawback compared to the original solution was that our regression test suite was slower to run, essentially because our tests generated resources in the context of a specific configuration. And since we were using _MP config_, we needed to boot a new Quarkus context every time we wanted to test a different configuration. Fortunately booting a new context is extremely fast in Quarkus, but still a lot slower than with our original plain Java solution."
+msgstr "オリジナルのソリューションと比較した場合の唯一の欠点は、リグレッションテストスイートの実行が遅くなったことです。 _MPコンフィグ_を使用していたので、異なるコンフィグをテストするたびに、新しいQuarkusコンテキストを起動する必要がありました。幸いなことに、新しいコンテキストの起動はQuarkusでは非常に高速ですが、それでも元々のプレーンなJavaソリューションに比べればかなり遅いです。"
+
+#. type: Title ==
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:130
+#, fuzzy, no-wrap
+msgid "It is all about the community"
+msgstr "すべてはコミュニティのために"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:133
+#, fuzzy
+msgid "Beside work on the Vault, FreeMarker and OpenShift Client extensions, we started contributing a few PRs in and outside Quarkus, hoping to speed up the process of getting improvements, such as:"
+msgstr "Vault、FreeMarker、OpenShift Clientの拡張機能の作業の他に、Quarkus内外でいくつかのPRに貢献し始めました。これは、以下のような改善を得るためのプロセスをスピードアップすることを期待しています。"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:135
+#, fuzzy
+msgid "Add `appendResourceVersionInObject` for CRD objects https://github.com/fabric8io/kubernetes-client/pull/2365[#2365] (merged)"
+msgstr "CRDオブジェクトに `appendResourceVersionInObject` を追加 link:https://github.com/fabric8io/kubernetes-client/pull/2365[#2365](merged)"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:136
+#, fuzzy
+msgid "Add cert-manager extension support https://github.com/fabric8io/kubernetes-client/pull/2930[#2930] (merged)"
+msgstr "cert-manager 拡張サポートの追加 link:https://github.com/fabric8io/kubernetes-client/pull/2930[#2930](merged)"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:137
+#, fuzzy
+msgid "Build distroless image using cekit in ci https://github.com/quarkusio/quarkus-images/pull/118[#118] (merged)"
+msgstr "ci で cekit を使ってディストロレスイメージを構築する link:https://github.com/quarkusio/quarkus-images/pull/118[#118](merged)"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:138
+#, fuzzy
+msgid "Allow root certificates to be configured at run time of native image https://github.com/oracle/graal/pull/3091[#3091] (_teshull_ assigned by Christian Wimmer at Oracle to work on this for the GraalVM 21.3 release)"
+msgstr "ネイティブイメージの実行時にルート証明書を設定できるようにしました link:https://github.com/oracle/graal/pull/3091[#3091] _(teshull_はオラクルの Christian Wimmer から GraalVM 21.3 リリースのための作業を任されました)"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:140
+#, fuzzy
+msgid "It is worth noting that the Quarkus community has been a huge factor for success, by:"
+msgstr "特筆すべきは、Quarkusのコミュニティが成功の大きな要因になっていることです。"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:142
+#, fuzzy
+msgid "Answering questions on the google group, zulip or other means such as stackoverflow."
+msgstr "googleグループやzulipなど、stackoverflowなどで質問に答えること。"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:143
+#, fuzzy
+msgid "Investigating issues in a timely fashion, and depending on the situation either providing fixes, guidance on applying the right approach, or workarounds."
+msgstr "問題をタイムリーに調査し、状況に応じて、修正、正しいアプローチの適用に関するガイダンス、または回避策を提供する。"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:144
+#, fuzzy
+msgid "Being open to improvements (e.g. on configuration)."
+msgstr "構成などの改善に前向きであること。"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:145
+#, fuzzy
+msgid "Reviewing PRs quickly, and facilitating contributions."
+msgstr "PRを迅速にレビューし、貢献を促進する。"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:146
+#, fuzzy
+msgid "Releasing with high frequency."
+msgstr "高い周波数でリリースする。"
+
+#. type: Title ==
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:147
+#, fuzzy, no-wrap
+msgid "Takeovers"
+msgstr "買収"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:150
+#, fuzzy
+msgid "It took us only a few months to do the migration, and we started deploying our first OpenShift application with our Quarkus powered _ocpdeploy_ end of last year. Since then, it was used to run hundreds of deployments. We were able to follow the pace of new releases with limited effort. We incurred very few bugs, usually fixed in time for the next release. The applicative framework provided by Quarkus allowed us to better structure our code, making it more maintainable, and easy to tests with mock features and test profiles. It is interesting to note as well that _ocpdeploy_ development was done by team members that were not Quarkus developers, or even strong Java specialists. This is a sign that the framework is light enough that once the overall structure (e.g. components, tests, configuration, ci) is in place, we can forget about it."
+msgstr "移行に要した期間はわずか数ヶ月で、昨年末にはQuarkusを搭載した _ocpdeploy_で最初のOpenShiftアプリケーションのデプロイを開始しました。それ以来、何百ものデプロイメントを実行するために使用されました。限られた労力で新しいリリースのペースを追うことができました。バグはほとんど発生せず、通常は次のリリースに間に合うように修正されました。Quarkusが提供するアプリケーションフレームワークにより、コードの構造化が進み、保守性が向上し、モック機能やテストプロファイルを使ったテストが容易になりました。 _ocpdeploy_の開発は、Quarkusの開発者ではなく、Javaの専門家でもないチームメンバーによって行われたことも興味深い点です。これは、フレームワークが、全体的な構造（例：コンポーネント、テスト、構成、ci）が整ってしまえば、それを忘れることができるほど軽量であることを示しています。"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:152
+#, fuzzy
+msgid "Our program was not business critical in the sense that if it did not work, business would not stop. But it is the only mean to deploy all of our OpenShift microservices. And given the pace of internal developments, it is considered a critical piece in the value chain. _ocpdeploy_ is not evidently ultra sophisticated, and we only scratched the surface of what could be done with Quarkus, but yet it worked for us, showing that it can tackle many different use cases."
+msgstr "私たちのプログラムは、それが動作しなければビジネスが止まらないという意味で、ビジネスクリティカルではありませんでした。しかし、OpenShiftのマイクロサービスをすべてデプロイするには、このプログラムしかありません。 _ocpdeploy_は明らかに超高度なものではなく、Quarkusでできることの表面をなぞっただけでしたが、それでも私たちのために動いてくれたので、さまざまなユースケースに取り組めることがわかりました。"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:154
+#, fuzzy
+msgid "In conclusion, I think the strong selling points for Quarkus are:"
+msgstr "結論として、Quarkusの強力なセールスポイントは以下の通りだと思います。"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:156
+#, fuzzy
+msgid "A vivid community, which listens actively for feedback, and welcome contributions"
+msgstr "積極的にフィードバックに耳を傾け、貢献を歓迎する生き生きとしたコミュニティ"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:157
+#, fuzzy
+msgid "A project developed with high velocity"
+msgstr "ハイスピードで開発されたプロジェクト"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:158
+#, fuzzy
+msgid "The right positioning (cloud native, developer joy, …) with versatility"
+msgstr "汎用性のある適切なポジショニング（クラウドネイティブ、デベロッパージョイ、...）。"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:159
+#, fuzzy
+msgid "Willingness to pragmatically bend, a little, specifications when they would work against the Quarkus values"
+msgstr "クォークスの価値観に反するような仕様であっても、現実的に少しでも曲げようとする姿勢"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:160
+#, fuzzy
+msgid "An architecture with a compact core and extensions, allowing for rapid expansion, which will nurture innovation"
+msgstr "コンパクトなコアと拡張性を持ち、迅速な拡張を可能にすることで、イノベーションを育むアーキテクチャ"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:161
+#, fuzzy
+msgid "Support for native by default, but also some improvements in jvm mode also"
+msgstr "デフォルトではネイティブをサポートしていますが、jvmモードでもいくつかの改良が加えられています。"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:162
+#, fuzzy
+msgid "Fast growing eco-system through the core extensions, the universe extensions (e.g. camel) and the Quarkiverse"
+msgstr "コアの拡張機能、ユニバースの拡張機能（例：ラクダ）、Quarkiverseによる急成長のエコシステム"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:163
+#, fuzzy
+msgid "Dev mode (local and remote)"
+msgstr "開発モード（ローカルおよびリモート"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:164
+#, fuzzy
+msgid "A framework for developing extensions that facilitate implementing patterns such as the build time initialization"
+msgstr "ビルド時の初期化などのパターンを実現するための拡張機能を開発するためのフレームワーク"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:167
+#, fuzzy
+msgid "The main challenge I see going forward, similarly to app stores 10 or 15 years ago, is to make sure that the extension eco-system grows in quantity without sacrifice for quality. Or at least provide a way to rate extensions, so that people building business critical applications get assurances that their investment in the technology is sound. In other words going deep in addition to going wide.  The other challenge I see is progressively filling the gaps of enterprise readiness; for instance finishing up solutions sometimes partially developed today, and making sure there is a clear and mature solution for the most common use cases."
+msgstr "10年前、15年前のアプリストアと同じように、私が考える今後の主な課題は、拡張機能のエコシステムが、品質を犠牲にすることなく量的に成長するようにすることです。あるいは、少なくとも拡張機能を評価する方法を提供して、ビジネスクリティカルなアプリケーションを構築する人々が、テクノロジーへの投資が適切であることを保証できるようにすることです。言い換えれば、\"広く広く \"に加えて \"深く \"ということです。私が考えるもう一つの課題は、企業の準備状況のギャップを徐々に埋めていくことです。例えば、今日、部分的に開発されているソリューションを完成させ、最も一般的なユースケースに対して明確で成熟したソリューションを提供できるようにすることです。"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:169
+#, fuzzy
+msgid "That is how Quarkus will win over enterprises. And I can see this being in motion."
+msgstr "それが、Quarkusが企業に勝つ方法です。そして、これが動き出しているのがわかります。"
+
+#. type: Plain text
+#: upstream/_posts/2021-06-08-quarkus-deploys-apps-on-openshift.adoc:170
+#, fuzzy
+msgid "I am very hopeful for the project. Can't wait to expand the use cases."
+msgstr "このプロジェクトにはとても期待しています。早くユースケースを広げたいですね。"
