@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2021-07-11 02:22+0000\n"
+"POT-Creation-Date: 2021-07-16 02:21+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -180,7 +180,7 @@ msgstr ""
 #: upstream/_versions/main/guides/config-mappings.adoc:311
 #: upstream/_versions/main/guides/config-mappings.adoc:345
 #: upstream/_versions/main/guides/config-mappings.adoc:376
-#: upstream/_versions/main/guides/config-mappings.adoc:584
+#: upstream/_versions/main/guides/config-mappings.adoc:645
 #, no-wrap
 msgid "application.properties"
 msgstr "application.properties"
@@ -768,7 +768,7 @@ msgstr ""
 
 #. type: Plain text
 #: upstream/_versions/main/guides/config-mappings.adoc:426
-#: upstream/_versions/main/guides/config-mappings.adoc:608
+#: upstream/_versions/main/guides/config-mappings.adoc:669
 msgid "For validation to work, the `quarkus-hibernate-validator` extension is required."
 msgstr ""
 
@@ -799,15 +799,15 @@ msgid ""
 "    @Produces\n"
 "    @ApplicationScoped\n"
 "    @io.quarkus.test.Mock\n"
-"    AppConfig appConfig() {\n"
-"        return config.unwrap(SmallRyeConfig.class).getConfigMapping(ServerMock.class);\n"
+"    Server server() {\n"
+"        return config.unwrap(SmallRyeConfig.class).getConfigMapping(Server.class);\n"
 "    }\n"
 "}\n"
 msgstr ""
 
 #. type: Plain text
 #: upstream/_versions/main/guides/config-mappings.adoc:448
-msgid "The `ServerMock` can be injected as a mock into a Quarkus test class:"
+msgid "The `Server` can be injected as a mock into a Quarkus test class with `@InjectMock`:"
 msgstr ""
 
 #. type: delimited block -
@@ -817,7 +817,7 @@ msgid ""
 "@QuarkusTest\n"
 "class ServerMockTest {\n"
 "    @InjectMock\n"
-"    ServerMock serverMock;\n"
+"    Server server;\n"
 msgstr ""
 
 #. type: delimited block -
@@ -826,207 +826,312 @@ msgstr ""
 msgid ""
 "    @Test\n"
 "    void localhost() {\n"
-"        Mockito.when(serverMock.host()).thenReturn(\"localhost\");\n"
-"        assertEquals(\"localhost\", serverMock.host());\n"
+"        Mockito.when(server.host()).thenReturn(\"localhost\");\n"
+"        assertEquals(\"localhost\", server.host());\n"
 "    }\n"
 "}\n"
 msgstr ""
 
-#. type: Title ==
+#. type: Plain text
 #: upstream/_versions/main/guides/config-mappings.adoc:465
-#, no-wrap
-msgid "[.line-through]#`@ConfigProperties`# (Deprecated)"
+msgid "The mock is just an empty shell without any actual configuration values."
 msgstr ""
 
 #. type: Plain text
 #: upstream/_versions/main/guides/config-mappings.adoc:468
-msgid "This feature will be removed soon, please update your code base and use `@ConfigMapping` instead."
-msgstr ""
-
-#. type: Plain text
-#: upstream/_versions/main/guides/config-mappings.adoc:471
-msgid "The `@io.quarkus.arc.config.ConfigProperties` annotation is able to group multiple related configuration values in its own class:"
+msgid "If the goal is to only mock certain configuration values and retain the original configuration, the mocking instance requires a spy:"
 msgstr ""
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/config-mappings.adoc:475
-#: upstream/_versions/main/guides/config-mappings.adoc:529
-#, no-wrap
-msgid "package org.acme.config;\n"
-msgstr "package org.acme.config;\n"
-
-#. type: delimited block -
-#: upstream/_versions/main/guides/config-mappings.adoc:478
 #, no-wrap
 msgid ""
-"import io.quarkus.arc.config.ConfigProperties;\n"
-"import java.util.Optional;\n"
+"@ConfigMapping(prefix = \"app\")\n"
+"public interface AppConfig {\n"
+"    @WithDefault(\"app\")\n"
+"    String name();\n"
 msgstr ""
-"import io.quarkus.arc.config.ConfigProperties;\n"
-"import java.util.Optional;\n"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/config-mappings.adoc:481
+#: upstream/_versions/main/guides/config-mappings.adoc:477
 #, no-wrap
-msgid ""
-"@ConfigProperties(prefix = \"greeting\") <1>\n"
-"public class GreetingConfiguration {\n"
+msgid "    Info info();\n"
 msgstr ""
-"@ConfigProperties(prefix = \"greeting\") <1>\n"
-"public class GreetingConfiguration {\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/config-mappings.adoc:485
 #, no-wrap
 msgid ""
-"    private String message;\n"
-"    private String suffix = \"!\"; <2>\n"
-"    private Optional<String> name;\n"
+"    interface Info {\n"
+"        @WithDefault(\"alias\")\n"
+"        String alias();\n"
+"        @WithDefault(\"10\")\n"
+"        Integer count();\n"
+"    }\n"
+"}\n"
 msgstr ""
-"    private String message;\n"
-"    private String suffix = \"!\"; <2>\n"
-"    private Optional<String> name;\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/config-mappings.adoc:489
 #, no-wrap
 msgid ""
-"    public String getMessage() {\n"
-"        return message;\n"
-"    }\n"
+"public static class AppConfigProducer {\n"
+"    @Inject\n"
+"    Config config;\n"
 msgstr ""
-"    public String getMessage() {\n"
-"        return message;\n"
-"    }\n"
-
-#. type: delimited block -
-#: upstream/_versions/main/guides/config-mappings.adoc:493
-#, no-wrap
-msgid ""
-"    public void setMessage(String message) {\n"
-"        this.message = message;\n"
-"    }\n"
-msgstr ""
-"    public void setMessage(String message) {\n"
-"        this.message = message;\n"
-"    }\n"
-
-#. type: delimited block -
-#: upstream/_versions/main/guides/config-mappings.adoc:497
-#, no-wrap
-msgid ""
-"    public String getSuffix() {\n"
-"        return suffix;\n"
-"    }\n"
-msgstr ""
-"    public String getSuffix() {\n"
-"        return suffix;\n"
-"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/config-mappings.adoc:501
 #, no-wrap
 msgid ""
-"    public void setSuffix(String suffix) {\n"
-"        this.suffix = suffix;\n"
-"    }\n"
-msgstr ""
-"    public void setSuffix(String suffix) {\n"
-"        this.suffix = suffix;\n"
-"    }\n"
-
-#. type: delimited block -
-#: upstream/_versions/main/guides/config-mappings.adoc:505
-#, no-wrap
-msgid ""
-"    public Optional<String> getName() {\n"
-"        return name;\n"
-"    }\n"
-msgstr ""
-"    public Optional<String> getName() {\n"
-"        return name;\n"
-"    }\n"
-
-#. type: delimited block -
-#: upstream/_versions/main/guides/config-mappings.adoc:510
-#, no-wrap
-msgid ""
-"    public void setName(Optional<String> name) {\n"
-"        this.name = name;\n"
+"    @Produces\n"
+"    @ApplicationScoped\n"
+"    @Mock\n"
+"    AppConfig appConfig() {\n"
+"        AppConfig appConfig = config.unwrap(SmallRyeConfig.class).getConfigMapping(AppConfig.class);\n"
+"        AppConfig appConfigSpy = Mockito.spy(appConfig);\n"
+"        AppConfig.Info infoSpy = Mockito.spy(appConfig.info());\n"
+"        Mockito.when(appConfigSpy.info()).thenReturn(infoSpy);\n"
+"        return appConfigSpy;\n"
 "    }\n"
 "}\n"
 msgstr ""
-"    public void setName(Optional<String> name) {\n"
-"        this.name = name;\n"
+
+#. type: Plain text
+#: upstream/_versions/main/guides/config-mappings.adoc:504
+msgid "The `AppConfig` can be injected as a mock into a Quarkus test class with `@Inject`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/config-mappings.adoc:511
+#, no-wrap
+msgid ""
+"@QuarkusTest\n"
+"class AppConfigTest {\n"
+"    @InjectMock\n"
+"    AppConfig appConfig;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/config-mappings.adoc:516
+#, no-wrap
+msgid ""
+"    @Test\n"
+"    void localhost() {\n"
+"        Mockito.when(appConfig.name()).thenReturn(\"mocked-app\");\n"
+"        assertEquals(\"mocked-app\", server.host());\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/config-mappings.adoc:521
+#, no-wrap
+msgid ""
+"        Mockito.when(appConfig.info().alias()).thenReturn(\"mocked-alias\");\n"
+"        assertEquals(\"mocked-alias\", server.info().alias());\n"
 "    }\n"
 "}\n"
-
-#. type: Plain text
-#: upstream/_versions/main/guides/config-mappings.adoc:514
-msgid "`prefix` is optional. If not set then the prefix to be used will be determined by the class name. In this case it would still be `greeting` (since the `Configuration` suffix is removed). If the class were named `GreetingExtraConfiguration` then the resulting default prefix would be `greeting-extra`."
-msgstr "`prefix` は任意です。設定していない場合は、使用される接頭辞はクラス名によって決まります。この場合も (`Configuration` の接尾辞は削除されているため) `greeting` となります。クラス名が `GreetingExtraConfiguration` の場合は、デフォルトの接頭辞が `greeting-extra` となります。"
-
-#. type: Plain text
-#: upstream/_versions/main/guides/config-mappings.adoc:515
-msgid "`!` will be the default value if `greeting.suffix` is not set."
-msgstr "`!` は、`greeting.suffix` が設定されていない場合のデフォルト値になります。"
-
-#. type: Plain text
-#: upstream/_versions/main/guides/config-mappings.adoc:517
-msgid "Inject the `GreetingResource` with CDI `@Inject`:"
 msgstr ""
 
-#. type: delimited block -
-#: upstream/_versions/main/guides/config-mappings.adoc:522
+#. type: Plain text
+#: upstream/_versions/main/guides/config-mappings.adoc:524
+msgid "Nested elements need to be spied individually by Mockito."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/config-mappings.adoc:526
 #, no-wrap
-msgid ""
-"@Inject\n"
-"GreetingConfiguration greetingConfiguration;\n"
+msgid "[.line-through]#`@ConfigProperties`# (Deprecated)"
 msgstr ""
-"@Inject\n"
-"GreetingConfiguration greetingConfiguration;\n"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/config-mappings.adoc:525
-msgid "Another alternative style provided by Quarkus is to create `GreetingConfiguration` as an interface:"
+#: upstream/_versions/main/guides/config-mappings.adoc:529
+msgid "This feature will be removed soon, please update your code base and use `@ConfigMapping` instead."
 msgstr ""
 
-#. type: delimited block -
-#: upstream/_versions/main/guides/config-mappings.adoc:533
-#, no-wrap
-msgid ""
-"import io.quarkus.arc.config.ConfigProperties;\n"
-"import org.eclipse.microprofile.config.inject.ConfigProperty;\n"
-"import java.util.Optional;\n"
+#. type: Plain text
+#: upstream/_versions/main/guides/config-mappings.adoc:532
+msgid "The `@io.quarkus.arc.config.ConfigProperties` annotation is able to group multiple related configuration values in its own class:"
 msgstr ""
-"import io.quarkus.arc.config.ConfigProperties;\n"
-"import org.eclipse.microprofile.config.inject.ConfigProperty;\n"
-"import java.util.Optional;\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/config-mappings.adoc:536
+#: upstream/_versions/main/guides/config-mappings.adoc:590
 #, no-wrap
-msgid ""
-"@ConfigProperties(prefix = \"greeting\")\n"
-"public interface GreetingConfiguration {\n"
-msgstr ""
-"@ConfigProperties(prefix = \"greeting\")\n"
-"public interface GreetingConfiguration {\n"
+msgid "package org.acme.config;\n"
+msgstr "package org.acme.config;\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/config-mappings.adoc:539
 #, no-wrap
 msgid ""
-"    @ConfigProperty(name = \"message\") <1>\n"
-"    String message();\n"
+"import io.quarkus.arc.config.ConfigProperties;\n"
+"import java.util.Optional;\n"
 msgstr ""
-"    @ConfigProperty(name = \"message\") <1>\n"
-"    String message();\n"
+"import io.quarkus.arc.config.ConfigProperties;\n"
+"import java.util.Optional;\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/config-mappings.adoc:542
 #, no-wrap
 msgid ""
+"@ConfigProperties(prefix = \"greeting\") <1>\n"
+"public class GreetingConfiguration {\n"
+msgstr ""
+"@ConfigProperties(prefix = \"greeting\") <1>\n"
+"public class GreetingConfiguration {\n"
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/config-mappings.adoc:546
+#, no-wrap
+msgid ""
+"    private String message;\n"
+"    private String suffix = \"!\"; <2>\n"
+"    private Optional<String> name;\n"
+msgstr ""
+"    private String message;\n"
+"    private String suffix = \"!\"; <2>\n"
+"    private Optional<String> name;\n"
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/config-mappings.adoc:550
+#, no-wrap
+msgid ""
+"    public String getMessage() {\n"
+"        return message;\n"
+"    }\n"
+msgstr ""
+"    public String getMessage() {\n"
+"        return message;\n"
+"    }\n"
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/config-mappings.adoc:554
+#, no-wrap
+msgid ""
+"    public void setMessage(String message) {\n"
+"        this.message = message;\n"
+"    }\n"
+msgstr ""
+"    public void setMessage(String message) {\n"
+"        this.message = message;\n"
+"    }\n"
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/config-mappings.adoc:558
+#, no-wrap
+msgid ""
+"    public String getSuffix() {\n"
+"        return suffix;\n"
+"    }\n"
+msgstr ""
+"    public String getSuffix() {\n"
+"        return suffix;\n"
+"    }\n"
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/config-mappings.adoc:562
+#, no-wrap
+msgid ""
+"    public void setSuffix(String suffix) {\n"
+"        this.suffix = suffix;\n"
+"    }\n"
+msgstr ""
+"    public void setSuffix(String suffix) {\n"
+"        this.suffix = suffix;\n"
+"    }\n"
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/config-mappings.adoc:566
+#, no-wrap
+msgid ""
+"    public Optional<String> getName() {\n"
+"        return name;\n"
+"    }\n"
+msgstr ""
+"    public Optional<String> getName() {\n"
+"        return name;\n"
+"    }\n"
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/config-mappings.adoc:571
+#, no-wrap
+msgid ""
+"    public void setName(Optional<String> name) {\n"
+"        this.name = name;\n"
+"    }\n"
+"}\n"
+msgstr ""
+"    public void setName(Optional<String> name) {\n"
+"        this.name = name;\n"
+"    }\n"
+"}\n"
+
+#. type: Plain text
+#: upstream/_versions/main/guides/config-mappings.adoc:575
+msgid "`prefix` is optional. If not set then the prefix to be used will be determined by the class name. In this case it would still be `greeting` (since the `Configuration` suffix is removed). If the class were named `GreetingExtraConfiguration` then the resulting default prefix would be `greeting-extra`."
+msgstr "`prefix` は任意です。設定していない場合は、使用される接頭辞はクラス名によって決まります。この場合も (`Configuration` の接尾辞は削除されているため) `greeting` となります。クラス名が `GreetingExtraConfiguration` の場合は、デフォルトの接頭辞が `greeting-extra` となります。"
+
+#. type: Plain text
+#: upstream/_versions/main/guides/config-mappings.adoc:576
+msgid "`!` will be the default value if `greeting.suffix` is not set."
+msgstr "`!` は、`greeting.suffix` が設定されていない場合のデフォルト値になります。"
+
+#. type: Plain text
+#: upstream/_versions/main/guides/config-mappings.adoc:578
+msgid "Inject the `GreetingResource` with CDI `@Inject`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/config-mappings.adoc:583
+#, no-wrap
+msgid ""
+"@Inject\n"
+"GreetingConfiguration greetingConfiguration;\n"
+msgstr ""
+"@Inject\n"
+"GreetingConfiguration greetingConfiguration;\n"
+
+#. type: Plain text
+#: upstream/_versions/main/guides/config-mappings.adoc:586
+msgid "Another alternative style provided by Quarkus is to create `GreetingConfiguration` as an interface:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/config-mappings.adoc:594
+#, no-wrap
+msgid ""
+"import io.quarkus.arc.config.ConfigProperties;\n"
+"import org.eclipse.microprofile.config.inject.ConfigProperty;\n"
+"import java.util.Optional;\n"
+msgstr ""
+"import io.quarkus.arc.config.ConfigProperties;\n"
+"import org.eclipse.microprofile.config.inject.ConfigProperty;\n"
+"import java.util.Optional;\n"
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/config-mappings.adoc:597
+#, no-wrap
+msgid ""
+"@ConfigProperties(prefix = \"greeting\")\n"
+"public interface GreetingConfiguration {\n"
+msgstr ""
+"@ConfigProperties(prefix = \"greeting\")\n"
+"public interface GreetingConfiguration {\n"
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/config-mappings.adoc:600
+#, no-wrap
+msgid ""
+"    @ConfigProperty(name = \"message\") <1>\n"
+"    String message();\n"
+msgstr ""
+"    @ConfigProperty(name = \"message\") <1>\n"
+"    String message();\n"
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/config-mappings.adoc:603
+#, no-wrap
+msgid ""
 "    @ConfigProperty(defaultValue = \"!\")\n"
 "    String getSuffix(); <2>\n"
 msgstr ""
@@ -1034,7 +1139,7 @@ msgstr ""
 "    String getSuffix(); <2>\n"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/config-mappings.adoc:545
+#: upstream/_versions/main/guides/config-mappings.adoc:606
 #, no-wrap
 msgid ""
 "    Optional<String> getName(); <3>\n"
@@ -1044,46 +1149,46 @@ msgstr ""
 "}\n"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/config-mappings.adoc:548
+#: upstream/_versions/main/guides/config-mappings.adoc:609
 msgid "The `@ConfigProperty` annotation is needed because the name of the configuration property that the method corresponds does not follow the getter method naming conventions."
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/config-mappings.adoc:549
+#: upstream/_versions/main/guides/config-mappings.adoc:610
 msgid "In this case since `name` is not set, the corresponding property will be `greeting.suffix`."
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/config-mappings.adoc:551
+#: upstream/_versions/main/guides/config-mappings.adoc:612
 msgid "It is unnecessary to specify the `@ConfigProperty` annotation because the method name follows the getter method naming conventions (`greeting.name` being the corresponding property) and no default value is required."
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/config-mappings.adoc:555
+#: upstream/_versions/main/guides/config-mappings.adoc:616
 msgid "When using `@ConfigProperties` on a class or an interface, if the value of one of its fields is not provided, the application startup will fail, and a `javax.enterprise.inject.spi.DeploymentException` will be thrown. This does not apply to `Optional` fields and fields with a default value."
 msgstr ""
 
 #. type: Title ===
-#: upstream/_versions/main/guides/config-mappings.adoc:556
+#: upstream/_versions/main/guides/config-mappings.adoc:617
 #, no-wrap
 msgid "Additional notes on @ConfigProperties"
 msgstr "@ConfigProperties に関する追加の注意事項"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/config-mappings.adoc:560
+#: upstream/_versions/main/guides/config-mappings.adoc:621
 #, fuzzy
 msgid "When using a regular class annotated with `@ConfigProperties` the class doesn't necessarily have to declare getters and setters. Having simple public non-final fields is valid as well."
 msgstr "`@ConfigProperties` でアノテーションされた通常のクラスを使用する場合、クラスは必ずしも getter および setter を宣言する必要はありません。単純でパブリックな確定的でないフィールドを持つことも有効です。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/config-mappings.adoc:563
+#: upstream/_versions/main/guides/config-mappings.adoc:624
 msgid "Furthermore, the configuration classes support nested object configuration. Suppose there was a need to have an extra layer of greeting configuration named `content` that would contain a few fields:"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/config-mappings.adoc:568
-#: upstream/_versions/main/guides/config-mappings.adoc:599
-#: upstream/_versions/main/guides/config-mappings.adoc:619
+#: upstream/_versions/main/guides/config-mappings.adoc:629
+#: upstream/_versions/main/guides/config-mappings.adoc:660
+#: upstream/_versions/main/guides/config-mappings.adoc:680
 #, no-wrap
 msgid ""
 "@ConfigProperties(prefix = \"greeting\")\n"
@@ -1091,114 +1196,114 @@ msgid ""
 msgstr ""
 "@ConfigProperties(prefix = \"greeting\")\n"
 "public class GreetingConfiguration {\n"
-
-#. type: delimited block -
-#: upstream/_versions/main/guides/config-mappings.adoc:573
-#, no-wrap
-msgid ""
-"    public String message;\n"
-"    public String suffix = \"!\";\n"
-"    public Optional<String> name;\n"
-"    public ContentConfig content; <1>\n"
-msgstr ""
-"    public String message;\n"
-"    public String suffix = \"!\";\n"
-"    public Optional<String> name;\n"
-"    public ContentConfig content; <1>\n"
-
-#. type: delimited block -
-#: upstream/_versions/main/guides/config-mappings.adoc:579
-#, no-wrap
-msgid ""
-"    public static class ContentConfig {\n"
-"        public Integer prizeAmount;\n"
-"        public List<String> recipients;\n"
-"    }\n"
-"}\n"
-msgstr ""
-"    public static class ContentConfig {\n"
-"        public Integer prizeAmount;\n"
-"        public List<String> recipients;\n"
-"    }\n"
-"}\n"
-
-#. type: Plain text
-#: upstream/_versions/main/guides/config-mappings.adoc:581
-msgid "The name of the field (not the class name) will determine the name of the properties that are bound to the object."
-msgstr "フィールドの名前 (クラス名ではありません) は、オブジェクトにバインドされるプロパティーの名前を決定します。"
-
-#. type: Plain text
-#: upstream/_versions/main/guides/config-mappings.adoc:583
-msgid "Setting the properties would occur in the normal manner:"
-msgstr ""
-
-#. type: delimited block -
-#: upstream/_versions/main/guides/config-mappings.adoc:591
-#, no-wrap
-msgid ""
-"greeting.message = hello\n"
-"greeting.name = quarkus\n"
-"greeting.content.prize-amount=10\n"
-"greeting.content.recipients=Jane,John\n"
-msgstr ""
-"greeting.message = hello\n"
-"greeting.name = quarkus\n"
-"greeting.content.prize-amount=10\n"
-"greeting.content.recipients=Jane,John\n"
-
-#. type: Plain text
-#: upstream/_versions/main/guides/config-mappings.adoc:594
-msgid "Furthermore, classes annotated with `@ConfigProperties` can be annotated with Bean Validation annotations:"
-msgstr ""
-
-#. type: delimited block -
-#: upstream/_versions/main/guides/config-mappings.adoc:603
-#: upstream/_versions/main/guides/config-mappings.adoc:623
-#, no-wrap
-msgid ""
-"    @Size(min = 20)\n"
-"    public String message;\n"
-"    public String suffix = \"!\";\n"
-msgstr ""
-"    @Size(min = 20)\n"
-"    public String message;\n"
-"    public String suffix = \"!\";\n"
-
-#. type: delimited block -
-#: upstream/_versions/main/guides/config-mappings.adoc:605
-#: upstream/_versions/main/guides/config-mappings.adoc:625
-#: upstream/_versions/main/guides/config-mappings.adoc:639
-#: upstream/_versions/main/guides/config-mappings.adoc:677
-#, no-wrap
-msgid "}\n"
-msgstr "}\n"
-
-#. type: Title ===
-#: upstream/_versions/main/guides/config-mappings.adoc:609
-#, no-wrap
-msgid "Using same ConfigProperties with different prefixes"
-msgstr "同じ ConfigProperties で異なる接頭辞を使用"
-
-#. type: Plain text
-#: upstream/_versions/main/guides/config-mappings.adoc:614
-msgid "Quarkus also supports the use of the same `@ConfigProperties` object with different prefixes for each injection point using the `io.quarkus.arc.config.@ConfigPrefix` annotation. If `GreetingConfiguration` from above needs to be used for both the `greeting` prefix and the `other` prefix:"
-msgstr ""
-
-#. type: delimited block -
-#: upstream/_versions/main/guides/config-mappings.adoc:631
-#: upstream/_versions/main/guides/config-mappings.adoc:672
-#, no-wrap
-msgid ""
-"@ApplicationScoped\n"
-"public class SomeBean {\n"
-msgstr ""
-"@ApplicationScoped\n"
-"public class SomeBean {\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/config-mappings.adoc:634
 #, no-wrap
 msgid ""
+"    public String message;\n"
+"    public String suffix = \"!\";\n"
+"    public Optional<String> name;\n"
+"    public ContentConfig content; <1>\n"
+msgstr ""
+"    public String message;\n"
+"    public String suffix = \"!\";\n"
+"    public Optional<String> name;\n"
+"    public ContentConfig content; <1>\n"
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/config-mappings.adoc:640
+#, no-wrap
+msgid ""
+"    public static class ContentConfig {\n"
+"        public Integer prizeAmount;\n"
+"        public List<String> recipients;\n"
+"    }\n"
+"}\n"
+msgstr ""
+"    public static class ContentConfig {\n"
+"        public Integer prizeAmount;\n"
+"        public List<String> recipients;\n"
+"    }\n"
+"}\n"
+
+#. type: Plain text
+#: upstream/_versions/main/guides/config-mappings.adoc:642
+msgid "The name of the field (not the class name) will determine the name of the properties that are bound to the object."
+msgstr "フィールドの名前 (クラス名ではありません) は、オブジェクトにバインドされるプロパティーの名前を決定します。"
+
+#. type: Plain text
+#: upstream/_versions/main/guides/config-mappings.adoc:644
+msgid "Setting the properties would occur in the normal manner:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/config-mappings.adoc:652
+#, no-wrap
+msgid ""
+"greeting.message = hello\n"
+"greeting.name = quarkus\n"
+"greeting.content.prize-amount=10\n"
+"greeting.content.recipients=Jane,John\n"
+msgstr ""
+"greeting.message = hello\n"
+"greeting.name = quarkus\n"
+"greeting.content.prize-amount=10\n"
+"greeting.content.recipients=Jane,John\n"
+
+#. type: Plain text
+#: upstream/_versions/main/guides/config-mappings.adoc:655
+msgid "Furthermore, classes annotated with `@ConfigProperties` can be annotated with Bean Validation annotations:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/config-mappings.adoc:664
+#: upstream/_versions/main/guides/config-mappings.adoc:684
+#, no-wrap
+msgid ""
+"    @Size(min = 20)\n"
+"    public String message;\n"
+"    public String suffix = \"!\";\n"
+msgstr ""
+"    @Size(min = 20)\n"
+"    public String message;\n"
+"    public String suffix = \"!\";\n"
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/config-mappings.adoc:666
+#: upstream/_versions/main/guides/config-mappings.adoc:686
+#: upstream/_versions/main/guides/config-mappings.adoc:700
+#: upstream/_versions/main/guides/config-mappings.adoc:738
+#, no-wrap
+msgid "}\n"
+msgstr "}\n"
+
+#. type: Title ===
+#: upstream/_versions/main/guides/config-mappings.adoc:670
+#, no-wrap
+msgid "Using same ConfigProperties with different prefixes"
+msgstr "同じ ConfigProperties で異なる接頭辞を使用"
+
+#. type: Plain text
+#: upstream/_versions/main/guides/config-mappings.adoc:675
+msgid "Quarkus also supports the use of the same `@ConfigProperties` object with different prefixes for each injection point using the `io.quarkus.arc.config.@ConfigPrefix` annotation. If `GreetingConfiguration` from above needs to be used for both the `greeting` prefix and the `other` prefix:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/config-mappings.adoc:692
+#: upstream/_versions/main/guides/config-mappings.adoc:733
+#, no-wrap
+msgid ""
+"@ApplicationScoped\n"
+"public class SomeBean {\n"
+msgstr ""
+"@ApplicationScoped\n"
+"public class SomeBean {\n"
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/config-mappings.adoc:695
+#, no-wrap
+msgid ""
 "    @Inject <1>\n"
 "    GreetingConfiguration greetingConfiguration;\n"
 msgstr ""
@@ -1206,7 +1311,7 @@ msgstr ""
 "    GreetingConfiguration greetingConfiguration;\n"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/config-mappings.adoc:637
+#: upstream/_versions/main/guides/config-mappings.adoc:698
 #, no-wrap
 msgid ""
 "    @ConfigPrefix(\"other\") <2>\n"
@@ -1216,38 +1321,38 @@ msgstr ""
 "    GreetingConfiguration otherConfiguration;\n"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/config-mappings.adoc:642
+#: upstream/_versions/main/guides/config-mappings.adoc:703
 msgid "At this injection point `greetingConfiguration` will use the `greeting` prefix since that is what has been defined on `@ConfigProperties`."
 msgstr "この注入ポイントでは、`greetingConfiguration` は `@ConfigProperties` で定義されている `greeting` の接頭辞を使用します。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/config-mappings.adoc:644
+#: upstream/_versions/main/guides/config-mappings.adoc:705
 msgid "At this injection point `otherConfiguration` will use the `other` prefix from `@ConfigPrefix` instead of the `greeting` prefix. Notice that in this case `@Inject` is not required."
 msgstr "この注入ポイントでは、`otherConfiguration` は、`greeting` の接頭辞の代わりに `@ConfigPrefix` から `other` の接頭辞を使用します。この場合、`@Inject` は必須ではないことに注意してください。"
 
 #. type: Title ===
-#: upstream/_versions/main/guides/config-mappings.adoc:645
+#: upstream/_versions/main/guides/config-mappings.adoc:706
 #, no-wrap
 msgid "Combining ConfigProperties with build time conditions"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/config-mappings.adoc:650
+#: upstream/_versions/main/guides/config-mappings.adoc:711
 msgid "Quarkus allows you to define conditions evaluated at build time (`@IfBuildProfile`, `@UnlessBuildProfile`, `@IfBuildProperty` and `@UnlessBuildProperty`) to enable or not the annotations `@ConfigProperties` and `@ConfigPrefix` which gives you a very flexible way to map your configuration."
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/config-mappings.adoc:654
+#: upstream/_versions/main/guides/config-mappings.adoc:715
 msgid "Let's assume that the configuration of a service is mapped thanks to a `@ConfigProperties` and you don't need this part of the configuration for your tests as it will be mocked, in that case you can define a build time condition like in the next example:"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/config-mappings.adoc:656
+#: upstream/_versions/main/guides/config-mappings.adoc:717
 msgid "`ServiceConfiguration.java`"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/config-mappings.adoc:664
+#: upstream/_versions/main/guides/config-mappings.adoc:725
 #, no-wrap
 msgid ""
 "@UnlessBuildProfile(\"test\") <1>\n"
@@ -1259,17 +1364,17 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/config-mappings.adoc:666
+#: upstream/_versions/main/guides/config-mappings.adoc:727
 msgid "The annotation `@ConfigProperties` is considered if and only if the active profile is not `test`."
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/config-mappings.adoc:668
+#: upstream/_versions/main/guides/config-mappings.adoc:729
 msgid "`SomeBean.java`"
 msgstr "`SomeBean.java`"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/config-mappings.adoc:675
+#: upstream/_versions/main/guides/config-mappings.adoc:736
 #, no-wrap
 msgid ""
 "    @Inject\n"
@@ -1277,7 +1382,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/config-mappings.adoc:679
+#: upstream/_versions/main/guides/config-mappings.adoc:740
 msgid "As the configuration of the service could be missing, we need to use `Instance<ServiceConfiguration>` as type at the injection point."
 msgstr ""
 
