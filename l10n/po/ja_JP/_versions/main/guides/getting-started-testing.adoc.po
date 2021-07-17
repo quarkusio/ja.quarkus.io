@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2021-06-11 02:26+0000\n"
+"POT-Creation-Date: 2021-07-17 02:18+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1723,27 +1723,137 @@ msgstr ""
 #. type: Plain text
 #: upstream/_versions/main/guides/getting-started-testing.adoc:1000
 #, fuzzy
-msgid "Quarkus provides a few implementations of `QuarkusTestResourceLifecycleManager` out of the box (see `io.quarkus.test.h2.H2DatabaseTestResource` which starts an H2 database, or `io.quarkus.test.kubernetes.client.KubernetesMockServerTestResource` which starts a mock Kubernetes API server), but it is common to create custom implementations to address specific application needs.  Common cases include starting docker containers using https://www.testcontainers.org/[Testcontainers] (an example of which can be found https://github.com/quarkusio/quarkus-quickstarts/blob/main/kafka-quickstart/src/test/java/org/acme/kafka/KafkaResource.java[here]), or starting a mock HTTP server using http://wiremock.org/[Wiremock] (an example of which can be found https://github.com/geoand/quarkus-test-demo/blob/main/src/test/java/org/acme/getting/started/country/WiremockCountries.java[here])."
+msgid "Quarkus provides a few implementations of `QuarkusTestResourceLifecycleManager` out of the box (see `io.quarkus.test.h2.H2DatabaseTestResource` which starts an H2 database, or `io.quarkus.test.kubernetes.client.KubernetesServerTestResource` which starts a mock Kubernetes API server), but it is common to create custom implementations to address specific application needs.  Common cases include starting docker containers using https://www.testcontainers.org/[Testcontainers] (an example of which can be found https://github.com/quarkusio/quarkus-quickstarts/blob/main/kafka-quickstart/src/test/java/org/acme/kafka/KafkaResource.java[here]), or starting a mock HTTP server using http://wiremock.org/[Wiremock] (an example of which can be found https://github.com/geoand/quarkus-test-demo/blob/main/src/test/java/org/acme/getting/started/country/WiremockCountries.java[here])."
 msgstr "Quarkusでは、 `QuarkusTestResourceLifecycleManager`  の実装がいくつか提供されていますが(H2データベースを起動する `io.quarkus.test.h2.H2DatabaseTestResource` や、モックKubernetes APIサーバーを起動する `io.quarkus.test.kubernetes.client.KubernetesMockServerTestResource`  を参照)、特定のアプリケーションのニーズに対応するためにカスタム実装を作成するのが一般的です。一般的なケースとしては、 link:https://www.testcontainers.org/[Testcontainers]を使ってdockerコンテナーを起動したり(その例は link:https://github.com/quarkusio/quarkus-quickstarts/blob/master/kafka-quickstart/src/test/java/org/acme/kafka/KafkaResource.java[こちら]にあります)、 link:http://wiremock.org/[Wiremock]を使ってモックHTTPサーバを起動したり(その例は link:https://github.com/geoand/quarkus-test-demo/blob/master/src/test/java/org/acme/getting/started/country/WiremockCountries.java[こちら]にあります)などがあります。"
 
 #. type: Title ===
-#: upstream/_versions/main/guides/getting-started-testing.adoc:1001
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1002
+#, fuzzy, no-wrap
+#| msgid "Controlling the test port"
+msgid "Altering the test class"
+msgstr "テストポートの制御"
+
+#. type: Plain text
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1005
+msgid "When creating a custom `QuarkusTestResourceLifecycleManager` that needs to inject the something into the test class, the `inject` methods can be used.  If for example you have a test like the following:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1011
+#, no-wrap
+msgid ""
+"@QuarkusTest\n"
+"@QuarkusTestResource(MyWireMockResource.class)\n"
+"public class MyTest {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1014
+#, no-wrap
+msgid ""
+"    @InjectWireMock // this a custom annotation you are defining in your own application\n"
+"    WireMockServer wireMockServer;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1020
+#, no-wrap
+msgid ""
+"    @Test\n"
+"    public someTest() {\n"
+"        // control wiremock in some way and perform test\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1023
+msgid "Making `MyWireMockResource` inject the `wireMockServer` field can be done as shown in the `inject` method of the following code snippet:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1027
+#, no-wrap
+msgid "public class MyWireMockResource implements QuarkusTestResourceLifecycleManager {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1029
+#, no-wrap
+msgid "    WireMockServer wireMockServer;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1034
+#, no-wrap
+msgid ""
+"    @Override\n"
+"    public Map<String, String> start() {\n"
+"        wireMockServer = new WireMockServer(8090);\n"
+"        wireMockServer.start();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1036
+#, no-wrap
+msgid "        // create some stubs\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1039
+#, no-wrap
+msgid ""
+"        return Map.of(\"some.service.url\", \"localhost:\" + wireMockServer.port());\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1047
+#, no-wrap
+msgid ""
+"    @Override\n"
+"    public synchronized void stop() {\n"
+"        if (wireMockServer != null) {\n"
+"            wireMockServer.stop();\n"
+"            wireMockServer = null;\n"
+"        }\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1053
+#, no-wrap
+msgid ""
+"    @Override\n"
+"    public void inject(TestInjector testInjector) {\n"
+"        testInjector.injectIntoFields(wireMockServer, new TestInjector.AnnotatedAndMatchesType(InjectWireMock.class, WireMockServer.class));\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1057
+msgid "It is worth mentioning that this injection into the test class is not under the control of CDI and happens after CDI has performed any necessary injections into the test class."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1058
 #, no-wrap
 msgid "Annotation-based test resources"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/getting-started-testing.adoc:1005
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1062
 msgid "It is possible to write test resources that are enabled and configured using annotations. This is enabled by placing the `@QuarkusTestResource` on an annotation which will be used to enable and configure the test resource."
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/getting-started-testing.adoc:1008
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1065
 msgid "For example, this defines the `@WithKubernetesTestServer` annotation, which you can use on your tests to activate the `KubernetesServerTestResource`, but only for the annotated test class. You can also place them on your `QuarkusTestProfile` test profiles."
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/getting-started-testing.adoc:1019
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1076
 #, no-wrap
 msgid ""
 "@QuarkusTestResource(KubernetesServerTestResource.class)\n"
@@ -1757,7 +1867,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/getting-started-testing.adoc:1024
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1081
 #, no-wrap
 msgid ""
 "    /**\n"
@@ -1767,7 +1877,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/getting-started-testing.adoc:1030
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1087
 #, no-wrap
 msgid ""
 "    /**\n"
@@ -1778,12 +1888,12 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/getting-started-testing.adoc:1034
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1091
 msgid "The `KubernetesServerTestResource` class has to implement the `QuarkusTestResourceConfigurableLifecycleManager` interface in order to be configured using the previous annotation:"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/getting-started-testing.adoc:1039
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1096
 #, no-wrap
 msgid ""
 "public class KubernetesServerTestResource\n"
@@ -1791,7 +1901,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/getting-started-testing.adoc:1043
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1100
 #, no-wrap
 msgid ""
 "    private boolean https = false;\n"
@@ -1800,7 +1910,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/getting-started-testing.adoc:1050
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1107
 #, no-wrap
 msgid ""
 "    @Override\n"
@@ -1812,7 +1922,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/getting-started-testing.adoc:1053
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1110
 #, no-wrap
 msgid ""
 "    // ...\n"
@@ -1820,128 +1930,128 @@ msgid ""
 msgstr ""
 
 #. type: Title ==
-#: upstream/_versions/main/guides/getting-started-testing.adoc:1055
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1112
 #, no-wrap
 msgid "Hang Detection"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/getting-started-testing.adoc:1060
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1117
 msgid "`@QuarkusTest` has support for hang detection to help diagnose any unexpected hangs. If no progress is made for a specified time (i.e. no JUnit callbacks are invoked) then Quarkus will print a stack trace to the console to help diagnose the hang.  The default value for this timeout is 10 minutes."
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/getting-started-testing.adoc:1065
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1122
 msgid "No further action will be taken, and the tests will continue as normal (generally until CI times out), however the printed stack traces should help diagnose why the build has failed. You can control this timeout with the `quarkus.test.hang-detection-timeout` system property (you can also set this in application.properties, but this won't be read until Quarkus has started, so the timeout for Quarkus start will be the default of 10 minutes)."
 msgstr ""
 
 #. type: Title ==
-#: upstream/_versions/main/guides/getting-started-testing.adoc:1066
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1123
 #, no-wrap
 msgid "Native Executable Testing"
 msgstr "ネイティブ実行可能ファイルテスト"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/getting-started-testing.adoc:1070
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1127
 msgid "It is also possible to test native executables using `@NativeImageTest`. This supports all the features mentioned in this guide except injecting into tests (and the native executable runs in a separate non-JVM process this is not really possible)."
 msgstr "`@NativeImageTest` を使用してネイティブ実行ファイルをテストすることも可能です。これは、テストに注入すること(そして、ネイティブ実行可能ファイルは別の非JVMプロセスで実行されることーこれは実際には可能ではありません)を除いて、このガイドで述べたすべての機能をサポートしています。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/getting-started-testing.adoc:1073
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1130
 msgid "This is covered in the link:building-native-image[Native Executable Guide]."
 msgstr "これは link:building-native-image[ネイティブ実行可能ファイルガイド] で説明されています。"
 
 #. type: delimited block =
-#: upstream/_versions/main/guides/getting-started-testing.adoc:1078
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1135
 msgid "Although `@NativeImageTest` is not yet deprecated, it will be in the future as it's functionality is covered by `@QuarkusIntegrationTest` which is described in the following section."
 msgstr ""
 
 #. type: Title ==
-#: upstream/_versions/main/guides/getting-started-testing.adoc:1081
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1138
 #, no-wrap
 msgid "Using @QuarkusIntegrationTest"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/getting-started-testing.adoc:1088
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1145
 msgid "`@QuarkusIntegrationTest` should be used to launch and test the artifact produced by the Quarkus build, and supports testing a jar (of whichever type), a native image or container-image.  Put simply, this means that if the result of a Quarkus build (`mvn package` or `gradle build`) is a jar, that jar will be launched as `java -jar ...` and tests run against it.  If instead a native image was build, then the application is launched as `./application ...` and again the tests run against the running application.  Finally, if a container image was created during the build (by using including the `quarkus-container-image-jib` or `quarkus-container-image-docker` extensions and having the `quarkus.container-image.build=true` property configured), then a container is created and run (this requires the `docker` executable being present)."
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/getting-started-testing.adoc:1090
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1147
 msgid "As is the case with `@NativeImageTest`, this is a black box test that supports the same set features and has the same limitations."
 msgstr ""
 
 #. type: delimited block =
-#: upstream/_versions/main/guides/getting-started-testing.adoc:1095
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1152
 msgid "As the `@QuarkusIntegrationTest` tests the result of the build, it should be run as part of the integration test suite - i.e., via the `maven-failsafe-plugin` if using Maven or an additional task if using Gradle.  These tests will **not** work if run in the same phase as `@QuarkusTest` as Quarkus has not yet created the final artifact."
 msgstr ""
 
 #. type: Title ==
-#: upstream/_versions/main/guides/getting-started-testing.adoc:1098
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1155
 #, no-wrap
 msgid "Running `@QuarkusTest` from an IDE"
 msgstr "IDE から `@QuarkusTest`  を実行する"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/getting-started-testing.adoc:1101
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1158
 msgid "Most IDEs offer the possibility to run a selected class as JUnit test directly. For this you should set a few properties in the settings of your chosen IDE:"
 msgstr "ほとんどの IDE では、選択したクラスを JUnit テストとして直接実行できるようになっています。そのためには、選択した IDE の設定でいくつかのプロパティーを設定する必要があります。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/getting-started-testing.adoc:1103
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1160
 msgid "`java.util.logging.manager` (see link:logging[Logging Guide])"
 msgstr "`java.util.logging.manager`  (ロ link:logging[ギングガイド]を参照)"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/getting-started-testing.adoc:1105
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1162
 msgid "`maven.home` (only if there are any custom settings in `${maven.home}/conf/settings.xml`, see link:maven-tooling[Maven Guide])"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/getting-started-testing.adoc:1107
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1164
 msgid "`maven.settings` (in case a custom version of `settings.xml` file should be used for the tests)"
 msgstr "`maven.settings`  (カスタム版の `settings.xml`  ファイルをテストに使用する場合)"
 
 #. type: Title ===
-#: upstream/_versions/main/guides/getting-started-testing.adoc:1108
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1165
 #, no-wrap
 msgid "Eclipse separate JRE definition"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/getting-started-testing.adoc:1111
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1168
 msgid "Copy your current \"Installed JRE\" definition into a new one, where you will add the properties as a new VM arguments:"
 msgstr "現在の\"Installed JRE\"定義を新しい定義にコピーし、新しいVMの引数としてプロパティーを追加します:"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/getting-started-testing.adoc:1113
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1170
 msgid "`-Djava.util.logging.manager=org.jboss.logmanager.LogManager`"
 msgstr "`-Djava.util.logging.manager=org.jboss.logmanager.LogManager`"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/getting-started-testing.adoc:1115
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1172
 msgid "`-Dmaven.home=<path-to-your-maven-installation>`"
 msgstr "`-Dmaven.home=&amp;lt;path-to-your-maven-installation&amp;gt;`"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/getting-started-testing.adoc:1117
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1174
 msgid "Use this JRE definition as your Quarkus project targeted runtime and the workaround will be applied to any \"Run as JUnit\" configuration."
 msgstr "このJRE定義をQuarkusプロジェクトのターゲットランタイムとして使用すると、「Run as JUnit」設定に回避策が適用されます。"
 
 #. type: Title ===
-#: upstream/_versions/main/guides/getting-started-testing.adoc:1118
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1175
 #, no-wrap
 msgid "VSCode \"run with\" configuration"
 msgstr "VSCode \"run with\" 設定"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/getting-started-testing.adoc:1121
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1178
 msgid "The `settings.json` placed in the root of your project directory or in the workspace will need the workaround in your test configuration:"
 msgstr "プロジェクトディレクトリーやワークスペースのルートにある `settings.json`  は、テスト設定で回避策が必要です。"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/getting-started-testing.adoc:1131
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1188
 #, no-wrap
 msgid ""
 "\"java.test.config\": [\n"
@@ -1955,12 +2065,12 @@ msgid ""
 msgstr ""
 
 #. type: Title ===
-#: upstream/_versions/main/guides/getting-started-testing.adoc:1133
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1190
 #, no-wrap
 msgid "IntelliJ JUnit template"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/getting-started-testing.adoc:1135
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1192
 msgid "Nothing needed in IntelliJ because the IDE will pick the `systemPropertyVariables` from the surefire plugin configuration in `pom.xml`."
 msgstr "IntelliJでは何も必要ありません。なぜなら、IDEは `systemPropertyVariables` を `pom.xml`のsurefireプラグイン設定から取得するからです。"
