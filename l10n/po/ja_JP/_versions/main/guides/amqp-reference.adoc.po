@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2021-07-20 02:24+0000\n"
+"POT-Creation-Date: 2021-08-26 02:16+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -206,6 +206,7 @@ msgstr ""
 #. type: delimited block -
 #: upstream/_versions/main/guides/amqp-reference.adoc:97
 #: upstream/_versions/main/guides/amqp-reference.adoc:123
+#: upstream/_versions/main/guides/amqp-reference.adoc:381
 #, no-wrap
 msgid "}\n"
 msgstr ""
@@ -771,24 +772,98 @@ msgstr ""
 msgid "More details about the AMQP Address model can be found in the https://activemq.apache.org/components/artemis/documentation/2.0.0/address-model.html[Artemis documentation]."
 msgstr ""
 
+#. type: Title ===
+#: upstream/_versions/main/guides/amqp-reference.adoc:351
+#, no-wrap
+msgid "Execution model and Blocking processing"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amqp-reference.adoc:357
+msgid "Reactive Messaging invokes your method on an I/O thread.  See the xref:quarkus-reactive-architecture.adoc[Quarkus Reactive Architecture documentation] for further details on this topic.  But, you often need to combine Reactive Messaging with blocking processing such as database interactions.  For this, you need to use the `@Blocking` annotation indicating that the processing is _blocking_ and should not be run on the caller thread."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amqp-reference.adoc:359
+msgid "For example, The following code illustrates how you can store incoming payloads to a database using Hibernate with Panache:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amqp-reference.adoc:364
+#, no-wrap
+msgid ""
+"import io.smallrye.reactive.messaging.annotations.Blocking;\n"
+"import org.eclipse.microprofile.reactive.messaging.Incoming;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amqp-reference.adoc:367
+#, no-wrap
+msgid ""
+"import javax.enterprise.context.ApplicationScoped;\n"
+"import javax.transaction.Transactional;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amqp-reference.adoc:370
+#, no-wrap
+msgid ""
+"@ApplicationScoped\n"
+"public class PriceStorage {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amqp-reference.adoc:379
+#, no-wrap
+msgid ""
+"    @Incoming(\"prices\")\n"
+"    @Blocking\n"
+"    @Transactional\n"
+"    public void store(int priceInUsd) {\n"
+"        Price price = new Price();\n"
+"        price.value = priceInUsd;\n"
+"        price.persist();\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/main/guides/amqp-reference.adoc:386
+msgid "There are 2 `@Blocking` annotations:"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/main/guides/amqp-reference.adoc:388
+msgid "`io.smallrye.reactive.messaging.annotations.Blocking`"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/main/guides/amqp-reference.adoc:389
+msgid "`io.smallrye.common.annotation.Blocking`"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/main/guides/amqp-reference.adoc:394
+msgid "They have the same effect.  Thus, you can use both.  The first one provides more fine-grained tuning such as the worker pool to use and whether it preserves the order.  The second one, used also with other reactive features of Quarkus, uses the default worker pool and preserves the order."
+msgstr ""
+
 #. type: Title ==
-#: upstream/_versions/main/guides/amqp-reference.adoc:350
+#: upstream/_versions/main/guides/amqp-reference.adoc:396
 #, no-wrap
 msgid "Customizing the underlying AMQP client"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/amqp-reference.adoc:354
+#: upstream/_versions/main/guides/amqp-reference.adoc:400
 msgid "The connector uses the Vert.x AMQP client underneath.  More details about this client can be found in the https://vertx.io/docs/vertx-amqp-client/java/[Vert.x website]."
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/amqp-reference.adoc:356
+#: upstream/_versions/main/guides/amqp-reference.adoc:402
 msgid "You can customize the underlying client configuration by producing an instance of `AmqpClientOptions` as follows:"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/amqp-reference.adoc:377
+#: upstream/_versions/main/guides/amqp-reference.adoc:423
 #, no-wrap
 msgid ""
 "@Produces\n"
@@ -812,65 +887,65 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/amqp-reference.adoc:381
+#: upstream/_versions/main/guides/amqp-reference.adoc:427
 msgid "This instance is retrieved and used to configure the client used by the connector.  You need to indicate the name of the client using the `client-options-name` attribute:"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/amqp-reference.adoc:385
+#: upstream/_versions/main/guides/amqp-reference.adoc:431
 #, no-wrap
 msgid "mp.messaging.incoming.prices.client-options-name=my-named-options\n"
 msgstr ""
 
 #. type: Title ==
-#: upstream/_versions/main/guides/amqp-reference.adoc:387
+#: upstream/_versions/main/guides/amqp-reference.adoc:433
 #, no-wrap
 msgid "Health reporting"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/amqp-reference.adoc:392
+#: upstream/_versions/main/guides/amqp-reference.adoc:438
 msgid "If you use the AMQP connector with the `quarkus-smallrye-health` extension, it contributes to the readiness and liveness probes.  The AMQP connector reports the readiness and liveness of each channel managed by the connector.  At the moment, the AMQP connector uses the same logic for the readiness and liveness checks."
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/amqp-reference.adoc:396
+#: upstream/_versions/main/guides/amqp-reference.adoc:442
 msgid "To disable health reporting, set the `health-enabled` attribute for the channel to false.  On the inbound side (receiving messages from AMQP), the check verifies that the receiver is attached to the broker.  On the outbound side (sending records to AMQP), the check verifies that the sender is attached to the broker."
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/amqp-reference.adoc:400
+#: upstream/_versions/main/guides/amqp-reference.adoc:446
 msgid "Note that a message processing failures nacks the message, which is then handled by the `failure-strategy`.  It the responsibility of the `failure-strategy` to report the failure and influence the outcome of the checks.  The `fail` failure strategy reports the failure, and so the check will report the fault."
 msgstr ""
 
 #. type: Title ==
-#: upstream/_versions/main/guides/amqp-reference.adoc:401
+#: upstream/_versions/main/guides/amqp-reference.adoc:447
 #, no-wrap
 msgid "Using RabbitMQ"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/amqp-reference.adoc:405
+#: upstream/_versions/main/guides/amqp-reference.adoc:451
 msgid "This connector is for AMQP 1.0. RabbitMQ implements AMQP 0.9.1.  RabbitMQ does not provide AMQP 1.0 by default, but there is a plugin for it.  To use RabbitMQ with this connector, enable and configure the AMQP 1.0 plugin."
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/amqp-reference.adoc:408
+#: upstream/_versions/main/guides/amqp-reference.adoc:454
 msgid "Despite the existence of the plugin, a few AMQP 1.0 features won’t work with RabbitMQ.  Thus, we recommend the following configurations."
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/amqp-reference.adoc:410
+#: upstream/_versions/main/guides/amqp-reference.adoc:456
 msgid "To receive messages from RabbitMQ:"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/amqp-reference.adoc:412
+#: upstream/_versions/main/guides/amqp-reference.adoc:458
 msgid "Set durable to false"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/amqp-reference.adoc:417
+#: upstream/_versions/main/guides/amqp-reference.adoc:463
 #, no-wrap
 msgid ""
 "mp.messaging.incoming.prices.connector=smallrye-amqp\n"
@@ -878,22 +953,22 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/amqp-reference.adoc:420
+#: upstream/_versions/main/guides/amqp-reference.adoc:466
 msgid "To send messages to RabbitMQ:"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/amqp-reference.adoc:422
+#: upstream/_versions/main/guides/amqp-reference.adoc:468
 msgid "set the destination address (anonymous sender are not supported)"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/amqp-reference.adoc:423
+#: upstream/_versions/main/guides/amqp-reference.adoc:469
 msgid "set `use-anonymous-sender` to false"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/amqp-reference.adoc:429
+#: upstream/_versions/main/guides/amqp-reference.adoc:475
 #, no-wrap
 msgid ""
 "mp.messaging.outgoing.generated-price.connector=smallrye-amqp\n"
@@ -902,59 +977,59 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/amqp-reference.adoc:432
+#: upstream/_versions/main/guides/amqp-reference.adoc:478
 msgid "As a consequence, it’s not possible to change the destination dynamically (using message metadata) when using RabbitMQ."
 msgstr ""
 
 #. type: Title ==
-#: upstream/_versions/main/guides/amqp-reference.adoc:434
+#: upstream/_versions/main/guides/amqp-reference.adoc:480
 #, no-wrap
 msgid "AMQP Connector Configuration Reference"
 msgstr ""
 
 #. type: Title ===
-#: upstream/_versions/main/guides/amqp-reference.adoc:436
+#: upstream/_versions/main/guides/amqp-reference.adoc:482
 #, no-wrap
 msgid "Quarkus specific configuration"
 msgstr ""
 
 #. type: Title ===
-#: upstream/_versions/main/guides/amqp-reference.adoc:440
+#: upstream/_versions/main/guides/amqp-reference.adoc:486
 #, no-wrap
 msgid "Incoming channel configuration"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:444
-#: upstream/_versions/main/guides/amqp-reference.adoc:551
+#: upstream/_versions/main/guides/amqp-reference.adoc:490
+#: upstream/_versions/main/guides/amqp-reference.adoc:597
 #, no-wrap
 msgid "Attribute (_alias_)"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:444
-#: upstream/_versions/main/guides/amqp-reference.adoc:551
+#: upstream/_versions/main/guides/amqp-reference.adoc:490
+#: upstream/_versions/main/guides/amqp-reference.adoc:597
 #, no-wrap
 msgid "Description"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:444
-#: upstream/_versions/main/guides/amqp-reference.adoc:551
+#: upstream/_versions/main/guides/amqp-reference.adoc:490
+#: upstream/_versions/main/guides/amqp-reference.adoc:597
 #, no-wrap
 msgid "Mandatory"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:446
-#: upstream/_versions/main/guides/amqp-reference.adoc:553
+#: upstream/_versions/main/guides/amqp-reference.adoc:492
+#: upstream/_versions/main/guides/amqp-reference.adoc:599
 #, no-wrap
 msgid "Default"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:448
-#: upstream/_versions/main/guides/amqp-reference.adoc:645
+#: upstream/_versions/main/guides/amqp-reference.adoc:494
+#: upstream/_versions/main/guides/amqp-reference.adoc:691
 #, no-wrap
 msgid ""
 "*username*\n"
@@ -963,8 +1038,8 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:450
-#: upstream/_versions/main/guides/amqp-reference.adoc:647
+#: upstream/_versions/main/guides/amqp-reference.adoc:496
+#: upstream/_versions/main/guides/amqp-reference.adoc:693
 #, no-wrap
 msgid ""
 "The username used to authenticate to the broker\n"
@@ -973,52 +1048,52 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:450
-#: upstream/_versions/main/guides/amqp-reference.adoc:456
-#: upstream/_versions/main/guides/amqp-reference.adoc:462
-#: upstream/_versions/main/guides/amqp-reference.adoc:468
-#: upstream/_versions/main/guides/amqp-reference.adoc:474
-#: upstream/_versions/main/guides/amqp-reference.adoc:480
-#: upstream/_versions/main/guides/amqp-reference.adoc:486
-#: upstream/_versions/main/guides/amqp-reference.adoc:492
-#: upstream/_versions/main/guides/amqp-reference.adoc:498
-#: upstream/_versions/main/guides/amqp-reference.adoc:504
+#: upstream/_versions/main/guides/amqp-reference.adoc:496
+#: upstream/_versions/main/guides/amqp-reference.adoc:502
 #: upstream/_versions/main/guides/amqp-reference.adoc:508
-#: upstream/_versions/main/guides/amqp-reference.adoc:512
-#: upstream/_versions/main/guides/amqp-reference.adoc:516
-#: upstream/_versions/main/guides/amqp-reference.adoc:522
+#: upstream/_versions/main/guides/amqp-reference.adoc:514
+#: upstream/_versions/main/guides/amqp-reference.adoc:520
 #: upstream/_versions/main/guides/amqp-reference.adoc:526
-#: upstream/_versions/main/guides/amqp-reference.adoc:530
-#: upstream/_versions/main/guides/amqp-reference.adoc:534
+#: upstream/_versions/main/guides/amqp-reference.adoc:532
 #: upstream/_versions/main/guides/amqp-reference.adoc:538
-#: upstream/_versions/main/guides/amqp-reference.adoc:542
-#: upstream/_versions/main/guides/amqp-reference.adoc:555
-#: upstream/_versions/main/guides/amqp-reference.adoc:561
-#: upstream/_versions/main/guides/amqp-reference.adoc:567
-#: upstream/_versions/main/guides/amqp-reference.adoc:571
-#: upstream/_versions/main/guides/amqp-reference.adoc:575
-#: upstream/_versions/main/guides/amqp-reference.adoc:579
-#: upstream/_versions/main/guides/amqp-reference.adoc:585
-#: upstream/_versions/main/guides/amqp-reference.adoc:589
-#: upstream/_versions/main/guides/amqp-reference.adoc:593
-#: upstream/_versions/main/guides/amqp-reference.adoc:599
-#: upstream/_versions/main/guides/amqp-reference.adoc:605
-#: upstream/_versions/main/guides/amqp-reference.adoc:611
+#: upstream/_versions/main/guides/amqp-reference.adoc:544
+#: upstream/_versions/main/guides/amqp-reference.adoc:550
+#: upstream/_versions/main/guides/amqp-reference.adoc:554
+#: upstream/_versions/main/guides/amqp-reference.adoc:558
+#: upstream/_versions/main/guides/amqp-reference.adoc:562
+#: upstream/_versions/main/guides/amqp-reference.adoc:568
+#: upstream/_versions/main/guides/amqp-reference.adoc:572
+#: upstream/_versions/main/guides/amqp-reference.adoc:576
+#: upstream/_versions/main/guides/amqp-reference.adoc:580
+#: upstream/_versions/main/guides/amqp-reference.adoc:584
+#: upstream/_versions/main/guides/amqp-reference.adoc:588
+#: upstream/_versions/main/guides/amqp-reference.adoc:601
+#: upstream/_versions/main/guides/amqp-reference.adoc:607
+#: upstream/_versions/main/guides/amqp-reference.adoc:613
 #: upstream/_versions/main/guides/amqp-reference.adoc:617
-#: upstream/_versions/main/guides/amqp-reference.adoc:623
-#: upstream/_versions/main/guides/amqp-reference.adoc:627
+#: upstream/_versions/main/guides/amqp-reference.adoc:621
+#: upstream/_versions/main/guides/amqp-reference.adoc:625
 #: upstream/_versions/main/guides/amqp-reference.adoc:631
 #: upstream/_versions/main/guides/amqp-reference.adoc:635
-#: upstream/_versions/main/guides/amqp-reference.adoc:641
-#: upstream/_versions/main/guides/amqp-reference.adoc:647
-#: upstream/_versions/main/guides/amqp-reference.adoc:653
+#: upstream/_versions/main/guides/amqp-reference.adoc:639
+#: upstream/_versions/main/guides/amqp-reference.adoc:645
+#: upstream/_versions/main/guides/amqp-reference.adoc:651
+#: upstream/_versions/main/guides/amqp-reference.adoc:657
+#: upstream/_versions/main/guides/amqp-reference.adoc:663
+#: upstream/_versions/main/guides/amqp-reference.adoc:669
+#: upstream/_versions/main/guides/amqp-reference.adoc:673
+#: upstream/_versions/main/guides/amqp-reference.adoc:677
+#: upstream/_versions/main/guides/amqp-reference.adoc:681
+#: upstream/_versions/main/guides/amqp-reference.adoc:687
+#: upstream/_versions/main/guides/amqp-reference.adoc:693
+#: upstream/_versions/main/guides/amqp-reference.adoc:699
 #, no-wrap
 msgid "false"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:454
-#: upstream/_versions/main/guides/amqp-reference.adoc:597
+#: upstream/_versions/main/guides/amqp-reference.adoc:500
+#: upstream/_versions/main/guides/amqp-reference.adoc:643
 #, no-wrap
 msgid ""
 "*password*\n"
@@ -1027,8 +1102,8 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:456
-#: upstream/_versions/main/guides/amqp-reference.adoc:599
+#: upstream/_versions/main/guides/amqp-reference.adoc:502
+#: upstream/_versions/main/guides/amqp-reference.adoc:645
 #, no-wrap
 msgid ""
 "The password used to authenticate to the broker\n"
@@ -1037,8 +1112,8 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:460
-#: upstream/_versions/main/guides/amqp-reference.adoc:583
+#: upstream/_versions/main/guides/amqp-reference.adoc:506
+#: upstream/_versions/main/guides/amqp-reference.adoc:629
 #, no-wrap
 msgid ""
 "*host*\n"
@@ -1047,8 +1122,8 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:462
-#: upstream/_versions/main/guides/amqp-reference.adoc:585
+#: upstream/_versions/main/guides/amqp-reference.adoc:508
+#: upstream/_versions/main/guides/amqp-reference.adoc:631
 #, no-wrap
 msgid ""
 "The broker hostname\n"
@@ -1057,15 +1132,15 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:464
-#: upstream/_versions/main/guides/amqp-reference.adoc:587
+#: upstream/_versions/main/guides/amqp-reference.adoc:510
+#: upstream/_versions/main/guides/amqp-reference.adoc:633
 #, no-wrap
 msgid "`localhost`"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:466
-#: upstream/_versions/main/guides/amqp-reference.adoc:603
+#: upstream/_versions/main/guides/amqp-reference.adoc:512
+#: upstream/_versions/main/guides/amqp-reference.adoc:649
 #, no-wrap
 msgid ""
 "*port*\n"
@@ -1074,8 +1149,8 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:468
-#: upstream/_versions/main/guides/amqp-reference.adoc:605
+#: upstream/_versions/main/guides/amqp-reference.adoc:514
+#: upstream/_versions/main/guides/amqp-reference.adoc:651
 #, no-wrap
 msgid ""
 "The broker port\n"
@@ -1084,15 +1159,15 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:470
-#: upstream/_versions/main/guides/amqp-reference.adoc:607
+#: upstream/_versions/main/guides/amqp-reference.adoc:516
+#: upstream/_versions/main/guides/amqp-reference.adoc:653
 #, no-wrap
 msgid "`5672`"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:472
-#: upstream/_versions/main/guides/amqp-reference.adoc:639
+#: upstream/_versions/main/guides/amqp-reference.adoc:518
+#: upstream/_versions/main/guides/amqp-reference.adoc:685
 #, no-wrap
 msgid ""
 "*use-ssl*\n"
@@ -1101,8 +1176,8 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:474
-#: upstream/_versions/main/guides/amqp-reference.adoc:641
+#: upstream/_versions/main/guides/amqp-reference.adoc:520
+#: upstream/_versions/main/guides/amqp-reference.adoc:687
 #, no-wrap
 msgid ""
 "Whether the AMQP connection uses SSL/TLS\n"
@@ -1111,20 +1186,20 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:476
-#: upstream/_versions/main/guides/amqp-reference.adoc:532
-#: upstream/_versions/main/guides/amqp-reference.adoc:536
-#: upstream/_versions/main/guides/amqp-reference.adoc:540
-#: upstream/_versions/main/guides/amqp-reference.adoc:581
-#: upstream/_versions/main/guides/amqp-reference.adoc:595
-#: upstream/_versions/main/guides/amqp-reference.adoc:643
+#: upstream/_versions/main/guides/amqp-reference.adoc:522
+#: upstream/_versions/main/guides/amqp-reference.adoc:578
+#: upstream/_versions/main/guides/amqp-reference.adoc:582
+#: upstream/_versions/main/guides/amqp-reference.adoc:586
+#: upstream/_versions/main/guides/amqp-reference.adoc:627
+#: upstream/_versions/main/guides/amqp-reference.adoc:641
+#: upstream/_versions/main/guides/amqp-reference.adoc:689
 #, no-wrap
 msgid "`false`"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:478
-#: upstream/_versions/main/guides/amqp-reference.adoc:651
+#: upstream/_versions/main/guides/amqp-reference.adoc:524
+#: upstream/_versions/main/guides/amqp-reference.adoc:697
 #, no-wrap
 msgid ""
 "*virtual-host*\n"
@@ -1133,8 +1208,8 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:480
-#: upstream/_versions/main/guides/amqp-reference.adoc:653
+#: upstream/_versions/main/guides/amqp-reference.adoc:526
+#: upstream/_versions/main/guides/amqp-reference.adoc:699
 #, no-wrap
 msgid ""
 "If set, configure the hostname value used for the connection AMQP Open frame and TLS SNI server name (if TLS is in use)\n"
@@ -1143,8 +1218,8 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:484
-#: upstream/_versions/main/guides/amqp-reference.adoc:621
+#: upstream/_versions/main/guides/amqp-reference.adoc:530
+#: upstream/_versions/main/guides/amqp-reference.adoc:667
 #, no-wrap
 msgid ""
 "*sni-server-name*\n"
@@ -1153,8 +1228,8 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:486
-#: upstream/_versions/main/guides/amqp-reference.adoc:623
+#: upstream/_versions/main/guides/amqp-reference.adoc:532
+#: upstream/_versions/main/guides/amqp-reference.adoc:669
 #, no-wrap
 msgid ""
 "If set, explicitly override the hostname to use for the TLS SNI server name\n"
@@ -1163,8 +1238,8 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:490
-#: upstream/_versions/main/guides/amqp-reference.adoc:609
+#: upstream/_versions/main/guides/amqp-reference.adoc:536
+#: upstream/_versions/main/guides/amqp-reference.adoc:655
 #, no-wrap
 msgid ""
 "*reconnect-attempts*\n"
@@ -1173,8 +1248,8 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:492
-#: upstream/_versions/main/guides/amqp-reference.adoc:611
+#: upstream/_versions/main/guides/amqp-reference.adoc:538
+#: upstream/_versions/main/guides/amqp-reference.adoc:657
 #, no-wrap
 msgid ""
 "The number of reconnection attempts\n"
@@ -1183,15 +1258,15 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:494
-#: upstream/_versions/main/guides/amqp-reference.adoc:613
+#: upstream/_versions/main/guides/amqp-reference.adoc:540
+#: upstream/_versions/main/guides/amqp-reference.adoc:659
 #, no-wrap
 msgid "`100`"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:496
-#: upstream/_versions/main/guides/amqp-reference.adoc:615
+#: upstream/_versions/main/guides/amqp-reference.adoc:542
+#: upstream/_versions/main/guides/amqp-reference.adoc:661
 #, no-wrap
 msgid ""
 "*reconnect-interval*\n"
@@ -1200,8 +1275,8 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:498
-#: upstream/_versions/main/guides/amqp-reference.adoc:617
+#: upstream/_versions/main/guides/amqp-reference.adoc:544
+#: upstream/_versions/main/guides/amqp-reference.adoc:663
 #, no-wrap
 msgid ""
 "The interval in second between two reconnection attempts\n"
@@ -1210,15 +1285,15 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:500
-#: upstream/_versions/main/guides/amqp-reference.adoc:619
+#: upstream/_versions/main/guides/amqp-reference.adoc:546
+#: upstream/_versions/main/guides/amqp-reference.adoc:665
 #, no-wrap
 msgid "`10`"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:502
-#: upstream/_versions/main/guides/amqp-reference.adoc:565
+#: upstream/_versions/main/guides/amqp-reference.adoc:548
+#: upstream/_versions/main/guides/amqp-reference.adoc:611
 #, no-wrap
 msgid ""
 "*connect-timeout*\n"
@@ -1227,8 +1302,8 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:504
-#: upstream/_versions/main/guides/amqp-reference.adoc:567
+#: upstream/_versions/main/guides/amqp-reference.adoc:550
+#: upstream/_versions/main/guides/amqp-reference.adoc:613
 #, no-wrap
 msgid ""
 "The connection timeout in milliseconds\n"
@@ -1237,22 +1312,22 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:506
-#: upstream/_versions/main/guides/amqp-reference.adoc:569
+#: upstream/_versions/main/guides/amqp-reference.adoc:552
+#: upstream/_versions/main/guides/amqp-reference.adoc:615
 #, no-wrap
 msgid "`1000`"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:506
-#: upstream/_versions/main/guides/amqp-reference.adoc:569
+#: upstream/_versions/main/guides/amqp-reference.adoc:552
+#: upstream/_versions/main/guides/amqp-reference.adoc:615
 #, no-wrap
 msgid "*container-id*"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:508
-#: upstream/_versions/main/guides/amqp-reference.adoc:571
+#: upstream/_versions/main/guides/amqp-reference.adoc:554
+#: upstream/_versions/main/guides/amqp-reference.adoc:617
 #, no-wrap
 msgid ""
 "The AMQP container id\n"
@@ -1261,15 +1336,15 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:510
-#: upstream/_versions/main/guides/amqp-reference.adoc:553
+#: upstream/_versions/main/guides/amqp-reference.adoc:556
+#: upstream/_versions/main/guides/amqp-reference.adoc:599
 #, no-wrap
 msgid "*address*"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:512
-#: upstream/_versions/main/guides/amqp-reference.adoc:555
+#: upstream/_versions/main/guides/amqp-reference.adoc:558
+#: upstream/_versions/main/guides/amqp-reference.adoc:601
 #, no-wrap
 msgid ""
 "The AMQP address. If not set, the channel name is used\n"
@@ -1278,15 +1353,15 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:514
-#: upstream/_versions/main/guides/amqp-reference.adoc:587
+#: upstream/_versions/main/guides/amqp-reference.adoc:560
+#: upstream/_versions/main/guides/amqp-reference.adoc:633
 #, no-wrap
 msgid "*link-name*"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:516
-#: upstream/_versions/main/guides/amqp-reference.adoc:589
+#: upstream/_versions/main/guides/amqp-reference.adoc:562
+#: upstream/_versions/main/guides/amqp-reference.adoc:635
 #, no-wrap
 msgid ""
 "The name of the link. If not set, the channel name is used.\n"
@@ -1295,8 +1370,8 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:520
-#: upstream/_versions/main/guides/amqp-reference.adoc:559
+#: upstream/_versions/main/guides/amqp-reference.adoc:566
+#: upstream/_versions/main/guides/amqp-reference.adoc:605
 #, no-wrap
 msgid ""
 "*client-options-name*\n"
@@ -1305,8 +1380,8 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:522
-#: upstream/_versions/main/guides/amqp-reference.adoc:561
+#: upstream/_versions/main/guides/amqp-reference.adoc:568
+#: upstream/_versions/main/guides/amqp-reference.adoc:607
 #, no-wrap
 msgid ""
 "The name of the AMQP Client Option bean used to customize the AMQP client configuration\n"
@@ -1315,15 +1390,15 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:524
-#: upstream/_versions/main/guides/amqp-reference.adoc:625
+#: upstream/_versions/main/guides/amqp-reference.adoc:570
+#: upstream/_versions/main/guides/amqp-reference.adoc:671
 #, no-wrap
 msgid "*tracing-enabled*"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:526
-#: upstream/_versions/main/guides/amqp-reference.adoc:627
+#: upstream/_versions/main/guides/amqp-reference.adoc:572
+#: upstream/_versions/main/guides/amqp-reference.adoc:673
 #, no-wrap
 msgid ""
 "Whether tracing is enabled (default) or disabled\n"
@@ -1332,21 +1407,21 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:528
-#: upstream/_versions/main/guides/amqp-reference.adoc:629
-#: upstream/_versions/main/guides/amqp-reference.adoc:637
+#: upstream/_versions/main/guides/amqp-reference.adoc:574
+#: upstream/_versions/main/guides/amqp-reference.adoc:675
+#: upstream/_versions/main/guides/amqp-reference.adoc:683
 #, no-wrap
 msgid "`true`"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:528
+#: upstream/_versions/main/guides/amqp-reference.adoc:574
 #, no-wrap
 msgid "*broadcast*"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:530
+#: upstream/_versions/main/guides/amqp-reference.adoc:576
 #, no-wrap
 msgid ""
 "Whether the received AMQP messages must be dispatched to multiple _subscribers_\n"
@@ -1355,14 +1430,14 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:532
-#: upstream/_versions/main/guides/amqp-reference.adoc:577
+#: upstream/_versions/main/guides/amqp-reference.adoc:578
+#: upstream/_versions/main/guides/amqp-reference.adoc:623
 #, no-wrap
 msgid "*durable*"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:534
+#: upstream/_versions/main/guides/amqp-reference.adoc:580
 #, no-wrap
 msgid ""
 "Whether AMQP subscription is durable\n"
@@ -1371,13 +1446,13 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:536
+#: upstream/_versions/main/guides/amqp-reference.adoc:582
 #, no-wrap
 msgid "*auto-acknowledgement*"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:538
+#: upstream/_versions/main/guides/amqp-reference.adoc:584
 #, no-wrap
 msgid ""
 "Whether the received AMQP messages must be acknowledged when received\n"
@@ -1386,13 +1461,13 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:540
+#: upstream/_versions/main/guides/amqp-reference.adoc:586
 #, no-wrap
 msgid "*failure-strategy*"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:542
+#: upstream/_versions/main/guides/amqp-reference.adoc:588
 #, no-wrap
 msgid ""
 "Specify the failure strategy to apply when a message produced from an AMQP message is nacked. Accepted values are `fail` (default), `accept`, `release`, `reject`, `modified-failed`, `modified-failed-undeliverable-here`\n"
@@ -1401,25 +1476,25 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:544
+#: upstream/_versions/main/guides/amqp-reference.adoc:590
 #, no-wrap
 msgid "`fail`"
 msgstr ""
 
 #. type: Title ===
-#: upstream/_versions/main/guides/amqp-reference.adoc:547
+#: upstream/_versions/main/guides/amqp-reference.adoc:593
 #, no-wrap
 msgid "Outgoing channel configuration"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:573
+#: upstream/_versions/main/guides/amqp-reference.adoc:619
 #, no-wrap
 msgid "*credit-retrieval-period*"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:575
+#: upstream/_versions/main/guides/amqp-reference.adoc:621
 #, no-wrap
 msgid ""
 "The period (in milliseconds) between two attempts to retrieve the credits granted by the broker. This time is used when the sender run out of credits.\n"
@@ -1428,13 +1503,13 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:577
+#: upstream/_versions/main/guides/amqp-reference.adoc:623
 #, no-wrap
 msgid "`2000`"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:579
+#: upstream/_versions/main/guides/amqp-reference.adoc:625
 #, no-wrap
 msgid ""
 "Whether sent AMQP messages are marked durable\n"
@@ -1443,13 +1518,13 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:591
+#: upstream/_versions/main/guides/amqp-reference.adoc:637
 #, no-wrap
 msgid "*merge*"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:593
+#: upstream/_versions/main/guides/amqp-reference.adoc:639
 #, no-wrap
 msgid ""
 "Whether the connector should allow multiple upstreams\n"
@@ -1458,13 +1533,13 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:629
+#: upstream/_versions/main/guides/amqp-reference.adoc:675
 #, no-wrap
 msgid "*ttl*"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:631
+#: upstream/_versions/main/guides/amqp-reference.adoc:677
 #, no-wrap
 msgid ""
 "The time-to-live of the send AMQP messages. 0 to disable the TTL\n"
@@ -1473,19 +1548,19 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:633
+#: upstream/_versions/main/guides/amqp-reference.adoc:679
 #, no-wrap
 msgid "`0`"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:633
+#: upstream/_versions/main/guides/amqp-reference.adoc:679
 #, no-wrap
 msgid "*use-anonymous-sender*"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/amqp-reference.adoc:635
+#: upstream/_versions/main/guides/amqp-reference.adoc:681
 #, no-wrap
 msgid ""
 "Whether or not the connector should use an anonymous sender.\n"
