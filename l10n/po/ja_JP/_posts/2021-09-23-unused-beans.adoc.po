@@ -1,0 +1,160 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2021-09-29 07:03+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. type: Plain text
+#: upstream/_posts/2021-09-23-unused-beans.adoc:1
+#, no-wrap
+msgid "---\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-09-23-unused-beans.adoc:8
+#, no-wrap
+msgid ""
+"layout: post\n"
+"title: 'Unused Beans and Why We Remove Them'\n"
+"date: 2021-09-23\n"
+"tags: cdi arc \n"
+"synopsis: Why does Quarkus detect and remove unused beans by default?\n"
+"author: mkouba\n"
+"---\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-09-23-unused-beans.adoc:13
+msgid "Quarkus is a build-time oriented stack, i.e. it tries to do as much as possible at build time to improve the startup time and memory usage of your application.  However, it's not always so easy and straightforward as many existing frameworks and libraries do not take this design choice into account.  And CDI is one of them."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_posts/2021-09-23-unused-beans.adoc:14
+#, no-wrap
+msgid "Why Bother"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-09-23-unused-beans.adoc:22
+msgid "A traditional CDI container attempts to find all beans during the application bootstrap.  For each bean a metadata object is created and kept for the lifetime of the application.  This allows for certain degree of dynamicity at runtime but it's suboptimal when it comes to memory consumption and application startup time.  Quarkus, on the other hand, attempts to detect and remove all _unused_ beans, interceptors and decorators during build by default.  And the reason is simple.  This optimization helps to minimize the amount of generated classes and the number of metadata objects used at runtime, thus conserving memory."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-09-23-unused-beans.adoc:29
+msgid "Speaking of generated classes.  The bean discovery, validation and wiring all components together - all this is perfomed at build time.  Quarkus then stores the collected metadata in the bytecode, i.e. for each bean one or more classes are generated.  In order to fullfill some basic CDI API requirements, a bean has at least a corresponding `javax.enterprise.inject.spi.Bean` implementation.  If it's a normal scoped bean then a client proxy class must be also generated.  Finally, intercepted and decorated beans require some more internal constructs."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-09-23-unused-beans.adoc:36
+msgid "Imagine that your application contains 50 beans that are actually not used anywhere.  If they have a normal scope (e.g. `@ApplicationScoped`) and are intercepted (e.g. declare a method annotated with `@Transactional`) you can expect more than 150 generated classes.  And these classes are completely useless.  Still, the container would have to instantiate and hold a reference on those 50+ bean metadata classes.  Needless to say, that the bean classes and any referenced classes cannot be a subject to dead code elimination when a native image is generated.  Therefore, Quarkus implements an algorithm to get rid of all these classes."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_posts/2021-09-23-unused-beans.adoc:37
+#, no-wrap
+msgid "What’s Actually Removed?"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-09-23-unused-beans.adoc:41
+msgid "Quarkus first identifies so-called _unremovable_ beans that form the roots in the dependency tree.  Unremovable beans:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-09-23-unused-beans.adoc:43
+msgid "declare an observer method, or"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-09-23-unused-beans.adoc:44
+msgid "have a name designated via `@Named`, or"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-09-23-unused-beans.adoc:45
+msgid "are annotated with `@io.quarkus.arc.Unremovable`, or"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-09-23-unused-beans.adoc:46
+msgid "are excluded via the `quarkus.arc.unremovable-types` config property, or"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-09-23-unused-beans.adoc:47
+msgid "are otherwise identified by Quarkus extensions."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-09-23-unused-beans.adoc:51
+msgid "The last point is probably most important, because this is how application entry points are made unremovable.  A good example is a JAX-RS resource class, identified by the RESTEasy extension.  Another example is a bean which declares a `@Scheduled` method, identified by the Scheduler extension."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-09-23-unused-beans.adoc:53
+msgid "An _unused_ bean:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-09-23-unused-beans.adoc:55
+msgid "is not unremovable, and"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-09-23-unused-beans.adoc:56
+msgid "is not eligible for injection to any injection point in the dependency tree, and"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-09-23-unused-beans.adoc:57
+msgid "does not declare any producer which is eligible for injection to any injection point in the dependency tree, and"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-09-23-unused-beans.adoc:58
+msgid "is not eligible for injection into any `javax.enterprise.inject.Instance` or `javax.inject.Provider` injection point."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-09-23-unused-beans.adoc:60
+msgid "Finally, unused interceptors and decorators are not associated with any bean."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-09-23-unused-beans.adoc:62
+msgid "When using the dev mode (e.g. running `./mvnw quarkus:dev`), you can see more information about which beans are being removed in the Dev UI."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_posts/2021-09-23-unused-beans.adoc:63
+#, no-wrap
+msgid "Main Drawback"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-09-23-unused-beans.adoc:72
+msgid "But there's one problem.  Quarkus can't detect the programmatic lookup performed via the `CDI.current()` static method.  Therefore, it is possible that a certain bean removal results in a false positive error, i.e. a bean is removed although it's actually used.  In such cases, you'll notice a big warning in the log.  Of course, users and extension authors have several options how to eliminate these errors.  For users, the easiest way is to add a special annotation: `@io.quarkus.arc.Unremovable` or use the `quarkus.arc.unremovable-types` config property.  Finally, it's also possible to disable this optimization via the `quarkus.arc.remove-unused-beans=false` config property."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_posts/2021-09-23-unused-beans.adoc:73
+#, no-wrap
+msgid "Conclusion"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2021-09-23-unused-beans.adoc:76
+msgid "Quarkus detects and removes unused beans to help you on your way to a subatomic application.  And if something goes wrong, there are options that make it possible to configure the behavior of this optimization."
+msgstr ""
