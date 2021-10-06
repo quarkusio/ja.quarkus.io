@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2021-08-31 13:17+0000\n"
+"POT-Creation-Date: 2021-10-06 08:08+0000\n"
 "PO-Revision-Date: 2021-04-25 23:27+0900\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -227,6 +227,8 @@ msgstr "まずは `/api/users/me` エンドポイントを実装してみまし�
 #: upstream/_guides/security-openid-connect.adoc:98
 #: upstream/_guides/security-openid-connect.adoc:141
 #: upstream/_guides/security-openid-connect.adoc:169
+#: upstream/_guides/security-openid-connect.adoc:729
+#: upstream/_guides/security-openid-connect.adoc:763
 #, no-wrap
 msgid "package org.acme.security.openid.connect;\n"
 msgstr ""
@@ -774,21 +776,95 @@ msgstr "`io.quarkus.oidc.TokenIntrospection` （シンプルな `javax.json.Json
 #. type: Title ==
 #: upstream/_guides/security-openid-connect.adoc:392
 #, no-wrap
+msgid "Token Introspection and UserInfo Cache"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-openid-connect.adoc:395
+msgid "All opaque and sometimes JWT Bearer access tokens have to be remotely introspected. If `UserInfo` is also required then the same access token will be used to do a remote call to OpenId Connect Provider again. So, if `UserInfo` is required and the current access token is opaque then for every such token there will be 2 remote calls done - one to introspect it and one to get UserInfo with it, and if the token is JWT then usually only a single remote call will be needed - to get UserInfo with it."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-openid-connect.adoc:397
+msgid "The cost of making up to 2 remote calls per every incoming bearer or code flow access token can sometimes be problematic."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-openid-connect.adoc:399
+msgid "If it is the case in your production then it can be recommended that the token introspection and `UserInfo` data are cached for a short period of time, for example, for 3 or 5 minutes."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-openid-connect.adoc:401
+msgid "`quarkus-oidc` provides `quarkus.oidc.TokenIntrospectionCache` and `quarkus.oidc.UserInfoCache` interfaces which can be used to implement `@ApplicationScoped` cache implementation which can be used to store and retrieve `quarkus.oidc.TokenIntrospection` and/or `quarkus.oidc.UserInfo` objects, for example:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-openid-connect.adoc:409
+#, no-wrap
+msgid ""
+"@ApplicationScoped\n"
+"@AlternativePriority(1)\n"
+"public class CustomIntrospectionUserInfoCache implements TokenIntrospectionCache, UserInfoCache {\n"
+"...\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-openid-connect.adoc:412
+msgid "Each OIDC tenant can either permit or deny storing its `quarkus.oidc.TokenIntrospection` and/or `quarkus.oidc.UserInfo` data with boolean `quarkus.oidc.\"tenant\".allow-token-introspection-cache` and `quarkus.oidc.\"tenant\".allow-user-info-cache` properties."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-openid-connect.adoc:414
+msgid "Additionally, `quarkus-oidc` provides a simple default memory based token cache which implements both `quarkus.oidc.TokenIntrospectionCache` and `quarkus.oidc.UserInfoCache` interfaces."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-openid-connect.adoc:416
+msgid "It can be activated and configured as follows:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-openid-connect.adoc:425
+#, no-wrap
+msgid ""
+"# 'max-size' is 0 by default so the cache can be activated by setting 'max-size' to a positive value.\n"
+"quarkus.oidc.token-cache.max-size=1000\n"
+"# 'time-to-live' specifies how long a cache entry can be valid for and will be used by a clean up timer.\n"
+"quarkus.oidc.token-cache.time-to-live=3M\n"
+"# 'clean-up-timer-interval' is not set by default so the clean up timer can be activated by setting 'clean-up-timer-interval'.\n"
+"quarkus.oidc.token-cache.clean-up-timer-interval=1M\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-openid-connect.adoc:428
+msgid "The default cache uses a token as a key and each entry can have `TokenIntrospection` and/or `UserInfo`. It will only keep up to a `max-size` number of entries. If the cache is full when a new entry is to be added then an attempt will be made to find a space for it by removing a single expired entry. Additionally, the clean up timer, if activated, will periodically check for the expired entries and remove them."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-openid-connect.adoc:430
+msgid "Please experiment with the default cache implementation or register a custom one."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/security-openid-connect.adoc:432
+#, no-wrap
 msgid "Single Page Applications"
 msgstr "シングルページアプリケーション"
 
 #. type: Plain text
-#: upstream/_guides/security-openid-connect.adoc:396
+#: upstream/_guides/security-openid-connect.adoc:436
 msgid "Single Page Application (SPA) typically uses `XMLHttpRequest`(XHR) and the Java Script utility code provided by the OpenId Connect provider to acquire a bearer token and use it to access Quarkus `service` applications."
 msgstr "シングルページアプリケーション(SPA)は通常、 `XMLHttpRequest` (XHR)とOpenId Connectプロバイダーが提供するJava Scriptユーティリティーコードを使用してベアラートークンを取得し、それを使用してQuarkus `service` アプリケーションにアクセスします。"
 
 #. type: Plain text
-#: upstream/_guides/security-openid-connect.adoc:398
+#: upstream/_guides/security-openid-connect.adoc:438
 msgid "For example, here is how you can use `keycloak.js` to authenticate the users and refresh the expired tokens from the SPA:"
 msgstr "例えば、 `keycloak.js` を使用してユーザーを認証し、SPA から期限切れのトークンをリフレッシュする方法は以下の通りです。"
 
 #. type: delimited block -
-#: upstream/_guides/security-openid-connect.adoc:437
+#: upstream/_guides/security-openid-connect.adoc:477
 #, no-wrap
 msgid ""
 "<html>\n"
@@ -830,28 +906,28 @@ msgid ""
 msgstr ""
 
 #. type: Title ==
-#: upstream/_guides/security-openid-connect.adoc:439
+#: upstream/_guides/security-openid-connect.adoc:479
 #, no-wrap
 msgid "Provider Endpoint configuration"
 msgstr "プロバイダーエンドポイント設定"
 
 #. type: Plain text
-#: upstream/_guides/security-openid-connect.adoc:442
+#: upstream/_guides/security-openid-connect.adoc:482
 msgid "OIDC `service` application needs to know OpenId Connect provider's token, `JsonWebKey` (JWK) set and possibly `UserInfo` and introspection endpoint addresses."
 msgstr "OIDC `service` アプリケーションは、OpenId Connect プロバイダのトークン、 `JsonWebKey` (JWK) セット、そして時には `UserInfo` とイントロスペクションのエンドポイントアドレスを知る必要があります。"
 
 #. type: Plain text
-#: upstream/_guides/security-openid-connect.adoc:444
+#: upstream/_guides/security-openid-connect.adoc:484
 msgid "By default they are discovered by adding a `/.well-known/openid-configuration` path to the configured `quarkus.oidc.auth-server-url`."
 msgstr "デフォルトでは、設定された `quarkus.oidc.auth-server-url` に `/.well-known/openid-configuration` パスを追加することで検出されます。"
 
 #. type: Plain text
-#: upstream/_guides/security-openid-connect.adoc:446
+#: upstream/_guides/security-openid-connect.adoc:486
 msgid "Alternatively, if the discovery endpoint is not available or you would like to save on the discovery endpoint roundtrip, you can disable the discovery and configure them with relative path values, for example:"
 msgstr "また、ディスカバリーエンドポイントが利用できない場合や、ディスカバリーエンドポイントのラウンドトリップを節約したい場合は、ディスカバリーを無効にして、相対パスの値で設定することができます。"
 
 #. type: delimited block -
-#: upstream/_guides/security-openid-connect.adoc:459
+#: upstream/_guides/security-openid-connect.adoc:499
 #, no-wrap
 msgid ""
 "quarkus.oidc.auth-server-url=http://localhost:8180/auth/realms/quarkus\n"
@@ -867,43 +943,43 @@ msgid ""
 msgstr ""
 
 #. type: Title ==
-#: upstream/_guides/security-openid-connect.adoc:462
+#: upstream/_guides/security-openid-connect.adoc:502
 #, no-wrap
 msgid "JSON Web Token Claim Verification"
 msgstr "JSON Web Tokenクレーム検証"
 
 #. type: Plain text
-#: upstream/_guides/security-openid-connect.adoc:465
+#: upstream/_guides/security-openid-connect.adoc:505
 msgid "Once the bearer JWT token's signature has been verified and its `expires at` (`exp`) claim has been checked, the `iss` (`issuer`) claim value is verified next."
 msgstr "ベアラのJWTトークンの署名が検証され、 `expires at` ( `exp`) のクレームが確認されると、次に `iss` ( `issuer`) クレーム値が検証されます。"
 
 #. type: Plain text
-#: upstream/_guides/security-openid-connect.adoc:468
+#: upstream/_guides/security-openid-connect.adoc:508
 msgid "By default, the `iss` claim value is compared to the `issuer` property which may have been discovered in the well-known provider configuration.  But if `quarkus.oidc.token.issuer` property is set then the `iss` claim value is compared to it instead."
 msgstr "デフォルトでは、 `iss` クレーム値は、well-knownプロバイダの設定で発見された `issuer` プロパティと比較されます。しかし、 `quarkus.oidc.token.issuer` プロパティが設定されている場合は、代わりに `iss` クレーム値がそれと比較されます。"
 
 #. type: Plain text
-#: upstream/_guides/security-openid-connect.adoc:470
+#: upstream/_guides/security-openid-connect.adoc:510
 msgid "In some cases, this `iss` claim verification may not work. For example, if the discovered `issuer` property contains an internal HTTP/IP address while the token `iss` claim value contains an external HTTP/IP address. Or when a discovered `issuer` property contains the template tenant variable but the token `iss` claim value has the complete tenant-specific issuer value."
 msgstr "場合によっては、この `iss` クレームの検証がうまくいかないことがあります。例えば、発見された `issuer` プロパティに内部の HTTP/IP アドレスが含まれている一方で、トークン `iss` クレーム値に外部の HTTP/IP アドレスが含まれている場合です。あるいは、発見された `issuer` プロパティにテンプレートのテナント変数が含まれているが、トークン `iss` クレーム値には完全なテナント固有の発行者の値が含まれている場合です。"
 
 #. type: Plain text
-#: upstream/_guides/security-openid-connect.adoc:472
+#: upstream/_guides/security-openid-connect.adoc:512
 msgid "In such cases you may want to consider skipping the issuer verification by setting `quarkus.oidc.token.issuer=any`. Please note that it is not recommended and should be avoided unless no other options are available:"
 msgstr "このような場合には、 `quarkus.oidc.token.issuer=any` を設定して、issuer認証を省略することを検討してください。なお、この設定は推奨されておらず、他に選択肢がない場合を除き、避けるべきです。"
 
 #. type: Plain text
-#: upstream/_guides/security-openid-connect.adoc:474
+#: upstream/_guides/security-openid-connect.adoc:514
 msgid "If you work with Keycloak and observe the issuer verification errors due to the different host addresses then configure Keycloak with a `KEYCLOAK_FRONTEND_URL` property to ensure the same host address is used."
 msgstr "Keycloakを使用していて、ホストアドレスが異なるために発行者検証エラーが発生する場合は、Keycloakに `KEYCLOAK_FRONTEND_URL` プロパティを設定して、同じホストアドレスが使用されるようにしてください。"
 
 #. type: Plain text
-#: upstream/_guides/security-openid-connect.adoc:475
+#: upstream/_guides/security-openid-connect.adoc:515
 msgid "If the `iss` property is tenant specific in a multi-tenant deployment then you can use the `SecurityIdentity` `tenant-id` attribute to check the issuer is correct in the endpoint itself or the custom JAX-RS filter, for example:"
 msgstr "マルチテナント展開で `iss` プロパティがテナント固有のものである場合は、 `SecurityIdentity` `tenant-id` 属性を使用して、エンドポイント自体やカスタム JAX-RS フィルタなどでissuerが正しいかどうかを確認することができます。"
 
 #. type: delimited block -
-#: upstream/_guides/security-openid-connect.adoc:482
+#: upstream/_guides/security-openid-connect.adoc:522
 #, no-wrap
 msgid ""
 "import javax.inject.Inject;\n"
@@ -913,7 +989,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/security-openid-connect.adoc:486
+#: upstream/_guides/security-openid-connect.adoc:526
 #, no-wrap
 msgid ""
 "import org.eclipse.microprofile.jwt.JsonWebToken;\n"
@@ -922,7 +998,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/security-openid-connect.adoc:491
+#: upstream/_guides/security-openid-connect.adoc:531
 #, no-wrap
 msgid ""
 "@Provider\n"
@@ -932,7 +1008,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/security-openid-connect.adoc:494
+#: upstream/_guides/security-openid-connect.adoc:534
 #, no-wrap
 msgid ""
 "    @Inject JsonWebToken jwt;\n"
@@ -940,7 +1016,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/security-openid-connect.adoc:502
+#: upstream/_guides/security-openid-connect.adoc:542
 #, no-wrap
 msgid ""
 "    public void filter(ContainerRequestContext requestContext) {\n"
@@ -953,49 +1029,49 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: upstream/_guides/security-openid-connect.adoc:505
+#: upstream/_guides/security-openid-connect.adoc:545
 msgid "Note it is also recommended to use `quarkus.oidc.token.audience` property to verify the token `aud` (`audience`) claim value."
 msgstr "なお、トークン `aud` ( `audience`) のクレーム値を検証するために `quarkus.oidc.token.audience` プロパティを使用することも推奨します。"
 
 #. type: Title ==
-#: upstream/_guides/security-openid-connect.adoc:506
+#: upstream/_guides/security-openid-connect.adoc:546
 #, no-wrap
 msgid "Token Propagation"
 msgstr "トークンの伝播"
 
 #. type: Plain text
-#: upstream/_guides/security-openid-connect.adoc:509
+#: upstream/_guides/security-openid-connect.adoc:549
 msgid "Please see link:security-openid-connect-client#token-propagation[Token Propagation] section about the Bearer access token propagation to the downstream services."
 msgstr "下流サービスへのベアラアクセストークンの伝播については、 link:security-openid-connect-client#token-propagation[トークン伝播] の項を参照してください。"
 
-#. type: Title ===
-#: upstream/_guides/security-openid-connect.adoc:511
+#. type: Title ==
+#: upstream/_guides/security-openid-connect.adoc:551
 #, fuzzy, no-wrap
 #| msgid "Provider Endpoint configuration"
 msgid "Oidc Provider Client Authentication"
 msgstr "プロバイダーエンドポイント設定"
 
 #. type: Plain text
-#: upstream/_guides/security-openid-connect.adoc:514
+#: upstream/_guides/security-openid-connect.adoc:554
 #, fuzzy
 msgid "`quarkus.oidc.runtime.OidcProviderClient` is used when a remote request to an OpenId Connect Provider has to be done. If the bearer token has to be introspected then `OidcProviderClient` has to authenticate to the OpenId Connect Provider. Please see link:security-openid-connect-web-authentication#oidc-provider-client-authentication[OidcProviderClient Authentication] for more information about all the supported authentication options."
 msgstr "`quarkus.oidc.runtime.OidcProviderClient` は、OpenId Connect Provider へのリモートリクエストが必要な場合に使用されます。ベアラートークンをイントロスペクトしなければならない場合、 `OidcProviderClient` は OpenId Connect Provider を認証しなければなりません。サポートされているすべての認証オプションの詳細については、 link:security-openid-connect-web-authentication#oidc-provider-client-authentication[OidcProviderClient Authentication]を参照してください。"
 
 #. type: Title ==
-#: upstream/_guides/security-openid-connect.adoc:516
+#: upstream/_guides/security-openid-connect.adoc:556
 #, no-wrap
 msgid "Testing"
 msgstr "テスト"
 
 #. type: Plain text
-#: upstream/_guides/security-openid-connect.adoc:519
+#: upstream/_guides/security-openid-connect.adoc:559
 #, fuzzy
 #| msgid "Add the following dependencies to your test project:"
 msgid "Start by adding the following dependencies to your test project:"
 msgstr "テストプロジェクトに以下の依存関係を追加します。"
 
 #. type: delimited block -
-#: upstream/_guides/security-openid-connect.adoc:532
+#: upstream/_guides/security-openid-connect.adoc:572
 #, no-wrap
 msgid ""
 "<dependency>\n"
@@ -1011,18 +1087,18 @@ msgid ""
 msgstr ""
 
 #. type: Title ===
-#: upstream/_guides/security-openid-connect.adoc:535
+#: upstream/_guides/security-openid-connect.adoc:575
 #, no-wrap
 msgid "Wiremock"
 msgstr "Wiremock"
 
 #. type: Plain text
-#: upstream/_guides/security-openid-connect.adoc:538
+#: upstream/_guides/security-openid-connect.adoc:578
 msgid "Add the following dependencies to your test project:"
 msgstr "テストプロジェクトに以下の依存関係を追加します。"
 
 #. type: delimited block -
-#: upstream/_guides/security-openid-connect.adoc:546
+#: upstream/_guides/security-openid-connect.adoc:586
 #, no-wrap
 msgid ""
 "<dependency>\n"
@@ -1033,13 +1109,13 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: upstream/_guides/security-openid-connect.adoc:549
-#: upstream/_guides/security-openid-connect.adoc:641
+#: upstream/_guides/security-openid-connect.adoc:589
+#: upstream/_guides/security-openid-connect.adoc:814
 msgid "Prepare the REST test endpoint, set `application.properties`, for example:"
 msgstr "RESTテストエンドポイントを用意し、例えば以下のように `application.properties` を設定します。"
 
 #. type: delimited block -
-#: upstream/_guides/security-openid-connect.adoc:558
+#: upstream/_guides/security-openid-connect.adoc:598
 #, no-wrap
 msgid ""
 "# keycloak.url is set by OidcWiremockTestResource\n"
@@ -1051,19 +1127,19 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: upstream/_guides/security-openid-connect.adoc:561
-#: upstream/_guides/security-openid-connect.adoc:652
+#: upstream/_guides/security-openid-connect.adoc:601
+#: upstream/_guides/security-openid-connect.adoc:825
 msgid "and finally write the test code, for example:"
 msgstr "最後に、例えば次のようにテストコードを書きます。"
 
 #. type: delimited block -
-#: upstream/_guides/security-openid-connect.adoc:565
+#: upstream/_guides/security-openid-connect.adoc:605
 #, no-wrap
 msgid "import static org.hamcrest.Matchers.equalTo;\n"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/security-openid-connect.adoc:568
+#: upstream/_guides/security-openid-connect.adoc:608
 #, no-wrap
 msgid ""
 "import java.util.Arrays;\n"
@@ -1071,8 +1147,8 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/security-openid-connect.adoc:571
-#: upstream/_guides/security-openid-connect.adoc:660
+#: upstream/_guides/security-openid-connect.adoc:611
+#: upstream/_guides/security-openid-connect.adoc:833
 #, no-wrap
 msgid ""
 "import org.hamcrest.Matchers;\n"
@@ -1080,7 +1156,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/security-openid-connect.adoc:577
+#: upstream/_guides/security-openid-connect.adoc:617
 #, no-wrap
 msgid ""
 "import io.quarkus.test.common.QuarkusTestResource;\n"
@@ -1091,7 +1167,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/security-openid-connect.adoc:581
+#: upstream/_guides/security-openid-connect.adoc:621
 #, no-wrap
 msgid ""
 "@QuarkusTest\n"
@@ -1100,7 +1176,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/security-openid-connect.adoc:591
+#: upstream/_guides/security-openid-connect.adoc:631
 #, no-wrap
 msgid ""
 "    @Test\n"
@@ -1115,7 +1191,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/security-openid-connect.adoc:600
+#: upstream/_guides/security-openid-connect.adoc:640
 #, no-wrap
 msgid ""
 "    private String getAccessToken(String userName, Set<String> groups) {\n"
@@ -1129,24 +1205,116 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: upstream/_guides/security-openid-connect.adoc:604
+#: upstream/_guides/security-openid-connect.adoc:644
 msgid "Testing your `quarkus-oidc` `service` application with `OidcWiremockTestResource` provides the best coverage as even the communication channel is tested against the Wiremock HTTP stubs.  `OidcWiremockTestResource` will be enhanced going forward to support more complex Bearer token test scenarios."
 msgstr "`quarkus-oidc` `service` アプリケーションを `OidcWiremockTestResource` でテストすると、通信チャネルが Wiremock HTTP スタブに対してテストされるため、最高のカバレッジが得られます。 `OidcWiremockTestResource` は、より複雑な Bearer トークンのテストシナリオをサポートするために、今後強化される予定です。"
 
-#. type: Title ===
-#: upstream/_guides/security-openid-connect.adoc:606
-#, fuzzy, no-wrap
-msgid "Keycloak"
-msgstr "キークローク"
-
 #. type: Plain text
-#: upstream/_guides/security-openid-connect.adoc:609
-#, fuzzy
-msgid "If you work with Keycloak then you can test against a live Keycloak instance by adding the following dependency:"
-msgstr "Keycloakを使用している場合は、以下の依存関係を追加することで、ライブのKeycloakインスタンスに対してテストすることができます。"
+#: upstream/_guides/security-openid-connect.adoc:647
+msgid "If there is an immediate need for a test to define Wiremock stubs not currently supported by `OidcWiremockTestResource` one can do so via a `WireMockServer` instance injected into the test class, for example:"
+msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/security-openid-connect.adoc:617
+#: upstream/_guides/security-openid-connect.adoc:651
+#, no-wrap
+msgid "package io.quarkus.it.keycloak;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-openid-connect.adoc:654
+#, no-wrap
+msgid ""
+"import static com.github.tomakehurst.wiremock.client.WireMock.matching;\n"
+"import static org.hamcrest.Matchers.equalTo;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-openid-connect.adoc:656
+#, no-wrap
+msgid "import org.junit.jupiter.api.Test;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-openid-connect.adoc:659
+#, no-wrap
+msgid ""
+"import com.github.tomakehurst.wiremock.WireMockServer;\n"
+"import com.github.tomakehurst.wiremock.client.WireMock;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-openid-connect.adoc:665
+#, no-wrap
+msgid ""
+"import io.quarkus.test.common.QuarkusTestResource;\n"
+"import io.quarkus.test.junit.QuarkusTest;\n"
+"import io.quarkus.test.oidc.server.OidcWireMock;\n"
+"import io.quarkus.test.oidc.server.OidcWiremockTestResource;\n"
+"import io.restassured.RestAssured;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-openid-connect.adoc:669
+#, no-wrap
+msgid ""
+"@QuarkusTest\n"
+"@QuarkusTestResource(OidcWiremockTestResource.class)\n"
+"public class CustomOidcWireMockStubTest {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-openid-connect.adoc:672
+#, no-wrap
+msgid ""
+"    @OidcWireMock\n"
+"    WireMockServer wireMockServer;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-openid-connect.adoc:678
+#, no-wrap
+msgid ""
+"    @Test\n"
+"    public void testInvalidBearerToken() {\n"
+"        wireMockServer.stubFor(WireMock.post(\"/auth/realms/quarkus/protocol/openid-connect/token/introspect\")\n"
+"                .withRequestBody(matching(\".*token=invalid_token.*\"))\n"
+"                .willReturn(WireMock.aResponse().withStatus(400)));\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-openid-connect.adoc:686
+#, no-wrap
+msgid ""
+"        RestAssured.given().auth().oauth2(\"invalid_token\").when()\n"
+"                .get(\"/api/users/me/bearer\")\n"
+"                .then()\n"
+"                .statusCode(401)\n"
+"                .header(\"WWW-Authenticate\", equalTo(\"Bearer\"));\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/security-openid-connect.adoc:689
+#, no-wrap
+msgid "Dev Services for Keycloak"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-openid-connect.adoc:693
+msgid "Using link:security-openid-connect-dev-services[Dev Services for Keycloak] is recommended for the integration testing against Keycloak.  `Dev Services for Keycloak` will launch and initialize a test container: it will create a `quarkus` realm, a `quarkus-app` client (`secret` secret) and add `alice` (`admin` and `user` roles) and `bob` (`user` role) users, where all of these properties can be customized."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-openid-connect.adoc:695
+#, fuzzy
+#| msgid "Add the following dependencies to your test project:"
+msgid "First you need to add the following dependency:"
+msgstr "テストプロジェクトに以下の依存関係を追加します。"
+
+#. type: delimited block -
+#: upstream/_guides/security-openid-connect.adoc:703
+#: upstream/_guides/security-openid-connect.adoc:788
 #, no-wrap
 msgid ""
 "<dependency>\n"
@@ -1157,13 +1325,153 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: upstream/_guides/security-openid-connect.adoc:620
+#: upstream/_guides/security-openid-connect.adoc:706
+msgid "which provides a utility class `io.quarkus.test.keycloak.client.KeycloakTestClient` you can use in tests for acquiring the access tokens."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-openid-connect.adoc:708
+msgid "Next prepare your `application.properties`. You can start with a completely empty `application.properties` as `Dev Services for Keycloak` will register `quarkus.oidc.auth-server-url` pointing to the running test container as well as `quarkus.oidc.client-id=quarkus-app` and `quarkus.oidc.credentials.secret=secret`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-openid-connect.adoc:710
+msgid "But if you already have all the required `quarkus-oidc` properties configured then you only need to associate `quarkus.oidc.auth-server-url` with the `prod` profile for `Dev Services for Keycloak`to start a container, for example:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-openid-connect.adoc:714
+#, no-wrap
+msgid "%prod.quarkus.oidc.auth-server-url=http://localhost:8180/auth/realms/quarkus\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-openid-connect.adoc:717
+msgid "If a custom realm file has to be imported into Keycloak before running the tests then you can configure `Dev Services for Keycloak` as follows:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-openid-connect.adoc:722
+#, no-wrap
+msgid ""
+"%prod.quarkus.oidc.auth-server-url=http://localhost:8180/auth/realms/quarkus\n"
+"quarkus.keycloak.devservices.realm-path=quarkus-realm.json\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-openid-connect.adoc:725
+msgid "Finally write your test which will be executed in JVM mode:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-openid-connect.adoc:734
+#, no-wrap
+msgid ""
+"import io.quarkus.test.junit.QuarkusTest;\n"
+"import io.quarkus.test.keycloak.client.KeycloakTestClient;\n"
+"import io.restassured.RestAssured;\n"
+"import org.junit.jupiter.api.Test;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-openid-connect.adoc:737
+#, no-wrap
+msgid ""
+"@QuarkusTest\n"
+"public class BearerTokenAuthenticationTest {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-openid-connect.adoc:739
+#, no-wrap
+msgid "    KeycloakTestClient keycloakClient = new KeycloakTestClient();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-openid-connect.adoc:751
+#, no-wrap
+msgid ""
+"    @Test\n"
+"    public void testAdminAccess() {\n"
+"        RestAssured.given().auth().oauth2(getAccessToken(\"alice\"))\n"
+"                .when().get(\"/api/admin\")\n"
+"                .then()\n"
+"                .statusCode(200);\n"
+"        RestAssured.given().auth().oauth2(getAccessToken(\"bob\"))\n"
+"                .when().get(\"/api/admin\")\n"
+"                .then()\n"
+"                .statusCode(403);\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-openid-connect.adoc:756
+#, no-wrap
+msgid ""
+"    protected String getAccessToken(String userName) {\n"
+"        return keycloakClient.getAccessToken(userName);\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-openid-connect.adoc:759
 #, fuzzy
-msgid "and configure `maven.surefire.plugin` as follows:"
+#| msgid "Running in Native Mode"
+msgid "and in native mode:"
+msgstr "ネイティブモードでの実行"
+
+#. type: delimited block -
+#: upstream/_guides/security-openid-connect.adoc:765
+#, no-wrap
+msgid "import io.quarkus.test.junit.QuarkusIntegrationTest;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-openid-connect.adoc:769
+#, no-wrap
+msgid ""
+"@QuarkusIntegrationTest\n"
+"public class NativeBearerTokenAuthenticationIT extends BearerTokenAuthenticationTest {\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-openid-connect.adoc:772
+msgid "Please see link:security-openid-connect-dev-services[Dev Services for Keycloak] for more information about the way it is initialized and configured."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/security-openid-connect.adoc:774
+#, no-wrap
+msgid "KeycloakTestResourceLifecycleManager"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-openid-connect.adoc:778
+msgid "If you need to do some integration testing against Keycloak then you are encouraged to do it with <<integration-testing-keycloak-devservices,Dev Services For Keycloak>>.  Use `KeycloakTestResourceLifecycleManager` for your tests only if there is a good reason not to use `Dev Services for Keycloak`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-openid-connect.adoc:780
+#, fuzzy
+#| msgid "Add the following dependencies to your test project:"
+msgid "Start with adding the following dependency:"
+msgstr "テストプロジェクトに以下の依存関係を追加します。"
+
+#. type: Plain text
+#: upstream/_guides/security-openid-connect.adoc:791
+msgid "which provides `io.quarkus.test.keycloak.server.KeycloakTestResourceLifecycleManager` - an implementaion of `io.quarkus.test.common.QuarkusTestResourceLifecycleManager` which starts a Keycloak container."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-openid-connect.adoc:793
+#, fuzzy
+msgid "And configure the Maven Surefire plugin as follows:"
 msgstr "で、 `maven.surefire.plugin` を以下のように設定します。"
 
 #. type: delimited block -
-#: upstream/_guides/security-openid-connect.adoc:636
+#: upstream/_guides/security-openid-connect.adoc:809
 #, no-wrap
 msgid ""
 "<plugin>\n"
@@ -1182,13 +1490,13 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: upstream/_guides/security-openid-connect.adoc:639
+#: upstream/_guides/security-openid-connect.adoc:812
 #, fuzzy
 msgid "(and similarly `maven.failsafe.plugin` when testing in native image)."
 msgstr "また、ネイティブイメージでテストした場合も同様に `maven.failsafe.plugin` ）。"
 
 #. type: delimited block -
-#: upstream/_guides/security-openid-connect.adoc:649
+#: upstream/_guides/security-openid-connect.adoc:822
 #, no-wrap
 msgid ""
 "# keycloak.url is set by KeycloakTestResourceLifecycleManager\n"
@@ -1199,7 +1507,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/security-openid-connect.adoc:657
+#: upstream/_guides/security-openid-connect.adoc:830
 #, no-wrap
 msgid ""
 "import static io.quarkus.test.keycloak.server.KeycloakTestResourceLifecycleManager.getAccessToken;\n"
@@ -1207,7 +1515,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/security-openid-connect.adoc:665
+#: upstream/_guides/security-openid-connect.adoc:838
 #, no-wrap
 msgid ""
 "import io.quarkus.test.common.QuarkusTestResource;\n"
@@ -1217,7 +1525,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/security-openid-connect.adoc:669
+#: upstream/_guides/security-openid-connect.adoc:842
 #, no-wrap
 msgid ""
 "@QuarkusTest\n"
@@ -1226,7 +1534,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/security-openid-connect.adoc:679
+#: upstream/_guides/security-openid-connect.adoc:852
 #, no-wrap
 msgid ""
 "    @Test\n"
@@ -1241,38 +1549,38 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/security-openid-connect.adoc:681
-#: upstream/_guides/security-openid-connect.adoc:762
-#: upstream/_guides/security-openid-connect.adoc:834
+#: upstream/_guides/security-openid-connect.adoc:854
+#: upstream/_guides/security-openid-connect.adoc:935
+#: upstream/_guides/security-openid-connect.adoc:1007
 #, no-wrap
 msgid "}\n"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_guides/security-openid-connect.adoc:684
+#: upstream/_guides/security-openid-connect.adoc:857
 #, fuzzy
 msgid "`KeycloakTestResourceLifecycleManager` registers `alice` and `admin` users. The user `alice` has the `user` role only by default - it can be customized with a `keycloak.token.user-roles` system property. The user `admin` has the `user` and `admin` roles by default - it can be customized with a `keycloak.token.admin-roles` system property."
 msgstr "`KeycloakTestResourceLifecycleManager` は、 `alice` と `admin` のユーザーを登録します。ユーザー `alice` は、デフォルトでは `user` ロールのみを持っています。 `keycloak.token.user-roles` システムプロパティでカスタマイズすることができます。ユーザー `admin` は、デフォルトで `user` と `admin` の役割を持っています - `keycloak.token.admin-roles` のシステムプロパティでカスタマイズできます。"
 
 #. type: Plain text
-#: upstream/_guides/security-openid-connect.adoc:687
+#: upstream/_guides/security-openid-connect.adoc:860
 #, fuzzy
 msgid "By default, `KeycloakTestResourceLifecycleManager` uses HTTPS to initialize a Keycloak instance which can be disabled with `keycloak.use.https=false`.  Default realm name is `quarkus` and client id - `quarkus-service-app` - set `keycloak.realm` and `keycloak.service.client` system properties to customize the values if needed."
 msgstr "デフォルトでは、 `KeycloakTestResourceLifecycleManager` は Keycloak インスタンスの初期化に HTTPS を使用しますが、これは `keycloak.use.https=false` で無効にできます。デフォルトのレルム名は `quarkus` 、クライアントIDは `quarkus-service-app` です。必要に応じて `keycloak.realm` と `keycloak.service.client` のシステムプロパティを設定し、値をカスタマイズしてください。"
 
 #. type: Title ===
-#: upstream/_guides/security-openid-connect.adoc:689
+#: upstream/_guides/security-openid-connect.adoc:862
 #, no-wrap
 msgid "Local Public Key"
 msgstr "ローカル公開鍵"
 
 #. type: Plain text
-#: upstream/_guides/security-openid-connect.adoc:692
+#: upstream/_guides/security-openid-connect.adoc:865
 msgid "You can also use a local inlined public key for testing your `quarkus-oidc` `service` applications:"
 msgstr "また、 `quarkus-oidc` `service` アプリケーションのテストに、ローカルのインライン公開鍵を使用することもできます。"
 
 #. type: delimited block -
-#: upstream/_guides/security-openid-connect.adoc:697
+#: upstream/_guides/security-openid-connect.adoc:870
 #, no-wrap
 msgid ""
 "quarkus.oidc.client-id=test\n"
@@ -1280,42 +1588,42 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/security-openid-connect.adoc:699
+#: upstream/_guides/security-openid-connect.adoc:872
 #, no-wrap
 msgid "smallrye.jwt.sign.key.location=/privateKey.pem\n"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_guides/security-openid-connect.adoc:702
+#: upstream/_guides/security-openid-connect.adoc:875
 msgid "copy `privateKey.pem` from the `integration-tests/oidc-tenancy` in the `main` Quarkus repository and use a test code similar to the one in the `Wiremock` section above to generate JWT tokens. You can use your own test keys if preferred."
 msgstr "`integration-tests/oidc-tenancy` から `main` のQuarkusリポジトリに `privateKey.pem` をコピーし、上記 `Wiremock` のセクションと同様のテストコードを使用してJWTトークンを生成します。必要であれば、独自のテストキーを使用することもできます。"
 
 #. type: Plain text
-#: upstream/_guides/security-openid-connect.adoc:704
+#: upstream/_guides/security-openid-connect.adoc:877
 msgid "This approach provides a more limited coverage compared to the Wiremock approach - for example, the remote communication code is not covered."
 msgstr "このアプローチは、Wiremockのアプローチと比較して、より限定された範囲をカバーします。例えば、リモート通信コードはカバーされません。"
 
 #. type: Title ===
-#: upstream/_guides/security-openid-connect.adoc:706
+#: upstream/_guides/security-openid-connect.adoc:879
 #, fuzzy, no-wrap
 msgid "TestSecurity annotation"
 msgstr "TestSecurityアノテーション"
 
 #. type: Plain text
-#: upstream/_guides/security-openid-connect.adoc:709
+#: upstream/_guides/security-openid-connect.adoc:882
 #, fuzzy
 msgid "You can use `@TestSecurity` and `@OidcSecurity` annotations for testing the `service` application endpoint code which depends on the injected `JsonWebToken` as well as `UserInfo` and `OidcConfigurationMetadata`."
 msgstr "`@TestSecurity` および `@OidcSecurity` アノテーションは、注入された `JsonWebToken` や `UserInfo` および `OidcConfigurationMetadata` に依存する `service` アプリケーション・エンドポイント・コードのテストに使用できます。"
 
 #. type: Plain text
-#: upstream/_guides/security-openid-connect.adoc:711
+#: upstream/_guides/security-openid-connect.adoc:884
 #, fuzzy
 #| msgid "Add the following dependencies to your test project:"
 msgid "Add the following dependency:"
 msgstr "テストプロジェクトに以下の依存関係を追加します。"
 
 #. type: delimited block -
-#: upstream/_guides/security-openid-connect.adoc:718
+#: upstream/_guides/security-openid-connect.adoc:891
 #, no-wrap
 msgid ""
 "<dependency>\n"
@@ -1326,13 +1634,13 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: upstream/_guides/security-openid-connect.adoc:721
+#: upstream/_guides/security-openid-connect.adoc:894
 #, fuzzy
 msgid "and write a test code like this one:"
 msgstr "のようなテストコードを書いてみましょう。"
 
 #. type: delimited block -
-#: upstream/_guides/security-openid-connect.adoc:735
+#: upstream/_guides/security-openid-connect.adoc:908
 #, no-wrap
 msgid ""
 "import static org.hamcrest.Matchers.is;\n"
@@ -1349,8 +1657,8 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/security-openid-connect.adoc:739
-#: upstream/_guides/security-openid-connect.adoc:820
+#: upstream/_guides/security-openid-connect.adoc:912
+#: upstream/_guides/security-openid-connect.adoc:993
 #, no-wrap
 msgid ""
 "@QuarkusTest\n"
@@ -1359,7 +1667,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/security-openid-connect.adoc:746
+#: upstream/_guides/security-openid-connect.adoc:919
 #, no-wrap
 msgid ""
 "    @Test\n"
@@ -1371,7 +1679,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/security-openid-connect.adoc:760
+#: upstream/_guides/security-openid-connect.adoc:933
 #, no-wrap
 msgid ""
 "    @Test\n"
@@ -1390,14 +1698,14 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: upstream/_guides/security-openid-connect.adoc:765
-#: upstream/_guides/security-openid-connect.adoc:837
+#: upstream/_guides/security-openid-connect.adoc:938
+#: upstream/_guides/security-openid-connect.adoc:1010
 #, fuzzy
 msgid "where `ProtectedResource` class may look like this:"
 msgstr "`ProtectedResource` のクラスは次のようになります。"
 
 #. type: delimited block -
-#: upstream/_guides/security-openid-connect.adoc:771
+#: upstream/_guides/security-openid-connect.adoc:944
 #, no-wrap
 msgid ""
 "import io.quarkus.oidc.OidcConfigurationMetadata;\n"
@@ -1406,8 +1714,8 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/security-openid-connect.adoc:775
-#: upstream/_guides/security-openid-connect.adoc:846
+#: upstream/_guides/security-openid-connect.adoc:948
+#: upstream/_guides/security-openid-connect.adoc:1019
 #, no-wrap
 msgid ""
 "@Path(\"/service\")\n"
@@ -1416,7 +1724,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/security-openid-connect.adoc:782
+#: upstream/_guides/security-openid-connect.adoc:955
 #, no-wrap
 msgid ""
 "    @Inject\n"
@@ -1428,7 +1736,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/security-openid-connect.adoc:788
+#: upstream/_guides/security-openid-connect.adoc:961
 #, no-wrap
 msgid ""
 "    @GET\n"
@@ -1439,7 +1747,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/security-openid-connect.adoc:798
+#: upstream/_guides/security-openid-connect.adoc:971
 #, no-wrap
 msgid ""
 "    @GET\n"
@@ -1454,19 +1762,19 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: upstream/_guides/security-openid-connect.adoc:803
+#: upstream/_guides/security-openid-connect.adoc:976
 #, fuzzy
 msgid "Note that `@TestSecurity` annotation must always be used and its `user` property is returned as `JsonWebToken.getName()` and `roles` property - as `JsonWebToken.getGroups()`.  `@OidcSecurity` annotation is optional and can be used to set the additional token claims, as well as `UserInfo` and `OidcConfigurationMetadata` properties.  Additionally, if `quarkus.oidc.token.issuer` property is configured then it will be used as an `OidcConfigurationMetadata` `issuer` property value."
 msgstr "なお、 `@TestSecurity` アノテーションは常に使用する必要があり、その `user` プロパティは `JsonWebToken.getName()` として、 `roles` プロパティは `JsonWebToken.getGroups()` として返されます。 `@OidcSecurity` アノテーションはオプションであり、追加のトークン クレームや `UserInfo` および `OidcConfigurationMetadata` プロパティの設定に使用できます。さらに、 `quarkus.oidc.token.issuer` プロパティが設定されている場合、それは `OidcConfigurationMetadata` `issuer` プロパティの値として使用されます。"
 
 #. type: Plain text
-#: upstream/_guides/security-openid-connect.adoc:805
+#: upstream/_guides/security-openid-connect.adoc:978
 #, fuzzy
 msgid "If you work with the opaque tokens then you can test them as follows:"
 msgstr "不透明なトークンを扱う場合は、次のようにしてテストすることができます。"
 
 #. type: delimited block -
-#: upstream/_guides/security-openid-connect.adoc:816
+#: upstream/_guides/security-openid-connect.adoc:989
 #, no-wrap
 msgid ""
 "import static org.hamcrest.Matchers.is;\n"
@@ -1480,7 +1788,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/security-openid-connect.adoc:832
+#: upstream/_guides/security-openid-connect.adoc:1005
 #, no-wrap
 msgid ""
 "    @Test\n"
@@ -1497,7 +1805,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/security-openid-connect.adoc:842
+#: upstream/_guides/security-openid-connect.adoc:1015
 #, no-wrap
 msgid ""
 "import io.quarkus.oidc.TokenIntrospection;\n"
@@ -1505,7 +1813,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/security-openid-connect.adoc:851
+#: upstream/_guides/security-openid-connect.adoc:1024
 #, no-wrap
 msgid ""
 "    @Inject\n"
@@ -1515,7 +1823,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/security-openid-connect.adoc:861
+#: upstream/_guides/security-openid-connect.adoc:1034
 #, no-wrap
 msgid ""
 "    @GET\n"
@@ -1530,25 +1838,25 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: upstream/_guides/security-openid-connect.adoc:864
+#: upstream/_guides/security-openid-connect.adoc:1037
 #, fuzzy
 msgid "Note that `@TestSecurity` `user` and `roles` attributes are availabe as `TokenIntrospection` `username` and `scope` properties and you can use `io.quarkus.test.security.oidc.TokenIntrospection` to add the additional introspection response properties such as an `email`, etc."
 msgstr "`@TestSecurity` `user` と `roles` の属性は `TokenIntrospection` `username` と `scope` のプロパティとして利用可能であり、 `io.quarkus.test.security.oidc.TokenIntrospection` を使って `email` などの追加のイントロスペクション・レスポンス・プロパティを追加することができることに注意してください。"
 
 #. type: Title ==
-#: upstream/_guides/security-openid-connect.adoc:865
+#: upstream/_guides/security-openid-connect.adoc:1038
 #, no-wrap
 msgid "How to check the errors in the logs"
 msgstr "ログでエラーを確認する方法"
 
 #. type: Plain text
-#: upstream/_guides/security-openid-connect.adoc:868
+#: upstream/_guides/security-openid-connect.adoc:1041
 #, fuzzy
 msgid "Please enable `io.quarkus.oidc.runtime.OidcProvider` `TRACE` level logging to see more details about the token verification errors:"
 msgstr "トークン検証エラーの詳細を確認するには、 `io.quarkus.oidc.runtime.OidcProvider` `TRACE` レベルのロギングを有効にしてください。"
 
 #. type: delimited block -
-#: upstream/_guides/security-openid-connect.adoc:873
+#: upstream/_guides/security-openid-connect.adoc:1046
 #, no-wrap
 msgid ""
 "quarkus.log.category.\"io.quarkus.oidc.runtime.OidcProvider\".level=TRACE\n"
@@ -1556,13 +1864,13 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: upstream/_guides/security-openid-connect.adoc:876
+#: upstream/_guides/security-openid-connect.adoc:1049
 #, fuzzy
 msgid "Please enable `io.quarkus.oidc.runtime.OidcRecorder` `TRACE` level logging to see more details about the OidcProvider client initialization errors:"
 msgstr "トークン検証エラーの詳細を確認するには、 `io.quarkus.oidc.runtime.OidcProvider` `TRACE` レベルのロギングを有効にしてください。"
 
 #. type: delimited block -
-#: upstream/_guides/security-openid-connect.adoc:881
+#: upstream/_guides/security-openid-connect.adoc:1054
 #, no-wrap
 msgid ""
 "quarkus.log.category.\"io.quarkus.oidc.runtime.OidcRecorder\".level=TRACE\n"
@@ -1570,55 +1878,55 @@ msgid ""
 msgstr ""
 
 #. type: Title ==
-#: upstream/_guides/security-openid-connect.adoc:883
+#: upstream/_guides/security-openid-connect.adoc:1056
 #, fuzzy, no-wrap
 msgid "External and Internal Access to OpenId Connect Provider"
 msgstr "OpenId Connect Providerへの外部および内部からのアクセス"
 
 #. type: Plain text
-#: upstream/_guides/security-openid-connect.adoc:886
+#: upstream/_guides/security-openid-connect.adoc:1059
 #, fuzzy
 msgid "Note that the OpenId Connect Provider externally accessible token and other endpoints may have different HTTP(S) URLs compared to the URLs auto-discovered or configured relative to `quarkus.oidc.auth-server-url` internal URL. For example, if your SPA acquires a token from an external token endpoint address and sends it to Quarkus as a Bearer token then an issuer verification failure may be reported by the endpoint."
 msgstr "OpenId Connect Providerの外部からアクセス可能なトークンやその他のエンドポイントは、 `quarkus.oidc.auth-server-url` 内部URLに関連して自動検出または設定されたURLとは異なるHTTP(S)URLを持つ可能性があることに注意してください。例えば、SPAが外部のトークンエンドポイントのアドレスからトークンを取得し、それをBearerトークンとしてQuarkusに送信した場合、エンドポイントから発行者検証の失敗が報告される可能性があります。"
 
 #. type: Plain text
-#: upstream/_guides/security-openid-connect.adoc:889
+#: upstream/_guides/security-openid-connect.adoc:1062
 #, fuzzy
 msgid "In such cases, if you work with Keycloak then please start it with a `KEYCLOAK_FRONTEND_URL` system property set to the externally accessible base URL.  If you work with other Openid Connect providers then please check your provider's documentation."
 msgstr "このような場合、Keycloakを使用している場合は、 `KEYCLOAK_FRONTEND_URL` システムプロパティに外部からアクセス可能なベースURLを設定して起動してください。他のOpenid Connectプロバイダを使用している場合は、各プロバイダのドキュメントを確認してください。"
 
 #. type: Title ==
-#: upstream/_guides/security-openid-connect.adoc:890
+#: upstream/_guides/security-openid-connect.adoc:1063
 #, fuzzy, no-wrap
 msgid "How to use 'client-id' property"
 msgstr "client-id」プロパティの使用方法"
 
 #. type: Plain text
-#: upstream/_guides/security-openid-connect.adoc:893
+#: upstream/_guides/security-openid-connect.adoc:1066
 #, fuzzy
 msgid "`quarkus.oidc.client-id` property identifies an OpenId Connect Client which requested the current bearer token. It can be an SPA application running in a browser or a Quarkus `web-app` confidential client application propagating the access token to the Quarkus `service` application."
 msgstr "`quarkus.oidc.client-id` プロパティは、現在のベアラートークンを要求したOpenId Connect Clientを識別します。ブラウザで実行されているSPAアプリケーションや、アクセストークンをQuarkus `service` アプリケーションに伝達するQuarkus `web-app` 機密クライアントアプリケーションである可能性があります。"
 
 #. type: Plain text
-#: upstream/_guides/security-openid-connect.adoc:896
+#: upstream/_guides/security-openid-connect.adoc:1069
 #, fuzzy
 msgid "This property is required if the `service` application is expected to introspect the tokens remotely - which is always the case for the opaque tokens.  This property is optional if the local Json Web Key token verification only is used."
 msgstr "このプロパティは、 `service` アプリケーションがリモートでトークンをイントロスペクトすることが期待される場合に必要です。このプロパティは、ローカルのJson Web Keyトークンの検証のみを使用する場合はオプションです。"
 
 #. type: Plain text
-#: upstream/_guides/security-openid-connect.adoc:898
+#: upstream/_guides/security-openid-connect.adoc:1071
 #, fuzzy
 msgid "Nonetheless, setting this propery is encouraged even if the endpoint does not require an access to the remote introspection endpoint. The reasons behind it that `client-id`, if set, can be used to verify the token audience and will also be included in the logs when the token verification fails for the better traceability of the tokens issued to specific clients to be analyzed over a longer period of time."
 msgstr "しかし、エンドポイントがリモートイントロスペクションエンドポイントへのアクセスを必要としない場合でも、このプロパティーを設定することが推奨されます。その理由は、 `client-id` が設定されていれば、トークンのオーディエンスを検証するために使用することができ、また、トークンの検証が失敗したときには、特定のクライアントに発行されたトークンのより良いトレーサビリティのために、より長い期間にわたって分析するために、ログに含まれます。"
 
 #. type: Plain text
-#: upstream/_guides/security-openid-connect.adoc:900
+#: upstream/_guides/security-openid-connect.adoc:1073
 #, fuzzy
 msgid "For example, if your OpenId Connect provider sets a token audience then the following configuration pattern is recommended:"
 msgstr "例えば、OpenId Connectプロバイダがトークンオーディエンスを設定している場合、以下のような構成パターンが推奨されます。"
 
 #. type: delimited block -
-#: upstream/_guides/security-openid-connect.adoc:907
+#: upstream/_guides/security-openid-connect.adoc:1080
 #, no-wrap
 msgid ""
 "# Set client-id\n"
@@ -1628,50 +1936,58 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: upstream/_guides/security-openid-connect.adoc:910
+#: upstream/_guides/security-openid-connect.adoc:1083
 #, fuzzy
 msgid "If you set `quarkus.oidc.client-id` but your endpoint does not require a remote access to one of OpenId Connect Provider endpoints (introspection, token acquisition, etc) then do not set a client secret with the `quarkus.oidc.credentials` or similar properties as it will not be used."
 msgstr "`quarkus.oidc.client-id` を設定しても、エンドポイントが OpenId Connect Provider のエンドポイントへのリモートアクセス（イントロスペクション、トークンの取得など）を必要としない場合は、 `quarkus.oidc.credentials` などのプロパティでクライアントシークレットを設定しても使用されないため、設定しないでください。"
 
 #. type: Plain text
-#: upstream/_guides/security-openid-connect.adoc:912
+#: upstream/_guides/security-openid-connect.adoc:1085
 #, fuzzy
 msgid "Note Quarkus `web-app` applications always require `quarkus.oidc.client-id` property."
 msgstr "注記 Quarkus `web-app` アプリケーションは、常に `quarkus.oidc.client-id` プロパティを必要とします。"
 
 #. type: Title ==
-#: upstream/_guides/security-openid-connect.adoc:914
+#: upstream/_guides/security-openid-connect.adoc:1087
 #, no-wrap
 msgid "References"
 msgstr "参照"
 
 #. type: Plain text
-#: upstream/_guides/security-openid-connect.adoc:917
+#: upstream/_guides/security-openid-connect.adoc:1090
 msgid "https://www.keycloak.org/documentation.html[Keycloak Documentation]"
 msgstr "link:https://www.keycloak.org/documentation.html[Keycloakのドキュメント]"
 
 #. type: Plain text
-#: upstream/_guides/security-openid-connect.adoc:918
+#: upstream/_guides/security-openid-connect.adoc:1091
 msgid "https://openid.net/connect/[OpenID Connect]"
 msgstr "https://openid.net/connect/[OpenID Connect]"
 
 #. type: Plain text
-#: upstream/_guides/security-openid-connect.adoc:919
+#: upstream/_guides/security-openid-connect.adoc:1092
 msgid "https://tools.ietf.org/html/rfc7519[JSON Web Token]"
 msgstr "https://tools.ietf.org/html/rfc7519[JSON Web Token]"
 
 #. type: Plain text
-#: upstream/_guides/security-openid-connect.adoc:920
+#: upstream/_guides/security-openid-connect.adoc:1093
 msgid "link:security-openid-connect-client[Quarkus - Using OpenID Connect and OAuth2 Client and Filters to manage access tokens]"
 msgstr "マルチテナントへの対応方法については、 link:security-openid-connect-multitenancy[OpenID Connectマルチテナンシーの利用] ガイドをお読みください。"
 
 #. type: Plain text
-#: upstream/_guides/security-openid-connect.adoc:921
+#: upstream/_guides/security-openid-connect.adoc:1094
 #, fuzzy
-msgid "link:security-openid-connect-dev-services[Dev Services for OpenId Connect]"
+msgid "link:security-openid-connect-dev-services[Dev Services for Keycloak]"
 msgstr "link:security-openid-connect-dev-services[OpenId Connectの開発サービス]"
 
 #. type: Plain text
-#: upstream/_guides/security-openid-connect.adoc:921
+#: upstream/_guides/security-openid-connect.adoc:1094
 msgid "link:security[Quarkus Security]"
 msgstr "link:security[Quarkus Security]"
+
+#, fuzzy
+#~ msgid "Keycloak"
+#~ msgstr "キークローク"
+
+#, fuzzy
+#~ msgid "If you work with Keycloak then you can test against a live Keycloak instance by adding the following dependency:"
+#~ msgstr "Keycloakを使用している場合は、以下の依存関係を追加することで、ライブのKeycloakインスタンスに対してテストすることができます。"

@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2021-08-31 13:16+0000\n"
+"POT-Creation-Date: 2021-10-06 08:09+0000\n"
 "PO-Revision-Date: 2021-03-31 00:18+0900\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -966,25 +966,25 @@ msgstr "取引"
 #. type: Plain text
 #: upstream/_guides/reactive-sql-clients.adoc:497
 #, fuzzy
-msgid "The reactive SQL clients support transactions.  A transaction is started with `client.begin()` and terminated with either `tx.commit()` or `tx.rollback()`.  All these operations are asynchronous:"
+msgid "The reactive SQL clients support transactions.  A transaction is started with `io.vertx.mutiny.sqlclient.SqlConnection#begin` and terminated with either `io.vertx.mutiny.sqlclient.Transaction#commit` or `io.vertx.mutiny.sqlclient.Transaction#rollback`.  All these operations are asynchronous:"
 msgstr "リアクティブ SQL クライアントはトランザクションをサポートしています。トランザクションは `client.begin()` で開始され、 `tx.commit()` または `tx.rollback()` で終了します。これらの操作はすべて非同期です。"
 
 #. type: Plain text
 #: upstream/_guides/reactive-sql-clients.adoc:499
 #, fuzzy
-msgid "`client.begin()` returns a `Uni<Transaction>`"
+msgid "`connection.begin()` returns a `Uni<Transaction>`"
 msgstr "`client.begin()` は `Uni<Transaction>`"
 
 #. type: Plain text
 #: upstream/_guides/reactive-sql-clients.adoc:500
 #, fuzzy
-msgid "`client.commit()` and `client.rollback()` return `Uni<Void>`"
+msgid "`transaction.commit()` and `transaction.rollback()` return `Uni<Void>`"
 msgstr "`client.commit()` と `client.rollback()` のリターン `Uni<Void>`"
 
 #. type: Plain text
 #: upstream/_guides/reactive-sql-clients.adoc:503
 #, fuzzy
-msgid "Managing transactions in the reactive programming world can be cumbersome.  Instead of writing repetitive and complex (thus error-prone!) code, you can use the `io.vertx.mutiny.sqlclient.SqlClientHelper`."
+msgid "Managing transactions in the reactive programming world can be cumbersome.  Instead of writing repetitive and complex (thus error-prone!) code, you can use the `io.vertx.mutiny.sqlclient.Pool#withTransaction` helper method."
 msgstr "リアクティブプログラミングの世界でトランザクションを管理するのは面倒です。反復的で複雑な(したがってエラーが発生しやすい!)コードを書く代わりに、 `io.vertx.mutiny.sqlclient.SqlClientHelper` ."
 
 #. type: Plain text
@@ -998,10 +998,10 @@ msgstr "次のスニペットは、同じトランザクション内で2つの�
 #, no-wrap
 msgid ""
 "public static Uni<Void> insertTwoFruits(PgPool client, Fruit fruit1, Fruit fruit2) {\n"
-"    return SqlClientHelper.inTransactionUni(client, tx -> {\n"
-"        Uni<RowSet<Row>> insertOne = tx.preparedQuery(\"INSERT INTO fruits (name) VALUES ($1) RETURNING id\")\n"
+"    return client.withTransaction(conn -> {\n"
+"        Uni<RowSet<Row>> insertOne = conn.preparedQuery(\"INSERT INTO fruits (name) VALUES ($1) RETURNING id\")\n"
 "                .execute(Tuple.of(fruit1.name));\n"
-"        Uni<RowSet<Row>> insertTwo = tx.preparedQuery(\"INSERT INTO fruits (name) VALUES ($1) RETURNING id\")\n"
+"        Uni<RowSet<Row>> insertTwo = conn.preparedQuery(\"INSERT INTO fruits (name) VALUES ($1) RETURNING id\")\n"
 "                .execute(Tuple.of(fruit2.name));\n"
 msgstr ""
 
@@ -1009,9 +1009,9 @@ msgstr ""
 #: upstream/_guides/reactive-sql-clients.adoc:520
 #, no-wrap
 msgid ""
-"        return insertOne.and(insertTwo)\n"
+"        return Uni.combine().all().unis(insertOne, insertTwo)\n"
 "                // Ignore the results (the two ids)\n"
-"                .onItem().ignore().andContinueWithNull();\n"
+"                .discardItems();\n"
 "    });\n"
 "}\n"
 msgstr ""
@@ -1031,7 +1031,7 @@ msgstr "また、以下のように依存アクションを作成することも
 #. type: delimited block -
 #: upstream/_guides/reactive-sql-clients.adoc:529
 #, no-wrap
-msgid "return SqlClientHelper.inTransactionUni(client, tx -> tx\n"
+msgid "return client.withTransaction(conn -> conn\n"
 msgstr ""
 
 #. type: delimited block -
@@ -1039,14 +1039,14 @@ msgstr ""
 #, no-wrap
 msgid ""
 "        .preparedQuery(\"INSERT INTO person (firstname,lastname) VALUES ($1,$2) RETURNING id\")\n"
-"                .execute(Tuple.of(person.getFirstName(), person.getLastName()))\n"
+"        .execute(Tuple.of(person.getFirstName(), person.getLastName()))\n"
 msgstr ""
 
 #. type: delimited block -
 #: upstream/_guides/reactive-sql-clients.adoc:535
 #, no-wrap
 msgid ""
-"        .onItem().transformToUni(id -> tx.preparedQuery(\"INSERT INTO addr (person_id,addrline1) VALUES ($1,$2)\")\n"
+"        .onItem().transformToUni(id -> conn.preparedQuery(\"INSERT INTO addr (person_id,addrline1) VALUES ($1,$2)\")\n"
 "                .execute(Tuple.of(id.iterator().next().getLong(\"id\"), person.getLastName())))\n"
 msgstr ""
 

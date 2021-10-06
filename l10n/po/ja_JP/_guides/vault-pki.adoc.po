@@ -1,0 +1,471 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2021-10-06 08:09+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. This guide is maintained in the main Quarkus repository
+#. and pull requests should be submitted there:
+#. https://github.com/quarkusio/quarkus/tree/main/docs/src/main/asciidoc
+#. type: Title =
+#: upstream/_guides/vault-pki.adoc:6
+#, no-wrap
+msgid "Using HashiCorp Vault's PKI Secret Engine"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/vault-pki.adoc:18
+msgid "Vault's PKI Secret Engine generates dynamic X.509 certificates. It allows services to get certificates without manually generating a private key and CSR, submitting to a CA, and waiting for signed certificate. The PKI secret engine allows dynamically generating certificates, which has the following advantages over classic CA scenarios:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/vault-pki.adoc:20
+msgid "Generating certificates with short TTLs reduces the need for and/or size of CRLs."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/vault-pki.adoc:21
+msgid "Allows for ephemeral certificates that are generated upon application startup, stored in memory and discarded on shutdown."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/vault-pki.adoc:23
+msgid "In this guide we cover the following:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/vault-pki.adoc:25
+msgid "setup: configuring the engine to generate certificates"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/vault-pki.adoc:26
+msgid "generation: generating certificates using roles"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/vault-pki.adoc:27
+msgid "revocation: revoking a previously generated certificate"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/vault-pki.adoc:29
+msgid "See https://www.vaultproject.io/docs/secrets/pki/index.html#pki-secrets-engine[Vault PKI Secrets Engine's official documentation]"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/vault-pki.adoc:32
+#, no-wrap
+msgid "Prerequisites"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/vault-pki.adoc:35
+msgid "To complete this guide, you need:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/vault-pki.adoc:37
+msgid "to complete the \"Starting Vault\" section of the {base-guide}"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/vault-pki.adoc:38
+msgid "roughly 15 minutes"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/vault-pki.adoc:39
+msgid "an IDE"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/vault-pki.adoc:40
+msgid "JDK 11+ installed with `JAVA_HOME` configured appropriately"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/vault-pki.adoc:41
+msgid "Apache Maven {maven-version}"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/vault-pki.adoc:42
+msgid "Docker installed"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/vault-pki.adoc:43
+#, no-wrap
+msgid "Setup"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/vault-pki.adoc:48
+msgid "We assume there is a Vault running from the {base-guide}, and the root token is known.  The first step consists of activating the PKI Secret Engine, and configuring a CA certificate and private key:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/vault-pki.adoc:53
+#, no-wrap
+msgid ""
+"docker exec -it dev-vault sh\n"
+"export VAULT_TOKEN={root-token}\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/vault-pki.adoc:56
+#, no-wrap
+msgid ""
+"vault secrets enable pki\n"
+"# ==> Success! Enabled the pki secrets engine at: pki/\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/vault-pki.adoc:59
+#, no-wrap
+msgid ""
+"vault secrets tune -max-lease-ttl=8760h pki\n"
+"# ==> Success! Tuned the secrets engine at: pki/\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/vault-pki.adoc:70
+#, no-wrap
+msgid ""
+"vault write pki/root/generate/internal \\\n"
+"    common_name=my-website.com \\\n"
+"    ttl=8760h\n"
+"# ==> Success! Configured CA with self-signed root\n"
+"# ==> Key              Value\n"
+"# ==> ---              -----\n"
+"# ==> certificate      -----BEGIN CERTIFICATE-----...\n"
+"# ==> expiration       1536807433\n"
+"# ==> issuing_ca       -----BEGIN CERTIFICATE-----...\n"
+"# ==> serial_number    7c:f1:fb:2c:6e:4d:99:0e:82:1b:08:0a:81:ed:61:3e:1d:fa:f5:29\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/vault-pki.adoc:74
+msgid "This example configures the CA with an internal self-signed root certificate and associated key pair that is managed by Vault. Alternatively, you can configure the CA with an existing key pair."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/vault-pki.adoc:76
+msgid "CA configuration can be done programmatically using `VaultPKISecretEngine.generateRoot(GenerateRootOptions)`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/vault-pki.adoc:79
+msgid "With the CA configured we now require a role to be defined that determines what parameters are allowed when generating certificates."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/vault-pki.adoc:82
+msgid "Here we create a role `example-dot-com` that allows certificates with the common name allowed to be any subdomain of `my-website.com`."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/vault-pki.adoc:90
+#, no-wrap
+msgid ""
+"vault write pki/roles/example-dot-com \\\n"
+"    allowed_domains=my-website.com \\\n"
+"    allow_subdomains=true \\\n"
+"    max_ttl=72h\n"
+"# ==> Success! Data written to: pki/roles/example-dot-com\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/vault-pki.adoc:94
+msgid "Role configuration can be done programmatically using `VaultPKISecretEngine.updateRole(String role, RoleOptions options)`"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/vault-pki.adoc:95
+#, no-wrap
+msgid "Generating Certificates"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/vault-pki.adoc:98
+msgid "First, let's create a simple Quarkus application with Vault and Jackson extensions:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/vault-pki.adoc:108
+#, no-wrap
+msgid ""
+"mvn io.quarkus.platform:quarkus-maven-plugin:{quarkus-version}:create \\\n"
+"    -DprojectGroupId=org.acme \\\n"
+"    -DprojectArtifactId=vault-pki-quickstart \\\n"
+"    -DclassName=\"org.acme.quickstart.GreetingResource\" \\\n"
+"    -Dpath=\"/hello\" \\\n"
+"    -Dextensions=\"resteasy,vault,resteasy-jackson\"\n"
+"cd vault-pki-quickstart\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/vault-pki.adoc:111
+msgid "Now, configure access to Vault from the `{config-file}`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/vault-pki.adoc:116
+#, no-wrap
+msgid ""
+"# vault url\n"
+"quarkus.vault.url=http://localhost:8200\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/vault-pki.adoc:120
+#, no-wrap
+msgid ""
+"# vault authentication\n"
+"quarkus.vault.authentication.userpass.username=bob\n"
+"quarkus.vault.authentication.userpass.password=sinclair\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/vault-pki.adoc:123
+msgid "We can then add a new endpoint that will allow us to generate a certificate using the configured CA & role:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/vault-pki.adoc:130
+#, no-wrap
+msgid ""
+"@Path(\"/pki\")\n"
+"@Produces(TEXT_PLAIN)\n"
+"@Consumes(TEXT_PLAIN)\n"
+"public class PKIResource {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/vault-pki.adoc:133
+#, no-wrap
+msgid ""
+"    @Inject\n"
+"    public VaultPKISecretEngine pkiSecretEngine;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/vault-pki.adoc:143
+#, no-wrap
+msgid ""
+"    @POST\n"
+"    @Path(\"/generate\")\n"
+"    public String generate(String subdomain) {\n"
+"        GenerateCertificateOptions options = new GenerateCertificateOptions()\n"
+"            .setSubjectCommonName(subdomain + \".my-website.com\");\n"
+"        GeneratedCertificate generated =  pkiSecretEngine.generateCertificate(\"example-dot-com\",  options);\n"
+"        return generated.certificate.getData();\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/vault-pki.adoc:146
+msgid "After compiling and starting the Quarkus application, let's generate a new certificate with a generated key pair:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/vault-pki.adoc:149
+#, no-wrap
+msgid "curl -X POST --data 'a-subdomain' --header \"Content-Type: text/plain\"  http://localhost:8080/pki/generate\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/vault-pki.adoc:153 upstream/_guides/vault-pki.adoc:182
+#, no-wrap
+msgid ""
+"# ==> -----BEGIN CERTIFICATE-----\n"
+"# ==> ...\n"
+"# ==> -----END CERTIFICATE-----\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/vault-pki.adoc:156
+msgid "Alternatively we can generate a key pair and CSR locally and generate a certificate by having vault sign our CSR."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/vault-pki.adoc:158
+msgid "Let's add a new method that accepts a CSR:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/vault-pki.adoc:168
+#, no-wrap
+msgid ""
+"@POST\n"
+"@Path(\"/sign\")\n"
+"public String sign(String csr) {\n"
+"    GenerateCertificateOptions options = new GenerateCertificateOptions();\n"
+"    SignedCertificate signed = pkiSecretEngine.signRequest(\"example-dot-com\", csr, options);\n"
+"    return signed.certificate.getData();\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/vault-pki.adoc:172
+msgid "Now we can generate a CSR (e.g. using OpenSSL) and pass it to our `/sign` endpoint to sign and generate a certificate from the CSR:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/vault-pki.adoc:176
+#, no-wrap
+msgid "openssl req -newkey rsa:2048 -keyout example.key -out example.csr\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/vault-pki.adoc:178
+#, no-wrap
+msgid "curl -X POST --data @example.csr --header \"Content-Type: text/plain\"  http://localhost:8080/pki/sign\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/vault-pki.adoc:184
+#, no-wrap
+msgid "Revoking Certificates"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/vault-pki.adoc:187
+msgid "Let's add another new method to our `PKIResource`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/vault-pki.adoc:195
+#, no-wrap
+msgid ""
+"@POST\n"
+"@Path(\"/revoke\")\n"
+"public void revoke(String serialNumber) {\n"
+"    pkiSecretEngine.revokeCertificate(serialNumber);\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/vault-pki.adoc:198
+msgid "And revoke a previously generated certificate:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/vault-pki.adoc:202
+#, no-wrap
+msgid ""
+"curl -X POST --data '1d:2e:c6:06:45:18:60:0e:23:d6:c5:17:43:c0:fe:46:ed:d1:50:be' --header \"Content-Type: text/plain\"  http://localhost:8080/pki/revoke\n"
+"# ==> No Data\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/vault-pki.adoc:204
+#, no-wrap
+msgid "Dynamically Mounting PKI Engines"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/vault-pki.adoc:208
+msgid "Quarkus's Vault PKI support includes that ability to mount & unmount PKI engines dynamically using the `VaultPKISecretEngineFactory` & `VaultSystemBackendEngine` interfaces."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/vault-pki.adoc:211
+msgid "To enable, or mount, a new PKI engine at specific mount path you can use the `VaultSystemBackendEngine.enable` method:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/vault-pki.adoc:217
+#, no-wrap
+msgid ""
+"// Obtain interfaces via injection or other standard CDI method.\n"
+"VaultSystemBackendEngine systemBackendEngine = ...;\n"
+"VaultPKISecretEngineFactory pkiSecretEngineFactory = ...;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/vault-pki.adoc:222
+#, no-wrap
+msgid ""
+"// Mount a PKI engine at a specified path.\n"
+"EnableEngineOptions options = new EnableEngineOptions()\n"
+"  .setMaxLeaseTimeToLive(\"8760h\");\n"
+"systemBackendEngine.enable(VaultSecretEngine.PKI, \"pki-dyn\", \"A dynamic PKI engine\", options);\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/vault-pki.adoc:225
+#, no-wrap
+msgid ""
+"// Obtain an engine manager for the newly mounted PKI engine.\n"
+"VaultPKISecretEngine dynPkiSecretEngine = pkiSecretEngineFactory.engine(\"pki-dyn\");\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/vault-pki.adoc:228
+#, no-wrap
+msgid ""
+"// Use dynamically created engine as you please.\n"
+"dynPkiSecretEngine.generateRoot(new GenerateRootOptions());\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/vault-pki.adoc:231
+msgid "To disable (aka unmount) a PKI engine at a specific path you simply use the `VaultSystemBackendEngine.disable` method:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/vault-pki.adoc:235
+#, no-wrap
+msgid "systemBackendEngine.disable(\"pki-dyn\");\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/vault-pki.adoc:239
+msgid "If you want to test if a specific mount path is already in use you can use `VaultSystemBackendEngine.isEngineMounted(String)`."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/vault-pki.adoc:240
+#, no-wrap
+msgid "Conclusion"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/vault-pki.adoc:245
+msgid "The PKI Secret Engine is a great tool for managing CAs and their provisioned certificates.  We have seen the most obvious functions of the interface but all of the methods and modes of Vault's PKI secret engine are supported, including:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/vault-pki.adoc:247
+msgid "Provisioning roles used to generate certificates."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/vault-pki.adoc:248
+msgid "Storing the root CA externally and issuing certificates from intermediate CAs."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/vault-pki.adoc:249
+msgid "Reading current CRLs for each provisioned engine instance."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/vault-pki.adoc:250
+msgid "Feel free to look at the `VaultPKISecretEngine` & `VaultPKISecretEngineFactory` interfaces."
+msgstr ""
