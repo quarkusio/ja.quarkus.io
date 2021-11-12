@@ -1,0 +1,626 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2021-11-12 13:16+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. This guide is maintained in the main Quarkus repository
+#. and pull requests should be submitted there:
+#. https://github.com/quarkusio/quarkus/tree/main/docs/src/main/asciidoc
+#. type: Title =
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:6
+#, no-wrap
+msgid "SmallRye GraphQL Client"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:16
+msgid "This guide demonstrates how your Quarkus application can use the GraphQL client library.  The client is implemented by the https://github.com/smallrye/smallrye-graphql/[SmallRye GraphQL] project.  This guide is specifically geared towards the client side, so if you need an introduction to GraphQL in general, first refer to the link:smallrye-graphql[SmallRye GraphQL guide], which provides an introduction to the GraphQL query language, general concepts and server-side development."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:24
+msgid "The guide will walk you through developing and running a simple application that uses both supported types of GraphQL clients to retrieve data from a remote resource, that being a database related to Star Wars.  It's available at https://graphql.org/swapi-graphql[this webpage] if you want to experiment with it manually.  The web UI allows you to write and execute GraphQL queries against it."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:25
+#, no-wrap
+msgid "Prerequisites"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:28
+msgid "To complete this guide, you need:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:30
+msgid "less than 15 minutes"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:31
+msgid "an IDE"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:32
+msgid "JDK 11+ installed with `JAVA_HOME` configured appropriately"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:33
+msgid "Apache Maven {maven-version}"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:34
+#, no-wrap
+msgid "GraphQL client types introduction"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:37
+msgid "Two types of GraphQL clients are supported."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:43
+msgid "The *typesafe* client works very much like the MicroProfile REST Client adjusted for calling GraphQL endpoints.  A client instance is basically a proxy that you can call like a regular Java object, but under the hood, the call will be translated to a GraphQL operation. It works with domain classes directly.  Any input and output objects for the operation will be translated to/from their representations in the GraphQL query language."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:49
+msgid "The *dynamic* client, on the other hand, works rather like an equivalent of the JAX-RS client from the `javax.ws.rs.client` package. It does not require the domain classes to work, it works with abstract representations of GraphQL documents instead. Documents are built using a domain-specific language (DSL).  The exchanged objects are treated as an abstract `JsonObject`, but, when necessary, it is possible to convert them to concrete model objects (if suitable model classes are available)."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:53
+msgid "The typesafe client can be viewed as a rather high-level and more declarative approach designed for ease of use, whereas the dynamic client is lower-level, more imperative, somewhat more verbose to use, but allows finer grained control over operations and responses."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:54
+#, no-wrap
+msgid "Solution"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:58
+msgid "We recommend that you follow the instructions in the next sections and create the application step by step.  However, you can go right to the completed example."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:60
+msgid "Clone the Git repository: `git clone {quickstarts-clone-url}`, or download an {quickstarts-archive-url}[archive]."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:62
+msgid "The solution is located in the `microprofile-graphql-client-quickstart` {quickstarts-tree-url}/microprofile-graphql-client-quickstart[directory]."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:63
+#, no-wrap
+msgid "Creating the Maven Project"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:66
+msgid "First, we need a new project. Create a new project with the following command:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:75
+#, no-wrap
+msgid ""
+"mvn io.quarkus.platform:quarkus-maven-plugin:{quarkus-version}:create \\\n"
+"    -DprojectGroupId=org.acme \\\n"
+"    -DprojectArtifactId=microprofile-graphql-client-quickstart \\\n"
+"    -DclassName=\"org.acme.microprofile.graphql.client.StarWarsResource\" \\\n"
+"    -Dextensions=\"resteasy-reactive-jsonb,graphql-client,rest-client-reactive\"\n"
+"cd microprofile-graphql-client-quickstart\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:83
+msgid "The typesafe GraphQL client depends on REST client, thus we included the `rest-client-reactive` extension in the `extensions` list. You may also switch to the traditional non-reactive `rest-client` if the rest of your application depends on the non-reactive RESTEasy stack (you can't mix reactive and non-reactive RESTEasy).  If you're only going to use the dynamic GraphQL client and don't use RESTEasy in your application, you may leave out the REST client dependency completely.  This command generates a Maven project, importing the `smallrye-graphql-client` extension."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:86
+msgid "If you already have your Quarkus project configured, you can add the `smallrye-graphql-client` extension to your project by running the following command in your project base directory:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:90
+#, no-wrap
+msgid "./mvnw quarkus:add-extension -Dextensions=\"graphql-client,rest-client-reactive\"\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:93
+msgid "Again, you may leave out `rest-client-reactive` if you're only going to use the dynamic client."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:95
+msgid "This will add the following to your `pom.xml`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:106
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-smallrye-graphql-client</artifactId>\n"
+"</dependency>\n"
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-rest-client-reactive</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:108
+#, no-wrap
+msgid "The application"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:114
+msgid "The application we will build makes use of both types of GraphQL clients. In both cases, they will connect to the Star Wars service at https://graphql.org/swapi-graphql[SWAPI] and query it for a list of Star Wars films, and, for each film, the names of the planets which appear in that film."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:116
+msgid "The corresponding GraphQL query looks like this:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:131
+#, no-wrap
+msgid ""
+"{\n"
+"  allFilms {\n"
+"    films {\n"
+"      title\n"
+"      planetConnection {\n"
+"        planets {\n"
+"          name\n"
+"        }\n"
+"      }\n"
+"    }\n"
+"  }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:134
+msgid "You may go to https://graphql.org/swapi-graphql[the webpage] to execute this query manually."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:135
+#, no-wrap
+msgid "Using the Typesafe client"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:142
+msgid "To use the typesafe client, we need the corresponding model classes that are compatible with the schema. There are two ways to obtain them. First is to use the client generator offered by SmallRye GraphQL, which generates classes from the schema document and a list of queries. This generator is considered highly experimental for now, and is not covered in this example. If interested, refer to the https://github.com/smallrye/smallrye-graphql/tree/main/client/generator[Client Generator] and its documentation."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:147
+msgid "In this example, we will create a slimmed down version of the model classes manually, with only the fields that we need, and ignore all the stuff that we don't need. We will need the classes for `Film` and `Planet`.  But, the service is also using specific wrappers named `FilmConnection` and `PlanetConnection`, which, for our purpose, will serve just to contain the actual list of `Film` and `Planet` instances, respectively."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:149
+msgid "Let's create all the model classes and put them into the `org.acme.microprofile.graphql.client.model` package:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:153
+#, no-wrap
+msgid "public class FilmConnection {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:155
+#, no-wrap
+msgid "    private List<Film> films;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:159
+#, no-wrap
+msgid ""
+"    public List<Film> getFilms() {\n"
+"        return films;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:164
+#, no-wrap
+msgid ""
+"    public void setFilms(List<Film> films) {\n"
+"        this.films = films;\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:166
+#, no-wrap
+msgid "public class Film {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:168
+#, no-wrap
+msgid "    private String title;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:170
+#, no-wrap
+msgid "    private PlanetConnection planetConnection;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:174
+#, no-wrap
+msgid ""
+"    public String getTitle() {\n"
+"        return title;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:178
+#, no-wrap
+msgid ""
+"    public void setTitle(String title) {\n"
+"        this.title = title;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:182
+#, no-wrap
+msgid ""
+"    public PlanetConnection getPlanetConnection() {\n"
+"        return planetConnection;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:187
+#, no-wrap
+msgid ""
+"    public void setPlanetConnection(PlanetConnection planetConnection) {\n"
+"        this.planetConnection = planetConnection;\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:189
+#, no-wrap
+msgid "public class PlanetConnection {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:191
+#, no-wrap
+msgid "    private List<Planet> planets;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:195
+#, no-wrap
+msgid ""
+"    public List<Planet> getPlanets() {\n"
+"        return planets;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:199
+#, no-wrap
+msgid ""
+"    public void setPlanets(List<Planet> planets) {\n"
+"        this.planets = planets;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:201
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:226
+#, no-wrap
+msgid "}\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:203
+#, no-wrap
+msgid "public class Planet {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:205
+#, no-wrap
+msgid "    private String name;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:209
+#, no-wrap
+msgid ""
+"    public String getName() {\n"
+"        return name;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:214
+#, no-wrap
+msgid ""
+"    public void setName(String name) {\n"
+"        this.name = name;\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:218
+msgid "Now that we have the model classes, we can create the interface that represents the actual set of operations we want to call on the remote GraphQL service."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:222
+#, no-wrap
+msgid ""
+"@GraphQLClientApi(configKey = \"star-wars-typesafe\")\n"
+"public interface StarWarsClientApi {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:224
+#, no-wrap
+msgid "    FilmConnection allFilms();\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:232
+msgid "For simplicity, we're only calling the query named `allFilms`. We named our corresponding method `allFilms` too. If we named the method differently, we would need to annotate it with `@Query(value=\"allFilms\")` to specify the name of the query that should be executed when this method is called."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:236
+msgid "The client also needs some configuration, namely at least the URL of the remote service. We can either specify that within the `@GraphQLClientApi` annotation (by setting the `endpoint` parameter), or move this over to the configuration file, `application.properties`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:239
+#, no-wrap
+msgid "quarkus.smallrye-graphql-client.star-wars-typesafe.url=https://swapi-graphql.netlify.app/.netlify/functions/index\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:244
+msgid "`star-wars-typesafe` is the name of the configured client instance, and corresponds to the `configKey` in the `@GraphQLClientApi` annotation. If you don't want to specify a custom name, you can leave out the `configKey`, and then refer to it by using the fully qualified name of the interface."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:248
+msgid "Now that we have the client instance properly configured, we need a way to have it perform something when we start the application. For that, we will use a REST endpoint that, when called by a user, obtains the client instance and lets it execute the query."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:255
+#, no-wrap
+msgid ""
+"@Path(\"/\")\n"
+"public class StarWarsResource {\n"
+"    @Inject\n"
+"    StarWarsClientApi typesafeClient;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:264
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @Path(\"/typesafe\")\n"
+"    @Produces(MediaType.APPLICATION_JSON)\n"
+"    @Blocking\n"
+"    public List<Film> getAllFilmsUsingTypesafeClient() {\n"
+"        return typesafeClient.allFilms().getFilms();\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:269
+msgid "With this REST endpoint included in your application, you can simply send a GET request to `/typesafe`, and the application will use an injected typesafe client instance to call the remote service, obtain the films and planets, and return the JSON representation of the resulting list."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:270
+#, no-wrap
+msgid "Using the Dynamic client"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:274
+msgid "For the dynamic client, the model classes are optional, because we can work with abstract representations of the GraphQL types and documents. The client API interface is not needed at all."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:276
+msgid "We still need to configure the URL for the client, so let's put this into `application.properties`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:278
+#, no-wrap
+msgid "quarkus.smallrye-graphql-client.star-wars-dynamic.url=https://swapi-graphql.netlify.app/.netlify/functions/index\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:282
+msgid "We decided to name the client `star-wars-dynamic`. We will use this name when injecting a dynamic client to properly qualify the injection point."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:285
+msgid "If you need to add an authorization header, or any other custom HTTP header (in our case it's not required), this can be done by:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:287
+#, no-wrap
+msgid "quarkus.smallrye-graphql-client.star-wars-dynamic.header.HEADER-KEY=HEADER-VALUE\"\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:290
+msgid "Add this to the `StarWarsResource` created earlier:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:296
+#, no-wrap
+msgid ""
+"import static io.smallrye.graphql.client.core.Document.document;\n"
+"import static io.smallrye.graphql.client.core.Field.field;\n"
+"import static io.smallrye.graphql.client.core.Operation.operation;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:298
+#, no-wrap
+msgid "// ....\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:302
+#, no-wrap
+msgid ""
+"@Inject\n"
+"@GraphQLClient(\"star-wars-dynamic\")    // <1>\n"
+"DynamicGraphQLClient dynamicClient;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:325
+#, no-wrap
+msgid ""
+"@GET\n"
+"@Path(\"/dynamic\")\n"
+"@Produces(MediaType.APPLICATION_JSON)\n"
+"@Blocking\n"
+"public List<Film> getAllFilmsUsingDynamicClient() throws Exception {\n"
+"    Document query = document(   // <2>\n"
+"        operation(\n"
+"            field(\"allFilms\",\n"
+"                field(\"films\",\n"
+"                    field(\"title\"),\n"
+"                    field(\"planetConnection\",\n"
+"                        field(\"planets\",\n"
+"                            field(\"name\")\n"
+"                        )\n"
+"                    )\n"
+"                )\n"
+"            )\n"
+"        )\n"
+"    );\n"
+"    Response response = dynamicClient.executeSync(query);   <3>\n"
+"    return response.getObject(FilmConnection.class, \"allFilms\").getFilms();  <4>\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:328
+msgid "Qualifies the injection point so that we know which named client needs to be injected here."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:332
+msgid "Here we build a document representing the GraphQL query, using the provided DSL language.  We use static imports to make the code easier to read. The DSL is designed in a way that it looks quite similar to writing a GraphQL query as a string."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:335
+msgid "Execute the query and block while waiting for the response. There is also an asynchronous variant that returns a `Uni<Response>`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:340
+msgid "Here we did the optional step of converting the response to instances of our model classes, because we have the classes available. If you don't have the classes available or don't want to use them, simply calling `response.getData()` would get you a `JsonObject` representing all the returned data."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:341
+#, no-wrap
+msgid "Running the application"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:344
+msgid "Launch the application using"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:348
+#, no-wrap
+msgid "./mvnw quarkus:dev\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:351
+msgid "To execute the queries, you need to send GET requests to our REST endpoint:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:355
+#, no-wrap
+msgid ""
+"curl -s http://localhost:8080/dynamic # to use the dynamic client\n"
+"curl -s http://localhost:8080/typesafe # to use the typesafe client\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:360
+msgid "Whether you use dynamic or typesafe, the result should be the same.  If the JSON document is hard to read, you might want to run it through a tool that formats it for better readability by humans, for example by piping the output through `jq`."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:361
+#, no-wrap
+msgid "Conclusion"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/smallrye-graphql-client.adoc:364
+msgid "This example showed how to use both the dynamic and typesafe GraphQL clients to call an external GraphQL service and explained the difference between the client types."
+msgstr ""

@@ -1,0 +1,569 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2021-11-12 13:16+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. This guide is maintained in the main Quarkus repository
+#. and pull requests should be submitted there:
+#. https://github.com/quarkusio/quarkus/tree/main/docs/src/main/asciidoc
+#. type: Title =
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:6
+#, no-wrap
+msgid "Amazon KMS Client"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:13
+msgid "AWS Key Management Service (KMS) is a service that allows you to create and control the keys used to encrypt or digitally sign your data.  Using KMS, you can create and manage cryptographic keys and control their use across a wide range of AWS services and in your application."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:15
+msgid "You can find more information about KMS at https://aws.amazon.com/kms/[the AWS KMS website]."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:18
+msgid "The KMS extension is based on https://docs.aws.amazon.com/sdk-for-java/v2/developer-guide/welcome.html[AWS Java SDK 2.x].  It's a major rewrite of the 1.x code base that offers two programming models (Blocking & Async)."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:22
+msgid "The Quarkus extension supports two programming models:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:24
+msgid "Blocking access using URL Connection HTTP client (by default) or the Apache HTTP Client"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:25
+msgid "https://docs.aws.amazon.com/sdk-for-java/v2/developer-guide/basics-async.html[Asynchronous programming] based on JDK's `CompletableFuture` objects and the Netty HTTP client."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:27
+msgid "In this guide, we see how you can get your REST services to use KMS locally and on AWS."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:28
+#, no-wrap
+msgid "Prerequisites"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:31
+msgid "To complete this guide, you need:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:33
+msgid "JDK 11+ installed with `JAVA_HOME` configured appropriately"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:34
+msgid "an IDE"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:35
+msgid "Apache Maven {maven-version}"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:36
+msgid "An AWS Account to access the KMS service"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:37
+msgid "Docker for your system to run KMS locally for testing purposes"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:38
+#, no-wrap
+msgid "Set up KMS locally"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:41
+msgid "The easiest way to start working with KMS is to run a local instance as a container."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:45
+#, no-wrap
+msgid "docker run --rm --name local-kms --publish 8011:4599 -e SERVICES=kms -e START_WEB=0 -d localstack/localstack:0.11.1\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:47
+msgid "This starts a KMS instance that is accessible on port `8011`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:49
+msgid "Create an AWS profile for your local instance using AWS CLI:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:56
+#, no-wrap
+msgid ""
+"$ aws configure --profile localstack\n"
+"AWS Access Key ID [None]: test-key\n"
+"AWS Secret Access Key [None]: test-secret\n"
+"Default region name [None]: us-east-1\n"
+"Default output format [None]:\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:58
+#, no-wrap
+msgid "Create a KMS master key"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:61
+msgid "Create a KMS master key queue using AWS CLI and store in `MASTER_KEY_ARN` environment variable."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:65
+#, no-wrap
+msgid "MASTER_KEY_ARN=`aws kms create-key --profile localstack --endpoint-url=http://localhost:8011 | cut -f3`\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:67
+msgid "Generate a key data as 256-bit symmetric key (AES 256)"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:70
+#, no-wrap
+msgid "aws kms generate-data-key --key-id $MASTER_KEY_ARN --key-spec AES_256 --profile localstack --endpoint-url=http://localhost:8011\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:73
+msgid "Or, if you want to use your AWS account create a key using your default profile"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:77
+#, no-wrap
+msgid ""
+"MASTER_KEY_ARN=`aws kms create-key | cut -f3`\n"
+"aws kms generate-data-key --key-id $MASTER_KEY_ARN --key-spec AES_256\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:79
+#, no-wrap
+msgid "Solution"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:81
+msgid "The application built here allows to encrypt and decrypt text messages using a master key created on AWS KMS."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:84
+msgid "We recommend that you follow the instructions in the next sections and create the application step by step.  However, you can go right to the completed example."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:86
+msgid "Clone the Git repository: `git clone {quickstarts-clone-url}`, or download an {quickstarts-archive-url}[archive]."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:88
+msgid "The solution is located in the `amazon-kms-quickstart` {quickstarts-tree-url}/amazon-kms-quickstart[directory]."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:89
+#, no-wrap
+msgid "Creating the Maven project"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:92
+msgid "First, we need a new project. Create a new project with the following command:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:102
+#, no-wrap
+msgid ""
+"mvn io.quarkus.platform:quarkus-maven-plugin:{quarkus-version}:create \\\n"
+"    -DprojectGroupId=org.acme \\\n"
+"    -DprojectArtifactId=amazon-kms-quickstart \\\n"
+"    -DclassName=\"org.acme.kms.QuarkusKmsSyncResource\" \\\n"
+"    -Dpath=\"/sync\" \\\n"
+"    -Dextensions=\"resteasy,resteasy-jackson,amazon-kms,resteasy-mutiny\"\n"
+"cd amazon-kms-quickstart\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:106
+msgid "This command generates a Maven structure importing the RESTEasy/JAX-RS, Mutiny and Amazon KMS Client extensions.  After this, the `amazon-kms` extension has been added to your `pom.xml` as well as the Mutiny support for RESTEasy."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:107
+#, no-wrap
+msgid "Creating JSON REST service"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:111
+msgid "In this example, we will create an application that allows to encrypt and decrypt text message provided in the request.  The example application will demonstrate the two programming models supported by the extension."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:113
+msgid "Let's create a `org.acme.kms.QuarkusKmsSyncResource` that will provide an API to encrypt and decrypt message using the synchronous client."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:117
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:237
+#, no-wrap
+msgid "package org.acme.kms;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:129
+#, no-wrap
+msgid ""
+"import javax.inject.Inject;\n"
+"import javax.ws.rs.Consumes;\n"
+"import javax.ws.rs.POST;\n"
+"import javax.ws.rs.Path;\n"
+"import javax.ws.rs.Produces;\n"
+"import javax.ws.rs.core.MediaType;\n"
+"import org.apache.commons.codec.binary.Base64;\n"
+"import org.eclipse.microprofile.config.inject.ConfigProperty;\n"
+"import software.amazon.awssdk.core.SdkBytes;\n"
+"import software.amazon.awssdk.services.kms.KmsClient;\n"
+"import software.amazon.awssdk.services.kms.model.DecryptResponse;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:134
+#, no-wrap
+msgid ""
+"@Path(\"/sync\")\n"
+"@Produces(MediaType.TEXT_PLAIN)\n"
+"@Consumes(MediaType.TEXT_PLAIN)\n"
+"public class QuarkusKmsSyncResource {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:137
+#, no-wrap
+msgid ""
+"    @Inject\n"
+"    KmsClient kms;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:140
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:262
+#, no-wrap
+msgid ""
+"    @ConfigProperty(name = \"key.arn\")\n"
+"    String keyArn;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:145
+#, no-wrap
+msgid ""
+"    @POST\n"
+"    @Path(\"/encrypt\")\n"
+"    public String encrypt(String data) {\n"
+"        SdkBytes encryptedBytes = kms.encrypt(req -> req.keyId(keyArn).plaintext(SdkBytes.fromUtf8String(data))).ciphertextBlob();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:148
+#, no-wrap
+msgid ""
+"        return Base64.encodeBase64String(encryptedBytes.asByteArray());\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:154
+#, no-wrap
+msgid ""
+"    @POST\n"
+"    @Path(\"/decrypt\")\n"
+"    public String decrypt(String data) {\n"
+"        SdkBytes encryptedData = SdkBytes.fromByteArray(Base64.decodeBase64(data.getBytes()));\n"
+"        DecryptResponse decrypted = kms.decrypt(req -> req.keyId(keyArn).ciphertextBlob(encryptedData));\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:158
+#, no-wrap
+msgid ""
+"        return decrypted.plaintext().asUtf8String();\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:161
+msgid "An encrypted message is in the form of a bytes array. To return it to the user we need to encode it as Base64 string in the `encrypt` endpoint.  On the `decrypt` endpoint we need to decode from the Base64 string back to the bytes array before sending it out to the KMS client."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:162
+#, no-wrap
+msgid "Configuring KMS clients"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:167
+msgid "Both KMS clients (sync and async) are configurable via the `application.properties` file that can be provided in the `src/main/resources` directory.  Additionally, you need to add to the classpath a proper implementation of the sync client. By default the extension uses the URL connection HTTP client, so you need to add a URL connection client dependency to the `pom.xml` file:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:174
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"    <groupId>software.amazon.awssdk</groupId>\n"
+"    <artifactId>url-connection-client</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:177
+msgid "If you want to use Apache HTTP client instead, configure it as follows:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:180
+#, no-wrap
+msgid "quarkus.kms.sync-client.type=apache\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:183
+msgid "And add the following dependency to the application `pom.xml`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:193
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"    <groupId>software.amazon.awssdk</groupId>\n"
+"    <artifactId>apache-client</artifactId>\n"
+"</dependency>\n"
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-apache-httpclient</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:196
+msgid "If you're going to use a local KMS instance, configure it as follows:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:200
+#, no-wrap
+msgid "quarkus.kms.endpoint-override=http://localhost:8011\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:205
+#, no-wrap
+msgid ""
+"quarkus.kms.aws.region=us-east-1\n"
+"quarkus.kms.aws.credentials.type=static\n"
+"quarkus.kms.aws.credentials.static-provider.access-key-id=test-key\n"
+"quarkus.kms.aws.credentials.static-provider.secret-access-key=test-secret\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:208
+msgid "`quarkus.kms.aws.region` - It's required by the client, but since you're using a local KMS instance use `us-east-1` as it's a default region of localstack's KMS."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:209
+msgid "`quarkus.kms.aws.credentials.type` - Set `static` credentials provider with any values for `access-key-id` and `secret-access-key`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:210
+msgid "`quarkus.kms.endpoint-override` - Override the KMS client to use a local instance instead of an AWS service"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:213
+msgid "If you want to work with an AWS account, you can simply remove or comment out all Amazon KMS related properties. By default, the KMS client extension will use the `default` credentials provider chain that looks for credentials in this order:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:217
+msgid "And the region from your AWS CLI profile will be used."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:218
+#, no-wrap
+msgid "Next steps"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:220
+#, no-wrap
+msgid "Packaging"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:224
+msgid "Packaging your application is as simple as `./mvnw clean package`.  It can be run with `java -Dkey.arn=$MASTER_KEY_ARN -jar target/quarkus-app/quarkus-run.jar`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:227
+msgid "With GraalVM installed, you can also create a native executable binary: `./mvnw clean package -Dnative`.  Depending on your system, that will take some time."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:228
+#, no-wrap
+msgid "Going asynchronous"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:231
+msgid "Thanks to the AWS SDK v2.x used by the Quarkus extension, you can use the asynchronous programming model out of the box."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:233
+msgid "Create a `org.acme.kms.QuarkusKmsAsyncResource` REST resource that will be similar to our `QuarkusKmsSyncResource` but using an asynchronous programming model."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:251
+#, no-wrap
+msgid ""
+"import io.smallrye.mutiny.Uni;\n"
+"import javax.inject.Inject;\n"
+"import javax.ws.rs.Consumes;\n"
+"import javax.ws.rs.POST;\n"
+"import javax.ws.rs.Path;\n"
+"import javax.ws.rs.Produces;\n"
+"import javax.ws.rs.core.MediaType;\n"
+"import org.apache.commons.codec.binary.Base64;\n"
+"import org.eclipse.microprofile.config.inject.ConfigProperty;\n"
+"import software.amazon.awssdk.core.SdkBytes;\n"
+"import software.amazon.awssdk.services.kms.KmsAsyncClient;\n"
+"import software.amazon.awssdk.services.kms.model.DecryptResponse;\n"
+"import software.amazon.awssdk.services.kms.model.EncryptResponse;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:256
+#, no-wrap
+msgid ""
+"@Path(\"/async\")\n"
+"@Produces(MediaType.TEXT_PLAIN)\n"
+"@Consumes(MediaType.TEXT_PLAIN)\n"
+"public class QuarkusKmsAsyncResource {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:259
+#, no-wrap
+msgid ""
+"    @Inject\n"
+"    KmsAsyncClient kms;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:270
+#, no-wrap
+msgid ""
+"    @POST\n"
+"    @Path(\"/encrypt\")\n"
+"    public Uni<String> encrypt(String data) {\n"
+"        return Uni.createFrom().completionStage(kms.encrypt(req -> req.keyId(keyArn).plaintext(SdkBytes.fromUtf8String(data))))\n"
+"            .onItem().transform(EncryptResponse::ciphertextBlob)\n"
+"            .onItem().transform(blob -> Base64.encodeBase64String(blob.asByteArray()));\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:282
+#, no-wrap
+msgid ""
+"    @POST\n"
+"    @Path(\"/decrypt\")\n"
+"    public Uni<String> decrypt(String data) {\n"
+"        return Uni.createFrom().item(SdkBytes.fromByteArray(Base64.decodeBase64(data.getBytes())))\n"
+"            .onItem().transformToUni(msg ->\n"
+"                Uni.createFrom().completionStage(kms.decrypt(req -> req.keyId(keyArn).ciphertextBlob(msg)))\n"
+"            )\n"
+"            .onItem().transform(DecryptResponse::plaintext)\n"
+"            .onItem().transform(SdkBytes::asUtf8String);\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:284
+msgid "We create `Uni` instances from the `CompletionStage` objects returned by the asynchronous KMS client, and then transform the emitted item."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:286
+msgid "And we need to add the Netty HTTP client dependency to the `pom.xml`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:293
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"    <groupId>software.amazon.awssdk</groupId>\n"
+"    <artifactId>netty-nio-client</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/amazon-kms.adoc:295
+#, no-wrap
+msgid "Configuration Reference"
+msgstr ""

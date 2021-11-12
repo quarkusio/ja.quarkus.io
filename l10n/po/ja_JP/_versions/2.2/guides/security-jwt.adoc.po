@@ -1,0 +1,2529 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2021-11-12 13:16+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. This guide is maintained in the main Quarkus repository
+#. and pull requests should be submitted there:
+#. https://github.com/quarkusio/quarkus/tree/main/docs/src/main/asciidoc
+#. type: Title =
+#: upstream/_versions/2.2/guides/security-jwt.adoc:6
+#, no-wrap
+msgid "Using JWT RBAC"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:15
+msgid "This guide explains how your Quarkus application can utilize https://github.com/smallrye/smallrye-jwt/[SmallRye JWT] to verify https://tools.ietf.org/html/rfc7519[JSON Web Token]s, represent them as MicroProfile JWT `org.eclipse.microprofile.jwt.JsonWebToken` and provide secured access to the Quarkus HTTP endpoints using Bearer Token Authorization and https://en.wikipedia.org/wiki/Role-based_access_control[Role-Based Access Control]."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:18
+msgid "Quarkus OpenId Connect extension also supports Bearer Token Authorization and uses `smallrye-jwt` to represent the bearer tokens as `JsonWebToken`, please read the link:security-openid-connect[Using OpenID Connect to Protect Service Applications] guide for more information.  OpenId Connect extension has to be used if the Quarkus application needs to authenticate the users using OIDC Authorization Code Flow, please read link:security-openid-connect-web-authentication[Using OpenID Connect to Protect Web Applications] guide for more information."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/security-jwt.adoc:19
+#, no-wrap
+msgid "Solution"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:23
+msgid "We recommend that you follow the instructions in the next sections and create the application step by step.  However, you can skip right to the completed example."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:25
+msgid "Clone the Git repository: `git clone {quickstarts-clone-url}`, or download an {quickstarts-archive-url}[archive]."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:27
+msgid "The solution is located in the `security-jwt-quickstart` {quickstarts-tree-url}/security-jwt-quickstart[directory]."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.2/guides/security-jwt.adoc:28
+#, no-wrap
+msgid "Creating the Maven project"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:31
+msgid "First, we need a new project. Create a new project with the following command:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:41
+#, no-wrap
+msgid ""
+"mvn io.quarkus.platform:quarkus-maven-plugin:{quarkus-version}:create \\\n"
+"    -DprojectGroupId=org.acme \\\n"
+"    -DprojectArtifactId=security-jwt-quickstart \\\n"
+"    -DclassName=\"org.acme.security.jwt.TokenSecuredResource\" \\\n"
+"    -Dpath=\"/secured\" \\\n"
+"    -Dextensions=\"resteasy,resteasy-jackson,smallrye-jwt,smallrye-jwt-build\"\n"
+"cd security-jwt-quickstart\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:44
+msgid "This command generates the Maven project with a REST endpoint and imports the `smallrye-jwt` extension, which includes the {mp-jwt} support."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:47
+msgid "If you already have your Quarkus project configured, you can add the `smallrye-jwt` extension to your project by running the following command in your project base directory:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:51
+#, no-wrap
+msgid "./mvnw quarkus:add-extension -Dextensions=\"smallrye-jwt, smallrye-jwt-build\"\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:54
+msgid "This will add the following to your `pom.xml`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:65
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-smallrye-jwt</artifactId>\n"
+"</dependency>\n"
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-smallrye-jwt-build</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.2/guides/security-jwt.adoc:67
+#, no-wrap
+msgid "Examine the JAX-RS resource"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:70
+msgid "Open the `src/main/java/org/acme/security/jwt/TokenSecuredResource.java` file and see the following content:"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.2/guides/security-jwt.adoc:71
+#, no-wrap
+msgid "Basic REST Endpoint"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:75
+#: upstream/_versions/2.2/guides/security-jwt.adoc:99
+#: upstream/_versions/2.2/guides/security-jwt.adoc:213
+#: upstream/_versions/2.2/guides/security-jwt.adoc:353
+#: upstream/_versions/2.2/guides/security-jwt.adoc:498
+#, no-wrap
+msgid "package org.acme.security.jwt;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:80
+#, no-wrap
+msgid ""
+"import javax.ws.rs.GET;\n"
+"import javax.ws.rs.Path;\n"
+"import javax.ws.rs.Produces;\n"
+"import javax.ws.rs.core.MediaType;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:83
+#, no-wrap
+msgid ""
+"@Path(\"/secured\")\n"
+"public class TokenSecuredResource {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:90
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @Produces(MediaType.TEXT_PLAIN)\n"
+"    public String hello() {\n"
+"        return \"hello\";\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:93
+msgid "This is a basic REST endpoint that does not have any of the {extension-name} specific features, so let's add some."
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.2/guides/security-jwt.adoc:95
+#, no-wrap
+msgid "REST Endpoint V1"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:101
+#, no-wrap
+msgid "import java.security.Principal;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:112
+#, no-wrap
+msgid ""
+"import javax.annotation.security.PermitAll;\n"
+"import javax.enterprise.context.RequestScoped;\n"
+"import javax.inject.Inject;\n"
+"import javax.ws.rs.GET;\n"
+"import javax.ws.rs.InternalServerErrorException;\n"
+"import javax.ws.rs.Path;\n"
+"import javax.ws.rs.Produces;\n"
+"import javax.ws.rs.core.Context;\n"
+"import javax.ws.rs.core.MediaType;\n"
+"import javax.ws.rs.core.SecurityContext;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:114
+#: upstream/_versions/2.2/guides/security-jwt.adoc:227
+#, no-wrap
+msgid "import org.eclipse.microprofile.jwt.JsonWebToken;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:118
+#, no-wrap
+msgid ""
+"@Path(\"/secured\")\n"
+"@RequestScoped // <1>\n"
+"public class TokenSecuredResource {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:121
+#, no-wrap
+msgid ""
+"    @Inject\n"
+"    JsonWebToken jwt; // <2>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:129
+#, no-wrap
+msgid ""
+"    @GET()\n"
+"    @Path(\"permit-all\")\n"
+"    @PermitAll // <3>\n"
+"    @Produces(MediaType.TEXT_PLAIN)\n"
+"    public String hello(@Context SecurityContext ctx) {\n"
+"        return getResponseString(ctx); // <4>\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:145
+#, no-wrap
+msgid ""
+"    private String getResponseString(SecurityContext ctx) {\n"
+"        String name;\n"
+"        if (ctx.getUserPrincipal() == null) { // <5>\n"
+"            name = \"anonymous\";\n"
+"        } else if (!ctx.getUserPrincipal().getName().equals(jwt.getName())) { // <6>\n"
+"            throw new InternalServerErrorException(\"Principal and JsonWebToken names do not match\");\n"
+"        } else {\n"
+"            name = ctx.getUserPrincipal().getName(); // <7>\n"
+"        }\n"
+"        return String.format(\"hello + %s,\"\n"
+"            + \" isHttps: %s,\"\n"
+"            + \" authScheme: %s,\"\n"
+"            + \" hasJWT: %s\",\n"
+"            name, ctx.isSecure(), ctx.getAuthenticationScheme(), hasJwt()); // <8>\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:150
+#, no-wrap
+msgid ""
+"    private boolean hasJwt() {\n"
+"\treturn jwt.getClaimNames() != null;\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:153
+msgid "Add a `RequestScoped` as Quarkus uses a default scoping of `ApplicationScoped` and this will produce undesirable behavior since JWT claims are naturally request scoped."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:154
+msgid "Here we inject the JsonWebToken interface, an extension of the java.security.Principal interface that provides access to the claims associated with the current authenticated token."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:155
+msgid "@PermitAll is a JSR 250 common security annotation that indicates that the given endpoint is accessible by any caller, authenticated or not."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:156
+msgid "Here we inject the JAX-RS SecurityContext to inspect the security state of the call and use a `getResponseString()` function to populate a response string."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:157
+msgid "Here we check if the call is insecured by checking the request user/caller `Principal` against null."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:158
+msgid "Here we check that the Principal and JsonWebToken have the same name since JsonWebToken does represent the current Principal."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:159
+msgid "Here we get the Principal name."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:160
+msgid "The reply we build up makes use of the caller name, the `isSecure()` and `getAuthenticationScheme()` states of the request `SecurityContext`, and whether a non-null `JsonWebToken` was injected."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.2/guides/security-jwt.adoc:161
+#, no-wrap
+msgid "Run the application"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:164
+msgid "Now we are ready to run our application. Use:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:168
+#, no-wrap
+msgid "./mvnw compile quarkus:dev\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:171
+msgid "and you should see output similar to:"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.2/guides/security-jwt.adoc:172
+#, no-wrap
+msgid "quarkus:dev Output"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:186
+#, no-wrap
+msgid ""
+"$ ./mvnw compile quarkus:dev\n"
+"[INFO] Scanning for projects...\n"
+"[INFO]\n"
+"[INFO] ----------------------< org.acme:security-jwt-quickstart >-----------------------\n"
+"[INFO] Building security-jwt-quickstart 1.0.0-SNAPSHOT\n"
+"[INFO] --------------------------------[ jar ]---------------------------------\n"
+"...\n"
+"Listening for transport dt_socket at address: 5005\n"
+"2020-07-15 16:09:50,883 INFO  [io.quarkus] (Quarkus Main Thread) security-jwt-quickstart 1.0.0-SNAPSHOT on JVM (powered by Quarkus 999-SNAPSHOT) started in 1.073s. Listening on: http://0.0.0.0:8080\n"
+"2020-07-15 16:09:50,885 INFO  [io.quarkus] (Quarkus Main Thread) Profile dev activated. Live Coding activated.\n"
+"2020-07-15 16:09:50,885 INFO  [io.quarkus] (Quarkus Main Thread) Installed features: [cdi, mutiny, resteasy, resteasy-jackson, security, smallrye-context-propagation, smallrye-jwt, vertx, vertx-web]\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:189
+msgid "Now that the REST endpoint is running, we can access it using a command line tool like curl:"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.2/guides/security-jwt.adoc:190
+#, no-wrap
+msgid "curl command for /secured/permit-all"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:195
+#, no-wrap
+msgid ""
+"$ curl http://127.0.0.1:8080/secured/permit-all; echo\n"
+"hello + anonymous, isHttps: false, authScheme: null, hasJWT: false\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:199
+msgid "We have not provided any JWT in our request, so we would not expect that there is any security state seen by the endpoint, and the response is consistent with that:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:201
+msgid "user name is anonymous"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:202
+msgid "isHttps is false as https is not used"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:203
+msgid "authScheme is null"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:204
+msgid "hasJWT is false"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:206
+msgid "Use Ctrl-C to stop the Quarkus server."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:208
+msgid "So now let's actually secure something. Take a look at the new endpoint method `helloRolesAllowed` in the following:"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.2/guides/security-jwt.adoc:209
+#, no-wrap
+msgid "REST Endpoint V2"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:225
+#: upstream/_versions/2.2/guides/security-jwt.adoc:510
+#, no-wrap
+msgid ""
+"import javax.annotation.security.PermitAll;\n"
+"import javax.annotation.security.RolesAllowed;\n"
+"import javax.enterprise.context.RequestScoped;\n"
+"import javax.inject.Inject;\n"
+"import javax.ws.rs.GET;\n"
+"import javax.ws.rs.InternalServerErrorException;\n"
+"import javax.ws.rs.Path;\n"
+"import javax.ws.rs.Produces;\n"
+"import javax.ws.rs.core.Context;\n"
+"import javax.ws.rs.core.MediaType;\n"
+"import javax.ws.rs.core.SecurityContext;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:231
+#: upstream/_versions/2.2/guides/security-jwt.adoc:518
+#, no-wrap
+msgid ""
+"@Path(\"/secured\")\n"
+"@RequestScoped\n"
+"public class TokenSecuredResource {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:234
+#, no-wrap
+msgid ""
+"    @Inject\n"
+"    JsonWebToken jwt; // <1>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:242
+#: upstream/_versions/2.2/guides/security-jwt.adoc:532
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @Path(\"permit-all\")\n"
+"    @PermitAll\n"
+"    @Produces(MediaType.TEXT_PLAIN)\n"
+"    public String hello(@Context SecurityContext ctx) {\n"
+"        return getResponseString(ctx);\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:250
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @Path(\"roles-allowed\") // <2>\n"
+"    @RolesAllowed({ \"User\", \"Admin\" }) // <3>\n"
+"    @Produces(MediaType.TEXT_PLAIN)\n"
+"    public String helloRolesAllowed(@Context SecurityContext ctx) {\n"
+"        return getResponseString(ctx) + \", birthdate: \" + jwt.getClaim(\"birthdate\").toString(); // <4>\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:266
+#: upstream/_versions/2.2/guides/security-jwt.adoc:564
+#, no-wrap
+msgid ""
+"    private String getResponseString(SecurityContext ctx) {\n"
+"        String name;\n"
+"        if (ctx.getUserPrincipal() == null) {\n"
+"            name = \"anonymous\";\n"
+"        } else if (!ctx.getUserPrincipal().getName().equals(jwt.getName())) {\n"
+"            throw new InternalServerErrorException(\"Principal and JsonWebToken names do not match\");\n"
+"        } else {\n"
+"            name = ctx.getUserPrincipal().getName();\n"
+"        }\n"
+"        return String.format(\"hello + %s,\"\n"
+"            + \" isHttps: %s,\"\n"
+"            + \" authScheme: %s,\"\n"
+"            + \" hasJWT: %s\",\n"
+"            name, ctx.isSecure(), ctx.getAuthenticationScheme(), hasJwt());\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:271
+#: upstream/_versions/2.2/guides/security-jwt.adoc:569
+#, no-wrap
+msgid ""
+"    private boolean hasJwt() {\n"
+"        return jwt.getClaimNames() != null;\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:273
+msgid "Here we inject `JsonWebToken`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:274
+msgid "This new endpoint will be located at /secured/roles-allowed"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:276
+msgid "@RolesAllowed is a JSR 250 common security annotation that indicates that the given endpoint is accessible by a caller if they have either a \"User\" or \"Admin\" role assigned."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:277
+msgid "Here we build the reply the same way as in the `hello` method but also add a value of the JWT `birthdate` claim by directly calling the injected `JsonWebToken`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:279
+msgid "After you make this addition to your `TokenSecuredResource`, rerun the `./mvnw compile quarkus:dev` command, and then try `curl -v http://127.0.0.1:8080/secured/roles-allowed; echo` to attempt to access the new endpoint. Your output should be:"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.2/guides/security-jwt.adoc:280
+#, no-wrap
+msgid "curl command for /secured/roles-allowed"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:300
+#, no-wrap
+msgid ""
+"$ curl -v http://127.0.0.1:8080/secured/roles-allowed; echo\n"
+"*   Trying 127.0.0.1...\n"
+"* TCP_NODELAY set\n"
+"* Connected to 127.0.0.1 (127.0.0.1) port 8080 (#0)\n"
+"> GET /secured/roles-allowed HTTP/1.1\n"
+"> Host: 127.0.0.1:8080\n"
+"> User-Agent: curl/7.54.0\n"
+"> Accept: */*\n"
+">\n"
+"< HTTP/1.1 401 Unauthorized\n"
+"< Connection: keep-alive\n"
+"< Content-Type: text/html;charset=UTF-8\n"
+"< Content-Length: 14\n"
+"< Date: Sun, 03 Mar 2019 16:32:34 GMT\n"
+"<\n"
+"* Connection #0 to host 127.0.0.1 left intact\n"
+"Not authorized\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:303
+msgid "Excellent, we have not provided any JWT in the request, so we should not be able to access the endpoint, and we were not. Instead we received an HTTP 401 Unauthorized error. We need to obtain and pass in a valid JWT to access that endpoint. There are two steps to this, 1) configuring our {extension-name} extension with information on how to validate a JWT, and 2) generating a matching JWT with the appropriate claims."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.2/guides/security-jwt.adoc:304
+#, no-wrap
+msgid "Configuring the {extension-name} Extension Security Information"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:307
+msgid "Create a `security-jwt-quickstart/src/main/resources/application.properties` with the following content:"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.2/guides/security-jwt.adoc:308
+#, no-wrap
+msgid "application.properties for TokenSecuredResource"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:313
+#, no-wrap
+msgid ""
+"mp.jwt.verify.publickey.location=publicKey.pem #<1>\n"
+"mp.jwt.verify.issuer=https://example.com/issuer #<2>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:315
+#, no-wrap
+msgid "quarkus.native.resources.includes=publicKey.pem #<3>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:317
+msgid "We are setting public key location to point to a classpath publicKey.pem location. We will add this key in part B, <<Adding a Public Key>>."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:318
+msgid "We are setting the issuer to the URL string `https://example.com/issuer`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:319
+msgid "We are including the public key as a resource in the native executable."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.2/guides/security-jwt.adoc:320
+#, no-wrap
+msgid "Adding a Public Key"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:328
+msgid "The https://tools.ietf.org/html/rfc7519[JWT specification] defines various levels of security of JWTs that one can use.  The {mp-jwt} specification requires that JWTs that are signed with the RSA-256 signature algorithm. This in turn requires a RSA public key pair. On the REST endpoint server side, you need to configure the location of the RSA public key to use to verify the JWT sent along with requests. The `mp.jwt.verify.publickey.location=publicKey.pem` setting configured previously expects that the public key is available on the classpath as `publicKey.pem`. To accomplish this, copy the following content to a `security-jwt-quickstart/src/main/resources/publicKey.pem` file."
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.2/guides/security-jwt.adoc:329
+#, no-wrap
+msgid "RSA Public Key PEM Content"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:341
+#, no-wrap
+msgid ""
+"-----BEGIN PUBLIC KEY-----\n"
+"MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlivFI8qB4D0y2jy0CfEq\n"
+"Fyy46R0o7S8TKpsx5xbHKoU1VWg6QkQm+ntyIv1p4kE1sPEQO73+HY8+Bzs75XwR\n"
+"TYL1BmR1w8J5hmjVWjc6R2BTBGAYRPFRhor3kpM6ni2SPmNNhurEAHw7TaqszP5e\n"
+"UF/F9+KEBWkwVta+PZ37bwqSE4sCb1soZFrVz/UT/LF4tYpuVYt3YbqToZ3pZOZ9\n"
+"AX2o1GCG3xwOjkc4x0W7ezbQZdC9iftPxVHR8irOijJRRjcPDtA6vPKpzLl6CyYn\n"
+"sIYPd99ltwxTHjr3npfv/3Lw50bAkbT4HeLFxTx4flEoZLKO/g0bAoV2uqBhkA9x\n"
+"nQIDAQAB\n"
+"-----END PUBLIC KEY-----\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.2/guides/security-jwt.adoc:343
+#, no-wrap
+msgid "Generating a JWT"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:346
+msgid "Often one obtains a JWT from an identity manager like https://www.keycloak.org/[Keycloak], but for this quickstart we will generate our own using the JWT generation API provided by `smallrye-jwt` (see <<generate-jwt-tokens, Generate JWT tokens with SmallRye JWT>> for more information)."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:348
+msgid "Take the code from the following listing and place into `security-jwt-quickstart/src/main/java/org/acme/security/jwt/GenerateToken.java`:"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.2/guides/security-jwt.adoc:349
+#, no-wrap
+msgid "GenerateToken main Driver Class"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:356
+#, no-wrap
+msgid ""
+"import java.util.Arrays;\n"
+"import java.util.HashSet;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:358
+#, no-wrap
+msgid "import org.eclipse.microprofile.jwt.Claims;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:360
+#, no-wrap
+msgid "import io.smallrye.jwt.build.Jwt;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:375
+#, no-wrap
+msgid ""
+"public class GenerateToken {\n"
+"    /**\n"
+"     * Generate JWT token\n"
+"     */\n"
+"    public static void main(String[] args) {\n"
+"        String token =\n"
+"           Jwt.issuer(\"https://example.com/issuer\") // <1>\n"
+"             .upn(\"jdoe@quarkus.io\") // <2>\n"
+"             .groups(new HashSet<>(Arrays.asList(\"User\", \"Admin\"))) // <3>\n"
+"             .claim(Claims.birthdate.name(), \"2001-07-13\") // <4>\n"
+"           .sign();\n"
+"        System.out.println(token);\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:379
+msgid "The `iss` claim is the issuer of the JWT. This needs to match the server side `mp.jwt.verify.issuer`.  in order for the token to be accepted as valid."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:381
+msgid "The `upn` claim is defined by the {mp-jwt} spec as preferred claim to use for the `Principal` seen via the container security APIs."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:382
+msgid "The `group` claim provides the groups and top-level roles associated with the JWT bearer."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:383
+msgid "The `birthday` claim. It can be considered to be a sensitive claim so you may want to consider encrypting the claims, see <<generate-jwt-tokens, Generate JWT tokens with SmallRye JWT>>."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:385
+msgid "Note for this code to work we need the content of the RSA private key that corresponds to the public key we have in the TokenSecuredResource application. Take the following PEM content and place it into `security-jwt-quickstart/src/test/resources/privateKey.pem`:"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.2/guides/security-jwt.adoc:386
+#, no-wrap
+msgid "RSA Private Key PEM Content"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:417
+#, no-wrap
+msgid ""
+"-----BEGIN PRIVATE KEY-----\n"
+"MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCWK8UjyoHgPTLa\n"
+"PLQJ8SoXLLjpHSjtLxMqmzHnFscqhTVVaDpCRCb6e3Ii/WniQTWw8RA7vf4djz4H\n"
+"OzvlfBFNgvUGZHXDwnmGaNVaNzpHYFMEYBhE8VGGiveSkzqeLZI+Y02G6sQAfDtN\n"
+"qqzM/l5QX8X34oQFaTBW1r49nftvCpITiwJvWyhkWtXP9RP8sXi1im5Vi3dhupOh\n"
+"nelk5n0BfajUYIbfHA6ORzjHRbt7NtBl0L2J+0/FUdHyKs6KMlFGNw8O0Dq88qnM\n"
+"uXoLJiewhg9332W3DFMeOveel+//cvDnRsCRtPgd4sXFPHh+UShkso7+DRsChXa6\n"
+"oGGQD3GdAgMBAAECggEAAjfTSZwMHwvIXIDZB+yP+pemg4ryt84iMlbofclQV8hv\n"
+"6TsI4UGwcbKxFOM5VSYxbNOisb80qasb929gixsyBjsQ8284bhPJR7r0q8h1C+jY\n"
+"URA6S4pk8d/LmFakXwG9Tz6YPo3pJziuh48lzkFTk0xW2Dp4SLwtAptZY/+ZXyJ6\n"
+"96QXDrZKSSM99Jh9s7a0ST66WoxSS0UC51ak+Keb0KJ1jz4bIJ2C3r4rYlSu4hHB\n"
+"Y73GfkWORtQuyUDa9yDOem0/z0nr6pp+pBSXPLHADsqvZiIhxD/O0Xk5I6/zVHB3\n"
+"zuoQqLERk0WvA8FXz2o8AYwcQRY2g30eX9kU4uDQAQKBgQDmf7KGImUGitsEPepF\n"
+"KH5yLWYWqghHx6wfV+fdbBxoqn9WlwcQ7JbynIiVx8MX8/1lLCCe8v41ypu/eLtP\n"
+"iY1ev2IKdrUStvYRSsFigRkuPHUo1ajsGHQd+ucTDf58mn7kRLW1JGMeGxo/t32B\n"
+"m96Af6AiPWPEJuVfgGV0iwg+HQKBgQCmyPzL9M2rhYZn1AozRUguvlpmJHU2DpqS\n"
+"34Q+7x2Ghf7MgBUhqE0t3FAOxEC7IYBwHmeYOvFR8ZkVRKNF4gbnF9RtLdz0DMEG\n"
+"5qsMnvJUSQbNB1yVjUCnDAtElqiFRlQ/k0LgYkjKDY7LfciZl9uJRl0OSYeX/qG2\n"
+"tRW09tOpgQKBgBSGkpM3RN/MRayfBtmZvYjVWh3yjkI2GbHA1jj1g6IebLB9SnfL\n"
+"WbXJErCj1U+wvoPf5hfBc7m+jRgD3Eo86YXibQyZfY5pFIh9q7Ll5CQl5hj4zc4Y\n"
+"b16sFR+xQ1Q9Pcd+BuBWmSz5JOE/qcF869dthgkGhnfVLt/OQzqZluZRAoGAXQ09\n"
+"nT0TkmKIvlza5Af/YbTqEpq8mlBDhTYXPlWCD4+qvMWpBII1rSSBtftgcgca9XLB\n"
+"MXmRMbqtQeRtg4u7dishZVh1MeP7vbHsNLppUQT9Ol6lFPsd2xUpJDc6BkFat62d\n"
+"Xjr3iWNPC9E9nhPPdCNBv7reX7q81obpeXFMXgECgYEAmk2Qlus3OV0tfoNRqNpe\n"
+"Mb0teduf2+h3xaI1XDIzPVtZF35ELY/RkAHlmWRT4PCdR0zXDidE67L6XdJyecSt\n"
+"FdOUH8z5qUraVVebRFvJqf/oGsXc4+ex1ZKUTbY0wqY1y9E39yvB3MaTmZFuuqk8\n"
+"f3cg+fr8aou7pr9SHhJlZCU=\n"
+"-----END PRIVATE KEY-----\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:420
+msgid "We will use a `smallrye.jwt.sign.key.location` property to point to this private signing key."
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.2/guides/security-jwt.adoc:422
+#, no-wrap
+msgid "Generating Keys with OpenSSL"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.2/guides/security-jwt.adoc:425
+msgid "It is also possible to generate a public and private key pair using the OpenSSL command line tool."
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.2/guides/security-jwt.adoc:426
+#, no-wrap
+msgid "openssl commands for generating keys"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:431
+#, no-wrap
+msgid ""
+"openssl genrsa -out rsaPrivateKey.pem 2048\n"
+"openssl rsa -pubout -in rsaPrivateKey.pem -out publicKey.pem\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:434
+msgid "An additional step is needed for generating the private key for converting it into the PKCS#8 format."
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.2/guides/security-jwt.adoc:435
+#, no-wrap
+msgid "openssl command for converting private key"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:439
+#, no-wrap
+msgid "openssl pkcs8 -topk8 -nocrypt -inform pem -in rsaPrivateKey.pem -outform pem -out privateKey.pem\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:442
+msgid "You can use the generated pair of keys instead of the keys used in this quickstart."
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.2/guides/security-jwt.adoc:445
+msgid "Now we can generate a JWT to use with `TokenSecuredResource` endpoint. To do this, run the following command:"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.2/guides/security-jwt.adoc:446
+#, no-wrap
+msgid "Command to Generate JWT"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.2/guides/security-jwt.adoc:448
+#, no-wrap
+msgid "Sample JWT Generation Output"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:452
+#, no-wrap
+msgid "$ mvn exec:java -Dexec.mainClass=org.acme.security.jwt.GenerateToken -Dexec.classpathScope=test -Dsmallrye.jwt.sign.key.location=privateKey.pem\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:454
+#, no-wrap
+msgid "eyJraWQiOiJcL3ByaXZhdGVLZXkucGVtIiwidHlwIjoiSldUIiwiYWxnIjoiUlMyNTYifQ.eyJzdWIiOiJqZG9lLXVzaW5nLWp3dC1yYmFjIiwiYXVkIjoidXNpbmctand0LXJiYWMiLCJ1cG4iOiJqZG9lQHF1YXJrdXMuaW8iLCJiaXJ0aGRhdGUiOiIyMDAxLTA3LTEzIiwiYXV0aF90aW1lIjoxNTUxNjU5Njc2LCJpc3MiOiJodHRwczpcL1wvcXVhcmt1cy5pb1wvdXNpbmctand0LXJiYWMiLCJyb2xlTWFwcGluZ3MiOnsiZ3JvdXAyIjoiR3JvdXAyTWFwcGVkUm9sZSIsImdyb3VwMSI6Ikdyb3VwMU1hcHBlZFJvbGUifSwiZ3JvdXBzIjpbIkVjaG9lciIsIlRlc3RlciIsIlN1YnNjcmliZXIiLCJncm91cDIiXSwicHJlZmVycmVkX3VzZXJuYW1lIjoiamRvZSIsImV4cCI6MTU1MTY1OTk3NiwiaWF0IjoxNTUxNjU5Njc2LCJqdGkiOiJhLTEyMyJ9.O9tx_wNNS4qdpFhxeD1e7v4aBNWz1FCq0UV8qmXd7dW9xM4hA5TO-ZREk3ApMrL7_rnX8z81qGPIo_R8IfHDyNaI1SLD56gVX-NaOLS2OjfcbO3zOWJPKR_BoZkYACtMoqlWgIwIRC-wJKUJU025dHZiNL0FWO4PjwuCz8hpZYXIuRscfFhXKrDX1fh3jDhTsOEFfu67ACd85f3BdX9pe-ayKSVLh_RSbTbBPeyoYPE59FW7H5-i8IE-Gqu838Hz0i38ksEJFI25eR-AJ6_PSUD0_-TV3NjXhF3bFIeT4VSaIZcpibekoJg0cQm-4ApPEcPLdgTejYHA-mupb8hSwg\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:458
+msgid "The JWT string is the Base64 URL encoded string that has 3 parts separated by '.' characters.  First part - JWT headers, second part - JWT claims, third part - JWT signature."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/security-jwt.adoc:459
+#, no-wrap
+msgid "Finally, Secured Access to /secured/roles-allowed"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:461
+msgid "Now let's use this to make a secured request to the /secured/roles-allowed endpoint. Make sure you have the Quarkus server running using the `./mvnw compile quarkus:dev` command, and then run the following command, making sure to use your version of the generated JWT from the previous step:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:465
+#, no-wrap
+msgid "curl -H \"Authorization: Bearer eyJraWQiOiJcL3ByaXZhdGVLZXkucGVtIiwidHlwIjoiSldUIiwiYWxnIjoiUlMyNTYifQ.eyJzdWIiOiJqZG9lLXVzaW5nLWp3dC1yYmFjIiwiYXVkIjoidXNpbmctand0LXJiYWMiLCJ1cG4iOiJqZG9lQHF1YXJrdXMuaW8iLCJiaXJ0aGRhdGUiOiIyMDAxLTA3LTEzIiwiYXV0aF90aW1lIjoxNTUxNjUyMDkxLCJpc3MiOiJodHRwczpcL1wvcXVhcmt1cy5pb1wvdXNpbmctand0LXJiYWMiLCJyb2xlTWFwcGluZ3MiOnsiZ3JvdXAyIjoiR3JvdXAyTWFwcGVkUm9sZSIsImdyb3VwMSI6Ikdyb3VwMU1hcHBlZFJvbGUifSwiZ3JvdXBzIjpbIkVjaG9lciIsIlRlc3RlciIsIlN1YnNjcmliZXIiLCJncm91cDIiXSwicHJlZmVycmVkX3VzZXJuYW1lIjoiamRvZSIsImV4cCI6MTU1MTY1MjM5MSwiaWF0IjoxNTUxNjUyMDkxLCJqdGkiOiJhLTEyMyJ9.aPA4Rlc4kw7n_OZZRRk25xZydJy_J_3BRR8ryYLyHTO1o68_aNWWQCgpnAuOW64svPhPnLYYnQzK-l2vHX34B64JySyBD4y_vRObGmdwH_SEufBAWZV7mkG3Y4mTKT3_4EWNu4VH92IhdnkGI4GJB6yHAEzlQI6EdSOa4Nq8Gp4uPGqHsUZTJrA3uIW0TbNshFBm47-oVM3ZUrBz57JKtr0e9jv0HjPQWyvbzx1HuxZd6eA8ow8xzvooKXFxoSFCMnxotd3wagvYQ9ysBa89bgzL-lhjWtusuMFDUVYwFqADE7oOSOD4Vtclgq8svznBQ-YpfTHfb9QEcofMlpyjNA\" http://127.0.0.1:8080/secured/roles-allowed; echo\n"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.2/guides/security-jwt.adoc:467
+#, no-wrap
+msgid "curl Command for /secured/roles-allowed With JWT"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:472
+#, no-wrap
+msgid ""
+"$ curl -H \"Authorization: Bearer eyJraWQ...\" http://127.0.0.1:8080/secured/roles-allowed; echo\n"
+"hello + jdoe@quarkus.io, isHttps: false, authScheme: Bearer, hasJWT: true, birthdate: 2001-07-13\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:475
+msgid "Success! We now have:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:477
+msgid "a non-anonymous caller name of jdoe@quarkus.io"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:478
+msgid "an authentication scheme of Bearer"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:479
+msgid "a non-null JsonWebToken"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:480
+msgid "birthdate claim value"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.2/guides/security-jwt.adoc:481
+#, no-wrap
+msgid "Using the JsonWebToken and Claim Injection"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:488
+msgid "Now that we can generate a JWT to access our secured REST endpoints, let's see what more we can do with the `JsonWebToken` interface and the JWT claims. The `org.eclipse.microprofile.jwt.JsonWebToken` interface extends the `java.security.Principal` interface, and is in fact the type of the object that is returned by the `javax.ws.rs.core.SecurityContext#getUserPrincipal()` call we used previously. This means that code that does not use CDI but does have access to the REST container `SecurityContext` can get hold of the caller `JsonWebToken` interface by casting the `SecurityContext#getUserPrincipal()`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:491
+msgid "The `JsonWebToken` interface defines methods for accessing claims in the underlying JWT. It provides accessors for common claims that are required by the {mp-jwt} specification as well as arbitrary claims that may exist in the JWT."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:494
+msgid "All the JWT claims can also be injected. Let's expand our `TokenSecuredResource` with another endpoint /secured/roles-allowed-admin which uses the injected `birthdate` claim (as opposed to getting it from `JsonWebToken`):"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:514
+#, no-wrap
+msgid ""
+"import org.eclipse.microprofile.jwt.Claim;\n"
+"import org.eclipse.microprofile.jwt.Claims;\n"
+"import org.eclipse.microprofile.jwt.JsonWebToken;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:524
+#, no-wrap
+msgid ""
+"    @Inject\n"
+"    JsonWebToken jwt;\n"
+"    @Inject\n"
+"    @Claim(standard = Claims.birthdate)\n"
+"    String birthdate; // <1>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:540
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @Path(\"roles-allowed\")\n"
+"    @RolesAllowed({ \"User\", \"Admin\" })\n"
+"    @Produces(MediaType.TEXT_PLAIN)\n"
+"    public String helloRolesAllowed(@Context SecurityContext ctx) {\n"
+"        return getResponseString(ctx) + \", birthdate: \" + jwt.getClaim(\"birthdate\").toString();\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:548
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @Path(\"roles-allowed-admin\")\n"
+"    @RolesAllowed(\"Admin\")\n"
+"    @Produces(MediaType.TEXT_PLAIN)\n"
+"    public String helloRolesAllowedAdmin(@Context SecurityContext ctx) {\n"
+"        return getResponseString(ctx) + \", birthdate: \" + birthdate; // <2>\n"
+"    }\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:571
+msgid "Here we use the injected `birthday` claim."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:572
+msgid "Here we use the injected `birthday` claim to build the final reply."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:574
+msgid "Now generate the token again and run:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:578
+#, no-wrap
+msgid "curl -H \"Authorization: Bearer eyJraWQiOiJcL3ByaXZhdGVLZXkucGVtIiwidHlwIjoiSldUIiwiYWxnIjoiUlMyNTYifQ.eyJzdWIiOiJqZG9lLXVzaW5nLWp3dC1yYmFjIiwiYXVkIjoidXNpbmctand0LXJiYWMiLCJ1cG4iOiJqZG9lQHF1YXJrdXMuaW8iLCJiaXJ0aGRhdGUiOiIyMDAxLTA3LTEzIiwiYXV0aF90aW1lIjoxNTUxNjUyMDkxLCJpc3MiOiJodHRwczpcL1wvcXVhcmt1cy5pb1wvdXNpbmctand0LXJiYWMiLCJyb2xlTWFwcGluZ3MiOnsiZ3JvdXAyIjoiR3JvdXAyTWFwcGVkUm9sZSIsImdyb3VwMSI6Ikdyb3VwMU1hcHBlZFJvbGUifSwiZ3JvdXBzIjpbIkVjaG9lciIsIlRlc3RlciIsIlN1YnNjcmliZXIiLCJncm91cDIiXSwicHJlZmVycmVkX3VzZXJuYW1lIjoiamRvZSIsImV4cCI6MTU1MTY1MjM5MSwiaWF0IjoxNTUxNjUyMDkxLCJqdGkiOiJhLTEyMyJ9.aPA4Rlc4kw7n_OZZRRk25xZydJy_J_3BRR8ryYLyHTO1o68_aNWWQCgpnAuOW64svPhPnLYYnQzK-l2vHX34B64JySyBD4y_vRObGmdwH_SEufBAWZV7mkG3Y4mTKT3_4EWNu4VH92IhdnkGI4GJB6yHAEzlQI6EdSOa4Nq8Gp4uPGqHsUZTJrA3uIW0TbNshFBm47-oVM3ZUrBz57JKtr0e9jv0HjPQWyvbzx1HuxZd6eA8ow8xzvooKXFxoSFCMnxotd3wagvYQ9ysBa89bgzL-lhjWtusuMFDUVYwFqADE7oOSOD4Vtclgq8svznBQ-YpfTHfb9QEcofMlpyjNA\" http://127.0.0.1:8080/secured/roles-allowed-admin; echo\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:584
+#, no-wrap
+msgid ""
+"$ curl -H \"Authorization: Bearer eyJraWQ...\" http://127.0.0.1:8080/secured/roles-allowed-admin; echo\n"
+"hello + jdoe@quarkus.io, isHttps: false, authScheme: Bearer, hasJWT: true, birthdate: 2001-07-13\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.2/guides/security-jwt.adoc:586
+#, no-wrap
+msgid "Package and run the application"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:588
+msgid "As usual, the application can be packaged using `./mvnw clean package` and executed using the `target/quarkus-app/quarkus-run.jar` file:"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.2/guides/security-jwt.adoc:588
+#, no-wrap
+msgid "Runner jar Example"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:594
+#, no-wrap
+msgid ""
+"$ ./mvnw clean package\n"
+"[INFO] Scanning for projects...\n"
+"...\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:598
+#, no-wrap
+msgid ""
+"$ java -jar target/quarkus-app/quarkus-run.jar\n"
+"2019-03-28 14:27:48,839 INFO  [io.quarkus] (main) Quarkus {quarkus-version} started in 0.796s. Listening on: http://[::]:8080\n"
+"2019-03-28 14:27:48,841 INFO  [io.quarkus] (main) Installed features: [cdi, resteasy, resteasy-jackson, security, smallrye-jwt]\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:601
+msgid "You can also generate the native executable with `./mvnw clean package -Pnative`."
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.2/guides/security-jwt.adoc:601
+#, no-wrap
+msgid "Native Executable Example"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:621
+#, no-wrap
+msgid ""
+"$ ./mvnw clean package -Pnative\n"
+"[INFO] Scanning for projects...\n"
+"...\n"
+"[security-jwt-quickstart-runner:25602]     universe:     493.17 ms\n"
+"[security-jwt-quickstart-runner:25602]      (parse):     660.41 ms\n"
+"[security-jwt-quickstart-runner:25602]     (inline):   1,431.10 ms\n"
+"[security-jwt-quickstart-runner:25602]    (compile):   7,301.78 ms\n"
+"[security-jwt-quickstart-runner:25602]      compile:  10,542.16 ms\n"
+"[security-jwt-quickstart-runner:25602]        image:   2,797.62 ms\n"
+"[security-jwt-quickstart-runner:25602]        write:     988.24 ms\n"
+"[security-jwt-quickstart-runner:25602]      [total]:  43,778.16 ms\n"
+"[INFO] ------------------------------------------------------------------------\n"
+"[INFO] BUILD SUCCESS\n"
+"[INFO] ------------------------------------------------------------------------\n"
+"[INFO] Total time:  51.500 s\n"
+"[INFO] Finished at: 2019-03-28T14:30:56-07:00\n"
+"[INFO] ------------------------------------------------------------------------\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:625
+#, no-wrap
+msgid ""
+"$ ./target/security-jwt-quickstart-runner\n"
+"2019-03-28 14:31:37,315 INFO  [io.quarkus] (main) Quarkus 0.12.0 started in 0.006s. Listening on: http://[::]:8080\n"
+"2019-03-28 14:31:37,316 INFO  [io.quarkus] (main) Installed features: [cdi, resteasy, resteasy-jackson, security, smallrye-jwt]\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.2/guides/security-jwt.adoc:627
+#, no-wrap
+msgid "Explore the Solution"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:633
+msgid "The solution repository located in the `security-jwt-quickstart` {quickstarts-tree-url}/security-jwt-quickstart[directory] contains all of the versions we have worked through in this quickstart guide as well as some additional endpoints that illustrate subresources with injection of ``JsonWebToken``s and their claims into those using the CDI APIs. We suggest that you check out the quickstart solutions and explore the `security-jwt-quickstart` directory to learn more about the {extension-name} extension features."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/security-jwt.adoc:635
+#, no-wrap
+msgid "Configuration Reference"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.2/guides/security-jwt.adoc:637
+#, no-wrap
+msgid "Quarkus configuration"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.2/guides/security-jwt.adoc:641
+#, no-wrap
+msgid "MicroProfile JWT configuration"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:645
+#: upstream/_versions/2.2/guides/security-jwt.adoc:673
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1089
+#, no-wrap
+msgid "Property Nam"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:645
+#: upstream/_versions/2.2/guides/security-jwt.adoc:673
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1089
+#, no-wrap
+msgid "Default"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:646
+#: upstream/_versions/2.2/guides/security-jwt.adoc:674
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1090
+#, no-wrap
+msgid "Description"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:646
+#, no-wrap
+msgid "mp.jwt.verify.publickey"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:646
+#: upstream/_versions/2.2/guides/security-jwt.adoc:647
+#: upstream/_versions/2.2/guides/security-jwt.adoc:649
+#: upstream/_versions/2.2/guides/security-jwt.adoc:650
+#: upstream/_versions/2.2/guides/security-jwt.adoc:651
+#: upstream/_versions/2.2/guides/security-jwt.adoc:653
+#: upstream/_versions/2.2/guides/security-jwt.adoc:680
+#: upstream/_versions/2.2/guides/security-jwt.adoc:683
+#: upstream/_versions/2.2/guides/security-jwt.adoc:684
+#: upstream/_versions/2.2/guides/security-jwt.adoc:686
+#: upstream/_versions/2.2/guides/security-jwt.adoc:687
+#: upstream/_versions/2.2/guides/security-jwt.adoc:688
+#: upstream/_versions/2.2/guides/security-jwt.adoc:690
+#: upstream/_versions/2.2/guides/security-jwt.adoc:694
+#: upstream/_versions/2.2/guides/security-jwt.adoc:695
+#: upstream/_versions/2.2/guides/security-jwt.adoc:696
+#: upstream/_versions/2.2/guides/security-jwt.adoc:698
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1095
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1096
+#, no-wrap
+msgid "non"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:647
+#, no-wrap
+msgid "The `mp.jwt.verify.publickey` config property allows the Public Key text itself to be supplied as a string.  The Public Key will be parsed from the supplied string in the order defined in section <<Supported Public Key Formats>>."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:647
+#, no-wrap
+msgid "mp.jwt.verify.publickey.location"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:648
+#, no-wrap
+msgid "Config property allows for an external or internal location of Public Key to be specified.  The value may be a relative path or a URL. If the value points to an HTTPS based JWK set then, for it to work in native mode, the `quarkus.ssl.native` property must also be set to `true`, see link:native-and-ssl[Using SSL With Native Executables] for more details."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:648
+#, no-wrap
+msgid "mp.jwt.verify.publickey.algorith"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:648
+#: upstream/_versions/2.2/guides/security-jwt.adoc:675
+#, no-wrap
+msgid "`RS256`"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:649
+#, no-wrap
+msgid "Signature algorithm. Set it to `ES256` to support the Elliptic Curve signature algorithm."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:649
+#, no-wrap
+msgid "mp.jwt.decrypt.key.location"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:650
+#, no-wrap
+msgid "Config property allows for an external or internal location of Private Decryption Key to be specified."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:650
+#, no-wrap
+msgid "mp.jwt.verify.issuer"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:651
+#, no-wrap
+msgid "Config property specifies the value of the `iss` (issuer) claim of the JWT that the server will accept as valid."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:651
+#, no-wrap
+msgid "mp.jwt.verify.audience"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:652
+#, no-wrap
+msgid "Comma separated list of the audiences that a token `aud` claim may contain."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:652
+#, no-wrap
+msgid "mp.jwt.token.header"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:652
+#: upstream/_versions/2.2/guides/security-jwt.adoc:679
+#, no-wrap
+msgid "`Authorization`"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:653
+#, no-wrap
+msgid "Set this property if another header such as `Cookie` is used to pass the token."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:653
+#, no-wrap
+msgid "mp.jwt.token.cooki"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:654
+#, no-wrap
+msgid "Name of the cookie containing a token. This property will be effective only if `mp.jwt.token.header` is set to `Cookie`."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.2/guides/security-jwt.adoc:656
+#, no-wrap
+msgid "Supported Public Key Formats"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:660
+msgid "Public Keys may be formatted in any of the following formats, specified in order of precedence:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:662
+msgid "Public Key Cryptography Standards #8 (PKCS#8) PEM"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:663
+msgid "JSON Web Key (JWK)"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:664
+msgid "JSON Web Key Set (JWKS)"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:665
+msgid "JSON Web Key (JWK) Base64 URL encoded"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:666
+msgid "JSON Web Key Set (JWKS) Base64 URL encoded"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.2/guides/security-jwt.adoc:667
+#, no-wrap
+msgid "Additional SmallRye JWT configuration"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:670
+msgid "SmallRye JWT provides more properties which can be used to customize the token processing:"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:674
+#, no-wrap
+msgid "smallrye.jwt.verify.key.location"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:674
+#, no-wrap
+msgid "NONE"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:675
+#, no-wrap
+msgid "Location of the verification key which can point to both public and secret keys. Secret keys can only be in the JWK format. Note that 'mp.jwt.verify.publickey.location' will be ignored if this property is set."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:675
+#, no-wrap
+msgid "smallrye.jwt.verify.algorith"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:676
+#, no-wrap
+msgid "Signature algorithm. Set it to `ES256` to support the Elliptic Curve signature algorithm. This property is deprecated, use `mp.jwt.verify.publickey.algorithm`."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:676
+#, no-wrap
+msgid "smallrye.jwt.verify.key-format"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:676
+#, no-wrap
+msgid "`ANY`"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:677
+#, no-wrap
+msgid "Set this property to a specific key format such as `PEM_KEY`, `PEM_CERTIFICATE`, `JWK` or `JWK_BASE64URL` to optimize the way the verification key is loaded."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:677
+#, no-wrap
+msgid "smallrye.jwt.verify.relax-key-validation"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:677
+#: upstream/_versions/2.2/guides/security-jwt.adoc:678
+#: upstream/_versions/2.2/guides/security-jwt.adoc:681
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1097
+#, no-wrap
+msgid "fals"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:678
+#, no-wrap
+msgid "Relax the validation of the verification keys, setting this property to `true` will allow public RSA keys with the length less than 2048 bit."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:678
+#, no-wrap
+msgid "smallrye.jwt.verify.certificate-thumbprint"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:679
+#, no-wrap
+msgid "If this property is enabled then a signed token must contain either 'x5t' or 'x5t#S256' X509Certificate thumbprint headers. Verification keys can only be in JWK or PEM Certificate key formats in this case. JWK keys must have a 'x5c' (Base64-encoded X509Certificate) property set."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:679
+#, no-wrap
+msgid "smallrye.jwt.token.header"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:680
+#, no-wrap
+msgid "Set this property if another header such as `Cookie` is used to pass the token. This property is deprecated - use 'mp.jwt.token.header'."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:680
+#, no-wrap
+msgid "smallrye.jwt.token.cooki"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:681
+#, no-wrap
+msgid "Name of the cookie containing a token. This property will be effective only if `smallrye.jwt.token.header` is set to `Cookie`. This property is deprecated - use 'mp.jwt.token.cookie`."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:681
+#, no-wrap
+msgid "smallrye.jwt.always-check-authorization"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:682
+#, no-wrap
+msgid "Set this property to `true` for `Authorization` header be checked even if the `smallrye.jwt.token.header` is set to `Cookie` but no cookie with a `smallrye.jwt.token.cookie` name exists."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:682
+#, no-wrap
+msgid "smallrye.jwt.token.scheme"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:682
+#, no-wrap
+msgid "`Bearer`"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:683
+#, no-wrap
+msgid "Comma-separated list containing an alternative single or multiple schemes, for example, `DPoP`."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:683
+#, no-wrap
+msgid "smallrye.jwt.token.ki"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:684
+#, no-wrap
+msgid "Key identifier. If it is set then the verification JWK key as well every JWT token must have a matching `kid` header."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:684
+#, no-wrap
+msgid "smallrye.jwt.time-to-liv"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:685
+#, no-wrap
+msgid "The maximum number of seconds that a JWT may be issued for use. Effectively, the difference between the expiration date of the JWT and the issued at date must not exceed this value. Setting this property to a non-positive value relaxes the requirement for the token to have a valid 'iat' (issued at) claim."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:685
+#, no-wrap
+msgid "smallrye.jwt.require.named-principa"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:685
+#, no-wrap
+msgid "`true`"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:686
+#, no-wrap
+msgid "If an application relies on `java.security.Principal` returning a name then a token must have a `upn` or `preferred_username` or `sub` claim set. Setting this property will result in SmallRye JWT throwing an exception if none of these claims is available for the application code to reliably deal with a non-null `Principal` name."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:686
+#, no-wrap
+msgid "smallrye.jwt.path.sub"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:687
+#, no-wrap
+msgid "Path to the claim containing the subject name. It starts from the top level JSON object and can contain multiple segments where each segment represents a JSON object name only, example: `realms/subject`. This property can be used if a token has no 'sub' claim but has the subject set in a different claim. Use double quotes with the namespace qualified claims."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:687
+#, no-wrap
+msgid "smallrye.jwt.claims.sub"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:688
+#, no-wrap
+msgid "This property can be used to set a default sub claim value when the current token has no standard or custom `sub` claim available. Effectively this property can be used to customize `java.security.Principal` name if no `upn` or `preferred_username` or `sub` claim is set."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:688
+#, no-wrap
+msgid "smallrye.jwt.path.group"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:689
+#, no-wrap
+msgid "Path to the claim containing the groups. It starts from the top level JSON object and can contain multiple segments where each segment represents a JSON object name only, example: `realm/groups`. This property can be used if a token has no 'groups' claim but has the groups set in a different claim. Use double quotes with the namespace qualified claims."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:689
+#, no-wrap
+msgid "smallrye.jwt.groups-separator"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:689
+#, no-wrap
+msgid "' '"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:690
+#, no-wrap
+msgid "Separator for splitting a string which may contain multiple group values. It will only be used if the `smallrye.jwt.path.groups` property points to a custom claim whose value is a string. The default value is a single space because a standard OAuth2 `scope` claim may contain a space separated sequence."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:690
+#, no-wrap
+msgid "smallrye.jwt.claims.group"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:691
+#, no-wrap
+msgid "This property can be used to set a default groups claim value when the current token has no standard or custom groups claim available."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:691
+#, no-wrap
+msgid "smallrye.jwt.jwks.refresh-interva"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:691
+#: upstream/_versions/2.2/guides/security-jwt.adoc:693
+#, no-wrap
+msgid "60"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:692
+#, no-wrap
+msgid "JWK cache refresh interval in minutes. It will be ignored unless the `mp.jwt.verify.publickey.location` points to the HTTP or HTTPS URL based JWK set and no HTTP `Cache-Control` response header with a positive `max-age` parameter value is returned from a JWK HTTPS endpoint."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:692
+#, no-wrap
+msgid "smallrye.jwt.jwks.forced-refresh-interva"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:692
+#, no-wrap
+msgid "30"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:693
+#, no-wrap
+msgid "Forced JWK cache refresh interval in minutes which is used to restrict the frequency of the forced refresh attempts which may happen when the token verification fails due to the cache having no JWK key with a `kid` property matching the current token's `kid` header. It will be ignored unless the `mp.jwt.verify.publickey.location` points to the HTTP or HTTPS URL based JWK set."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:693
+#, no-wrap
+msgid "smallrye.jwt.expiration.grac"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:694
+#, no-wrap
+msgid "Expiration grace in seconds. By default an expired token will still be accepted if the current time is no more than 1 min after the token expiry time."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:694
+#, no-wrap
+msgid "smallrye.jwt.verify.au"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:695
+#, no-wrap
+msgid "Comma separated list of the audiences that a token `aud` claim may contain. This property is deprecated - use `mp.jwt.verify.audiences`."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:695
+#, no-wrap
+msgid "smallrye.jwt.required.claim"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:696
+#, no-wrap
+msgid "Comma separated list of the claims that a token must contain."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:696
+#, no-wrap
+msgid "smallrye.jwt.decrypt.key.location"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:697
+#, no-wrap
+msgid "Config property allows for an external or internal location of Private Decryption Key to be specified. This property is deprecated - use 'mp.jwt.decrypt.key.location'."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:697
+#, no-wrap
+msgid "smallrye.jwt.decrypt.algorith"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:697
+#, no-wrap
+msgid "`RSA_OAEP`"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:698
+#, no-wrap
+msgid "Decryption algorithm."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:698
+#, no-wrap
+msgid "smallrye.jwt.token.decryption.ki"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:699
+#, no-wrap
+msgid "Decryption Key identifier. If it is set then the decryption JWK key as well every JWT token must have a matching `kid` header."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/security-jwt.adoc:701
+#, no-wrap
+msgid "Create JsonWebToken with JWTParser"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:704
+msgid "If the JWT token can not be injected, for example, if it is embedded in the service request payload or the service endpoint acquires it out of band, then one can use `JWTParser`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:711
+#, no-wrap
+msgid ""
+"import org.eclipse.microprofile.jwt.JsonWebToken;\n"
+"import io.smallrye.jwt.auth.principal.JWTParser;\n"
+"...\n"
+"@Inject JWTParser parser;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:713
+#, no-wrap
+msgid "String token = getTokenFromOidcServer();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:716
+#, no-wrap
+msgid ""
+"// Parse and verify the token\n"
+"JsonWebToken jwt = parser.parse(token);\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:719
+msgid "You can also use it to customize the way the token is verified or decrypted. For example, one can supply a local `SecretKey`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:729
+#, no-wrap
+msgid ""
+"import javax.crypto.SecretKey;\n"
+"import javax.ws.rs.GET;\n"
+"import javax.ws.rs.core.NewCookie;\n"
+"import javax.ws.rs.core.Response;\n"
+"import org.eclipse.microprofile.jwt.JsonWebToken;\n"
+"import io.smallrye.jwt.auth.principal.JWTParser;\n"
+"import io.smallrye.jwt.build.Jwt;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:734
+#, no-wrap
+msgid ""
+"@Path(\"/secured\")\n"
+"public class SecuredResource {\n"
+"  @Inject JWTParser parser;\n"
+"  private String secret = \"AyM1SysPpbyDfgZld3umj1qzKObwVMko\";\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:753
+#, no-wrap
+msgid ""
+"  @GET\n"
+"  @Produces(\"text/plain\")\n"
+"  public Response getUserName(@CookieParam(\"jwt\") String jwtCookie) {\n"
+"    Response response = null;\n"
+"    if (jwtCookie == null) {\n"
+"        // Create a JWT token signed using the 'HS256' algorithm\n"
+"        String newJwtCookie = Jwt.upn(\"Alice\").signWithSecret(secret);\n"
+"        // or create a JWT token encrypted using the 'A256KW' algorithm\n"
+"        // Jwt.upn(\"alice\").encryptWithSecret(secret);\n"
+"        return Response.ok(\"Alice\").cookie(new NewCookie(\"jwt\", newJwtCookie)).build();\n"
+"    } else {\n"
+"        // All mp.jwt and smallrye.jwt properties are still effective, only the verification key is customized.\n"
+"        JsonWebToken jwt = parser.verify(jwtCookie, secret);\n"
+"        // or jwt = parser.decrypt(jwtCookie, secret);\n"
+"        return Response.ok(jwt.getName()).build();\n"
+"    }\n"
+"  }\n"
+"}\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/security-jwt.adoc:755
+#, no-wrap
+msgid "Token Decryption"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:759
+msgid "If your application needs to accept the tokens with the encrypted claims or with the encrypted inner signed claims then all you have to do is to set `smallrye.jwt.decrypt.key.location` pointing to the decryption key."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:763
+msgid "If this is the only key property which is set then the incoming token is expected to contain the encrypted claims only.  If either `mp.jwt.verify.publickey` or `mp.jwt.verify.publickey.location` verification properties are also set then the incoming token is expected to contain the encrypted inner-signed token."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:765
+msgid "See <<generate-jwt-tokens, Generate JWT tokens with SmallRye JWT>> and learn how to generate the encrypted or inner-signed and then encrypted tokens fast."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/security-jwt.adoc:766
+#, no-wrap
+msgid "How to check the errors in the logs"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:769
+msgid "Please enable `io.quarkus.smallrye.jwt.runtime.auth.MpJwtValidator` `TRACE` level logging to see more details about the token verification or decryption errors:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:774
+#, no-wrap
+msgid ""
+"quarkus.log.category.\"io.quarkus.smallrye.jwt.runtime.auth.MpJwtValidator\".level=TRACE\n"
+"quarkus.log.category.\"io.quarkus.smallrye.jwt.runtime.auth.MpJwtValidator\".min-level=TRACE\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/security-jwt.adoc:776
+#, no-wrap
+msgid "Proactive Authentication"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:779
+msgid "If you'd like to skip the token verification when the public endpoint methods are invoked then please disable the link:security-built-in-authentication#proactive-authentication[proactive authentication]."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:781
+msgid "Note that you can't access the injected `JsonWebToken` in the public methods if the token verification has not been done."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/security-jwt.adoc:782
+#, no-wrap
+msgid "Custom Factories"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:786
+msgid "`io.smallrye.jwt.auth.principal.DefaultJWTCallerPrincipalFactory` is used by default to parse and verify JWT tokens and convert them to `JsonWebToken` principals.  It uses `MP JWT` and `smallrye-jwt` properties listed in the `Configuration` section to verify and customize JWT tokens."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:788
+msgid "If you need to provide your own factory, for example, to avoid verifying the tokens again which have already been verified by the firewall, then you can either use a `ServiceLoader` mechanism by providing a `META-INF/services/io.smallrye.jwt.auth.principal.JWTCallerPrincipalFactory` resource or simply have an `Alternative` CDI bean implementation like this one:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:803
+#, no-wrap
+msgid ""
+"import java.nio.charset.StandardCharsets;\n"
+"import java.util.Base64;\n"
+"import javax.annotation.Priority;\n"
+"import javax.enterprise.context.ApplicationScoped;\n"
+"import javax.enterprise.inject.Alternative;\n"
+"import org.jose4j.jwt.JwtClaims;\n"
+"import org.jose4j.jwt.consumer.InvalidJwtException;\n"
+"import io.smallrye.jwt.auth.principal.DefaultJWTCallerPrincipal;\n"
+"import io.smallrye.jwt.auth.principal.JWTAuthContextInfo;\n"
+"import io.smallrye.jwt.auth.principal.JWTCallerPrincipal;\n"
+"import io.smallrye.jwt.auth.principal.JWTCallerPrincipalFactory;\n"
+"import io.smallrye.jwt.auth.principal.ParseException;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:808
+#, no-wrap
+msgid ""
+"@ApplicationScoped\n"
+"@Alternative\n"
+"@Priority(1)\n"
+"public class TestJWTCallerPrincipalFactory extends JWTCallerPrincipalFactory {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:820
+#, no-wrap
+msgid ""
+"    @Override\n"
+"    public JWTCallerPrincipal parse(String token, JWTAuthContextInfo authContextInfo) throws ParseException {\n"
+"        try {\n"
+"            // Token has already been verified, parse the token claims only\n"
+"            String json = new String(Base64.getUrlDecoder().decode(token.split(\"\\\\.\")[1]), StandardCharsets.UTF_8);\n"
+"            return new DefaultJWTCallerPrincipal(JwtClaims.parse(json));\n"
+"        } catch (InvalidJwtException ex) {\n"
+"            throw new ParseException(ex.getMessage());\n"
+"        }\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/security-jwt.adoc:822
+#, no-wrap
+msgid "Token Propagation"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:825
+msgid "Please see link:security-openid-connect-client#token-propagation[Token Propagation] section about the Bearer access token propagation to the downstream services."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/security-jwt.adoc:827
+#, no-wrap
+msgid "Testing"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.2/guides/security-jwt.adoc:830
+#, no-wrap
+msgid "Wiremock"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:833
+msgid "If you configure `mp.jwt.verify.publickey.location` to point to HTTPS or HTTP based JsonWebKey (JWK) set then you can use the same approach as described in the link:security-openid-connect#integration-testing[OpenId Connect Bearer Token Integration testing] `Wiremock` section but only change the `application.properties` to use MP JWT configuration properties instead:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:839
+#: upstream/_versions/2.2/guides/security-jwt.adoc:854
+#, no-wrap
+msgid ""
+"# keycloak.url is set by OidcWiremockTestResource\n"
+"mp.jwt.verify.publickey.location=${keycloak.url}/realms/quarkus/protocol/openid-connect/certs\n"
+"mp.jwt.verify.issuer=${keycloak.url}/realms/quarkus\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:842
+#, no-wrap
+msgid ""
+"# required to sign the tokens\n"
+"smallrye.jwt.sign.key.location=privateKey.jwk\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.2/guides/security-jwt.adoc:845
+#, no-wrap
+msgid "Keycloak"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:848
+msgid "If you work with Keycloak and configure `mp.jwt.verify.publickey.location` to point to HTTPS or HTTP based JsonWebKey (JWK) set then you can use the same approach as described in the link:security-openid-connect#integration-testing-keycloak[OpenId Connect Bearer Token Integration testing] `Keycloak` section but only change the `application.properties` to use MP JWT configuration properties instead:"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.2/guides/security-jwt.adoc:857
+#, no-wrap
+msgid "Local Public Key"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:860
+msgid "You can use the same approach as described in the link:security-openid-connect#integration-testing[OpenId Connect Bearer Token Integration testing] `Local Public Key` section but only change the `application.properties` to use MP JWT configuration properties instead:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:866
+#, no-wrap
+msgid ""
+"mp.jwt.verify.publickey=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlivFI8qB4D0y2jy0CfEqFyy46R0o7S8TKpsx5xbHKoU1VWg6QkQm+ntyIv1p4kE1sPEQO73+HY8+Bzs75XwRTYL1BmR1w8J5hmjVWjc6R2BTBGAYRPFRhor3kpM6ni2SPmNNhurEAHw7TaqszP5eUF/F9+KEBWkwVta+PZ37bwqSE4sCb1soZFrVz/UT/LF4tYpuVYt3YbqToZ3pZOZ9AX2o1GCG3xwOjkc4x0W7ezbQZdC9iftPxVHR8irOijJRRjcPDtA6vPKpzLl6CyYnsIYPd99ltwxTHjr3npfv/3Lw50bAkbT4HeLFxTx4flEoZLKO/g0bAoV2uqBhkA9xnQIDAQAB\n"
+"# set it to the issuer value which is used to generate the tokens\n"
+"mp.jwt.verify.issuer=${keycloak.url}/realms/quarkus\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:869
+#, no-wrap
+msgid ""
+"# required to sign the tokens\n"
+"smallrye.jwt.sign.key.location=privateKey.pem\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.2/guides/security-jwt.adoc:872
+#, no-wrap
+msgid "TestSecurity annotation"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:875
+msgid "Add the following dependency:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:882
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-test-security-jwt</artifactId>\n"
+"    <scope>test</scope>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:885
+msgid "and write a test code like this one:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:896
+#, no-wrap
+msgid ""
+"import static org.hamcrest.Matchers.is;\n"
+"import org.junit.jupiter.api.Test;\n"
+"import io.quarkus.test.common.http.TestHTTPEndpoint;\n"
+"import io.quarkus.test.junit.QuarkusTest;\n"
+"import io.quarkus.test.security.TestSecurity;\n"
+"import io.quarkus.test.security.jwt.Claim;\n"
+"import io.quarkus.test.security.jwt.JwtSecurity;\n"
+"import io.restassured.RestAssured;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:900
+#, no-wrap
+msgid ""
+"@QuarkusTest\n"
+"@TestHTTPEndpoint(ProtectedResource.class)\n"
+"public class TestSecurityAuthTest {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:907
+#, no-wrap
+msgid ""
+"    @Test\n"
+"    @TestSecurity(user = \"userJwt\", roles = \"viewer\")\n"
+"    public void testJwt() {\n"
+"        RestAssured.when().get(\"test-security-jwt\").then()\n"
+"                .body(is(\"userJwt:viewer\"));\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:917
+#, no-wrap
+msgid ""
+"    @Test\n"
+"    @TestSecurity(user = \"userJwt\", roles = \"viewer\")\n"
+"    @JwtSecurity(claims = {\n"
+"            @Claim(key = \"email\", value = \"user@gmail.com\")\n"
+"    })\n"
+"    public void testJwtWithClaims() {\n"
+"        RestAssured.when().get(\"test-security-jwt-claims\").then()\n"
+"                .body(is(\"userJwt:viewer:user@gmail.com\"));\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:919
+#, no-wrap
+msgid "}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:922
+msgid "where `ProtectedResource` class may look like this:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:928
+#, no-wrap
+msgid ""
+"@Path(\"/web-app\")\n"
+"@Authenticated\n"
+"public class ProtectedResource {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:931
+#, no-wrap
+msgid ""
+"    @Inject\n"
+"    JsonWebToken accessToken;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:937
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @Path(\"test-security-jwt\")\n"
+"    public String testSecurityOidc() {\n"
+"        return accessToken.getName() + \":\" + accessToken.getGroups().iterator().next();\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:945
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @Path(\"test-security-jwt-claims\")\n"
+"    public String testSecurityOidcUserInfoMetadata() {\n"
+"        return accessToken.getName() + \":\" + accessToken.getGroups().iterator().next()\n"
+"                + \":\" + accessToken.getClaim(\"email\");\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:949
+msgid "Note that `@TestSecurity` annotation must always be used and its `user` property is returned as `JsonWebToken.getName()` and `roles` property - as `JsonWebToken.getGroups()`.  `@JwtSecurity` annotation is optional and can be used to set the additional token claims."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/security-jwt.adoc:951
+#, no-wrap
+msgid "Generate JWT tokens with SmallRye JWT"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:957
+msgid "JWT claims can be signed or encrypted or signed first and the nested JWT token encrypted.  Signing the claims is used most often to secure the claims. What is known today as a JWT token is typically produced by signing the claims in a JSON format using the steps described in the link:https://tools.ietf.org/html/rfc7515[JSON Web Signature] specification.  However, when the claims are sensitive, their confidentiality can be guaranteed by following the steps described in the link:https://tools.ietf.org/html/rfc7516[JSON Web Encryption] specification to produce a JWT token with the encrypted claims.  Finally both the confidentiality and integrity of the claims can be further enforced by signing them first and then encrypting the nested JWT token."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:959
+msgid "SmallRye JWT provides an API for securing the JWT claims using all of these options."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.2/guides/security-jwt.adoc:960
+#, no-wrap
+msgid "Maven dependency"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:968
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"  <groupId>io.quarkus</groupId>\n"
+"  <artifactId>quarkus-smallrye-jwt-build</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:972
+msgid "Note you can use Smallrye JWT Build API without having to create MP JWT endpoints.  It can also be excluded from `quarkus-smallrye-jwt` if MP JWT endpoints do not need to generate JWT tokens."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.2/guides/security-jwt.adoc:973
+#, no-wrap
+msgid "Create JwtClaimsBuilder and set the claims"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:976
+msgid "The first step is to initialize a `JwtClaimsBuilder` using one of the options below and add some claims to it:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:991
+#, no-wrap
+msgid ""
+"import java.util.Collections;\n"
+"import javax.json.Json;\n"
+"import javax.json.JsonObject;\n"
+"import io.smallrye.jwt.build.Jwt;\n"
+"import io.smallrye.jwt.build.JwtClaimsBuilder;\n"
+"import org.eclipse.microprofile.jwt.JsonWebToken;\n"
+"...\n"
+"// Create an empty builder and add some claims\n"
+"JwtClaimsBuilder builder1 = Jwt.claims();\n"
+"builder1.claim(\"customClaim\", \"custom-value\").issuer(\"https://issuer.org\");\n"
+"// Or start typing the claims immediately:\n"
+"// JwtClaimsBuilder builder1 = Jwt.upn(\"Alice\");\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:994
+#, no-wrap
+msgid ""
+"// Builder created from the existing claims\n"
+"JwtClaimsBuilder builder2 = Jwt.claims(\"/tokenClaims.json\");\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:997
+#, no-wrap
+msgid ""
+"// Builder created from a map of claims\n"
+"JwtClaimsBuilder builder3 = Jwt.claims(Collections.singletonMap(\"customClaim\", \"custom-value\"));\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1003
+#, no-wrap
+msgid ""
+"// Builder created from JsonObject\n"
+"JsonObject userName = Json.createObjectBuilder().add(\"username\", \"Alice\").build();\n"
+"JsonObject userAddress = Json.createObjectBuilder().add(\"city\", \"someCity\").add(\"street\", \"someStreet\").build();\n"
+"JsonObject json = Json.createObjectBuilder(userName).add(\"address\", userAddress).build();\n"
+"JwtClaimsBuilder builder4 = Jwt.claims(json);\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1007
+#, no-wrap
+msgid ""
+"// Builder created from JsonWebToken\n"
+"@Inject JsonWebToken token;\n"
+"JwtClaimsBuilder builder5 = Jwt.claims(token);\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1010
+msgid "The API is fluent so the builder initialization can be done as part of the fluent API sequence."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1013
+msgid "The builder will also set `iat` (issued at) to the current time, `exp` (expires at) to 5 minutes away from the current time (it can be customized with the `smallrye.jwt.new-token.lifespan` property) and `jti` (unique token identifier) claims if they have not already been set.  One can also configure `smallrye.jwt.new-token.issuer` property and skip setting the issuer directly with the builder API."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1015
+msgid "The next step is to decide how to secure the claims."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1016
+#, no-wrap
+msgid "Sign the claims"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1019
+msgid "The claims can be signed immediately or after the `JSON Web Signature` headers have been set:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1024
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1044
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1061
+#, no-wrap
+msgid ""
+"import io.smallrye.jwt.build.Jwt;\n"
+"...\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1028
+#, no-wrap
+msgid ""
+"// Sign the claims using the private key loaded from the location set with a 'smallrye.jwt.sign.key.location' property.\n"
+"// No 'jws()' transition is necessary.\n"
+"String jwt1 = Jwt.claims(\"/tokenClaims.json\").sign();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1031
+#, no-wrap
+msgid ""
+"// Set the headers and sign the claims with an RSA private key loaded in the code (the implementation of this method is omitted). Note a 'jws()' transition to a 'JwtSignatureBuilder'.\n"
+"String jwt2 = Jwt.claims(\"/tokenClaims.json\").jws().keyId(\"kid1\").header(\"custom-header\", \"custom-value\").sign(getPrivateKey());\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1034
+msgid "Note the `alg` (algorithm) header is set to `RS256` by default and `keyId` (key identifier) does not have to be set if a single JSON Web Key (JWK) containing a `kid` property is used."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1035
+#, no-wrap
+msgid "Encrypt the claims"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1039
+msgid "The claims can be encrypted immediately or after the `JSON Web Encryption` headers have been set the same way as they can be signed.  The only minor difference is that encrypting the claims always requires a `jwe()` `JwtEncryptionBuilder` transition:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1047
+#, no-wrap
+msgid ""
+"// Encrypt the claims using the public key loaded from the location set with a 'smallrye.jwt.encrypt.key.location' property.\n"
+"String jwt1 = Jwt.claims(\"/tokenClaims.json\").jwe().encrypt();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1050
+#, no-wrap
+msgid ""
+"// Set the headers and encrypt the claims with an RSA public key loaded in the code (the implementation of this method is omitted).\n"
+"String jwt2 = Jwt.claims(\"/tokenClaims.json\").jwe().header(\"custom-header\", \"custom-value\").encrypt(getPublicKey());\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1053
+msgid "Note the `alg` (key management algorithm) header is set to `RSA-OAEP` and the `enc` (content encryption header) is set to `A256GCM` by default."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1054
+#, no-wrap
+msgid "Sign the claims and encrypt the nested JWT token"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1057
+msgid "The claims can be signed and then the nested JWT token encrypted by combining the sign and encrypt steps."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1064
+#, no-wrap
+msgid ""
+"// Sign the claims and encrypt the nested token using the private and public keys loaded from the locations set with the 'smallrye.jwt.sign.key.location' and 'smallrye.jwt.encrypt.key.location' properties respectively.\n"
+"String jwt = Jwt.claims(\"/tokenClaims.json\").innerSign().encrypt();\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1066
+#, no-wrap
+msgid "Fast JWT Generation"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1069
+msgid "If `smallrye.jwt.sign.key.location` or/and `smallrye.jwt.encrypt.key.location` properties are set then one can secure the existing claims (resources, maps, JsonObjects) with a single call:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1074
+#, no-wrap
+msgid ""
+"// More compact than Jwt.claims(\"/claims.json\").sign();\n"
+"Jwt.sign(\"/claims.json\");\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1077
+#, no-wrap
+msgid ""
+"// More compact than Jwt.claims(\"/claims.json\").jwe().encrypt();\n"
+"Jwt.encrypt(\"/claims.json\");\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1080
+#, no-wrap
+msgid ""
+"// More compact than Jwt.claims(\"/claims.json\").innerSign().encrypt();\n"
+"Jwt.signAndEncrypt(\"/claims.json\");\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1082
+msgid "As mentioned above, `iat`, `exp`, `jti` and `iss` claims will be added if needed."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1083
+#, no-wrap
+msgid "SmallRye JWT Builder configuration"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1086
+msgid "SmallRye JWT supports the following properties which can be used to customize the way claims are signed and encrypted:"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1090
+#, no-wrap
+msgid "smallrye.jwt.sign.key.location"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1090
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1091
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1092
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1093
+#, no-wrap
+msgid "`none`"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1091
+#, no-wrap
+msgid "Location of a private key which will be used to sign the claims when either a no-argument `sign()` or `innerSign()` method is called."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1091
+#, no-wrap
+msgid "smallrye.jwt.sign.key.i"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1092
+#, no-wrap
+msgid "Signing key identifier which is checked only when JWK keys are used."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1092
+#, no-wrap
+msgid "smallrye.jwt.encrypt.key.location"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1093
+#, no-wrap
+msgid "Location of a public key which will be used to encrypt the claims or inner JWT when a no-argument `encrypt()` method is called."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1093
+#, no-wrap
+msgid "smallrye.jwt.encrypt.key.i"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1094
+#, no-wrap
+msgid "Encryption key identifier which is checked only when JWK keys are used."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1094
+#, no-wrap
+msgid "smallrye.jwt.new-token.lifespan"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1094
+#, no-wrap
+msgid "300"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1095
+#, no-wrap
+msgid "Token lifespan in seconds which will be used to calculate an `exp` (expiry) claim value if this claim has not already been set."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1095
+#, no-wrap
+msgid "smallrye.jwt.new-token.issuer"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1096
+#, no-wrap
+msgid "Token issuer which can be used to set an `iss` (issuer) claim value if this claim has not already been set."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1096
+#, no-wrap
+msgid "smallrye.jwt.new-token.audienc"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1097
+#, no-wrap
+msgid "Token audience which can be used to set an `aud` (audience) claim value if this claim has not already been set."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1097
+#, no-wrap
+msgid "smallrye.jwt.new-token.override-matching-claim"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1098
+#, no-wrap
+msgid "Set this property to `true` for `smallrye.jwt.new-token.issuer` and `smallrye.jwt.new-token.audience` values to override the already initialized `iss` (issuer) and `aud` (audience) claims."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1100
+#, no-wrap
+msgid "References"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1103
+msgid "link:https://download.eclipse.org/microprofile/microprofile-jwt-auth-1.2/microprofile-jwt-auth-spec-1.2.html[MP JWT 1.2 HTML]"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1104
+msgid "link:https://download.eclipse.org/microprofile/microprofile-jwt-auth-1.2/microprofile-jwt-auth-spec-1.2.pdf[MP JWT 1.2 PDF]"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1105
+msgid "link:https://github.com/smallrye/smallrye-jwt[SmallRye JWT]"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1106
+msgid "link:https://tools.ietf.org/html/rfc7519[JSON Web Token]"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1107
+msgid "link:https://tools.ietf.org/html/rfc7515[JSON Web Signature]"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1108
+msgid "link:https://tools.ietf.org/html/rfc7516[JSON Web Encryption]"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1109
+msgid "link:https://tools.ietf.org/html/rfc7518[JSON Web Algorithms]"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-jwt.adoc:1109
+msgid "link:security[Quarkus Security]"
+msgstr ""

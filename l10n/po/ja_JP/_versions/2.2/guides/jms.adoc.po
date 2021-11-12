@@ -1,0 +1,693 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2021-11-12 13:16+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. This guide is maintained in the main Quarkus repository
+#. and pull requests should be submitted there:
+#. https://github.com/quarkusio/quarkus/tree/main/docs/src/main/asciidoc
+#. type: Title =
+#: upstream/_versions/2.2/guides/jms.adoc:6
+#, no-wrap
+msgid "Using JMS"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/jms.adoc:13
+msgid "This guide demonstrates how your Quarkus application can use JMS messaging via the Apache Qpid JMS AMQP client, or alternatively the Apache ActiveMQ Artemis JMS client."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/jms.adoc:16
+#, no-wrap
+msgid "Prerequisites"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/jms.adoc:19
+msgid "To complete this guide, you need:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/jms.adoc:21
+msgid "less than 15 minutes"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/jms.adoc:22
+msgid "an IDE"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/jms.adoc:23
+msgid "JDK 11+ installed with `JAVA_HOME` configured appropriately"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/jms.adoc:24
+msgid "Apache Maven {maven-version}"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/jms.adoc:25
+msgid "A running Artemis server, or Docker to start one"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/jms.adoc:26
+msgid "GraalVM, or Docker, installed if you want to run in native mode."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/jms.adoc:27
+#, no-wrap
+msgid "Architecture"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/jms.adoc:33
+msgid "In this guide, we are going to generate (random) prices in one component.  These prices are written to a queue (`prices`) using a JMS client.  Another component reads from the `prices` queue and stores the latest price.  The data can be fetched from a browser using a fetch button from a JAX-RS resource."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/jms.adoc:38
+msgid "The guide can be used either via the Apache Qpid JMS AMQP client as detailed immediately below, or alternatively with the Apache ActiveMQ Artemis JMS client given some different configuration as <<artemis-jms, detailed later>>."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/jms.adoc:40
+#, no-wrap
+msgid "Qpid JMS - AMQP"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/jms.adoc:47
+msgid "In the detailed steps below we will use the https://qpid.apache.org/components/jms/[Apache Qpid JMS] client via the https://github.com/amqphub/quarkus-qpid-jms/[Quarkus Qpid JMS extension]. Qpid JMS uses the AMQP 1.0 ISO standard as its wire protocol, allowing it to be used with a variety of AMQP 1.0 servers and services such as ActiveMQ Artemis, ActiveMQ 5, Qpid Broker-J, Qpid Dispatch router, Azure Service Bus, and more."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.2/guides/jms.adoc:48
+#: upstream/_versions/2.2/guides/jms.adoc:351
+#, no-wrap
+msgid "Solution"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/jms.adoc:52
+msgid "We recommend that you follow the instructions in the next sections and create the application step by step.  However, you can go right to the completed example."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/jms.adoc:55
+msgid "Clone the Git repository: `git clone https://github.com/amqphub/quarkus-qpid-jms-quickstart.git`, or download an https://github.com/amqphub/quarkus-qpid-jms-quickstart/archive/main.zip[archive]."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.2/guides/jms.adoc:56
+#: upstream/_versions/2.2/guides/jms.adoc:359
+#, no-wrap
+msgid "Creating the Maven Project"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/jms.adoc:59
+msgid "First, we need a new project. Create a new project with the following command:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/jms.adoc:69
+#, no-wrap
+msgid ""
+"mvn io.quarkus.platform:quarkus-maven-plugin:{quarkus-version}:create \\\n"
+"    -DprojectGroupId=org.acme \\\n"
+"    -DprojectArtifactId=jms-quickstart \\\n"
+"    -DclassName=\"org.acme.jms.PriceResource\" \\\n"
+"    -Dpath=\"/prices\" \\\n"
+"    -Dextensions=\"resteasy,qpid-jms\"\n"
+"cd jms-quickstart\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/jms.adoc:72
+msgid "This command generates a Maven project, with its pom.xml importing the quarkus-qpid-jms extension:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/jms.adoc:78
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"    <groupId>org.amqphub.quarkus</groupId>\n"
+"    <artifactId>quarkus-qpid-jms</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.2/guides/jms.adoc:81
+#, no-wrap
+msgid "Starting the broker"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/jms.adoc:85
+msgid "Then, we need an AMQP broker. In this case we will use an ActiveMQ Artemis server.  You can follow the instructions from the https://activemq.apache.org/components/artemis/[Apache Artemis web site] or start a broker via docker:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/jms.adoc:89
+#, no-wrap
+msgid "docker run -it --rm -p 8161:8161 -p 61616:61616 -p 5672:5672 -e ARTEMIS_USERNAME=quarkus -e ARTEMIS_PASSWORD=quarkus vromero/activemq-artemis:2.11.0-alpine\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.2/guides/jms.adoc:91
+#, no-wrap
+msgid "The price producer"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/jms.adoc:94
+msgid "Create the `src/main/java/org/acme/jms/PriceProducer.java` file, with the following content:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/jms.adoc:98
+#: upstream/_versions/2.2/guides/jms.adoc:151
+#: upstream/_versions/2.2/guides/jms.adoc:217
+#, no-wrap
+msgid "package org.acme.jms;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/jms.adoc:103
+#, no-wrap
+msgid ""
+"import java.util.Random;\n"
+"import java.util.concurrent.Executors;\n"
+"import java.util.concurrent.ScheduledExecutorService;\n"
+"import java.util.concurrent.TimeUnit;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/jms.adoc:110
+#, no-wrap
+msgid ""
+"import javax.enterprise.context.ApplicationScoped;\n"
+"import javax.enterprise.event.Observes;\n"
+"import javax.inject.Inject;\n"
+"import javax.jms.ConnectionFactory;\n"
+"import javax.jms.JMSContext;\n"
+"import javax.jms.Session;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/jms.adoc:113
+#: upstream/_versions/2.2/guides/jms.adoc:167
+#, no-wrap
+msgid ""
+"import io.quarkus.runtime.ShutdownEvent;\n"
+"import io.quarkus.runtime.StartupEvent;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/jms.adoc:119
+#, no-wrap
+msgid ""
+"/**\n"
+" * A bean producing random prices every 5 seconds and sending them to the prices JMS queue.\n"
+" */\n"
+"@ApplicationScoped\n"
+"public class PriceProducer implements Runnable {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/jms.adoc:122
+#: upstream/_versions/2.2/guides/jms.adoc:176
+#, no-wrap
+msgid ""
+"    @Inject\n"
+"    ConnectionFactory connectionFactory;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/jms.adoc:125
+#, no-wrap
+msgid ""
+"    private final Random random = new Random();\n"
+"    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/jms.adoc:129
+#, no-wrap
+msgid ""
+"    void onStart(@Observes StartupEvent ev) {\n"
+"        scheduler.scheduleWithFixedDelay(this, 0L, 5L, TimeUnit.SECONDS);\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/jms.adoc:133
+#: upstream/_versions/2.2/guides/jms.adoc:192
+#, no-wrap
+msgid ""
+"    void onStop(@Observes ShutdownEvent ev) {\n"
+"        scheduler.shutdown();\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/jms.adoc:141
+#, no-wrap
+msgid ""
+"    @Override\n"
+"    public void run() {\n"
+"        try (JMSContext context = connectionFactory.createContext(Session.AUTO_ACKNOWLEDGE)) {\n"
+"            context.createProducer().send(context.createQueue(\"prices\"), Integer.toString(random.nextInt(100)));\n"
+"        }\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.2/guides/jms.adoc:143
+#, no-wrap
+msgid "The price consumer"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/jms.adoc:147
+msgid "The price consumer reads the prices from JMS, and stores the last one.  Create the `src/main/java/org/acme/jms/PriceConsumer.java` file with the following content:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/jms.adoc:154
+#, no-wrap
+msgid ""
+"import java.util.concurrent.ExecutorService;\n"
+"import java.util.concurrent.Executors;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/jms.adoc:164
+#, no-wrap
+msgid ""
+"import javax.enterprise.context.ApplicationScoped;\n"
+"import javax.enterprise.event.Observes;\n"
+"import javax.inject.Inject;\n"
+"import javax.jms.ConnectionFactory;\n"
+"import javax.jms.JMSConsumer;\n"
+"import javax.jms.JMSContext;\n"
+"import javax.jms.JMSException;\n"
+"import javax.jms.Message;\n"
+"import javax.jms.Session;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/jms.adoc:173
+#, no-wrap
+msgid ""
+"/**\n"
+" * A bean consuming prices from the JMS queue.\n"
+" */\n"
+"@ApplicationScoped\n"
+"public class PriceConsumer implements Runnable {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/jms.adoc:178
+#, no-wrap
+msgid "    private final ExecutorService scheduler = Executors.newSingleThreadExecutor();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/jms.adoc:180
+#, no-wrap
+msgid "    private volatile String lastPrice;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/jms.adoc:184
+#, no-wrap
+msgid ""
+"    public String getLastPrice() {\n"
+"        return lastPrice;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/jms.adoc:188
+#, no-wrap
+msgid ""
+"    void onStart(@Observes StartupEvent ev) {\n"
+"        scheduler.submit(this);\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/jms.adoc:207
+#, no-wrap
+msgid ""
+"    @Override\n"
+"    public void run() {\n"
+"        try (JMSContext context = connectionFactory.createContext(Session.AUTO_ACKNOWLEDGE)) {\n"
+"            JMSConsumer consumer = context.createConsumer(context.createQueue(\"prices\"));\n"
+"            while (true) {\n"
+"                Message message = consumer.receive();\n"
+"                if (message == null) return;\n"
+"                lastPrice = message.getBody(String.class);\n"
+"            }\n"
+"        } catch (JMSException e) {\n"
+"            throw new RuntimeException(e);\n"
+"        }\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.2/guides/jms.adoc:209
+#, no-wrap
+msgid "The price resource"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/jms.adoc:213
+msgid "Finally, let's create a simple JAX-RS resource to show the last price.  Create the `src/main/java/org/acme/jms/PriceResource.java` file with the following content:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/jms.adoc:223
+#, no-wrap
+msgid ""
+"import javax.inject.Inject;\n"
+"import javax.ws.rs.GET;\n"
+"import javax.ws.rs.Path;\n"
+"import javax.ws.rs.Produces;\n"
+"import javax.ws.rs.core.MediaType;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/jms.adoc:229
+#, no-wrap
+msgid ""
+"/**\n"
+" * A simple resource showing the last price.\n"
+" */\n"
+"@Path(\"/prices\")\n"
+"public class PriceResource {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/jms.adoc:232
+#, no-wrap
+msgid ""
+"    @Inject\n"
+"    PriceConsumer consumer;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/jms.adoc:240
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @Path(\"last\")\n"
+"    @Produces(MediaType.TEXT_PLAIN)\n"
+"    public String last() {\n"
+"        return consumer.getLastPrice();\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.2/guides/jms.adoc:242
+#, no-wrap
+msgid "The HTML page"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/jms.adoc:245
+msgid "Final touch, the HTML page reading the converted prices using SSE."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/jms.adoc:247
+msgid "Create the `src/main/resources/META-INF/resources/prices.html` file, with the following content:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/jms.adoc:255
+#, no-wrap
+msgid ""
+"<!DOCTYPE html>\n"
+"<html lang=\"en\">\n"
+"<head>\n"
+"    <meta charset=\"UTF-8\">\n"
+"    <title>Prices</title>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/jms.adoc:263
+#, no-wrap
+msgid ""
+"    <link rel=\"stylesheet\" type=\"text/css\"\n"
+"          href=\"https://cdnjs.cloudflare.com/ajax/libs/patternfly/3.24.0/css/patternfly.min.css\">\n"
+"    <link rel=\"stylesheet\" type=\"text/css\"\n"
+"          href=\"https://cdnjs.cloudflare.com/ajax/libs/patternfly/3.24.0/css/patternfly-additions.min.css\">\n"
+"</head>\n"
+"<body>\n"
+"<div class=\"container\">\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/jms.adoc:280
+#, no-wrap
+msgid ""
+"    <h2>Last price</h2>\n"
+"    <div class=\"row\">\n"
+"    <p class=\"col-md-12\"><button id=\"fetch\">Fetch</button>The last price is <strong><span id=\"content\">N/A</span>&nbsp;&euro;</strong>.</p>\n"
+"    </div>\n"
+"</div>\n"
+"</body>\n"
+"<script>\n"
+"    document.getElementById(\"fetch\").addEventListener(\"click\", function() {\n"
+"        fetch(\"/prices/last\").then(function (response) {\n"
+"            response.text().then(function (text) {\n"
+"                document.getElementById(\"content\").textContent = text;\n"
+"            })\n"
+"        })\n"
+"    })\n"
+"</script>\n"
+"</html>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/jms.adoc:283
+msgid "Nothing spectacular here. On each fetch, it updates the page."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.2/guides/jms.adoc:284
+#, no-wrap
+msgid "Configure the Qpid JMS properties"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/jms.adoc:288
+msgid "We need to configure the Qpid JMS properties used by the extension when injecting the ConnectionFactory."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/jms.adoc:290
+msgid "This is done in the `src/main/resources/application.properties` file."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/jms.adoc:297
+#, no-wrap
+msgid ""
+"# Configures the Qpid JMS properties.\n"
+"quarkus.qpid-jms.url=amqp://localhost:5672\n"
+"quarkus.qpid-jms.username=quarkus\n"
+"quarkus.qpid-jms.password=quarkus\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/jms.adoc:300
+msgid "More detail about the configuration are available in the https://github.com/amqphub/quarkus-qpid-jms#configuration[Quarkus Qpid JMS] documentation."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.2/guides/jms.adoc:302
+#, no-wrap
+msgid "Get it running"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/jms.adoc:306
+msgid "If you followed the instructions, you should have the Artemis server running.  Then, you just need to run the application using:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/jms.adoc:310
+#, no-wrap
+msgid "./mvnw compile quarkus:dev\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/jms.adoc:313
+#: upstream/_versions/2.2/guides/jms.adoc:337
+msgid "Open `http://localhost:8080/prices.html` in your browser."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.2/guides/jms.adoc:314
+#, no-wrap
+msgid "Running Native"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/jms.adoc:317
+msgid "You can build the native executable with:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/jms.adoc:321
+#, no-wrap
+msgid "./mvnw package -Pnative\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/jms.adoc:324
+msgid "Or, if you don't have GraalVM installed, you can instead use Docker to build the native executable using:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/jms.adoc:327
+#, no-wrap
+msgid "./mvnw package -Pnative -Dquarkus.native.container-build=true\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/jms.adoc:330
+msgid "and then run with:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/jms.adoc:334
+#, no-wrap
+msgid "./target/jms-quickstart-1.0.0-SNAPSHOT-runner\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/jms.adoc:339
+msgid "'''"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/jms.adoc:342
+#, no-wrap
+msgid "Artemis JMS"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/jms.adoc:350
+msgid "The above steps detailed using the Qpid JMS AMQP client, however the guide can also be used with the Artemis JMS client. Many of the individual steps are exactly as previously <<qpid-jms-amqp, detailed above for Qpid JMS>>. The individual component code is the same.  The only differences are in the dependency for the initial project creation, and the configuration properties used. These changes are detailed below and should be substituted for the equivalent step during the sequence above."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/jms.adoc:354
+msgid "You can go right to the completed example."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/jms.adoc:356
+msgid "Clone the Git repository: `git clone {quickstarts-clone-url}`, or download an {quickstarts-archive-url}[archive]."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/jms.adoc:358
+msgid "The Artemis JMS solution is located in the `jms-quickstart` {quickstarts-tree-url}/jms-quickstart[directory]."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/jms.adoc:362
+msgid "Create a new project with the following command:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/jms.adoc:372
+#, no-wrap
+msgid ""
+"mvn io.quarkus.platform:quarkus-maven-plugin:{quarkus-version}:create \\\n"
+"    -DprojectGroupId=org.acme \\\n"
+"    -DprojectArtifactId=jms-quickstart \\\n"
+"    -DclassName=\"org.acme.jms.PriceResource\" \\\n"
+"    -Dpath=\"/prices\" \\\n"
+"    -Dextensions=\"resteasy,artemis-jms\"\n"
+"cd jms-quickstart\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/jms.adoc:375
+msgid "This creates a Maven project, with its pom.xml importing the quarkus-artemis-jms extension:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/jms.adoc:381
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"  <groupId>io.quarkus</groupId>\n"
+"  <artifactId>quarkus-artemis-jms</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/jms.adoc:386
+msgid "With the project created, you can resume from <<starting-the-broker>> in the detailed steps above and proceed until configuring the `application.properties` file, when you should use the Artemis configuration below instead."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.2/guides/jms.adoc:387
+#, no-wrap
+msgid "Configure the Artemis properties"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/jms.adoc:391
+msgid "We need to configure the Artemis connection properties.  This is done in the `src/main/resources/application.properties` file."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/jms.adoc:398
+#, no-wrap
+msgid ""
+"# Configures the Artemis properties.\n"
+"quarkus.artemis.url=tcp://localhost:61616\n"
+"quarkus.artemis.username=quarkus\n"
+"quarkus.artemis.password=quarkus\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/jms.adoc:401
+msgid "With the Artemis properties configured, you can resume the steps above from <<get-it-running>>."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.2/guides/jms.adoc:402
+#, no-wrap
+msgid "Configuration Reference"
+msgstr ""

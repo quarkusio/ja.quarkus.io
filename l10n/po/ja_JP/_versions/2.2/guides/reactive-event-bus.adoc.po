@@ -1,0 +1,757 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2021-11-12 13:15+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. This guide is maintained in the main Quarkus repository
+#. and pull requests should be submitted there:
+#. https://github.com/quarkusio/quarkus/tree/main/docs/src/main/asciidoc
+#. type: Title =
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:6
+#, no-wrap
+msgid "Using the event bus"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:13
+msgid "Quarkus allows different beans to interact using asynchronous events, thus promoting loose-coupling.  The messages are sent to _virtual addresses_.  It offers 3 types of delivery mechanism:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:15
+msgid "point-to-point - send the message, one consumer receives it. If several consumers listen to the address, a round robin is applied;"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:16
+msgid "publish/subscribe - publish a message, all the consumers listening to the address are receiving the message;"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:17
+msgid "request/reply - send the message and expect a response. The receiver can respond to the message in an asynchronous-fashion"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:19
+msgid "All these delivery mechanism are non-blocking, and are providing one of the fundamental brick to build reactive applications."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:22
+msgid "The asynchronous message passing feature allows replying to messages which is not supported by Reactive Messaging.  However, it is limited to single-event behavior (no stream) and to local messages."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:23
+#, no-wrap
+msgid "Installing"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:27
+msgid "This mechanism uses the Vert.x EventBus, so you need to enable the `vertx` extension to use this feature.  If you are creating a new project, set the `extensions` parameter are follows:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:36
+#, no-wrap
+msgid ""
+"mvn io.quarkus.platform:quarkus-maven-plugin:{quarkus-version}:create \\\n"
+"    -DprojectGroupId=org.acme \\\n"
+"    -DprojectArtifactId=vertx-quickstart \\\n"
+"    -Dextensions=\"vertx,resteasy-mutiny\" \\\n"
+"    -DnoExamples\n"
+"cd vertx-quickstart\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:40
+msgid "If you have an already created project, the `vertx` extension can be added to an existing Quarkus project with the `add-extension` command:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:44
+#, no-wrap
+msgid "./mvnw quarkus:add-extension -Dextensions=\"vertx,resteasy-mutiny\"\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:47
+msgid "Otherwise, you can manually add this to the dependencies section of your `pom.xml` file:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:54
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-vertx</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:56
+#, no-wrap
+msgid "Consuming events"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:59
+msgid "To consume events, use the `io.quarkus.vertx.ConsumeEvent` annotation:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:63
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:112
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:238
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:312
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:349
+#, no-wrap
+msgid "package org.acme.vertx;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:65
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:114
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:351
+#, no-wrap
+msgid "import io.quarkus.vertx.ConsumeEvent;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:67
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:353
+#, no-wrap
+msgid "import javax.enterprise.context.ApplicationScoped;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:70
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:122
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:356
+#, no-wrap
+msgid ""
+"@ApplicationScoped\n"
+"public class GreetingService {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:76
+#, no-wrap
+msgid ""
+"    @ConsumeEvent                           // <1>\n"
+"    public String consume(String name) {    // <2>\n"
+"        return name.toUpperCase();\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:78
+msgid "If not set, the address is the fully qualified name of the bean, for instance, in this snippet it's `org.acme.vertx.GreetingService`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:79
+msgid "The method parameter is the message body. If the method returns _something_ it's the message response."
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:84
+msgid "By default, the code consuming the event must be _non-blocking_, as it's called on the Vert.x event loop.  If your processing is blocking, use the `blocking` attribute:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:91
+#, no-wrap
+msgid ""
+"@ConsumeEvent(value = \"blocking-consumer\", blocking = true)\n"
+"void consumeBlocking(String message) {\n"
+"    // Something blocking\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:94
+msgid "Alternatively, you can annotate your method with `@io.smallrye.common.annotation.Blocking`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:101
+#, no-wrap
+msgid ""
+"@ConsumeEvent(value = \"blocking-consumer\")\n"
+"@Blocking\n"
+"void consumeBlocking(String message) {\n"
+"    // Something blocking\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:105
+msgid "When using `@Blocking`, it ignores the value of the `blocking` attribute of `@ConsumeEvent`.  See the xref:quarkus-reactive-architecture.adoc[Quarkus Reactive Architecture documentation] for further details on this topic."
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:108
+msgid "Asynchronous processing is also possible by returning either an `io.smallrye.mutiny.Uni` or a `java.util.concurrent.CompletionStage`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:119
+#, no-wrap
+msgid ""
+"import javax.enterprise.context.ApplicationScoped;\n"
+"import java.util.concurrent.CompletableFuture;\n"
+"import java.util.concurrent.CompletionStage;\n"
+"import io.smallrye.mutiny.Uni;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:128
+#, no-wrap
+msgid ""
+"    @ConsumeEvent\n"
+"    public CompletionStage<String> consume(String name) {\n"
+"        // return a CompletionStage completed when the processing is finished.\n"
+"        // You can also fail the CompletionStage explicitly\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:135
+#, no-wrap
+msgid ""
+"    @ConsumeEvent\n"
+"    public Uni<String> process(String name) {\n"
+"        // return an Uni completed when the processing is finished.\n"
+"        // You can also fail the Uni explicitly\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:138
+#, no-wrap
+msgid "Mutiny"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:142
+msgid "The previous example uses Mutiny reactive types.  If you are not familiar with Mutiny, check xref:mutiny-primer.adoc[Mutiny - an intuitive reactive programming library]."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:144
+#, no-wrap
+msgid "Configuring the address"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:147
+msgid "The `@ConsumeEvent` annotation can be configured to set the address:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:154
+#, no-wrap
+msgid ""
+"@ConsumeEvent(\"greeting\")               // <1>\n"
+"public String consume(String name) {\n"
+"    return name.toUpperCase();\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:156
+msgid "Receive the messages sent to the `greeting` address"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:157
+#, no-wrap
+msgid "Replying"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:161
+msgid "The _return_ value of a method annotated with `@ConsumeEvent` is used as response to the incoming message.  For instance, in the following snippet, the returned `String` is the response."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:168
+#, no-wrap
+msgid ""
+"@ConsumeEvent(\"greeting\")\n"
+"public String consume(String name) {\n"
+"    return name.toUpperCase();\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:171
+msgid "You can also return a `Uni<T>` or a `CompletionStage<T>` to handle asynchronous reply:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:178
+#, no-wrap
+msgid ""
+"@ConsumeEvent(\"greeting\")\n"
+"public Uni<String> consume2(String name) {\n"
+"    return Uni.createFrom().item(() -> name.toUpperCase()).emitOn(executor);\n"
+"}\n"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:183
+msgid "You can inject an `executor` if you use the Context Propagation extension:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:186
+#, no-wrap
+msgid "@Inject ManagedExecutor executor;\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:189
+msgid "Alternatively, you can use the default Quarkus worker pool using:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:193
+#, no-wrap
+msgid "Executor executor = Infrastructure.getDefaultWorkerPool();\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:196
+#, no-wrap
+msgid "Implementing fire and forget interactions"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:201
+msgid "You don't have to reply to received messages.  Typically, for a _fire and forget_ interaction, the messages are consumed and the sender does not need to know about it.  To implement this, your consumer method just returns `void`"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:208
+#, no-wrap
+msgid ""
+"@ConsumeEvent(\"greeting\")\n"
+"public void consume(String event) {\n"
+"    // Do something with the event\n"
+"}\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:210
+#, no-wrap
+msgid "Dealing with messages"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:213
+msgid "As said above, this mechanism is based on the Vert.x event bus. So, you can also use `Message` directly:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:221
+#, no-wrap
+msgid ""
+"@ConsumeEvent(\"greeting\")\n"
+"public void consume(Message<String> msg) {\n"
+"    System.out.println(msg.address());\n"
+"    System.out.println(msg.body());\n"
+"}\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:223
+#, no-wrap
+msgid "Handling Failures"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:226
+msgid "If a method annotated with `@ConsumeEvent` throws an exception then:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:228
+msgid "if a reply handler is set then the failure is propagated back to the sender via an `io.vertx.core.eventbus.ReplyException` with code `ConsumeEvent#FAILURE_CODE` and the exception message,"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:229
+msgid "if no reply handler is set then the exception is rethrown (and wrapped in a `RuntimeException` if necessary) and can be handled by the default exception handler, i.e. `io.vertx.core.Vertx#exceptionHandler()`."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:230
+#, no-wrap
+msgid "Sending messages"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:234
+msgid "Ok, we have seen how to receive messages, let's now switch to the _other side_: the sender.  Sending and publishing messages use the Vert.x event bus:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:243
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:317
+#, no-wrap
+msgid ""
+"import io.smallrye.mutiny.Uni;\n"
+"import io.vertx.mutiny.core.eventbus.EventBus;\n"
+"import io.vertx.mutiny.core.eventbus.Message;\n"
+"import org.jboss.resteasy.annotations.jaxrs.PathParam;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:249
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:323
+#, no-wrap
+msgid ""
+"import javax.inject.Inject;\n"
+"import javax.ws.rs.GET;\n"
+"import javax.ws.rs.Path;\n"
+"import javax.ws.rs.Produces;\n"
+"import javax.ws.rs.core.MediaType;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:252
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:326
+#, no-wrap
+msgid ""
+"@Path(\"/async\")\n"
+"public class EventResource {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:255
+#, no-wrap
+msgid ""
+"    @Inject\n"
+"    EventBus bus;                                       // <1>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:264
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @Produces(MediaType.TEXT_PLAIN)\n"
+"    @Path(\"{name}\")\n"
+"    public Uni<String> greeting(@PathParam String name) {\n"
+"        return bus.<String>request(\"greeting\", name)        // <2>\n"
+"                .onItem().transform(Message::body);\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:266
+msgid "Inject the Event bus"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:267
+msgid "Send a message to the address `greeting`. Message payload is `name`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:269
+msgid "The `EventBus` object provides methods to:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:271
+msgid "`send` a message to a specific address - one single consumer receives the message."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:272
+msgid "`publish` a message to a specific address - all consumers receive the messages."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:273
+msgid "`send` a message and expect reply"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:283
+#, no-wrap
+msgid ""
+"// Case 1\n"
+"bus.sendAndForget(\"greeting\", name)\n"
+"// Case 2\n"
+"bus.publish(\"greeting\", name)\n"
+"// Case 3\n"
+"Uni<String> response = bus.<String>request(\"address\", \"hello, how are you?\")\n"
+"        .onItem().transform(Message::body);\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:285
+#, no-wrap
+msgid "Putting things together - bridging HTTP and messages"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:291
+msgid "Let's revisit a greeting HTTP endpoint and use asynchronous message passing to delegate the call to a separated bean.  It uses the request/reply dispatching mechanism.  Instead of implementing the business logic inside the JAX-RS endpoint, we are sending a message.  This message is consumed by another bean and the response is sent using the _reply_ mechanism."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:293
+msgid "First create a new project using:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:302
+#, no-wrap
+msgid ""
+"mvn io.quarkus.platform:quarkus-maven-plugin:{quarkus-version}:create \\\n"
+"    -DprojectGroupId=org.acme \\\n"
+"    -DprojectArtifactId=vertx-http-quickstart \\\n"
+"    -Dextensions=\"vertx\" \\\n"
+"    -DnoExamples\n"
+"cd vertx-http-quickstart\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:305
+msgid "You can already start the application in _dev mode_ using `./mvnw compile quarkus:dev`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:307
+msgid "Then, creates a new JAX-RS resource with the following content:"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:309
+#, no-wrap
+msgid "src/main/java/org/acme/vertx/EventResource.java"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:329
+#, no-wrap
+msgid ""
+"    @Inject\n"
+"    EventBus bus;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:338
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @Produces(MediaType.TEXT_PLAIN)\n"
+"    @Path(\"{name}\")\n"
+"    public Uni<String> greeting(@PathParam String name) {\n"
+"        return bus.<String>request(\"greeting\", name)            // <1>\n"
+"                .onItem().transform(Message::body);            // <2>\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:340
+msgid "send the `name` to the `greeting` address and request a response"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:341
+msgid "when we get the response, extract the body and send it to the user"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:344
+msgid "If you call this endpoint, you will wait and get a timeout. Indeed, no one is listening.  So, we need a consumer listening on the `greeting` address. Create a `GreetingService` bean with the following content:"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:346
+#, no-wrap
+msgid "src/main/java/org/acme/vertx/GreetingService.java"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:361
+#, no-wrap
+msgid ""
+"    @ConsumeEvent(\"greeting\")\n"
+"    public String greeting(String name) {\n"
+"        return \"Hello \" + name;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:363
+#, no-wrap
+msgid "}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:366
+msgid "This bean receives the name, and returns the greeting message."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:368
+msgid "Now, open your browser to http://localhost:8080/async/Quarkus, and you should see:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:372
+#, no-wrap
+msgid "Hello Quarkus\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:375
+msgid "To better understand, let's detail how the HTTP request/response has been handled:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:377
+msgid "The request is received by the `hello` method"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:378
+msgid "a message containing the _name_ is sent to the event bus"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:379
+msgid "Another bean receives this message and computes the response"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:380
+msgid "This response is sent back using the reply mechanism"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:381
+msgid "Once the reply is received by the sender, the content is written to the HTTP response"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:383
+msgid "This application can be packaged using:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:387
+#, no-wrap
+msgid "./mvnw clean package\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:390
+msgid "You can also compile it as a native executable with:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:394
+#, no-wrap
+msgid "./mvnw clean package -Pnative\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:396
+#, no-wrap
+msgid "Using codecs"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:401
+msgid "The https://vertx.io/docs/vertx-core/java/#event_bus[Vert.x Event Bus] uses codecs to _serialize_ and _deserialize_ objects.  Quarkus provides a default codec for local delivery.  So you can exchange objects as follows:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:411
+#, no-wrap
+msgid ""
+"@GET\n"
+"@Produces(MediaType.TEXT_PLAIN)\n"
+"@Path(\"{name}\")\n"
+"public Uni<String> greeting(@PathParam String name) {\n"
+"    return bus.<String>request(\"greeting\", new MyName(name))\n"
+"        .onItem().transform(Message::body);\n"
+"}\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:416
+#, no-wrap
+msgid ""
+"@ConsumeEvent(value = \"greeting\")\n"
+"Uni<String> greeting(MyName name) {\n"
+"    return Uni.createFrom().item(() -> \"Hello \" + name.getName());\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:419
+msgid "If you want to use a specific codec, you need to explicitly set it on both ends:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:430
+#, no-wrap
+msgid ""
+"@GET\n"
+"@Produces(MediaType.TEXT_PLAIN)\n"
+"@Path(\"{name}\")\n"
+"public Uni<String> greeting(@PathParam String name) {\n"
+"    return bus.<String>request(\"greeting\", name,\n"
+"        new DeliveryOptions().setCodecName(MyNameCodec.class.getName())) // <1>\n"
+"        .onItem().transform(Message::body);\n"
+"}\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:435
+#, no-wrap
+msgid ""
+"@ConsumeEvent(value = \"greeting\", codec = MyNameCodec.class)            // <2>\n"
+"Uni<String> greeting(MyName name) {\n"
+"    return Uni.createFrom().item(() -> \"Hello \"+name.getName());\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:437
+msgid "Set the name of the codec to use to send the message"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/reactive-event-bus.adoc:437
+msgid "Set the codec to use to receive the message"
+msgstr ""

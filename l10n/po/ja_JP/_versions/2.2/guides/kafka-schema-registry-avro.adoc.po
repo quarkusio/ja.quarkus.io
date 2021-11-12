@@ -1,0 +1,1140 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2021-11-12 13:15+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. This guide is maintained in the main Quarkus repository
+#. and pull requests should be submitted there:
+#. https://github.com/quarkusio/quarkus/tree/main/docs/src/main/asciidoc
+#. type: Title =
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:6
+#, no-wrap
+msgid "Using Apache Kafka with Schema Registry and Avro"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:12
+msgid "This guide shows how your Quarkus application can use Apache Kafka, http://avro.apache.org/docs/current/[Avro] serialized records, and connect to a schema registry (such as the https://docs.confluent.io/platform/current/schema-registry/index.html[Confluent Schema Registry] or https://www.apicur.io/registry/[Apicurio Registry]."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:15
+msgid "If you are not familiar with Kafka and Kafka in Quarkus in particular, consider first going through the link:kafka[Using Apache Kafka with Reactive Messaging] guide."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:16
+#, no-wrap
+msgid "Prerequisites"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:19
+msgid "To complete this guide, you need:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:21
+msgid "less than 30 minutes"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:22
+msgid "an IDE"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:23
+msgid "JDK 11+ installed with `JAVA_HOME` configured appropriately"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:24
+msgid "Apache Maven {maven-version}"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:25
+msgid "Docker Compose to start a local Kafka cluster and Apicurio Registry"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:26
+msgid "GraalVM installed if you want to run in native mode."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:28
+#, no-wrap
+msgid "Architecture"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:32
+msgid "In this guide we are going to implement a REST resource, namely `MovieResource`, that will consume movie DTOs and put them in a Kafka topic."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:36
+msgid "Then, we will implement a consumer that will consume and collect messages from the same topic.  The collected messages will be then exposed by another resource, `ConsumedMovieResource`, via https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events[Server-Sent Events]."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:40
+msgid "The _Movies_ will be serialized and deserialized using Avro.  The schema, describing the _Movie_, is stored in Apicurio Registry.  The same concept applies if you are using the Confluent Avro _serde_ and Confluent Schema Registry."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:41
+#, no-wrap
+msgid "Solution"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:45
+msgid "We recommend that you follow the instructions in the next sections and create the application step by step.  However, you can go right to the completed example."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:47
+msgid "Clone the Git repository: `git clone {quickstarts-clone-url}`, or download an {quickstarts-archive-url}[archive]."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:49
+msgid "The solution is located in the `kafka-avro-schema-quickstart` {quickstarts-tree-url}/kafka-avro-schema-quickstart[directory]."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:50
+#, no-wrap
+msgid "Creating the Maven Project"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:53
+msgid "First, we need a new project. Create a new project with the following command:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:63
+#, no-wrap
+msgid ""
+"mvn io.quarkus.platform:quarkus-maven-plugin:{quarkus-version}:create \\\n"
+"    -DprojectGroupId=org.acme \\\n"
+"    -DprojectArtifactId=kafka-avro-schema-quickstart \\\n"
+"    -DclassName=\"org.acme.kafka.MovieResource\" \\\n"
+"    -Dpath=\"/movies\" \\\n"
+"    -Dextensions=\"resteasy-reactive,resteasy-reactive-jackson,smallrye-reactive-messaging-kafka,apicurio-registry-avro\"\n"
+"cd kafka-avro-schema-quickstart\n"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:70
+msgid "If you use Confluent Schema Registry, you don't need the `quarkus-apicurio-registry-avro` extension.  Instead, you need the following dependencies and the Confluent Maven repository added to your `pom.xml`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:98
+#, no-wrap
+msgid ""
+"<dependencies>\n"
+"    ...\n"
+"    <!-- Quarkus extension for generating Java code from Avro schemas -->\n"
+"    <!-- with this, you don't have to use avro-maven-plugin -->\n"
+"    <dependency>\n"
+"        <groupId>io.quarkus</groupId>\n"
+"        <artifactId>quarkus-avro</artifactId>\n"
+"    </dependency>\n"
+"    <!-- Confluent registry libraries use JAX-RS client -->\n"
+"    <dependency>\n"
+"        <groupId>io.quarkus</groupId>\n"
+"        <artifactId>quarkus-rest-client-reactive</artifactId>\n"
+"    </dependency>\n"
+"    <dependency>\n"
+"        <groupId>io.confluent</groupId>\n"
+"        <artifactId>kafka-avro-serializer</artifactId>\n"
+"        <version>6.1.1</version>\n"
+"        <exclusions>\n"
+"            <exclusion>\n"
+"                <groupId>jakarta.ws.rs</groupId>\n"
+"                <artifactId>jakarta.ws.rs-api</artifactId>\n"
+"            </exclusion>\n"
+"        </exclusions>\n"
+"    </dependency>\n"
+"</dependencies>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:108
+#, no-wrap
+msgid ""
+"<repositories>\n"
+"    <repository>\n"
+"        <id>confluent</id>\n"
+"        <url>https://packages.confluent.io/maven/</url>\n"
+"        <snapshots>\n"
+"            <enabled>false</enabled>\n"
+"        </snapshots>\n"
+"    </repository>\n"
+"</repositories>\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:111
+#, no-wrap
+msgid "Avro schema"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:116
+msgid "Apache Avro is a data serialization system. Data structures are described using schemas.  The first thing we need to do is to create a schema describing the `Movie` structure.  Create a file called `src/main/avro/movie.avsc` with the schema for our record (Kafka message):"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:133
+#, no-wrap
+msgid ""
+"{\n"
+"  \"namespace\": \"org.acme.kafka.quarkus\",\n"
+"  \"type\": \"record\",\n"
+"  \"name\": \"Movie\",\n"
+"  \"fields\": [\n"
+"    {\n"
+"      \"name\": \"title\",\n"
+"      \"type\": \"string\"\n"
+"    },\n"
+"    {\n"
+"      \"name\": \"year\",\n"
+"      \"type\": \"int\"\n"
+"    }\n"
+"  ]\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:137
+msgid "If you build the project with `mvn compile` , the `movies.avsc` will get compiled to a `Movie.java` file placed in the `target/generated-sources/avsc` directory."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:140
+msgid "Take a look at the https://avro.apache.org/docs/current/spec.html#schemas[Avro specification] to learn more about the Avro syntax and supported types."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:142
+msgid "With Quarkus, there's no need to use a specific Maven plugin to process the Avro schema, this is all done for you by the `quarkus-avro` extension!"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:145
+msgid "If you run the project with `mvn quarkus:dev`, the changes you do to the schema file will be automatically applied to the generated Java files."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:146
+#, no-wrap
+msgid "The `Movie` producer"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:149
+msgid "Having defined the schema, we can now jump to implementing the `MovieResource`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:152
+msgid "Let's open the `MovieResource`, inject an https://quarkus.io/blog/reactive-messaging-emitter/[`Emitter`] of `Movie` DTO and implement a `@POST` method that consumes `Movie` and sends it through the `Emitter`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:156
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:223
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:472
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:592
+#, no-wrap
+msgid "package org.acme.kafka;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:161
+#, no-wrap
+msgid ""
+"import org.acme.kafka.quarkus.Movie;\n"
+"import org.eclipse.microprofile.reactive.messaging.Channel;\n"
+"import org.eclipse.microprofile.reactive.messaging.Emitter;\n"
+"import org.jboss.logging.Logger;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:165
+#, no-wrap
+msgid ""
+"import javax.ws.rs.POST;\n"
+"import javax.ws.rs.Path;\n"
+"import javax.ws.rs.core.Response;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:169
+#, no-wrap
+msgid ""
+"@Path(\"/movies\")\n"
+"public class MovieResource {\n"
+"    private static final Logger LOGGER = Logger.getLogger(MovieResource.class);\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:172
+#, no-wrap
+msgid ""
+"    @Channel(\"movies\")\n"
+"    Emitter<Movie> emitter;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:179
+#, no-wrap
+msgid ""
+"    @POST\n"
+"    public Response enqueueMovie(Movie movie) {\n"
+"        LOGGER.infof(\"Sending movie %s to Kafka\", movie.getTitle());\n"
+"        emitter.send(movie);\n"
+"        return Response.accepted().build();\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:181
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:560
+#, no-wrap
+msgid "}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:185
+msgid "Now, we need to _map_ the `movies` channel (the `Emitter` emits to this channel) to a Kafka topic.  To achieve this, edit the `application.properties` file, and add the following content:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:190
+#, no-wrap
+msgid ""
+"# set the connector for the outgoing channel to `smallrye-kafka`\n"
+"mp.messaging.outgoing.movies.connector=smallrye-kafka\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:193
+#, no-wrap
+msgid ""
+"# set the topic name for the channel to `movies`\n"
+"mp.messaging.outgoing.movies.topic=movies\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:196
+#, no-wrap
+msgid ""
+"# automatically register the schema with the registry, if not present\n"
+"mp.messaging.outgoing.movies.apicurio.registry.auto-register=true\n"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:203
+msgid "You might have noticed that we didn't define the `value.serializer`.  That's because Quarkus can xref:kafka.adoc#serialization-autodetection[autodetect] that `io.apicurio.registry.serde.avro.AvroKafkaSerializer` is appropriate here, based on the `@Channel` declaration, structure of the `Movie` type, and presence of the Apicurio Registry libraries.  We still have to define the `apicurio.registry.auto-register` property."
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:209
+msgid "If you use Confluent Schema Registry, you don't have to configure `value.serializer` either.  It is also detected automatically.  The Confluent Schema Registry analogue of `apicurio.registry.auto-register` is called `auto.register.schemas`.  It defaults to `true`, so it doesn't have to be configured in this example.  It can be explicitly set to `false` if you want to disable automatic schema registration."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:211
+#, no-wrap
+msgid "The `Movie` consumer"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:216
+msgid "So, we can write records into Kafka containing our `Movie` data.  That data is serialized using Avro.  Now, it's time to implement a consumer for them."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:219
+msgid "Let's create `ConsumedMovieResource` that will consume `Movie` messages from the `movies-from-kafka` channel and will expose it via Server-Sent Events:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:229
+#, no-wrap
+msgid ""
+"import javax.enterprise.context.ApplicationScoped;\n"
+"import javax.ws.rs.GET;\n"
+"import javax.ws.rs.Path;\n"
+"import javax.ws.rs.Produces;\n"
+"import javax.ws.rs.core.MediaType;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:233
+#, no-wrap
+msgid ""
+"import org.acme.kafka.quarkus.Movie;\n"
+"import org.eclipse.microprofile.reactive.messaging.Channel;\n"
+"import org.jboss.resteasy.reactive.RestSseElementType;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:235
+#, no-wrap
+msgid "import io.smallrye.mutiny.Multi;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:239
+#, no-wrap
+msgid ""
+"@ApplicationScoped\n"
+"@Path(\"/consumed-movies\")\n"
+"public class ConsumedMovieResource {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:242
+#, no-wrap
+msgid ""
+"    @Channel(\"movies-from-kafka\")\n"
+"    Multi<Movie> movies;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:250
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @Produces(MediaType.SERVER_SENT_EVENTS)\n"
+"    @RestSseElementType(MediaType.TEXT_PLAIN)\n"
+"    public Multi<String> stream() {\n"
+"        return movies.map(movie -> String.format(\"'%s' from %s\", movie.getTitle(), movie.getYear()));\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:254
+msgid "The last bit of the application's code is the configuration of the `movies-from-kafka` channel in `application.properties`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:259
+#, no-wrap
+msgid ""
+"# set the connector for the incoming channel to `smallrye-kafka`\n"
+"mp.messaging.incoming.movies-from-kafka.connector=smallrye-kafka\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:262
+#, no-wrap
+msgid ""
+"# set the topic name for the channel to `movies`\n"
+"mp.messaging.incoming.movies-from-kafka.topic=movies\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:265
+#, no-wrap
+msgid ""
+"# disable auto-commit, Reactive Messaging handles it itself\n"
+"mp.messaging.incoming.movies-from-kafka.enable.auto.commit=false\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:267
+#, no-wrap
+msgid "mp.messaging.incoming.movies-from-kafka.auto.offset.reset=earliest\n"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:274
+msgid "You might have noticed that we didn't define the `value.deserializer`.  That's because Quarkus can xref:kafka.adoc#serialization-autodetection[autodetect] that `io.apicurio.registry.serde.avro.AvroKafkaDeserializer` is appropriate here, based on the `@Channel` declaration, structure of the `Movie` type, and presence of the Apicurio Registry libraries.  We don't have to define the `apicurio.registry.use-specific-avro-reader` property either, that is also configured automatically."
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:277
+msgid "If you use Confluent Schema Registry, you don't have to configure `value.deserializer` or `specific.avro.reader` either.  They are both detected automatically."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:279
+#, no-wrap
+msgid "Running the application"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:282
+msgid "Start the application in dev mode:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:286
+#, no-wrap
+msgid "mvn quarkus:dev\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:290
+msgid "Kafka broker and Apicurio Registry instance are started automatically thanks to Dev Services.  See xref:kafka-dev-services.adoc[Dev Services for Kafka] and xref:apicurio-registry-dev-services.adoc[Dev Services for Apicurio Registry] for more details."
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:295
+msgid "You might have noticed that we didn't configure the schema registry URL anywhere.  This is because Dev Services for Apicurio Registry configures all Kafka channels in SmallRye Reactive Messaging to use the automatically started registry instance."
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:298
+msgid "There's no Dev Services support for Confluent Schema Registry.  If you want to use a running instance of Confluent Schema Registry, configure its URL, together with the URL of a Kafka broker:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:303
+#, no-wrap
+msgid ""
+"kafka.bootstrap.servers=PLAINTEXT://localhost:9092\n"
+"mp.messaging.connector.smallrye-kafka.schema.registry.url=http://localhost:8081\n"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:307
+msgid "In the second terminal, query the `ConsumedMovieResource` resource with `curl`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:311
+#, no-wrap
+msgid "curl -N http://localhost:8080/consumed-movies\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:314
+msgid "In the third one, post a few movies:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:321
+#, no-wrap
+msgid ""
+"curl --header \"Content-Type: application/json\" \\\n"
+"  --request POST \\\n"
+"  --data '{\"title\":\"The Shawshank Redemption\",\"year\":1994}' \\\n"
+"  http://localhost:8080/movies\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:326
+#, no-wrap
+msgid ""
+"curl --header \"Content-Type: application/json\" \\\n"
+"  --request POST \\\n"
+"  --data '{\"title\":\"The Godfather\",\"year\":1972}' \\\n"
+"  http://localhost:8080/movies\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:331
+#, no-wrap
+msgid ""
+"curl --header \"Content-Type: application/json\" \\\n"
+"  --request POST \\\n"
+"  --data '{\"title\":\"The Dark Knight\",\"year\":2008}' \\\n"
+"  http://localhost:8080/movies\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:336
+#, no-wrap
+msgid ""
+"curl --header \"Content-Type: application/json\" \\\n"
+"  --request POST \\\n"
+"  --data '{\"title\":\"12 Angry Men\",\"year\":1957}' \\\n"
+"  http://localhost:8080/movies\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:339
+msgid "Observe what is printed in the second terminal. You should see something along the lines of:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:343
+#, no-wrap
+msgid "data:'The Shawshank Redemption' from 1994\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:345
+#, no-wrap
+msgid "data:'The Godfather' from 1972\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:347
+#, no-wrap
+msgid "data:'The Dark Knight' from 2008\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:349
+#, no-wrap
+msgid "data:'12 Angry Men' from 1957\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:351
+#, no-wrap
+msgid "Running in JVM or Native mode"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:355
+msgid "When not running in dev or test mode, you will need to start your own Kafka broker and Apicurio Registry.  The easiest way to get them running is to use `docker-compose` to start the appropriate containers."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:358
+msgid "If you use Confluent Schema Registry, you already have a Kafka broker and Confluent Schema Registry instance running and configured.  You can ignore the `docker-compose` instructions here, as well as the Apicurio Registry configuration."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:360
+msgid "Create a `docker-compose.yaml` file at the root of the project with the following content:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:364
+#, no-wrap
+msgid "version: '2'\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:366
+#, no-wrap
+msgid "services:\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:377
+#, no-wrap
+msgid ""
+"  zookeeper:\n"
+"    image: quay.io/strimzi/kafka:0.22.1-kafka-2.7.0\n"
+"    command: [\n"
+"        \"sh\", \"-c\",\n"
+"        \"bin/zookeeper-server-start.sh config/zookeeper.properties\"\n"
+"    ]\n"
+"    ports:\n"
+"      - \"2181:2181\"\n"
+"    environment:\n"
+"      LOG_DIR: /tmp/logs\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:393
+#, no-wrap
+msgid ""
+"  kafka:\n"
+"    image: quay.io/strimzi/kafka:0.22.1-kafka-2.7.0\n"
+"    command: [\n"
+"        \"sh\", \"-c\",\n"
+"        \"bin/kafka-server-start.sh config/server.properties --override listeners=$${KAFKA_LISTENERS} --override advertised.listeners=$${KAFKA_ADVERTISED_LISTENERS} --override zookeeper.connect=$${KAFKA_ZOOKEEPER_CONNECT}\"\n"
+"    ]\n"
+"    depends_on:\n"
+"      - zookeeper\n"
+"    ports:\n"
+"      - \"9092:9092\"\n"
+"    environment:\n"
+"      LOG_DIR: \"/tmp/logs\"\n"
+"      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092\n"
+"      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092\n"
+"      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:402
+#, no-wrap
+msgid ""
+"  schema-registry:\n"
+"    image: apicurio/apicurio-registry-mem:2.0.1.Final\n"
+"    ports:\n"
+"      - 8081:8080\n"
+"    depends_on:\n"
+"      - kafka\n"
+"    environment:\n"
+"      QUARKUS_PROFILE: prod\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:405
+msgid "Before starting the application, let's first start the Kafka broker and Apicurio Registry:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:409
+#, no-wrap
+msgid "docker-compose up\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:413
+msgid "To stop the containers, use `docker-compose down`. You can also clean up the containers with `docker-compose rm`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:415
+msgid "You can build and run the application in JVM mode with:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:420
+#, no-wrap
+msgid ""
+"mvn package\n"
+"java -Dmp.messaging.connector.smallrye-kafka.apicurio.registry.url=http://localhost:8081/apis/registry/v2 -jar target/quarkus-app/quarkus-run.jar\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:424
+msgid "By default, the application tries to connect to a Kafka broker listening at `localhost:9092`.  You can configure the bootstrap server using: `java -Dkafka.bootstrap.servers=\\... -jar target/quarkus-app/quarkus-run.jar`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:426
+msgid "Specifying the registry URL on the command line is not very convenient, so you can add a configuration property only for the `prod` profile:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:430
+#, no-wrap
+msgid "%prod.mp.messaging.connector.smallrye-kafka.apicurio.registry.url=http://localhost:8081/apis/registry/v2\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:433
+msgid "You can build and run the native executable with:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:438
+#, no-wrap
+msgid ""
+"mvn package -Dnative\n"
+"./target/kafka-avro-schema-quickstart-1.0.0-SNAPSHOT-runner -Dkafka.bootstrap.servers=localhost:9092\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:440
+#, no-wrap
+msgid "Testing the application"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:445
+msgid "As mentioned above, Dev Services for Kafka and Apicurio Registry automatically start and configure a Kafka broker and Apicurio Registry instance in dev mode and for tests.  Hence, we don't have to set up Kafka and Apicurio Registry ourselves.  We can just focus on writing the test."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:447
+msgid "First, let's add test dependencies on REST Client and Awaitility to `pom.xml`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:464
+#, no-wrap
+msgid ""
+"<dependencies>\n"
+"    ...\n"
+"    <!-- we'll use JAX-RS Client for talking to the SSE endpoint -->\n"
+"    <dependency>\n"
+"        <groupId>io.quarkus</groupId>\n"
+"        <artifactId>quarkus-rest-client-reactive</artifactId>\n"
+"        <scope>test</scope>\n"
+"    </dependency>\n"
+"    <dependency>\n"
+"        <groupId>org.awaitility</groupId>\n"
+"        <artifactId>awaitility</artifactId>\n"
+"        <scope>test</scope>\n"
+"    </dependency>\n"
+"</dependencies>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:468
+msgid "In the test, we will send movies in a loop and check if the `ConsumedMovieResource` returns what we send."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:479
+#, no-wrap
+msgid ""
+"import io.quarkus.test.common.QuarkusTestResource;\n"
+"import io.quarkus.test.common.http.TestHTTPResource;\n"
+"import io.quarkus.test.junit.QuarkusTest;\n"
+"import io.restassured.http.ContentType;\n"
+"import org.hamcrest.Matchers;\n"
+"import org.junit.jupiter.api.Test;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:489
+#, no-wrap
+msgid ""
+"import javax.ws.rs.client.Client;\n"
+"import javax.ws.rs.client.ClientBuilder;\n"
+"import javax.ws.rs.client.WebTarget;\n"
+"import javax.ws.rs.sse.SseEventSource;\n"
+"import java.net.URI;\n"
+"import java.util.List;\n"
+"import java.util.concurrent.CopyOnWriteArrayList;\n"
+"import java.util.concurrent.ExecutorService;\n"
+"import java.util.concurrent.Executors;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:495
+#, no-wrap
+msgid ""
+"import static io.restassured.RestAssured.given;\n"
+"import static java.util.concurrent.TimeUnit.MILLISECONDS;\n"
+"import static java.util.concurrent.TimeUnit.SECONDS;\n"
+"import static org.awaitility.Awaitility.await;\n"
+"import static org.hamcrest.MatcherAssert.assertThat;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:498
+#, no-wrap
+msgid ""
+"@QuarkusTest\n"
+"public class MovieResourceTest {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:501
+#, no-wrap
+msgid ""
+"    @TestHTTPResource(\"/consumed-movies\")\n"
+"    URI consumedMovies;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:507
+#, no-wrap
+msgid ""
+"    @Test\n"
+"    public void testHelloEndpoint() throws InterruptedException {\n"
+"        // create a client for `ConsumedMovieResource` and collect the consumed resources in a list\n"
+"        Client client = ClientBuilder.newClient();\n"
+"        WebTarget target = client.target(consumedMovies);\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:509
+#, no-wrap
+msgid "        List<String> received = new CopyOnWriteArrayList<>();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:512
+#, no-wrap
+msgid ""
+"        SseEventSource source = SseEventSource.target(target).build();\n"
+"        source.register(inboundSseEvent -> received.add(inboundSseEvent.readData()));\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:515
+#, no-wrap
+msgid ""
+"        // in a separate thread, feed the `MovieResource`\n"
+"        ExecutorService movieSender = startSendingMovies();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:517
+#, no-wrap
+msgid "        source.open();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:523
+#, no-wrap
+msgid ""
+"        // check if, after at most 5 seconds, we have at least 2 items collected, and they are what we expect\n"
+"        await().atMost(5, SECONDS).until(() -> received.size() >= 2);\n"
+"        assertThat(received, Matchers.hasItems(\"'The Shawshank Redemption' from 1994\",\n"
+"                \"'12 Angry Men' from 1957\"));\n"
+"        source.close();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:528
+#, no-wrap
+msgid ""
+"        // shutdown the executor that is feeding the `MovieResource`\n"
+"        movieSender.shutdownNow();\n"
+"        movieSender.awaitTermination(5, SECONDS);\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:540
+#, no-wrap
+msgid ""
+"    private ExecutorService startSendingMovies() {\n"
+"        ExecutorService executorService = Executors.newSingleThreadExecutor();\n"
+"        executorService.execute(() -> {\n"
+"            while (true) {\n"
+"                given()\n"
+"                        .contentType(ContentType.JSON)\n"
+"                        .body(\"{\\\"title\\\":\\\"The Shawshank Redemption\\\",\\\"year\\\":1994}\")\n"
+"                .when()\n"
+"                        .post(\"/movies\")\n"
+"                .then()\n"
+"                        .statusCode(202);\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:548
+#, no-wrap
+msgid ""
+"                given()\n"
+"                        .contentType(ContentType.JSON)\n"
+"                        .body(\"{\\\"title\\\":\\\"12 Angry Men\\\",\\\"year\\\":1957}\")\n"
+"                .when()\n"
+"                        .post(\"/movies\")\n"
+"                .then()\n"
+"                        .statusCode(202);\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:558
+#, no-wrap
+msgid ""
+"                try {\n"
+"                    Thread.sleep(200L);\n"
+"                } catch (InterruptedException e) {\n"
+"                    break;\n"
+"                }\n"
+"            }\n"
+"        });\n"
+"        return executorService;\n"
+"    }\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:565
+msgid "We modified the `MovieResourceTest` that was generated together with the project. This test class has a subclass, `NativeMovieResourceIT`, that runs the same test against the native executable.  To run it, execute `mvn verify -Dnative`, or `mvn clean install -Dnative`"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:566
+#, no-wrap
+msgid "Manual setup"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:569
+msgid "If we couldn't use Dev Services and wanted to start a Kafka broker and Apicurio Registry instance manually, we would define a link:getting-started-testing#quarkus-test-resource[QuarkusTestResourceLifecycleManager]."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:587
+#, no-wrap
+msgid ""
+"<dependencies>\n"
+"    ...\n"
+"   <dependency>\n"
+"        <groupId>io.strimzi</groupId>\n"
+"        <artifactId>strimzi-test-container</artifactId>\n"
+"        <version>0.22.1</version>\n"
+"        <scope>test</scope>\n"
+"        <exclusions>\n"
+"            <exclusion>\n"
+"                <groupId>org.apache.logging.log4j</groupId>\n"
+"                <artifactId>log4j-core</artifactId>\n"
+"            </exclusion>\n"
+"        </exclusions>\n"
+"    </dependency>\n"
+"</dependencies>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:595
+#, no-wrap
+msgid ""
+"import java.util.HashMap;\n"
+"import java.util.Map;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:597
+#, no-wrap
+msgid "import org.testcontainers.containers.GenericContainer;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:600
+#, no-wrap
+msgid ""
+"import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;\n"
+"import io.strimzi.StrimziKafkaContainer;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:602
+#, no-wrap
+msgid "public class KafkaAndSchemaRegistryTestResource implements QuarkusTestResourceLifecycleManager {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:604
+#, no-wrap
+msgid "    private final StrimziKafkaContainer kafka = new StrimziKafkaContainer();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:606
+#, no-wrap
+msgid "    private GenericContainer<?> registry;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:620
+#, no-wrap
+msgid ""
+"    @Override\n"
+"    public Map<String, String> start() {\n"
+"        kafka.start();\n"
+"        registry = new GenericContainer<>(\"apicurio/apicurio-registry-mem:2.0.1.Final\")\n"
+"                .withExposedPorts(8080)\n"
+"                .withEnv(\"QUARKUS_PROFILE\", \"prod\");\n"
+"        registry.start();\n"
+"        Map<String, String> properties = new HashMap<>();\n"
+"        properties.put(\"mp.messaging.connector.smallrye-kafka.apicurio.registry.url\",\n"
+"                \"http://\" + registry.getContainerIpAddress() + \":\" + registry.getMappedPort(8080) + \"/apis/registry/v2\");\n"
+"        properties.put(\"kafka.bootstrap.servers\", kafka.getBootstrapServers());\n"
+"        return properties;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:627
+#, no-wrap
+msgid ""
+"    @Override\n"
+"    public void stop() {\n"
+"        registry.stop();\n"
+"        kafka.stop();\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:636
+#, no-wrap
+msgid ""
+"@QuarkusTest\n"
+"@QuarkusTestResource(KafkaAndSchemaRegistryTestResource.class)\n"
+"public class MovieResourceTest {\n"
+"    ...\n"
+"}\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:638
+#, no-wrap
+msgid "Avro code generation details"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:642
+msgid "In this guide we used the Quarkus code generation mechanism to generate Java files from Avro schema."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:644
+msgid "Under the hood, the mechanism uses `org.apache.avro:avro-compiler`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:646
+msgid "You can use the following configuration properties to alter how it works:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:650
+msgid "`avro.codegen.[avsc|avdl|avpr].imports` - a list of files or directories that should be compiled first thus making them importable by subsequently compiled schemas. Note that imported files should not reference each other. All paths should be relative to the `src/[main|test]/avro` directory. Passed as a comma-separated list."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:652
+msgid "`avro.codegen.stringType` - the Java type to use for Avro strings. May be one of `CharSequence`, `String` or `Utf8`. Defaults to `String`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:654
+msgid "`avro.codegen.createOptionalGetters` - enables generating the `getOptional...` methods that return an Optional of the requested type. Defaults to `false`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:655
+msgid "`avro.codegen.enableDecimalLogicalType` - determines whether to use Java classes for decimal types, defaults to `false`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:657
+msgid "`avro.codegen.createSetters` - determines whether to create setters for the fields of the record.  Defaults to `false`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:659
+msgid "`avro.codegen.gettersReturnOptional` - enables generating `get...` methods that return an Optional of the requested type. Defaults to `false`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:662
+msgid "`avro.codegen.optionalGettersForNullableFieldsOnly`, works in conjunction with `gettersReturnOptional` option.  If it is set, `Optional` getters will be generated only for fields that are nullable. If the field is mandatory, regular getter will be generated. Defaults to `false`"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:663
+#, no-wrap
+msgid "Further reading"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:666
+msgid "link:https://smallrye.io/smallrye-reactive-messaging/smallrye-reactive-messaging/2.9/kafka/kafka.html[SmallRye Reactive Messaging Kafka] documentation"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/kafka-schema-registry-avro.adoc:667
+msgid "link:https://quarkus.io/blog/kafka-avro/[How to Use Kafka, Schema Registry and Avro with Quarkus] - a blog post on which the guide is based. It gives a good introduction to Avro and the concept of schema registry"
+msgstr ""

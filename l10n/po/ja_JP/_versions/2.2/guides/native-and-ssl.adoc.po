@@ -1,0 +1,533 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2021-11-12 13:16+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. This guide is maintained in the main Quarkus repository
+#. and pull requests should be submitted there:
+#. https://github.com/quarkusio/quarkus/tree/main/docs/src/main/asciidoc
+#. type: Title =
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:6
+#, no-wrap
+msgid "Using SSL With Native Executables"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:11
+msgid "We are quickly moving to an SSL-everywhere world so being able to use SSL is crucial."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:14
+msgid "In this guide, we will discuss how you can get your native executables to support SSL, as native executables don't support it out of the box."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:16
+msgid "If you don't plan on using native executables, you can pass your way as in JDK mode, SSL is supported without further manipulations."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:17
+#, no-wrap
+msgid "Prerequisites"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:20
+msgid "To complete this guide, you need:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:22
+msgid "less than 20 minutes"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:23
+msgid "an IDE"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:24
+msgid "GraalVM (Java 11) installed with `JAVA_HOME` and `GRAALVM_HOME` configured appropriately"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:25
+msgid "Apache Maven {maven-version}"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:27
+msgid "This guide is based on the REST client guide so you should get this Maven project first."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:29
+msgid "Clone the Git repository: `git clone {quickstarts-clone-url}`, or download an {quickstarts-archive-url}[archive]."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:31
+msgid "The project is located in the `rest-client-quickstart` {quickstarts-tree-url}/rest-client-quickstart[directory]."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:32
+#, no-wrap
+msgid "Looks like it works out of the box?!?"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:35
+msgid "If you open the application's configuration file (`src/main/resources/application.properties`), you can see the following line:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:39
+#, no-wrap
+msgid "org.acme.restclient.CountriesService/mp-rest/url=https://restcountries.eu/rest\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:41
+msgid "which configures our REST client to connect to an SSL REST service."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:43
+msgid "Now let's build the application as a native executable and run the tests:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:47
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:145
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:168
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:213
+#, no-wrap
+msgid "./mvnw clean install -Pnative\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:50
+msgid "And we obtain the following result:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:56
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:184
+#, no-wrap
+msgid ""
+"[INFO] ------------------------------------------------------------------------\n"
+"[INFO] BUILD SUCCESS\n"
+"[INFO] ------------------------------------------------------------------------\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:59
+msgid "So, yes, it appears it works out of the box and this guide is pretty useless."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:61
+msgid "It's not. The magic happens when building the native executable:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:65
+#, no-wrap
+msgid "[INFO] [io.quarkus.creator.phase.nativeimage.NativeImagePhase] /opt/graalvm/bin/native-image -J-Djava.util.logging.manager=org.jboss.logmanager.LogManager -J-Dcom.sun.xml.internal.bind.v2.bytecode.ClassTailor.noOptimize=true -H:InitialCollectionPolicy=com.oracle.svm.core.genscavenge.CollectionPolicy$BySpaceAndTime -jar rest-client-1.0.0-SNAPSHOT-runner.jar -J-Djava.util.concurrent.ForkJoinPool.common.parallelism=1 -H:+PrintAnalysisCallTree -H:EnableURLProtocols=http,https --enable-all-security-services -H:-SpawnIsolates -H:+JNI --no-server -H:-UseServiceLoaderFeature -H:+StackTrace\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:68
+msgid "The important elements are these 3 options that were automatically added by Quarkus:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:72
+#, no-wrap
+msgid "-H:EnableURLProtocols=http,https --enable-all-security-services -H:+JNI\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:76
+msgid "They enable the native SSL support for your native executable.  But you should not set them manually, we have a nice configuration property for this purpose as described below."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:78
+msgid "As SSL is de facto the standard nowadays, we decided to enable its support automatically for some of our extensions:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:80
+msgid "the Agroal connection pooling extension (`quarkus-agroal`),"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:81
+msgid "the Amazon Services extension (`quarkus-amazon-*`),"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:82
+msgid "the Consul Config extension (`quarkus-consul-config`),"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:83
+msgid "the Elasticsearch client extensions (`quarkus-elasticsearch-rest-client` and `quarkus-elasticsearch-rest-high-level-client`) and thus the Hibernate Search Elasticsearch extension (`quarkus-hibernate-search-orm-elasticsearch`),"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:84
+msgid "the Elytron Security OAuth2 extension (`quarkus-elytron-security-oauth2`),"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:85
+msgid "the gRPC extension (`quarkus-grpc`),"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:86
+msgid "the Infinispan Client extension (`quarkus-infinispan-client`)."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:87
+msgid "the Jaeger extension (`quarkus-jaeger`),"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:88
+msgid "the JGit extension (`quarkus-jgit`),"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:89
+msgid "the JSch extension (`quarkus-jsch`),"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:90
+msgid "the Kafka Client extension (`quarkus-kafka-client`), if Apicurio Registry 2.x Avro library is used"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:91
+msgid "the Keycloak Authorization extension (`quarkus-keycloak-authorization`),"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:92
+msgid "the Kubernetes client extension (`quarkus-kubernetes-client`),"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:93
+msgid "the Logging Sentry extension (`quarkus-logging-sentry`),"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:94
+msgid "the Mailer extension (`quarkus-mailer`),"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:95
+msgid "the MongoDB client extension (`quarkus-mongodb-client`),"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:96
+msgid "the Neo4j extension (`quarkus-neo4j`),"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:97
+msgid "the OIDC and OIDC client extensions (`quarkus-oidc` and `quarkus-oidc-client`),"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:98
+msgid "the Reactive client for IBM DB2 extension (`quarkus-reactive-db2-client`),"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:99
+msgid "the Reactive client for PostgreSQL extension (`quarkus-reactive-pg-client`),"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:100
+msgid "the Reactive client for MySQL extension (`quarkus-reactive-mysql-client`),"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:101
+msgid "the Reactive client for DB2 extension (`quarkus-reactive-db2-client`)."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:102
+msgid "the Redis client extension (`quarkus-redis-client`),"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:103
+msgid "the REST Client extension (`quarkus-rest-client`),"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:104
+msgid "the REST Client Reactive extension (`quarkus-rest-client-reactive`),"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:105
+msgid "the Spring Cloud Config client extension (`quarkus-spring-cloud-config-client`),"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:106
+msgid "the Vault extension (`quarkus-vault`),"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:107
+msgid "the Cassandra client extensions (`cassandra-quarkus-client`)"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:109
+msgid "As long as you have one of these extensions in your project, the SSL support will be enabled by default."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:111
+msgid "If you are not using any of them and you want to enable SSL support anyway, please add the following to your configuration:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:115
+#, no-wrap
+msgid "quarkus.ssl.native=true\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:118
+msgid "Now, let's just check the size of our native executable as it will be useful later:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:123
+#, no-wrap
+msgid ""
+"$ ls -lh target/rest-client-quickstart-1.0.0-SNAPSHOT-runner\n"
+"-rwxrwxr-x. 1 gandrian gandrian 46M Jun 11 13:01 target/rest-client-quickstart-1.0.0-SNAPSHOT-runner\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:125
+#, no-wrap
+msgid "Let's disable SSL and see how it goes"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:130
+msgid "Quarkus has an option to disable the SSL support entirely.  Why? Because it comes at a certain cost.  So if you are sure you don't need it, you can disable it entirely."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:132
+msgid "First, let's disable it without changing the REST service URL and see how it goes."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:134
+msgid "Open `src/main/resources/application.properties` and add the following line:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:138
+#, no-wrap
+msgid "quarkus.ssl.native=false\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:141
+msgid "And let's try to build again:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:148
+msgid "The native executable tests will fail with the following error:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:152
+#, no-wrap
+msgid "Exception handling request to /country/name/greece: com.oracle.svm.core.jdk.UnsupportedFeatureError: Accessing an URL protocol that was not enabled. The URL protocol https is supported but not enabled by default. It must be enabled by adding the --enable-url-protocols=https option to the native-image command.\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:155
+msgid "This error is the one you obtain when trying to use SSL while it was not explicitly enabled in your native executable."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:157
+msgid "Now, let's change the REST service URL to **not** use SSL in `src/main/resources/application.properties`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:161
+#, no-wrap
+msgid "org.acme.restclient.CountriesService/mp-rest/url=http://restcountries.eu/rest\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:164
+msgid "And build again:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:171
+msgid "If you check carefully the native executable build options, you can see that the SSL related options are gone:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:175
+#, no-wrap
+msgid "[INFO] [io.quarkus.creator.phase.nativeimage.NativeImagePhase] /opt/graalvm/bin/native-image -J-Djava.util.logging.manager=org.jboss.logmanager.LogManager -J-Dcom.sun.xml.internal.bind.v2.bytecode.ClassTailor.noOptimize=true -H:InitialCollectionPolicy=com.oracle.svm.core.genscavenge.CollectionPolicy$BySpaceAndTime -jar rest-client-1.0.0-SNAPSHOT-runner.jar -J-Djava.util.concurrent.ForkJoinPool.common.parallelism=1 -H:+PrintAnalysisCallTree -H:EnableURLProtocols=http -H:-SpawnIsolates -H:+JNI --no-server -H:-UseServiceLoaderFeature -H:+StackTrace\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:178
+msgid "And we end up with:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:188
+msgid "You remember we checked the size of the native executable with SSL enabled? Let's check again with SSL support entirely disabled:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:193
+#, no-wrap
+msgid ""
+"$ ls -lh target/rest-client-quickstart-1.0.0-SNAPSHOT-runner\n"
+"-rwxrwxr-x. 1 gandrian gandrian 35M Jun 11 13:06 target/rest-client-quickstart-1.0.0-SNAPSHOT-runner\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:196
+msgid "Yes, it is now **35 MB** whereas it used to be **46 MB**. SSL comes with a 11 MB overhead in native executable size."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:198
+msgid "And there's more to it."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:199
+#, no-wrap
+msgid "Let's start again with a clean slate"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:202
+msgid "Let's revert the changes we made to the configuration file and go back to SSL with the following command:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:206
+#, no-wrap
+msgid "git checkout -- src/main/resources/application.properties\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:209
+msgid "And let's build the native executable again:"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:216
+#, no-wrap
+msgid "The TrustStore path"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:221
+msgid "This behavior is new to GraalVM 19.3+."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:228
+msgid "When creating a native binary, GraalVM embraces the principle of \"immutable security\" for the root certificates.  This essentially means that the root certificates are fixed at image build time, based on the certificate configuration used at that build time (which for Quarkus means when you perform a build having `quarkus.package.type=native` set).  This avoids shipping a `cacerts` file or requiring a system property be set in order to set up root certificates that are provided by the OS where the binary runs."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:232
+msgid "As a consequence, system properties such as `javax.net.ssl.trustStore` do not have an effect at run time, so when the defaults need to be changed, these system properties must be provided at image build time.  The easiest way to do so is by setting `quarkus.native.additional-build-args`. For example:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:236
+#, no-wrap
+msgid "quarkus.native.additional-build-args=-J-Djavax.net.ssl.trustStore=/tmp/mycerts,-J-Djavax.net.ssl.trustStorePassword=changeit\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:239
+msgid "will ensure that the certificates of `/tmp/mycerts` are baked into the native binary and used *in addition* to the default cacerts."
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:243
+msgid "The file containing the custom TrustStore does *not* have to be present at runtime as its content has been baked into the native binary."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:246
+#, no-wrap
+msgid "Working with containers"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:250
+msgid "No special action needs to be taken when running the native binary in a container. If the native binary was properly built with the custom TrustStore as described in the previous section, it will work properly in container as well."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:251
+#, no-wrap
+msgid "Conclusion"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:255
+msgid "We make building native executable easy and, even if the SSL support in GraalVM is still requiring some serious thinking, it should be mostly transparent when using Quarkus."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/native-and-ssl.adoc:256
+msgid "We track GraalVM progress on a regular basis so we will promptly integrate in Quarkus any improvement with respect to SSL support."
+msgstr ""

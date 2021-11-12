@@ -1,0 +1,739 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2021-11-12 13:16+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. This guide is maintained in the main Quarkus repository
+#. and pull requests should be submitted there:
+#. https://github.com/quarkusio/quarkus/tree/main/docs/src/main/asciidoc
+#. type: Title =
+#: upstream/_versions/2.2/guides/security-customization.adoc:6
+#, no-wrap
+msgid "Security Tips and Tricks"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/security-customization.adoc:10
+#, no-wrap
+msgid "Quarkus Security Dependency"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-customization.adoc:13
+msgid "`io.quarkus:quarkus-security` module contains the core Quarkus security classes."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-customization.adoc:16
+msgid "In most cases it does not have to be added directly to your project's `pom.xml` as it is already provided by all of the security extensions.  However if you need to write your own custom security code (for example, register a <<jaxrs-security-context, Custom JAX-RS SecurityContext>>) or use <<bouncy-castle, BouncyCastle>> libraries, then please make sure it is included:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-customization.adoc:23
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"  <groupId>io.quarkus</groupId>\n"
+"  <artifactId>quarkus-security</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/security-customization.adoc:25
+#, no-wrap
+msgid "HttpAuthenticationMechanism Customization"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-customization.adoc:29
+msgid "One can customize `HttpAuthenticationMechanism` by registering a CDI implementation bean.  In the example below the custom authenticator delegates to `JWTAuthMechanism` provided by `quarkus-smallrye-jwt`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-customization.adoc:36
+#, no-wrap
+msgid ""
+"@Alternative\n"
+"@Priority(1)\n"
+"@ApplicationScoped\n"
+"public class CustomAwareJWTAuthMechanism implements HttpAuthenticationMechanism {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-customization.adoc:38
+#, no-wrap
+msgid "\tprivate static final Logger LOG = LoggerFactory.getLogger(CustomAwareJWTAuthMechanism.class);\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-customization.adoc:41
+#, no-wrap
+msgid ""
+"\t@Inject\n"
+"\tJWTAuthMechanism delegate;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-customization.adoc:47
+#, no-wrap
+msgid ""
+"\t@Override\n"
+"\tpublic Uni<SecurityIdentity> authenticate(RoutingContext context, IdentityProviderManager identityProviderManager) {\n"
+"\t    // do some custom action and delegate\t\n"
+"            return delegate.authenticate(context, identityProviderManager);\n"
+"\t}\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-customization.adoc:52
+#, no-wrap
+msgid ""
+"\t@Override\n"
+"\tpublic Uni<ChallengeData> getChallenge(RoutingContext context) {\n"
+"\t\treturn delegate.getChallenge(context);\n"
+"\t}\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-customization.adoc:57
+#, no-wrap
+msgid ""
+"\t@Override\n"
+"\tpublic Set<Class<? extends AuthenticationRequest>> getCredentialTypes() {\n"
+"\t\treturn delegate.getCredentialTypes();\n"
+"\t}\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-customization.adoc:62
+#, no-wrap
+msgid ""
+"\t@Override\n"
+"\tpublic HttpCredentialTransport getCredentialTransport() {\n"
+"\t\treturn delegate.getCredentialTransport();\n"
+"\t}\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-customization.adoc:64
+#, no-wrap
+msgid "}\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/security-customization.adoc:67
+#, no-wrap
+msgid "Security Identity Customization"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-customization.adoc:70
+msgid "Internally, the identity providers create and update an instance of the `io.quarkus.security.identity.SecurityIdentity` class which holds the principal, roles, credentials which were used to authenticate the client (user) and other security attributes. An easy option to customize `SecurityIdentity` is to register a custom `SecurityIdentityAugmentor`. For example, the augmentor below adds an addition role:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-customization.adoc:78
+#, no-wrap
+msgid ""
+"import io.quarkus.security.identity.AuthenticationRequestContext;\n"
+"import io.quarkus.security.identity.SecurityIdentity;\n"
+"import io.quarkus.security.identity.SecurityIdentityAugmentor;\n"
+"import io.quarkus.security.runtime.QuarkusSecurityIdentity;\n"
+"import io.smallrye.mutiny.Uni;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-customization.adoc:81
+#, no-wrap
+msgid ""
+"import javax.enterprise.context.ApplicationScoped;\n"
+"import java.util.function.Supplier;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-customization.adoc:84
+#: upstream/_versions/2.2/guides/security-customization.adoc:126
+#, no-wrap
+msgid ""
+"@ApplicationScoped\n"
+"public class RolesAugmentor implements SecurityIdentityAugmentor {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-customization.adoc:88
+#, no-wrap
+msgid ""
+"    @Override\n"
+"    public Uni<SecurityIdentity> augment(SecurityIdentity identity, AuthenticationRequestContext context) {\n"
+"        return Uni.createFrom().item(build(identity));\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-customization.adoc:92
+#, no-wrap
+msgid ""
+"        // Do 'return context.runBlocking(build(identity));'\n"
+"        // if a blocking call is required to customize the identity\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-customization.adoc:99
+#, no-wrap
+msgid ""
+"    private Supplier<SecurityIdentity> build(SecurityIdentity identity) {\n"
+"        if(identity.isAnonymous()) {\n"
+"            return () -> identity;\n"
+"        } else {\n"
+"            // create a new builder and copy principal, attributes, credentials and roles from the original identity\n"
+"            QuarkusSecurityIdentity.Builder builder = QuarkusSecurityIdentity.builder(identity);\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-customization.adoc:106
+#, no-wrap
+msgid ""
+"            // add custom role source here\n"
+"            builder.addRole(\"dummy\");\n"
+"            return builder::build;\n"
+"        }\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-customization.adoc:109
+msgid "Here is another example showing how to use the client certificate available in the current link:security-built-in-authentication#mutual-tls[Mutual TLS] request to add more roles:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-customization.adoc:119
+#, no-wrap
+msgid ""
+"import java.security.cert.X509Certificate;\n"
+"import io.quarkus.security.credential.CertificateCredential;\n"
+"import io.quarkus.security.identity.AuthenticationRequestContext;\n"
+"import io.quarkus.security.identity.SecurityIdentity;\n"
+"import io.quarkus.security.identity.SecurityIdentityAugmentor;\n"
+"import io.quarkus.security.runtime.QuarkusSecurityIdentity;\n"
+"import io.smallrye.mutiny.Uni;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-customization.adoc:123
+#, no-wrap
+msgid ""
+"import javax.enterprise.context.ApplicationScoped;\n"
+"import java.util.function.Supplier;\n"
+"import java.util.Set;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-customization.adoc:131
+#, no-wrap
+msgid ""
+"    @Override\n"
+"    public Uni<SecurityIdentity> augment(SecurityIdentity identity, AuthenticationRequestContext context) {\n"
+"        return Uni.createFrom().item(build(identity));\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-customization.adoc:135
+#, no-wrap
+msgid ""
+"    private Supplier<SecurityIdentity> build(SecurityIdentity identity) {\n"
+"        // create a new builder and copy principal, attributes, credentials and roles from the original identity\n"
+"        QuarkusSecurityIdentity.Builder builder = QuarkusSecurityIdentity.builder(identity);\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-customization.adoc:142
+#, no-wrap
+msgid ""
+"        CertificateCredential certificate = identity.getCredential(CertificateCredential.class);\n"
+"        if (certificate != null) {\n"
+"            builder.addRoles(extractRoles(certificate.getCertificate()));\n"
+"        }\n"
+"        return builder::build;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-customization.adoc:145
+#, no-wrap
+msgid ""
+"    private Set<String> extractRoles(X509Certificate certificate) {\n"
+"        String name = certificate.getSubjectX500Principal().getName();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-customization.adoc:156
+#, no-wrap
+msgid ""
+"        switch (name) {\n"
+"            case \"CN=client\":\n"
+"                return Collections.singleton(\"user\");\n"
+"            case \"CN=guest-client\":\n"
+"                return Collections.singleton(\"guest\");\n"
+"            default:\n"
+"                return Collections.emptySet();\n"
+"        }\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.2/guides/security-customization.adoc:162
+msgid "If more than one custom `SecurityIdentityAugmentor` is registered then they will be considered equal candidates and invoked in random order.  You can enforce the order by implementing a default `SecurityIdentityAugmentor#priority` method. Augmentors with higher priorities will be invoked first."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/security-customization.adoc:165
+#, no-wrap
+msgid "Custom JAX-RS SecurityContext"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-customization.adoc:168
+msgid "If you use JAX-RS `ContainerRequestFilter` to set a custom JAX-RS `SecurityContext` then make sure `ContainerRequestFilter` runs in the JAX-RS pre-match phase by adding a `@PreMatching` annotation to it for this custom security context to be linked with Quarkus `SecurityIdentity`, for example:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-customization.adoc:172
+#, no-wrap
+msgid "import java.security.Principal;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-customization.adoc:178
+#, no-wrap
+msgid ""
+"import javax.ws.rs.container.ContainerRequestContext;\n"
+"import javax.ws.rs.container.ContainerRequestFilter;\n"
+"import javax.ws.rs.container.PreMatching;\n"
+"import javax.ws.rs.core.SecurityContext;\n"
+"import javax.ws.rs.ext.Provider;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-customization.adoc:197
+#, no-wrap
+msgid ""
+"@Provider\n"
+"@PreMatching\n"
+"public class SecurityOverrideFilter implements ContainerRequestFilter {\n"
+"    @Override\n"
+"    public void filter(ContainerRequestContext requestContext) throws IOException {\n"
+"        String user = requestContext.getHeaders().getFirst(\"User\");\n"
+"        String role = requestContext.getHeaders().getFirst(\"Role\");\n"
+"        if (user != null && role != null) {\n"
+"            requestContext.setSecurityContext(new SecurityContext() {\n"
+"                @Override\n"
+"                public Principal getUserPrincipal() {\n"
+"                    return new Principal() {\n"
+"                        @Override\n"
+"                        public String getName() {\n"
+"                            return user;\n"
+"                        }\n"
+"                    };\n"
+"                }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-customization.adoc:202
+#, no-wrap
+msgid ""
+"                @Override\n"
+"                public boolean isUserInRole(String r) {\n"
+"                    return role.equals(r);\n"
+"                }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-customization.adoc:207
+#, no-wrap
+msgid ""
+"                @Override\n"
+"                public boolean isSecure() {\n"
+"                    return false;\n"
+"                }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-customization.adoc:214
+#, no-wrap
+msgid ""
+"                @Override\n"
+"                public String getAuthenticationScheme() {\n"
+"                    return \"basic\";\n"
+"                }\n"
+"            });\n"
+"        }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-customization.adoc:217
+#, no-wrap
+msgid ""
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/security-customization.adoc:219
+#, no-wrap
+msgid "Disabling Authorization"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-customization.adoc:222
+msgid "If you have a good reason to disable the authorization (for example, when testing) then you can register a custom `AuthorizationController`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-customization.adoc:231
+#, no-wrap
+msgid ""
+"@Alternative\n"
+"@Priority(Interceptor.Priority.LIBRARY_AFTER)\n"
+"@ApplicationScoped\n"
+"public class DisabledAuthController extends AuthorizationController {\n"
+"    @ConfigProperty(name = \"disable.authorization\", defaultValue = \"false\")\n"
+"    boolean disableAuthorization;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-customization.adoc:237
+#, no-wrap
+msgid ""
+"    @Override\n"
+"    public boolean isAuthorizationEnabled() {\n"
+"        return !disableAuthorization;\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-customization.adoc:240
+msgid "Please also see link:security-testing#testing-security[TestingSecurity Annotation] section on how to disable the security checks using `TestSecurity` annotation."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/security-customization.adoc:241
+#, no-wrap
+msgid "Registering Security Providers"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.2/guides/security-customization.adoc:243
+#, no-wrap
+msgid "Default providers"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-customization.adoc:249
+msgid "When running in native mode, the default behavior for GraalVM native executable generation is to only include the main \"SUN\" provider unless you have enabled SSL, in which case all security providers are registered. If you are not using SSL, then you can selectively register security providers by name using the `quarkus.security.security-providers` property. The following example illustrates configuration to register the \"SunRsaSign\" and \"SunJCE\" security providers:"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.2/guides/security-customization.adoc:250
+#, no-wrap
+msgid "Example Security Providers Configuration"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-customization.adoc:254
+#, no-wrap
+msgid "quarkus.security.security-providers=SunRsaSign,SunJCE\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.2/guides/security-customization.adoc:257
+#, no-wrap
+msgid "BouncyCastle"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-customization.adoc:260
+msgid "If you need to register an `org.bouncycastle.jce.provider.BouncyCastleProvider` JCE provider then please set a `BC` provider name:"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.2/guides/security-customization.adoc:261
+#, no-wrap
+msgid "Example Security Providers BouncyCastle Configuration"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-customization.adoc:265
+#, no-wrap
+msgid "quarkus.security.security-providers=BC\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-customization.adoc:268
+msgid "and add the BouncyCastle provider dependency:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-customization.adoc:275
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"  <groupId>org.bouncycastle</groupId>\n"
+"  <artifactId>bcprov-jdk15on</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.2/guides/security-customization.adoc:277
+#, no-wrap
+msgid "BouncyCastle JSSE"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-customization.adoc:280
+msgid "If you need to register an `org.bouncycastle.jsse.provider.BouncyCastleJsseProvider` JSSE provider and use it instead of the default SunJSSE provider then please set a `BCJSSE` provider name:"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.2/guides/security-customization.adoc:281
+#, no-wrap
+msgid "Example Security Providers BouncyCastle JSSE Configuration"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-customization.adoc:285
+#, no-wrap
+msgid "quarkus.security.security-providers=BCJSSE\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-customization.adoc:287
+#: upstream/_versions/2.2/guides/security-customization.adoc:346
+#, no-wrap
+msgid "quarkus.http.ssl.client-auth=REQUIRED\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-customization.adoc:292
+#, no-wrap
+msgid ""
+"quarkus.http.ssl.certificate.key-store-file=server-keystore.jks\n"
+"quarkus.http.ssl.certificate.key-store-password=password\n"
+"quarkus.http.ssl.certificate.trust-store-file=server-truststore.jks\n"
+"quarkus.http.ssl.certificate.trust-store-password=password\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-customization.adoc:295
+msgid "and add the BouncyCastle TLS dependency:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-customization.adoc:302
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"  <groupId>org.bouncycastle</groupId>\n"
+"  <artifactId>bctls-jdk15on</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.2/guides/security-customization.adoc:304
+#, no-wrap
+msgid "BouncyCastle FIPS"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-customization.adoc:307
+msgid "If you need to register an `org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider` JCE provider then please set a `BCFIPS` provider name:"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.2/guides/security-customization.adoc:308
+#, no-wrap
+msgid "Example Security Providers BouncyCastle FIPS Configuration"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-customization.adoc:312
+#, no-wrap
+msgid "quarkus.security.security-providers=BCFIPS\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-customization.adoc:315
+msgid "and add the BouncyCastle FIPS provider dependency:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-customization.adoc:322
+#: upstream/_versions/2.2/guides/security-customization.adoc:370
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"  <groupId>org.bouncycastle</groupId>\n"
+"  <artifactId>bc-fips</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.2/guides/security-customization.adoc:327
+msgid "`BCFIPS` provider option is supported in native image but the algorithm self-tests which rely on `java.security.SecureRandom` to verify the generated keys have been removed for these tests to pass. The following classes have been affected:"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.2/guides/security-customization.adoc:328
+msgid "`org.bouncycastle.crypto.general.DSA`"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.2/guides/security-customization.adoc:329
+msgid "`org.bouncycastle.crypto.general.DSTU4145`"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.2/guides/security-customization.adoc:330
+msgid "`org.bouncycastle.crypto.general.ECGOST3410`"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.2/guides/security-customization.adoc:331
+msgid "`org.bouncycastle.crypto.general.GOST3410`"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.2/guides/security-customization.adoc:332
+msgid "`org.bouncycastle.crypto.fips.FipsDSA`"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.2/guides/security-customization.adoc:333
+msgid "`org.bouncycastle.crypto.fips.FipsEC`"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.2/guides/security-customization.adoc:334
+msgid "`org.bouncycastle.crypto.fips.FipsRSA`"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.2/guides/security-customization.adoc:336
+#, no-wrap
+msgid "BouncyCastle JSSE FIPS"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-customization.adoc:339
+msgid "If you need to register an `org.bouncycastle.jsse.provider.BouncyCastleJsseProvider` JSSE provider and use it in combination with `org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider` instead of the default SunJSSE provider then please set a `BCFIPSJSSE` provider name:"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.2/guides/security-customization.adoc:340
+#, no-wrap
+msgid "Example Security Providers BouncyCastle FIPS JSSE Configuration"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-customization.adoc:344
+#, no-wrap
+msgid "quarkus.security.security-providers=BCFIPSJSSE\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-customization.adoc:355
+#, no-wrap
+msgid ""
+"quarkus.http.ssl.certificate.key-store-file=server-keystore.jks\n"
+"quarkus.http.ssl.certificate.key-store-password=password\n"
+"quarkus.http.ssl.certificate.key-store-file-type=BCFKS\n"
+"quarkus.http.ssl.certificate.key-store-provider=BCFIPS\n"
+"quarkus.http.ssl.certificate.trust-store-file=server-truststore.jks\n"
+"quarkus.http.ssl.certificate.trust-store-password=password\n"
+"quarkus.http.ssl.certificate.trust-store-file-type=BCFKS\n"
+"quarkus.http.ssl.certificate.trust-store-provider=BCFIPS\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-customization.adoc:358
+msgid "and the BouncyCastle TLS dependency optimized for using the BouncyCastle FIPS provider:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-customization.adoc:365
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"  <groupId>org.bouncycastle</groupId>\n"
+"  <artifactId>bctls-fips</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-customization.adoc:374
+msgid "Note that the keystore and truststore type and provider are set to `BCFKS` and `BCFIPS`.  One can generate a keystore with this type and provider like this:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-customization.adoc:378
+#, no-wrap
+msgid "keytool -genkey -alias server -keyalg RSA -keystore server-keystore.jks -keysize 2048 -keypass password -provider org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider -providerpath $PATH_TO_BC_FIPS_JAR -storetype BCFKS\n"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.2/guides/security-customization.adoc:383
+msgid "`BCFIPSJSSE` provider option is currently not supported in native image."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/security-customization.adoc:385
+#, no-wrap
+msgid "Reactive Security"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-customization.adoc:388
+msgid "If you are going to use security in a reactive environment, you will likely need SmallRye Context Propagation:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.2/guides/security-customization.adoc:395
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"  <groupId>io.quarkus</groupId>\n"
+"  <artifactId>quarkus-smallrye-context-propagation</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-customization.adoc:401
+msgid "This will allow you to propagate the identity throughout the reactive callbacks. You also need to make sure you are using an executor that is capable of propagating the identity (e.g. no `CompletableFuture.supplyAsync`), to make sure that Quarkus can propagate it. For more information see the link:context-propagation[Context Propagation Guide]."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.2/guides/security-customization.adoc:402
+#, no-wrap
+msgid "References"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.2/guides/security-customization.adoc:404
+msgid "link:security[Quarkus Security]"
+msgstr ""
