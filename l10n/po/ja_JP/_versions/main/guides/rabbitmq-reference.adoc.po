@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2021-11-28 02:18+0000\n"
+"POT-Creation-Date: 2021-12-10 02:16+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -162,7 +162,7 @@ msgstr ""
 
 #. type: Plain text
 #: upstream/_versions/main/guides/rabbitmq-reference.adoc:79
-msgid "In dev mode and when running tests, link:rabbitmq-dev-services.adoc[Dev Services for RabbitMQ] automatically starts a RabbitMQ broker."
+msgid "In dev mode and when running tests, xref:rabbitmq-dev-services.adoc[Dev Services for RabbitMQ] automatically starts a RabbitMQ broker."
 msgstr ""
 
 #. type: Title ==
@@ -857,48 +857,146 @@ msgstr ""
 #. type: Title ==
 #: upstream/_versions/main/guides/rabbitmq-reference.adoc:397
 #, no-wrap
+msgid "Dynamic Credentials"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:401
+msgid "Quarkus and the RabbitMQ connector support https://www.vaultproject.io/docs/secrets/rabbitmq[Vault's RabbitMQ secrets engine] for generating short-lived dynamic credentials. This allows Vault to create and retire RabbitMQ credentials on a regular basis."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:405
+msgid "First we need to enable Vault's `rabbitmq` secret engine, configure it with RabbitMQ's connection and authentication information, and create a Vault role `my-role` (replace `10.0.0.3` by the actual host that is running the RabbitMQ container):"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:408
+#, no-wrap
+msgid "vault secrets enable rabbitmq\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:413
+#, no-wrap
+msgid ""
+"vault write rabbitmq/config/connection \\\n"
+"    connection_uri=http://10.0.0.3:15672 \\\n"
+"    username=guest \\\n"
+"    password=guest\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:416
+#, no-wrap
+msgid ""
+"vault write rabbitmq/roles/my-role \\\n"
+"    vhosts='{\"/\":{\"write\": \".*\", \"read\": \".*\"}}'\n"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:422
+msgid "For this use case, user `guest` configured above needs to be a RabbitMQ admin user with the capability to create credentials."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:425
+msgid "Then we need to give a read capability to the Quarkus application on path `rabbitmq/creds/my-role`."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:435
+#, no-wrap
+msgid ""
+"cat <<EOF | vault policy write vault-rabbitmq-policy -\n"
+"path \"secret/data/myapps/vault-rabbitmq-test/*\" {\n"
+"  capabilities = [\"read\"]\n"
+"}\n"
+"path \"rabbitmq/creds/my-role\" {\n"
+"  capabilities = [ \"read\" ]\n"
+"}\n"
+"EOF\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:439
+msgid "Now that Vault knows how to create users in RabbitMQ, we need to configure Quarkus to use a credentials-provider for RabbitMQ."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:441
+msgid "First we tell Quarkus to request dynamic credentials using a credentials-provider named `rabbitmq`."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:443
+#, no-wrap
+msgid "quarkus.rabbitmq.credentials-provider = rabbitmq\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:447
+msgid "Next we configure the `rabbitmq` credentials provider. The `credentials-role` option must be set to the name of the role we created in Vault, in our case `my-role`. The `credentials-mount` option must be set to `rabbitmq`."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:451
+#, no-wrap
+msgid ""
+"quarkus.vault.credentials-provider.rabbitmq.credentials-role = my-role\n"
+"quarkus.vault.credentials-provider.rabbitmq.credentials-mount = rabbitmq\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:456
+msgid "The `credentials-mount` is used directly as the mount of the secret engine in Vault. Here we are using the default mount path of `rabbitmq`. If the RabbitMQ secret engine was mounted at a custom path, the `credentials-mount` option must be set to that path instead."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:458
+#, no-wrap
 msgid "RabbitMQ Connector Configuration Reference"
 msgstr ""
 
 #. === Quarkus specific configuration
 #. include::{generated-dir}/config/quarkus-smallrye-reactivemessaging-rabbitmq.adoc[opts=optional, leveloffset=+1]
 #. type: Title ===
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:403
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:464
 #, no-wrap
 msgid "Incoming channel configuration"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:407
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:628
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:468
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:689
 #, no-wrap
 msgid "Attribute (_alias_)"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:407
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:628
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:468
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:689
 #, no-wrap
 msgid "Description"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:407
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:628
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:468
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:689
 #, no-wrap
 msgid "Mandatory"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:409
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:630
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:470
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:691
 #, no-wrap
 msgid "Default"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:411
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:776
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:472
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:837
 #, no-wrap
 msgid ""
 "[.no-hyphens]#*username*#\n"
@@ -907,8 +1005,8 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:413
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:778
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:474
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:839
 #, no-wrap
 msgid ""
 "The username used to authenticate to the broker\n"
@@ -917,52 +1015,39 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:413
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:419
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:425
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:431
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:437
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:443
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:449
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:455
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:461
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:465
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:469
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:473
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:477
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:483
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:489
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:493
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:497
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:501
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:505
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:509
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:513
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:519
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:523
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:527
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:531
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:535
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:539
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:543
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:547
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:555
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:559
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:563
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:567
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:571
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:575
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:579
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:583
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:587
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:591
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:595
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:599
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:603
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:607
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:611
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:615
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:619
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:474
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:480
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:486
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:492
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:498
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:504
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:510
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:516
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:522
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:526
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:530
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:534
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:538
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:544
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:550
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:554
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:558
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:562
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:566
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:570
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:574
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:580
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:584
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:588
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:592
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:596
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:600
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:604
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:608
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:616
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:620
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:624
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:628
 #: upstream/_versions/main/guides/rabbitmq-reference.adoc:632
 #: upstream/_versions/main/guides/rabbitmq-reference.adoc:636
 #: upstream/_versions/main/guides/rabbitmq-reference.adoc:640
@@ -974,35 +1059,48 @@ msgstr ""
 #: upstream/_versions/main/guides/rabbitmq-reference.adoc:664
 #: upstream/_versions/main/guides/rabbitmq-reference.adoc:668
 #: upstream/_versions/main/guides/rabbitmq-reference.adoc:672
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:678
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:682
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:686
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:690
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:694
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:700
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:706
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:712
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:718
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:722
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:726
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:732
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:736
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:740
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:746
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:752
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:758
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:764
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:768
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:772
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:778
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:784
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:676
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:680
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:693
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:697
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:701
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:705
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:709
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:713
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:717
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:721
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:725
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:729
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:733
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:739
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:743
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:747
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:751
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:755
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:761
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:767
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:773
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:779
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:783
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:787
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:793
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:797
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:801
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:807
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:813
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:819
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:825
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:829
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:833
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:839
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:845
 #, no-wrap
 msgid "false"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:417
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:698
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:478
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:759
 #, no-wrap
 msgid ""
 "[.no-hyphens]#*password*#\n"
@@ -1011,8 +1109,8 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:419
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:700
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:480
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:761
 #, no-wrap
 msgid ""
 "The password used to authenticate to the broker\n"
@@ -1021,8 +1119,8 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:423
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:676
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:484
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:737
 #, no-wrap
 msgid ""
 "[.no-hyphens]#*host*#\n"
@@ -1031,8 +1129,8 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:425
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:678
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:486
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:739
 #, no-wrap
 msgid ""
 "The broker hostname\n"
@@ -1041,15 +1139,15 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:427
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:680
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:488
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:741
 #, no-wrap
 msgid "`localhost`"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:429
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:704
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:490
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:765
 #, no-wrap
 msgid ""
 "[.no-hyphens]#*port*#\n"
@@ -1058,8 +1156,8 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:431
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:706
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:492
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:767
 #, no-wrap
 msgid ""
 "The broker port\n"
@@ -1068,15 +1166,15 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:433
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:708
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:494
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:769
 #, no-wrap
 msgid "`5672`"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:435
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:730
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:496
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:791
 #, no-wrap
 msgid ""
 "[.no-hyphens]#*ssl*#\n"
@@ -1085,8 +1183,8 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:437
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:732
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:498
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:793
 #, no-wrap
 msgid ""
 "Whether or not the connection should use SSL\n"
@@ -1095,32 +1193,32 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:439
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:445
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:475
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:503
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:515
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:533
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:561
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:565
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:581
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:601
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:609
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:613
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:617
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:634
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:654
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:684
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:734
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:748
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:770
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:500
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:506
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:536
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:564
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:576
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:594
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:622
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:626
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:642
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:662
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:670
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:674
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:678
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:695
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:715
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:745
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:795
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:809
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:831
 #, no-wrap
 msgid "`false`"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:441
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:744
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:502
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:805
 #, no-wrap
 msgid ""
 "[.no-hyphens]#*trust-all*#\n"
@@ -1129,8 +1227,8 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:443
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:746
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:504
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:807
 #, no-wrap
 msgid ""
 "Whether to skip trust certificate verification\n"
@@ -1139,8 +1237,8 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:447
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:756
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:508
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:817
 #, no-wrap
 msgid ""
 "[.no-hyphens]#*trust-store-path*#\n"
@@ -1149,8 +1247,8 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:449
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:758
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:510
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:819
 #, no-wrap
 msgid ""
 "The path to a JKS trust store\n"
@@ -1159,8 +1257,8 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:453
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:750
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:514
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:811
 #, no-wrap
 msgid ""
 "[.no-hyphens]#*trust-store-password*#\n"
@@ -1169,8 +1267,8 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:455
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:752
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:516
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:813
 #, no-wrap
 msgid ""
 "The password of the JKS trust store\n"
@@ -1179,8 +1277,8 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:459
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:762
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:520
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:823
 #, no-wrap
 msgid ""
 "[.no-hyphens]#*credentials-provider-name*#\n"
@@ -1189,8 +1287,8 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:461
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:764
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:522
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:825
 #, no-wrap
 msgid ""
 "The name of the RabbitMQ Credentials Provider bean used to provide dynamic credentials to the RabbitMQ client\n"
@@ -1199,15 +1297,15 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:463
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:638
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:524
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:699
 #, no-wrap
 msgid "[.no-hyphens]#*connection-timeout*#"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:465
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:640
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:526
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:701
 #, no-wrap
 msgid ""
 "The TCP connection timeout (ms); 0 is interpreted as no timeout\n"
@@ -1216,22 +1314,22 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:467
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:642
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:528
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:703
 #, no-wrap
 msgid "`60000`"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:467
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:670
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:528
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:731
 #, no-wrap
 msgid "[.no-hyphens]#*handshake-timeout*#"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:469
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:672
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:530
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:733
 #, no-wrap
 msgid ""
 "The AMQP 0-9-1 protocol handshake timeout (ms)\n"
@@ -1240,22 +1338,22 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:471
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:674
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:532
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:735
 #, no-wrap
 msgid "`10000`"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:471
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:630
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:532
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:691
 #, no-wrap
 msgid "[.no-hyphens]#*automatic-recovery-enabled*#"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:473
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:632
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:534
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:693
 #, no-wrap
 msgid ""
 "Whether automatic connection recovery is enabled\n"
@@ -1264,15 +1362,15 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:475
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:634
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:536
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:695
 #, no-wrap
 msgid "[.no-hyphens]#*automatic-recovery-on-initial-connection*#"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:477
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:636
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:538
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:697
 #, no-wrap
 msgid ""
 "Whether automatic recovery on initial connections is enabled\n"
@@ -1281,23 +1379,23 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:479
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:529
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:541
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:545
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:557
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:569
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:638
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:658
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:662
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:742
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:540
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:590
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:602
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:606
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:618
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:630
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:699
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:719
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:723
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:803
 #, no-wrap
 msgid "`true`"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:481
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:710
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:542
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:771
 #, no-wrap
 msgid ""
 "[.no-hyphens]#*reconnect-attempts*#\n"
@@ -1306,8 +1404,8 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:483
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:712
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:544
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:773
 #, no-wrap
 msgid ""
 "The number of reconnection attempts\n"
@@ -1316,15 +1414,15 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:485
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:714
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:546
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:775
 #, no-wrap
 msgid "`100`"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:487
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:716
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:548
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:777
 #, no-wrap
 msgid ""
 "[.no-hyphens]#*reconnect-interval*#\n"
@@ -1333,8 +1431,8 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:489
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:718
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:550
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:779
 #, no-wrap
 msgid ""
 "The interval (in seconds) between two reconnection attempts\n"
@@ -1343,22 +1441,22 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:491
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:720
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:552
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:781
 #, no-wrap
 msgid "`10`"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:491
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:692
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:552
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:753
 #, no-wrap
 msgid "[.no-hyphens]#*network-recovery-interval*#"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:493
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:694
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:554
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:755
 #, no-wrap
 msgid ""
 "How long (ms) will automatic recovery wait before attempting to reconnect\n"
@@ -1367,22 +1465,22 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:495
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:696
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:556
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:757
 #, no-wrap
 msgid "`5000`"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:495
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:770
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:556
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:831
 #, no-wrap
 msgid "[.no-hyphens]#*user*#"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:497
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:772
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:558
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:833
 #, no-wrap
 msgid ""
 "The AMQP user name to use when connecting to the broker\n"
@@ -1391,22 +1489,22 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:499
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:774
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:560
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:835
 #, no-wrap
 msgid "`guest`"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:499
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:680
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:560
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:741
 #, no-wrap
 msgid "[.no-hyphens]#*include-properties*#"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:501
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:682
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:562
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:743
 #, no-wrap
 msgid ""
 "Whether to include properties when a broker message is passed on the event bus\n"
@@ -1415,15 +1513,15 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:503
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:720
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:564
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:781
 #, no-wrap
 msgid "[.no-hyphens]#*requested-channel-max*#"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:505
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:722
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:566
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:783
 #, no-wrap
 msgid ""
 "The initially requested maximum channel number\n"
@@ -1432,22 +1530,22 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:507
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:724
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:568
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:785
 #, no-wrap
 msgid "`2047`"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:507
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:724
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:568
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:785
 #, no-wrap
 msgid "[.no-hyphens]#*requested-heartbeat*#"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:509
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:726
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:570
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:787
 #, no-wrap
 msgid ""
 "The initially requested heartbeat interval (seconds), zero for none\n"
@@ -1456,22 +1554,22 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:511
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:728
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:572
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:789
 #, no-wrap
 msgid "`60`"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:511
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:766
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:572
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:827
 #, no-wrap
 msgid "[.no-hyphens]#*use-nio*#"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:513
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:768
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:574
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:829
 #, no-wrap
 msgid ""
 "Whether usage of NIO Sockets is enabled\n"
@@ -1480,8 +1578,8 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:517
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:782
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:578
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:843
 #, no-wrap
 msgid ""
 "[.no-hyphens]#*virtual-host*#\n"
@@ -1490,8 +1588,8 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:519
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:784
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:580
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:845
 #, no-wrap
 msgid ""
 "The virtual host to use when connecting to the broker\n"
@@ -1500,22 +1598,22 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:521
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:786
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:582
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:847
 #, no-wrap
 msgid "`/`"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:521
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:662
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:582
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:723
 #, no-wrap
 msgid "[.no-hyphens]#*exchange.name*#"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:523
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:664
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:584
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:725
 #, no-wrap
 msgid ""
 "The exchange that messages are published to or consumed from. If not set, the channel name is used\n"
@@ -1524,15 +1622,15 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:525
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:658
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:586
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:719
 #, no-wrap
 msgid "[.no-hyphens]#*exchange.durable*#"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:527
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:660
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:588
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:721
 #, no-wrap
 msgid ""
 "Whether the exchange is durable\n"
@@ -1541,15 +1639,15 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:529
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:650
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:590
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:711
 #, no-wrap
 msgid "[.no-hyphens]#*exchange.auto-delete*#"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:531
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:652
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:592
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:713
 #, no-wrap
 msgid ""
 "Whether the exchange should be deleted after use\n"
@@ -1558,15 +1656,15 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:533
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:666
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:594
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:727
 #, no-wrap
 msgid "[.no-hyphens]#*exchange.type*#"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:535
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:668
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:596
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:729
 #, no-wrap
 msgid ""
 "The exchange type: direct, fanout, headers or topic (default)\n"
@@ -1575,22 +1673,22 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:537
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:670
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:598
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:731
 #, no-wrap
 msgid "`topic`"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:537
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:654
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:598
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:715
 #, no-wrap
 msgid "[.no-hyphens]#*exchange.declare*#"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:539
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:656
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:600
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:717
 #, no-wrap
 msgid ""
 "Whether to declare the exchange; set to false if the exchange is expected to be set up independently\n"
@@ -1599,15 +1697,15 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:541
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:738
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:602
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:799
 #, no-wrap
 msgid "[.no-hyphens]#*tracing.enabled*#"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:543
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:740
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:604
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:801
 #, no-wrap
 msgid ""
 "Whether tracing is enabled (default) or disabled\n"
@@ -1616,15 +1714,15 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:545
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:734
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:606
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:795
 #, no-wrap
 msgid "[.no-hyphens]#*tracing.attribute-headers*#"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:547
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:736
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:608
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:797
 #, no-wrap
 msgid ""
 "A comma-separated list of headers that should be recorded as span attributes. Relevant only if tracing.enabled=true\n"
@@ -1633,21 +1731,21 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:549
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:646
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:738
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:610
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:707
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:799
 #, no-wrap
 msgid "``"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:549
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:610
 #, no-wrap
 msgid "[.no-hyphens]#*queue.name*#"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:551
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:612
 #, no-wrap
 msgid ""
 "The queue from which messages are consumed.\n"
@@ -1656,19 +1754,19 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:551
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:612
 #, no-wrap
 msgid "true"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:553
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:614
 #, no-wrap
 msgid "[.no-hyphens]#*queue.durable*#"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:555
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:616
 #, no-wrap
 msgid ""
 "Whether the queue is durable\n"
@@ -1677,13 +1775,13 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:557
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:618
 #, no-wrap
 msgid "[.no-hyphens]#*queue.exclusive*#"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:559
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:620
 #, no-wrap
 msgid ""
 "Whether the queue is for exclusive use\n"
@@ -1692,13 +1790,13 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:561
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:622
 #, no-wrap
 msgid "[.no-hyphens]#*queue.auto-delete*#"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:563
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:624
 #, no-wrap
 msgid ""
 "Whether the queue should be deleted after use\n"
@@ -1707,13 +1805,13 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:565
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:626
 #, no-wrap
 msgid "[.no-hyphens]#*queue.declare*#"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:567
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:628
 #, no-wrap
 msgid ""
 "Whether to declare the queue and binding; set to false if these are expected to be set up independently\n"
@@ -1722,13 +1820,13 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:569
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:630
 #, no-wrap
 msgid "[.no-hyphens]#*queue.ttl*#"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:571
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:632
 #, no-wrap
 msgid ""
 "If specified, the time (ms) for which a message can remain in the queue undelivered before it is dead\n"
@@ -1737,13 +1835,13 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:573
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:634
 #, no-wrap
 msgid "[.no-hyphens]#*max-incoming-internal-queue-size*#"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:575
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:636
 #, no-wrap
 msgid ""
 "The maximum size of the incoming internal queue\n"
@@ -1752,13 +1850,13 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:577
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:638
 #, no-wrap
 msgid "[.no-hyphens]#*auto-bind-dlq*#"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:579
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:640
 #, no-wrap
 msgid ""
 "Whether to automatically declare the DLQ and bind it to the binder DLX\n"
@@ -1767,13 +1865,13 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:581
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:642
 #, no-wrap
 msgid "[.no-hyphens]#*dead-letter-queue-name*#"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:583
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:644
 #, no-wrap
 msgid ""
 "The name of the DLQ; if not supplied will default to the queue name with '.dlq' appended\n"
@@ -1782,13 +1880,13 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:585
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:646
 #, no-wrap
 msgid "[.no-hyphens]#*dead-letter-exchange*#"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:587
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:648
 #, no-wrap
 msgid ""
 "A DLX to assign to the queue. Relevant only if auto-bind-dlq is true\n"
@@ -1797,19 +1895,19 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:589
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:650
 #, no-wrap
 msgid "`DLX`"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:589
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:650
 #, no-wrap
 msgid "[.no-hyphens]#*dead-letter-exchange-type*#"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:591
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:652
 #, no-wrap
 msgid ""
 "The type of the DLX to assign to the queue. Relevant only if auto-bind-dlq is true\n"
@@ -1818,19 +1916,19 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:593
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:654
 #, no-wrap
 msgid "`direct`"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:593
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:654
 #, no-wrap
 msgid "[.no-hyphens]#*dead-letter-routing-key*#"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:595
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:656
 #, no-wrap
 msgid ""
 "A dead letter routing key to assign to the queue; if not supplied will default to the queue name\n"
@@ -1839,13 +1937,13 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:597
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:658
 #, no-wrap
 msgid "[.no-hyphens]#*dlx.declare*#"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:599
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:660
 #, no-wrap
 msgid ""
 "Whether to declare the dead letter exchange binding. Relevant only if auto-bind-dlq is true; set to false if these are expected to be set up independently\n"
@@ -1854,13 +1952,13 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:601
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:662
 #, no-wrap
 msgid "[.no-hyphens]#*failure-strategy*#"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:603
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:664
 #, no-wrap
 msgid ""
 "The failure strategy to apply when a RabbitMQ message is nacked. Accepted values are `fail`, `accept`, `reject` (default)\n"
@@ -1869,19 +1967,19 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:605
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:666
 #, no-wrap
 msgid "`reject`"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:605
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:666
 #, no-wrap
 msgid "[.no-hyphens]#*broadcast*#"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:607
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:668
 #, no-wrap
 msgid ""
 "Whether the received RabbitMQ messages must be dispatched to multiple _subscribers_\n"
@@ -1890,13 +1988,13 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:609
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:670
 #, no-wrap
 msgid "[.no-hyphens]#*auto-acknowledgement*#"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:611
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:672
 #, no-wrap
 msgid ""
 "Whether the received RabbitMQ messages must be acknowledged when received; if true then delivery constitutes acknowledgement\n"
@@ -1905,13 +2003,13 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:613
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:674
 #, no-wrap
 msgid "[.no-hyphens]#*keep-most-recent*#"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:615
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:676
 #, no-wrap
 msgid ""
 "Whether to discard old messages instead of recent ones\n"
@@ -1920,13 +2018,13 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:617
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:678
 #, no-wrap
 msgid "[.no-hyphens]#*routing-keys*#"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:619
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:680
 #, no-wrap
 msgid ""
 "A comma-separated list of routing keys to bind the queue to the exchange\n"
@@ -1935,25 +2033,25 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:621
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:682
 #, no-wrap
 msgid "`#`"
 msgstr ""
 
 #. type: Title ===
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:624
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:685
 #, no-wrap
 msgid "Outgoing channel configuration"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:642
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:703
 #, no-wrap
 msgid "[.no-hyphens]#*default-routing-key*#"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:644
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:705
 #, no-wrap
 msgid ""
 "The default routing key to use when sending messages to the exchange\n"
@@ -1962,13 +2060,13 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:646
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:707
 #, no-wrap
 msgid "[.no-hyphens]#*default-ttl*#"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:648
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:709
 #, no-wrap
 msgid ""
 "If specified, the time (ms) sent messages can remain in queues undelivered before they are dead\n"
@@ -1977,13 +2075,13 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:684
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:745
 #, no-wrap
 msgid "[.no-hyphens]#*max-inflight-messages*#"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:686
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:747
 #, no-wrap
 msgid ""
 "The maximum number of messages to be written to RabbitMQ concurrently; must be a positive number\n"
@@ -1992,19 +2090,19 @@ msgid ""
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:688
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:749
 #, no-wrap
 msgid "`1024`"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:688
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:749
 #, no-wrap
 msgid "[.no-hyphens]#*max-outgoing-internal-queue-size*#"
 msgstr ""
 
 #. type: Table
-#: upstream/_versions/main/guides/rabbitmq-reference.adoc:690
+#: upstream/_versions/main/guides/rabbitmq-reference.adoc:751
 #, no-wrap
 msgid ""
 "The maximum size of the outgoing internal queue\n"
