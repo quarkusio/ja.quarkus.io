@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2021-11-24 10:04+0000\n"
+"POT-Creation-Date: 2021-12-22 15:04+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -178,7 +178,7 @@ msgstr "RabbitMQコネクターが管理するPricesチャンネルを指示す�
 #. type: Plain text
 #: upstream/_guides/rabbitmq-reference.adoc:79
 #, fuzzy
-msgid "In dev mode and when running tests, link:rabbitmq-dev-services.adoc[Dev Services for RabbitMQ] automatically starts a RabbitMQ broker."
+msgid "In dev mode and when running tests, xref:rabbitmq-dev-services.adoc[Dev Services for RabbitMQ] automatically starts a RabbitMQ broker."
 msgstr "開発モードおよびテストの実行時には、 link:rabbitmq-dev-services.adoc[Dev Services for RabbitMQ]は自動的にRabbitMQブローカーを起動します。"
 
 #. type: Title ==
@@ -908,6 +908,104 @@ msgstr "なお、メッセージ処理の失敗は、メッセージをジャッ
 
 #. type: Title ==
 #: upstream/_guides/rabbitmq-reference.adoc:397
+#, no-wrap
+msgid "Dynamic Credentials"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/rabbitmq-reference.adoc:401
+msgid "Quarkus and the RabbitMQ connector support https://www.vaultproject.io/docs/secrets/rabbitmq[Vault's RabbitMQ secrets engine] for generating short-lived dynamic credentials. This allows Vault to create and retire RabbitMQ credentials on a regular basis."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/rabbitmq-reference.adoc:405
+msgid "First we need to enable Vault's `rabbitmq` secret engine, configure it with RabbitMQ's connection and authentication information, and create a Vault role `my-role` (replace `10.0.0.3` by the actual host that is running the RabbitMQ container):"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/rabbitmq-reference.adoc:408
+#, no-wrap
+msgid "vault secrets enable rabbitmq\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/rabbitmq-reference.adoc:413
+#, no-wrap
+msgid ""
+"vault write rabbitmq/config/connection \\\n"
+"    connection_uri=http://10.0.0.3:15672 \\\n"
+"    username=guest \\\n"
+"    password=guest\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/rabbitmq-reference.adoc:416
+#, no-wrap
+msgid ""
+"vault write rabbitmq/roles/my-role \\\n"
+"    vhosts='{\"/\":{\"write\": \".*\", \"read\": \".*\"}}'\n"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_guides/rabbitmq-reference.adoc:422
+msgid "For this use case, user `guest` configured above needs to be a RabbitMQ admin user with the capability to create credentials."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/rabbitmq-reference.adoc:425
+msgid "Then we need to give a read capability to the Quarkus application on path `rabbitmq/creds/my-role`."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/rabbitmq-reference.adoc:435
+#, no-wrap
+msgid ""
+"cat <<EOF | vault policy write vault-rabbitmq-policy -\n"
+"path \"secret/data/myapps/vault-rabbitmq-test/*\" {\n"
+"  capabilities = [\"read\"]\n"
+"}\n"
+"path \"rabbitmq/creds/my-role\" {\n"
+"  capabilities = [ \"read\" ]\n"
+"}\n"
+"EOF\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/rabbitmq-reference.adoc:439
+msgid "Now that Vault knows how to create users in RabbitMQ, we need to configure Quarkus to use a credentials-provider for RabbitMQ."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/rabbitmq-reference.adoc:441
+msgid "First we tell Quarkus to request dynamic credentials using a credentials-provider named `rabbitmq`."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/rabbitmq-reference.adoc:443
+#, no-wrap
+msgid "quarkus.rabbitmq.credentials-provider = rabbitmq\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/rabbitmq-reference.adoc:447
+msgid "Next we configure the `rabbitmq` credentials provider. The `credentials-role` option must be set to the name of the role we created in Vault, in our case `my-role`. The `credentials-mount` option must be set to `rabbitmq`."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/rabbitmq-reference.adoc:451
+#, no-wrap
+msgid ""
+"quarkus.vault.credentials-provider.rabbitmq.credentials-role = my-role\n"
+"quarkus.vault.credentials-provider.rabbitmq.credentials-mount = rabbitmq\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/rabbitmq-reference.adoc:456
+msgid "The `credentials-mount` is used directly as the mount of the secret engine in Vault. Here we are using the default mount path of `rabbitmq`. If the RabbitMQ secret engine was mounted at a custom path, the `credentials-mount` option must be set to that path instead."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/rabbitmq-reference.adoc:458
 #, fuzzy, no-wrap
 msgid "RabbitMQ Connector Configuration Reference"
 msgstr "RabbitMQ コネクタ設定リファレンス"
@@ -915,42 +1013,42 @@ msgstr "RabbitMQ コネクタ設定リファレンス"
 #. === Quarkus specific configuration
 #. include::{generated-dir}/config/quarkus-smallrye-reactivemessaging-rabbitmq.adoc[opts=optional, leveloffset=+1]
 #. type: Title ===
-#: upstream/_guides/rabbitmq-reference.adoc:403
+#: upstream/_guides/rabbitmq-reference.adoc:464
 #, fuzzy, no-wrap
 msgid "Incoming channel configuration"
 msgstr "着信チャンネルの設定"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:407
-#: upstream/_guides/rabbitmq-reference.adoc:622
+#: upstream/_guides/rabbitmq-reference.adoc:468
+#: upstream/_guides/rabbitmq-reference.adoc:689
 #, fuzzy, no-wrap
 msgid "Attribute (_alias_)"
 msgstr "アトリビュート _（エイリアス）_"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:407
-#: upstream/_guides/rabbitmq-reference.adoc:622
+#: upstream/_guides/rabbitmq-reference.adoc:468
+#: upstream/_guides/rabbitmq-reference.adoc:689
 #, fuzzy, no-wrap
 msgid "Description"
 msgstr "説明"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:407
-#: upstream/_guides/rabbitmq-reference.adoc:622
+#: upstream/_guides/rabbitmq-reference.adoc:468
+#: upstream/_guides/rabbitmq-reference.adoc:689
 #, fuzzy, no-wrap
 msgid "Mandatory"
 msgstr "必須"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:409
-#: upstream/_guides/rabbitmq-reference.adoc:624
+#: upstream/_guides/rabbitmq-reference.adoc:470
+#: upstream/_guides/rabbitmq-reference.adoc:691
 #, fuzzy, no-wrap
 msgid "Default"
 msgstr "デフォルト"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:411
-#: upstream/_guides/rabbitmq-reference.adoc:764
+#: upstream/_guides/rabbitmq-reference.adoc:472
+#: upstream/_guides/rabbitmq-reference.adoc:837
 #, fuzzy, no-wrap
 msgid ""
 "[.no-hyphens]#*username*#\n"
@@ -959,8 +1057,8 @@ msgid ""
 msgstr "<span class=\"no-hyphens\"> *ユーザー名*</span>"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:413
-#: upstream/_guides/rabbitmq-reference.adoc:766
+#: upstream/_guides/rabbitmq-reference.adoc:474
+#: upstream/_guides/rabbitmq-reference.adoc:839
 #, fuzzy, no-wrap
 msgid ""
 "The username used to authenticate to the broker\n"
@@ -969,90 +1067,92 @@ msgid ""
 msgstr "ブローカーへの認証に使用されるユーザー名"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:413
-#: upstream/_guides/rabbitmq-reference.adoc:419
-#: upstream/_guides/rabbitmq-reference.adoc:425
-#: upstream/_guides/rabbitmq-reference.adoc:431
-#: upstream/_guides/rabbitmq-reference.adoc:437
-#: upstream/_guides/rabbitmq-reference.adoc:443
-#: upstream/_guides/rabbitmq-reference.adoc:449
-#: upstream/_guides/rabbitmq-reference.adoc:455
-#: upstream/_guides/rabbitmq-reference.adoc:459
-#: upstream/_guides/rabbitmq-reference.adoc:463
-#: upstream/_guides/rabbitmq-reference.adoc:467
-#: upstream/_guides/rabbitmq-reference.adoc:471
-#: upstream/_guides/rabbitmq-reference.adoc:477
-#: upstream/_guides/rabbitmq-reference.adoc:483
-#: upstream/_guides/rabbitmq-reference.adoc:487
-#: upstream/_guides/rabbitmq-reference.adoc:491
-#: upstream/_guides/rabbitmq-reference.adoc:495
-#: upstream/_guides/rabbitmq-reference.adoc:499
-#: upstream/_guides/rabbitmq-reference.adoc:503
-#: upstream/_guides/rabbitmq-reference.adoc:507
-#: upstream/_guides/rabbitmq-reference.adoc:513
-#: upstream/_guides/rabbitmq-reference.adoc:517
-#: upstream/_guides/rabbitmq-reference.adoc:521
-#: upstream/_guides/rabbitmq-reference.adoc:525
-#: upstream/_guides/rabbitmq-reference.adoc:529
-#: upstream/_guides/rabbitmq-reference.adoc:533
-#: upstream/_guides/rabbitmq-reference.adoc:537
-#: upstream/_guides/rabbitmq-reference.adoc:541
-#: upstream/_guides/rabbitmq-reference.adoc:549
-#: upstream/_guides/rabbitmq-reference.adoc:553
-#: upstream/_guides/rabbitmq-reference.adoc:557
-#: upstream/_guides/rabbitmq-reference.adoc:561
-#: upstream/_guides/rabbitmq-reference.adoc:565
-#: upstream/_guides/rabbitmq-reference.adoc:569
-#: upstream/_guides/rabbitmq-reference.adoc:573
-#: upstream/_guides/rabbitmq-reference.adoc:577
-#: upstream/_guides/rabbitmq-reference.adoc:581
-#: upstream/_guides/rabbitmq-reference.adoc:585
-#: upstream/_guides/rabbitmq-reference.adoc:589
-#: upstream/_guides/rabbitmq-reference.adoc:593
-#: upstream/_guides/rabbitmq-reference.adoc:597
-#: upstream/_guides/rabbitmq-reference.adoc:601
-#: upstream/_guides/rabbitmq-reference.adoc:605
-#: upstream/_guides/rabbitmq-reference.adoc:609
-#: upstream/_guides/rabbitmq-reference.adoc:613
-#: upstream/_guides/rabbitmq-reference.adoc:626
-#: upstream/_guides/rabbitmq-reference.adoc:630
-#: upstream/_guides/rabbitmq-reference.adoc:634
-#: upstream/_guides/rabbitmq-reference.adoc:638
-#: upstream/_guides/rabbitmq-reference.adoc:642
-#: upstream/_guides/rabbitmq-reference.adoc:646
-#: upstream/_guides/rabbitmq-reference.adoc:650
-#: upstream/_guides/rabbitmq-reference.adoc:654
-#: upstream/_guides/rabbitmq-reference.adoc:658
-#: upstream/_guides/rabbitmq-reference.adoc:662
-#: upstream/_guides/rabbitmq-reference.adoc:666
+#: upstream/_guides/rabbitmq-reference.adoc:474
+#: upstream/_guides/rabbitmq-reference.adoc:480
+#: upstream/_guides/rabbitmq-reference.adoc:486
+#: upstream/_guides/rabbitmq-reference.adoc:492
+#: upstream/_guides/rabbitmq-reference.adoc:498
+#: upstream/_guides/rabbitmq-reference.adoc:504
+#: upstream/_guides/rabbitmq-reference.adoc:510
+#: upstream/_guides/rabbitmq-reference.adoc:516
+#: upstream/_guides/rabbitmq-reference.adoc:522
+#: upstream/_guides/rabbitmq-reference.adoc:526
+#: upstream/_guides/rabbitmq-reference.adoc:530
+#: upstream/_guides/rabbitmq-reference.adoc:534
+#: upstream/_guides/rabbitmq-reference.adoc:538
+#: upstream/_guides/rabbitmq-reference.adoc:544
+#: upstream/_guides/rabbitmq-reference.adoc:550
+#: upstream/_guides/rabbitmq-reference.adoc:554
+#: upstream/_guides/rabbitmq-reference.adoc:558
+#: upstream/_guides/rabbitmq-reference.adoc:562
+#: upstream/_guides/rabbitmq-reference.adoc:566
+#: upstream/_guides/rabbitmq-reference.adoc:570
+#: upstream/_guides/rabbitmq-reference.adoc:574
+#: upstream/_guides/rabbitmq-reference.adoc:580
+#: upstream/_guides/rabbitmq-reference.adoc:584
+#: upstream/_guides/rabbitmq-reference.adoc:588
+#: upstream/_guides/rabbitmq-reference.adoc:592
+#: upstream/_guides/rabbitmq-reference.adoc:596
+#: upstream/_guides/rabbitmq-reference.adoc:600
+#: upstream/_guides/rabbitmq-reference.adoc:604
+#: upstream/_guides/rabbitmq-reference.adoc:608
+#: upstream/_guides/rabbitmq-reference.adoc:616
+#: upstream/_guides/rabbitmq-reference.adoc:620
+#: upstream/_guides/rabbitmq-reference.adoc:624
+#: upstream/_guides/rabbitmq-reference.adoc:628
+#: upstream/_guides/rabbitmq-reference.adoc:632
+#: upstream/_guides/rabbitmq-reference.adoc:636
+#: upstream/_guides/rabbitmq-reference.adoc:640
+#: upstream/_guides/rabbitmq-reference.adoc:644
+#: upstream/_guides/rabbitmq-reference.adoc:648
+#: upstream/_guides/rabbitmq-reference.adoc:652
+#: upstream/_guides/rabbitmq-reference.adoc:656
+#: upstream/_guides/rabbitmq-reference.adoc:660
+#: upstream/_guides/rabbitmq-reference.adoc:664
+#: upstream/_guides/rabbitmq-reference.adoc:668
 #: upstream/_guides/rabbitmq-reference.adoc:672
 #: upstream/_guides/rabbitmq-reference.adoc:676
 #: upstream/_guides/rabbitmq-reference.adoc:680
-#: upstream/_guides/rabbitmq-reference.adoc:684
-#: upstream/_guides/rabbitmq-reference.adoc:688
-#: upstream/_guides/rabbitmq-reference.adoc:694
-#: upstream/_guides/rabbitmq-reference.adoc:700
-#: upstream/_guides/rabbitmq-reference.adoc:706
-#: upstream/_guides/rabbitmq-reference.adoc:712
-#: upstream/_guides/rabbitmq-reference.adoc:716
-#: upstream/_guides/rabbitmq-reference.adoc:720
-#: upstream/_guides/rabbitmq-reference.adoc:726
-#: upstream/_guides/rabbitmq-reference.adoc:730
-#: upstream/_guides/rabbitmq-reference.adoc:734
-#: upstream/_guides/rabbitmq-reference.adoc:740
-#: upstream/_guides/rabbitmq-reference.adoc:746
-#: upstream/_guides/rabbitmq-reference.adoc:752
-#: upstream/_guides/rabbitmq-reference.adoc:756
-#: upstream/_guides/rabbitmq-reference.adoc:760
-#: upstream/_guides/rabbitmq-reference.adoc:766
-#: upstream/_guides/rabbitmq-reference.adoc:772
+#: upstream/_guides/rabbitmq-reference.adoc:693
+#: upstream/_guides/rabbitmq-reference.adoc:697
+#: upstream/_guides/rabbitmq-reference.adoc:701
+#: upstream/_guides/rabbitmq-reference.adoc:705
+#: upstream/_guides/rabbitmq-reference.adoc:709
+#: upstream/_guides/rabbitmq-reference.adoc:713
+#: upstream/_guides/rabbitmq-reference.adoc:717
+#: upstream/_guides/rabbitmq-reference.adoc:721
+#: upstream/_guides/rabbitmq-reference.adoc:725
+#: upstream/_guides/rabbitmq-reference.adoc:729
+#: upstream/_guides/rabbitmq-reference.adoc:733
+#: upstream/_guides/rabbitmq-reference.adoc:739
+#: upstream/_guides/rabbitmq-reference.adoc:743
+#: upstream/_guides/rabbitmq-reference.adoc:747
+#: upstream/_guides/rabbitmq-reference.adoc:751
+#: upstream/_guides/rabbitmq-reference.adoc:755
+#: upstream/_guides/rabbitmq-reference.adoc:761
+#: upstream/_guides/rabbitmq-reference.adoc:767
+#: upstream/_guides/rabbitmq-reference.adoc:773
+#: upstream/_guides/rabbitmq-reference.adoc:779
+#: upstream/_guides/rabbitmq-reference.adoc:783
+#: upstream/_guides/rabbitmq-reference.adoc:787
+#: upstream/_guides/rabbitmq-reference.adoc:793
+#: upstream/_guides/rabbitmq-reference.adoc:797
+#: upstream/_guides/rabbitmq-reference.adoc:801
+#: upstream/_guides/rabbitmq-reference.adoc:807
+#: upstream/_guides/rabbitmq-reference.adoc:813
+#: upstream/_guides/rabbitmq-reference.adoc:819
+#: upstream/_guides/rabbitmq-reference.adoc:825
+#: upstream/_guides/rabbitmq-reference.adoc:829
+#: upstream/_guides/rabbitmq-reference.adoc:833
+#: upstream/_guides/rabbitmq-reference.adoc:839
+#: upstream/_guides/rabbitmq-reference.adoc:845
 #, fuzzy, no-wrap
 msgid "false"
 msgstr "偽"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:417
-#: upstream/_guides/rabbitmq-reference.adoc:692
+#: upstream/_guides/rabbitmq-reference.adoc:478
+#: upstream/_guides/rabbitmq-reference.adoc:759
 #, fuzzy, no-wrap
 msgid ""
 "[.no-hyphens]#*password*#\n"
@@ -1061,8 +1161,8 @@ msgid ""
 msgstr "<span class=\"no-hyphens\"> *パスワード*</span>"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:419
-#: upstream/_guides/rabbitmq-reference.adoc:694
+#: upstream/_guides/rabbitmq-reference.adoc:480
+#: upstream/_guides/rabbitmq-reference.adoc:761
 #, fuzzy, no-wrap
 msgid ""
 "The password used to authenticate to the broker\n"
@@ -1071,8 +1171,8 @@ msgid ""
 msgstr "ブローカーへの認証に使用されるパスワード"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:423
-#: upstream/_guides/rabbitmq-reference.adoc:670
+#: upstream/_guides/rabbitmq-reference.adoc:484
+#: upstream/_guides/rabbitmq-reference.adoc:737
 #, fuzzy, no-wrap
 msgid ""
 "[.no-hyphens]#*host*#\n"
@@ -1081,8 +1181,8 @@ msgid ""
 msgstr "<span class=\"no-hyphens\"> *ホスト*</span>"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:425
-#: upstream/_guides/rabbitmq-reference.adoc:672
+#: upstream/_guides/rabbitmq-reference.adoc:486
+#: upstream/_guides/rabbitmq-reference.adoc:739
 #, fuzzy, no-wrap
 msgid ""
 "The broker hostname\n"
@@ -1091,15 +1191,15 @@ msgid ""
 msgstr "ブローカーのホスト名"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:427
-#: upstream/_guides/rabbitmq-reference.adoc:674
+#: upstream/_guides/rabbitmq-reference.adoc:488
+#: upstream/_guides/rabbitmq-reference.adoc:741
 #, fuzzy, no-wrap
 msgid "`localhost`"
 msgstr "`localhost`"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:429
-#: upstream/_guides/rabbitmq-reference.adoc:698
+#: upstream/_guides/rabbitmq-reference.adoc:490
+#: upstream/_guides/rabbitmq-reference.adoc:765
 #, fuzzy, no-wrap
 msgid ""
 "[.no-hyphens]#*port*#\n"
@@ -1108,8 +1208,8 @@ msgid ""
 msgstr "<span class=\"no-hyphens\"> *ポート*</span>"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:431
-#: upstream/_guides/rabbitmq-reference.adoc:700
+#: upstream/_guides/rabbitmq-reference.adoc:492
+#: upstream/_guides/rabbitmq-reference.adoc:767
 #, fuzzy, no-wrap
 msgid ""
 "The broker port\n"
@@ -1118,15 +1218,15 @@ msgid ""
 msgstr "ブローカーポート"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:433
-#: upstream/_guides/rabbitmq-reference.adoc:702
+#: upstream/_guides/rabbitmq-reference.adoc:494
+#: upstream/_guides/rabbitmq-reference.adoc:769
 #, fuzzy, no-wrap
 msgid "`5672`"
 msgstr "`5672`"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:435
-#: upstream/_guides/rabbitmq-reference.adoc:724
+#: upstream/_guides/rabbitmq-reference.adoc:496
+#: upstream/_guides/rabbitmq-reference.adoc:791
 #, fuzzy, no-wrap
 msgid ""
 "[.no-hyphens]#*ssl*#\n"
@@ -1135,8 +1235,8 @@ msgid ""
 msgstr "<span class=\"no-hyphens\"> *ssl*</span>"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:437
-#: upstream/_guides/rabbitmq-reference.adoc:726
+#: upstream/_guides/rabbitmq-reference.adoc:498
+#: upstream/_guides/rabbitmq-reference.adoc:793
 #, fuzzy, no-wrap
 msgid ""
 "Whether or not the connection should use SSL\n"
@@ -1145,32 +1245,32 @@ msgid ""
 msgstr "接続にSSLを使用するかどうか"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:439
-#: upstream/_guides/rabbitmq-reference.adoc:445
-#: upstream/_guides/rabbitmq-reference.adoc:469
-#: upstream/_guides/rabbitmq-reference.adoc:497
-#: upstream/_guides/rabbitmq-reference.adoc:509
-#: upstream/_guides/rabbitmq-reference.adoc:527
-#: upstream/_guides/rabbitmq-reference.adoc:555
-#: upstream/_guides/rabbitmq-reference.adoc:559
-#: upstream/_guides/rabbitmq-reference.adoc:575
-#: upstream/_guides/rabbitmq-reference.adoc:595
-#: upstream/_guides/rabbitmq-reference.adoc:603
-#: upstream/_guides/rabbitmq-reference.adoc:607
-#: upstream/_guides/rabbitmq-reference.adoc:611
-#: upstream/_guides/rabbitmq-reference.adoc:628
-#: upstream/_guides/rabbitmq-reference.adoc:648
+#: upstream/_guides/rabbitmq-reference.adoc:500
+#: upstream/_guides/rabbitmq-reference.adoc:506
+#: upstream/_guides/rabbitmq-reference.adoc:536
+#: upstream/_guides/rabbitmq-reference.adoc:564
+#: upstream/_guides/rabbitmq-reference.adoc:576
+#: upstream/_guides/rabbitmq-reference.adoc:594
+#: upstream/_guides/rabbitmq-reference.adoc:622
+#: upstream/_guides/rabbitmq-reference.adoc:626
+#: upstream/_guides/rabbitmq-reference.adoc:642
+#: upstream/_guides/rabbitmq-reference.adoc:662
+#: upstream/_guides/rabbitmq-reference.adoc:670
+#: upstream/_guides/rabbitmq-reference.adoc:674
 #: upstream/_guides/rabbitmq-reference.adoc:678
-#: upstream/_guides/rabbitmq-reference.adoc:728
-#: upstream/_guides/rabbitmq-reference.adoc:742
-#: upstream/_guides/rabbitmq-reference.adoc:758
+#: upstream/_guides/rabbitmq-reference.adoc:695
+#: upstream/_guides/rabbitmq-reference.adoc:715
+#: upstream/_guides/rabbitmq-reference.adoc:745
+#: upstream/_guides/rabbitmq-reference.adoc:795
+#: upstream/_guides/rabbitmq-reference.adoc:809
+#: upstream/_guides/rabbitmq-reference.adoc:831
 #, fuzzy, no-wrap
 msgid "`false`"
 msgstr "`false`"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:441
-#: upstream/_guides/rabbitmq-reference.adoc:738
+#: upstream/_guides/rabbitmq-reference.adoc:502
+#: upstream/_guides/rabbitmq-reference.adoc:805
 #, fuzzy, no-wrap
 msgid ""
 "[.no-hyphens]#*trust-all*#\n"
@@ -1179,8 +1279,8 @@ msgid ""
 msgstr "<span class=\"no-hyphens\"> *トラストオール*</span>"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:443
-#: upstream/_guides/rabbitmq-reference.adoc:740
+#: upstream/_guides/rabbitmq-reference.adoc:504
+#: upstream/_guides/rabbitmq-reference.adoc:807
 #, fuzzy, no-wrap
 msgid ""
 "Whether to skip trust certificate verification\n"
@@ -1189,8 +1289,8 @@ msgid ""
 msgstr "トラスト証明書の検証をスキップするかどうか"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:447
-#: upstream/_guides/rabbitmq-reference.adoc:750
+#: upstream/_guides/rabbitmq-reference.adoc:508
+#: upstream/_guides/rabbitmq-reference.adoc:817
 #, fuzzy, no-wrap
 msgid ""
 "[.no-hyphens]#*trust-store-path*#\n"
@@ -1199,8 +1299,8 @@ msgid ""
 msgstr "<span class=\"no-hyphens\"> *トラスト-ストア-パス*</span>"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:449
-#: upstream/_guides/rabbitmq-reference.adoc:752
+#: upstream/_guides/rabbitmq-reference.adoc:510
+#: upstream/_guides/rabbitmq-reference.adoc:819
 #, fuzzy, no-wrap
 msgid ""
 "The path to a JKS trust store\n"
@@ -1209,8 +1309,8 @@ msgid ""
 msgstr "JKSトラストストアへのパス"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:453
-#: upstream/_guides/rabbitmq-reference.adoc:744
+#: upstream/_guides/rabbitmq-reference.adoc:514
+#: upstream/_guides/rabbitmq-reference.adoc:811
 #, fuzzy, no-wrap
 msgid ""
 "[.no-hyphens]#*trust-store-password*#\n"
@@ -1219,8 +1319,8 @@ msgid ""
 msgstr "<span class=\"no-hyphens\"> *trust-store-password*</span>"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:455
-#: upstream/_guides/rabbitmq-reference.adoc:746
+#: upstream/_guides/rabbitmq-reference.adoc:516
+#: upstream/_guides/rabbitmq-reference.adoc:813
 #, fuzzy, no-wrap
 msgid ""
 "The password of the JKS trust store\n"
@@ -1229,15 +1329,35 @@ msgid ""
 msgstr "JKSトラストストアのパスワード"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:457
-#: upstream/_guides/rabbitmq-reference.adoc:632
+#: upstream/_guides/rabbitmq-reference.adoc:520
+#: upstream/_guides/rabbitmq-reference.adoc:823
+#, fuzzy, no-wrap
+msgid ""
+"[.no-hyphens]#*credentials-provider-name*#\n"
+"\n"
+"[.no-hyphens]#_(rabbitmq-credentials-provider-name)_#"
+msgstr "<span class=\"no-hyphens\"> *ユーザー名*</span>"
+
+#. type: Table
+#: upstream/_guides/rabbitmq-reference.adoc:522
+#: upstream/_guides/rabbitmq-reference.adoc:825
+#, no-wrap
+msgid ""
+"The name of the RabbitMQ Credentials Provider bean used to provide dynamic credentials to the RabbitMQ client\n"
+"\n"
+"Type: _string_"
+msgstr ""
+
+#. type: Table
+#: upstream/_guides/rabbitmq-reference.adoc:524
+#: upstream/_guides/rabbitmq-reference.adoc:699
 #, fuzzy, no-wrap
 msgid "[.no-hyphens]#*connection-timeout*#"
 msgstr "<span class=\"no-hyphens\"> *コネクションタイムアウト*</span>"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:459
-#: upstream/_guides/rabbitmq-reference.adoc:634
+#: upstream/_guides/rabbitmq-reference.adoc:526
+#: upstream/_guides/rabbitmq-reference.adoc:701
 #, fuzzy, no-wrap
 msgid ""
 "The TCP connection timeout (ms); 0 is interpreted as no timeout\n"
@@ -1246,22 +1366,22 @@ msgid ""
 msgstr "TCP接続のタイムアウト（ミリ秒）；0はタイムアウトなしと解釈される"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:461
-#: upstream/_guides/rabbitmq-reference.adoc:636
+#: upstream/_guides/rabbitmq-reference.adoc:528
+#: upstream/_guides/rabbitmq-reference.adoc:703
 #, fuzzy, no-wrap
 msgid "`60000`"
 msgstr "`60000`"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:461
-#: upstream/_guides/rabbitmq-reference.adoc:664
+#: upstream/_guides/rabbitmq-reference.adoc:528
+#: upstream/_guides/rabbitmq-reference.adoc:731
 #, fuzzy, no-wrap
 msgid "[.no-hyphens]#*handshake-timeout*#"
 msgstr "<span class=\"no-hyphens\"> *ハンドシェークタイムアウト*</span>"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:463
-#: upstream/_guides/rabbitmq-reference.adoc:666
+#: upstream/_guides/rabbitmq-reference.adoc:530
+#: upstream/_guides/rabbitmq-reference.adoc:733
 #, fuzzy, no-wrap
 msgid ""
 "The AMQP 0-9-1 protocol handshake timeout (ms)\n"
@@ -1270,22 +1390,22 @@ msgid ""
 msgstr "AMQP 0-9-1プロトコルのハンドシェイクのタイムアウト（ms）"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:465
-#: upstream/_guides/rabbitmq-reference.adoc:668
+#: upstream/_guides/rabbitmq-reference.adoc:532
+#: upstream/_guides/rabbitmq-reference.adoc:735
 #, fuzzy, no-wrap
 msgid "`10000`"
 msgstr "`10000`"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:465
-#: upstream/_guides/rabbitmq-reference.adoc:624
+#: upstream/_guides/rabbitmq-reference.adoc:532
+#: upstream/_guides/rabbitmq-reference.adoc:691
 #, fuzzy, no-wrap
 msgid "[.no-hyphens]#*automatic-recovery-enabled*#"
 msgstr "<span class=\"no-hyphens\"> *自動回復機能付き*</span>"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:467
-#: upstream/_guides/rabbitmq-reference.adoc:626
+#: upstream/_guides/rabbitmq-reference.adoc:534
+#: upstream/_guides/rabbitmq-reference.adoc:693
 #, fuzzy, no-wrap
 msgid ""
 "Whether automatic connection recovery is enabled\n"
@@ -1294,15 +1414,15 @@ msgid ""
 msgstr "接続の自動回復を有効にするかどうか"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:469
-#: upstream/_guides/rabbitmq-reference.adoc:628
+#: upstream/_guides/rabbitmq-reference.adoc:536
+#: upstream/_guides/rabbitmq-reference.adoc:695
 #, fuzzy, no-wrap
 msgid "[.no-hyphens]#*automatic-recovery-on-initial-connection*#"
 msgstr "<span class=\"no-hyphens\"> *初期接続時の自動回復*</span>"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:471
-#: upstream/_guides/rabbitmq-reference.adoc:630
+#: upstream/_guides/rabbitmq-reference.adoc:538
+#: upstream/_guides/rabbitmq-reference.adoc:697
 #, fuzzy, no-wrap
 msgid ""
 "Whether automatic recovery on initial connections is enabled\n"
@@ -1311,23 +1431,23 @@ msgid ""
 msgstr "初回接続時の自動回復を有効にするかどうか"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:473
-#: upstream/_guides/rabbitmq-reference.adoc:523
-#: upstream/_guides/rabbitmq-reference.adoc:535
-#: upstream/_guides/rabbitmq-reference.adoc:539
-#: upstream/_guides/rabbitmq-reference.adoc:551
-#: upstream/_guides/rabbitmq-reference.adoc:563
-#: upstream/_guides/rabbitmq-reference.adoc:632
-#: upstream/_guides/rabbitmq-reference.adoc:652
-#: upstream/_guides/rabbitmq-reference.adoc:656
-#: upstream/_guides/rabbitmq-reference.adoc:736
+#: upstream/_guides/rabbitmq-reference.adoc:540
+#: upstream/_guides/rabbitmq-reference.adoc:590
+#: upstream/_guides/rabbitmq-reference.adoc:602
+#: upstream/_guides/rabbitmq-reference.adoc:606
+#: upstream/_guides/rabbitmq-reference.adoc:618
+#: upstream/_guides/rabbitmq-reference.adoc:630
+#: upstream/_guides/rabbitmq-reference.adoc:699
+#: upstream/_guides/rabbitmq-reference.adoc:719
+#: upstream/_guides/rabbitmq-reference.adoc:723
+#: upstream/_guides/rabbitmq-reference.adoc:803
 #, fuzzy, no-wrap
 msgid "`true`"
 msgstr "`true`"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:475
-#: upstream/_guides/rabbitmq-reference.adoc:704
+#: upstream/_guides/rabbitmq-reference.adoc:542
+#: upstream/_guides/rabbitmq-reference.adoc:771
 #, fuzzy, no-wrap
 msgid ""
 "[.no-hyphens]#*reconnect-attempts*#\n"
@@ -1336,8 +1456,8 @@ msgid ""
 msgstr "<span class=\"no-hyphens\"> *reconnect-attempts*</span>"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:477
-#: upstream/_guides/rabbitmq-reference.adoc:706
+#: upstream/_guides/rabbitmq-reference.adoc:544
+#: upstream/_guides/rabbitmq-reference.adoc:773
 #, fuzzy, no-wrap
 msgid ""
 "The number of reconnection attempts\n"
@@ -1346,15 +1466,15 @@ msgid ""
 msgstr "再接続の試行回数"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:479
-#: upstream/_guides/rabbitmq-reference.adoc:708
+#: upstream/_guides/rabbitmq-reference.adoc:546
+#: upstream/_guides/rabbitmq-reference.adoc:775
 #, fuzzy, no-wrap
 msgid "`100`"
 msgstr "`100`"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:481
-#: upstream/_guides/rabbitmq-reference.adoc:710
+#: upstream/_guides/rabbitmq-reference.adoc:548
+#: upstream/_guides/rabbitmq-reference.adoc:777
 #, fuzzy, no-wrap
 msgid ""
 "[.no-hyphens]#*reconnect-interval*#\n"
@@ -1363,8 +1483,8 @@ msgid ""
 msgstr "<span class=\"no-hyphens\"> *reconnect-interval*</span>"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:483
-#: upstream/_guides/rabbitmq-reference.adoc:712
+#: upstream/_guides/rabbitmq-reference.adoc:550
+#: upstream/_guides/rabbitmq-reference.adoc:779
 #, fuzzy, no-wrap
 msgid ""
 "The interval (in seconds) between two reconnection attempts\n"
@@ -1373,22 +1493,22 @@ msgid ""
 msgstr "2回の再接続試行の間隔（単位：秒"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:485
-#: upstream/_guides/rabbitmq-reference.adoc:714
+#: upstream/_guides/rabbitmq-reference.adoc:552
+#: upstream/_guides/rabbitmq-reference.adoc:781
 #, fuzzy, no-wrap
 msgid "`10`"
 msgstr "`10`"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:485
-#: upstream/_guides/rabbitmq-reference.adoc:686
+#: upstream/_guides/rabbitmq-reference.adoc:552
+#: upstream/_guides/rabbitmq-reference.adoc:753
 #, fuzzy, no-wrap
 msgid "[.no-hyphens]#*network-recovery-interval*#"
 msgstr "<span class=\"no-hyphens\"> *ネットワークリカバリーインターバル*</span>"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:487
-#: upstream/_guides/rabbitmq-reference.adoc:688
+#: upstream/_guides/rabbitmq-reference.adoc:554
+#: upstream/_guides/rabbitmq-reference.adoc:755
 #, fuzzy, no-wrap
 msgid ""
 "How long (ms) will automatic recovery wait before attempting to reconnect\n"
@@ -1397,22 +1517,22 @@ msgid ""
 msgstr "自動回復が再接続を試みるまでの時間（ms）について"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:489
-#: upstream/_guides/rabbitmq-reference.adoc:690
+#: upstream/_guides/rabbitmq-reference.adoc:556
+#: upstream/_guides/rabbitmq-reference.adoc:757
 #, fuzzy, no-wrap
 msgid "`5000`"
 msgstr "`5000`"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:489
-#: upstream/_guides/rabbitmq-reference.adoc:758
+#: upstream/_guides/rabbitmq-reference.adoc:556
+#: upstream/_guides/rabbitmq-reference.adoc:831
 #, fuzzy, no-wrap
 msgid "[.no-hyphens]#*user*#"
 msgstr "<span class=\"no-hyphens\"> *ユーザー*</span>"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:491
-#: upstream/_guides/rabbitmq-reference.adoc:760
+#: upstream/_guides/rabbitmq-reference.adoc:558
+#: upstream/_guides/rabbitmq-reference.adoc:833
 #, fuzzy, no-wrap
 msgid ""
 "The AMQP user name to use when connecting to the broker\n"
@@ -1421,22 +1541,22 @@ msgid ""
 msgstr "ブローカーへの接続時に使用するAMQPユーザー名"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:493
-#: upstream/_guides/rabbitmq-reference.adoc:762
+#: upstream/_guides/rabbitmq-reference.adoc:560
+#: upstream/_guides/rabbitmq-reference.adoc:835
 #, fuzzy, no-wrap
 msgid "`guest`"
 msgstr "`guest`"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:493
-#: upstream/_guides/rabbitmq-reference.adoc:674
+#: upstream/_guides/rabbitmq-reference.adoc:560
+#: upstream/_guides/rabbitmq-reference.adoc:741
 #, fuzzy, no-wrap
 msgid "[.no-hyphens]#*include-properties*#"
 msgstr "<span class=\"no-hyphens\"> *include-properties*</span>"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:495
-#: upstream/_guides/rabbitmq-reference.adoc:676
+#: upstream/_guides/rabbitmq-reference.adoc:562
+#: upstream/_guides/rabbitmq-reference.adoc:743
 #, fuzzy, no-wrap
 msgid ""
 "Whether to include properties when a broker message is passed on the event bus\n"
@@ -1445,15 +1565,15 @@ msgid ""
 msgstr "ブローカーメッセージがイベントバスに渡される際に、プロパティを含めるかどうか"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:497
-#: upstream/_guides/rabbitmq-reference.adoc:714
+#: upstream/_guides/rabbitmq-reference.adoc:564
+#: upstream/_guides/rabbitmq-reference.adoc:781
 #, fuzzy, no-wrap
 msgid "[.no-hyphens]#*requested-channel-max*#"
 msgstr "<span class=\"no-hyphens\"> *要求されたチャネルの最大値*</span>"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:499
-#: upstream/_guides/rabbitmq-reference.adoc:716
+#: upstream/_guides/rabbitmq-reference.adoc:566
+#: upstream/_guides/rabbitmq-reference.adoc:783
 #, fuzzy, no-wrap
 msgid ""
 "The initially requested maximum channel number\n"
@@ -1462,22 +1582,22 @@ msgid ""
 msgstr "最初に要求された最大チャネル数"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:501
-#: upstream/_guides/rabbitmq-reference.adoc:718
+#: upstream/_guides/rabbitmq-reference.adoc:568
+#: upstream/_guides/rabbitmq-reference.adoc:785
 #, fuzzy, no-wrap
 msgid "`2047`"
 msgstr "`2047`"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:501
-#: upstream/_guides/rabbitmq-reference.adoc:718
+#: upstream/_guides/rabbitmq-reference.adoc:568
+#: upstream/_guides/rabbitmq-reference.adoc:785
 #, fuzzy, no-wrap
 msgid "[.no-hyphens]#*requested-heartbeat*#"
 msgstr "<span class=\"no-hyphens\"> *リクエストハートビート*</span>"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:503
-#: upstream/_guides/rabbitmq-reference.adoc:720
+#: upstream/_guides/rabbitmq-reference.adoc:570
+#: upstream/_guides/rabbitmq-reference.adoc:787
 #, fuzzy, no-wrap
 msgid ""
 "The initially requested heartbeat interval (seconds), zero for none\n"
@@ -1486,22 +1606,22 @@ msgid ""
 msgstr "最初に要求されたハートビート間隔（秒）、noneの場合は0"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:505
-#: upstream/_guides/rabbitmq-reference.adoc:722
+#: upstream/_guides/rabbitmq-reference.adoc:572
+#: upstream/_guides/rabbitmq-reference.adoc:789
 #, fuzzy, no-wrap
 msgid "`60`"
 msgstr "`60`"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:505
-#: upstream/_guides/rabbitmq-reference.adoc:754
+#: upstream/_guides/rabbitmq-reference.adoc:572
+#: upstream/_guides/rabbitmq-reference.adoc:827
 #, fuzzy, no-wrap
 msgid "[.no-hyphens]#*use-nio*#"
 msgstr "<span class=\"no-hyphens\"> *us-nio*</span>"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:507
-#: upstream/_guides/rabbitmq-reference.adoc:756
+#: upstream/_guides/rabbitmq-reference.adoc:574
+#: upstream/_guides/rabbitmq-reference.adoc:829
 #, fuzzy, no-wrap
 msgid ""
 "Whether usage of NIO Sockets is enabled\n"
@@ -1510,8 +1630,8 @@ msgid ""
 msgstr "NIOソケットの使用を有効にするかどうか"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:511
-#: upstream/_guides/rabbitmq-reference.adoc:770
+#: upstream/_guides/rabbitmq-reference.adoc:578
+#: upstream/_guides/rabbitmq-reference.adoc:843
 #, fuzzy, no-wrap
 msgid ""
 "[.no-hyphens]#*virtual-host*#\n"
@@ -1520,8 +1640,8 @@ msgid ""
 msgstr "<span class=\"no-hyphens\"> *バーチャルホスト*</span>"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:513
-#: upstream/_guides/rabbitmq-reference.adoc:772
+#: upstream/_guides/rabbitmq-reference.adoc:580
+#: upstream/_guides/rabbitmq-reference.adoc:845
 #, fuzzy, no-wrap
 msgid ""
 "The virtual host to use when connecting to the broker\n"
@@ -1530,22 +1650,22 @@ msgid ""
 msgstr "ブローカーへの接続時に使用するバーチャルホスト"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:515
-#: upstream/_guides/rabbitmq-reference.adoc:774
+#: upstream/_guides/rabbitmq-reference.adoc:582
+#: upstream/_guides/rabbitmq-reference.adoc:847
 #, fuzzy, no-wrap
 msgid "`/`"
 msgstr "`/`"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:515
-#: upstream/_guides/rabbitmq-reference.adoc:656
+#: upstream/_guides/rabbitmq-reference.adoc:582
+#: upstream/_guides/rabbitmq-reference.adoc:723
 #, fuzzy, no-wrap
 msgid "[.no-hyphens]#*exchange.name*#"
 msgstr "<span class=\"no-hyphens\"> *exchange.name*</span>"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:517
-#: upstream/_guides/rabbitmq-reference.adoc:658
+#: upstream/_guides/rabbitmq-reference.adoc:584
+#: upstream/_guides/rabbitmq-reference.adoc:725
 #, fuzzy, no-wrap
 msgid ""
 "The exchange that messages are published to or consumed from. If not set, the channel name is used\n"
@@ -1554,15 +1674,15 @@ msgid ""
 msgstr "メッセージが公開されたり、消費されたりする取引所です。設定されていない場合は、チャネル名が使用されます。"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:519
-#: upstream/_guides/rabbitmq-reference.adoc:652
+#: upstream/_guides/rabbitmq-reference.adoc:586
+#: upstream/_guides/rabbitmq-reference.adoc:719
 #, fuzzy, no-wrap
 msgid "[.no-hyphens]#*exchange.durable*#"
 msgstr "<span class=\"no-hyphens\"> *exchange.durable*</span>"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:521
-#: upstream/_guides/rabbitmq-reference.adoc:654
+#: upstream/_guides/rabbitmq-reference.adoc:588
+#: upstream/_guides/rabbitmq-reference.adoc:721
 #, fuzzy, no-wrap
 msgid ""
 "Whether the exchange is durable\n"
@@ -1571,15 +1691,15 @@ msgid ""
 msgstr "交換の耐久性の有無"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:523
-#: upstream/_guides/rabbitmq-reference.adoc:644
+#: upstream/_guides/rabbitmq-reference.adoc:590
+#: upstream/_guides/rabbitmq-reference.adoc:711
 #, fuzzy, no-wrap
 msgid "[.no-hyphens]#*exchange.auto-delete*#"
 msgstr "<span class=\"no-hyphens\"> *exchange.auto-delete*</span>"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:525
-#: upstream/_guides/rabbitmq-reference.adoc:646
+#: upstream/_guides/rabbitmq-reference.adoc:592
+#: upstream/_guides/rabbitmq-reference.adoc:713
 #, fuzzy, no-wrap
 msgid ""
 "Whether the exchange should be deleted after use\n"
@@ -1588,15 +1708,15 @@ msgid ""
 msgstr "使用後に削除するかどうか"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:527
-#: upstream/_guides/rabbitmq-reference.adoc:660
+#: upstream/_guides/rabbitmq-reference.adoc:594
+#: upstream/_guides/rabbitmq-reference.adoc:727
 #, fuzzy, no-wrap
 msgid "[.no-hyphens]#*exchange.type*#"
 msgstr "<span class=\"no-hyphens\"> *exchange.type*</span>"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:529
-#: upstream/_guides/rabbitmq-reference.adoc:662
+#: upstream/_guides/rabbitmq-reference.adoc:596
+#: upstream/_guides/rabbitmq-reference.adoc:729
 #, fuzzy, no-wrap
 msgid ""
 "The exchange type: direct, fanout, headers or topic (default)\n"
@@ -1605,22 +1725,22 @@ msgid ""
 msgstr "交換タイプ：ダイレクト、ファンアウト、ヘッダー、トピック（デフォルト）"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:531
-#: upstream/_guides/rabbitmq-reference.adoc:664
+#: upstream/_guides/rabbitmq-reference.adoc:598
+#: upstream/_guides/rabbitmq-reference.adoc:731
 #, fuzzy, no-wrap
 msgid "`topic`"
 msgstr "`topic`"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:531
-#: upstream/_guides/rabbitmq-reference.adoc:648
+#: upstream/_guides/rabbitmq-reference.adoc:598
+#: upstream/_guides/rabbitmq-reference.adoc:715
 #, fuzzy, no-wrap
 msgid "[.no-hyphens]#*exchange.declare*#"
 msgstr "<span class=\"no-hyphens\"> *exchange.declare*</span>"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:533
-#: upstream/_guides/rabbitmq-reference.adoc:650
+#: upstream/_guides/rabbitmq-reference.adoc:600
+#: upstream/_guides/rabbitmq-reference.adoc:717
 #, fuzzy, no-wrap
 msgid ""
 "Whether to declare the exchange; set to false if the exchange is expected to be set up independently\n"
@@ -1629,15 +1749,15 @@ msgid ""
 msgstr "取引所を宣言するかどうか。取引所が独立して設立されることが予想される場合は、falseに設定されます。"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:535
-#: upstream/_guides/rabbitmq-reference.adoc:732
+#: upstream/_guides/rabbitmq-reference.adoc:602
+#: upstream/_guides/rabbitmq-reference.adoc:799
 #, fuzzy, no-wrap
 msgid "[.no-hyphens]#*tracing.enabled*#"
 msgstr "<span class=\"no-hyphens\"> *tracing.enabled*</span>"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:537
-#: upstream/_guides/rabbitmq-reference.adoc:734
+#: upstream/_guides/rabbitmq-reference.adoc:604
+#: upstream/_guides/rabbitmq-reference.adoc:801
 #, fuzzy, no-wrap
 msgid ""
 "Whether tracing is enabled (default) or disabled\n"
@@ -1646,15 +1766,15 @@ msgid ""
 msgstr "トレースを有効（デフォルト）にするか、無効にするか"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:539
-#: upstream/_guides/rabbitmq-reference.adoc:728
+#: upstream/_guides/rabbitmq-reference.adoc:606
+#: upstream/_guides/rabbitmq-reference.adoc:795
 #, fuzzy, no-wrap
 msgid "[.no-hyphens]#*tracing.attribute-headers*#"
 msgstr "<span class=\"no-hyphens\"> *tracing.attribute-headers*</span>"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:541
-#: upstream/_guides/rabbitmq-reference.adoc:730
+#: upstream/_guides/rabbitmq-reference.adoc:608
+#: upstream/_guides/rabbitmq-reference.adoc:797
 #, fuzzy, no-wrap
 msgid ""
 "A comma-separated list of headers that should be recorded as span attributes. Relevant only if tracing.enabled=true\n"
@@ -1663,21 +1783,21 @@ msgid ""
 msgstr "スパン属性として記録されるべきヘッダーのコンマ区切りのリストです。tracing.enabled=trueの場合のみ関連します。"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:543
-#: upstream/_guides/rabbitmq-reference.adoc:640
-#: upstream/_guides/rabbitmq-reference.adoc:732
+#: upstream/_guides/rabbitmq-reference.adoc:610
+#: upstream/_guides/rabbitmq-reference.adoc:707
+#: upstream/_guides/rabbitmq-reference.adoc:799
 #, fuzzy, no-wrap
 msgid "``"
 msgstr "``"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:543
+#: upstream/_guides/rabbitmq-reference.adoc:610
 #, fuzzy, no-wrap
 msgid "[.no-hyphens]#*queue.name*#"
 msgstr "<span class=\"no-hyphens\"> *queue.name*</span>"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:545
+#: upstream/_guides/rabbitmq-reference.adoc:612
 #, fuzzy, no-wrap
 msgid ""
 "The queue from which messages are consumed.\n"
@@ -1686,19 +1806,19 @@ msgid ""
 msgstr "メッセージが消費されるキューです。"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:545
+#: upstream/_guides/rabbitmq-reference.adoc:612
 #, fuzzy, no-wrap
 msgid "true"
 msgstr "真"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:547
+#: upstream/_guides/rabbitmq-reference.adoc:614
 #, fuzzy, no-wrap
 msgid "[.no-hyphens]#*queue.durable*#"
 msgstr "<span class=\"no-hyphens\"> *queue.durable*</span>"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:549
+#: upstream/_guides/rabbitmq-reference.adoc:616
 #, fuzzy, no-wrap
 msgid ""
 "Whether the queue is durable\n"
@@ -1707,13 +1827,13 @@ msgid ""
 msgstr "キューの耐久性があるかどうか"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:551
+#: upstream/_guides/rabbitmq-reference.adoc:618
 #, fuzzy, no-wrap
 msgid "[.no-hyphens]#*queue.exclusive*#"
 msgstr "<span class=\"no-hyphens\"> *キュー・エクスクルーシブ*</span>"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:553
+#: upstream/_guides/rabbitmq-reference.adoc:620
 #, fuzzy, no-wrap
 msgid ""
 "Whether the queue is for exclusive use\n"
@@ -1722,13 +1842,13 @@ msgid ""
 msgstr "キューが排他的に使用されているかどうか"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:555
+#: upstream/_guides/rabbitmq-reference.adoc:622
 #, fuzzy, no-wrap
 msgid "[.no-hyphens]#*queue.auto-delete*#"
 msgstr "<span class=\"no-hyphens\"> *キュー.オートデリート*</span>"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:557
+#: upstream/_guides/rabbitmq-reference.adoc:624
 #, fuzzy, no-wrap
 msgid ""
 "Whether the queue should be deleted after use\n"
@@ -1737,13 +1857,13 @@ msgid ""
 msgstr "使用後にキューを削除するかどうか"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:559
+#: upstream/_guides/rabbitmq-reference.adoc:626
 #, fuzzy, no-wrap
 msgid "[.no-hyphens]#*queue.declare*#"
 msgstr "<span class=\"no-hyphens\"> *queue.declare*</span>"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:561
+#: upstream/_guides/rabbitmq-reference.adoc:628
 #, fuzzy, no-wrap
 msgid ""
 "Whether to declare the queue and binding; set to false if these are expected to be set up independently\n"
@@ -1752,13 +1872,13 @@ msgid ""
 msgstr "キューとバインディングを宣言するかどうか。これらが独立して設定されることが予想される場合は、falseを設定します。"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:563
+#: upstream/_guides/rabbitmq-reference.adoc:630
 #, fuzzy, no-wrap
 msgid "[.no-hyphens]#*queue.ttl*#"
 msgstr "<span class=\"no-hyphens\"> *queue.ttl*</span>"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:565
+#: upstream/_guides/rabbitmq-reference.adoc:632
 #, fuzzy, no-wrap
 msgid ""
 "If specified, the time (ms) for which a message can remain in the queue undelivered before it is dead\n"
@@ -1767,13 +1887,13 @@ msgid ""
 msgstr "指定されている場合、メッセージが死滅する前に未配信でキューに残っていられる時間（ms）"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:567
+#: upstream/_guides/rabbitmq-reference.adoc:634
 #, fuzzy, no-wrap
 msgid "[.no-hyphens]#*max-incoming-internal-queue-size*#"
 msgstr "<span class=\"no-hyphens\"> *max-incoming-internal-queue-size*</span>"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:569
+#: upstream/_guides/rabbitmq-reference.adoc:636
 #, fuzzy, no-wrap
 msgid ""
 "The maximum size of the incoming internal queue\n"
@@ -1782,13 +1902,13 @@ msgid ""
 msgstr "受信する内部キューの最大サイズ"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:571
+#: upstream/_guides/rabbitmq-reference.adoc:638
 #, fuzzy, no-wrap
 msgid "[.no-hyphens]#*auto-bind-dlq*#"
 msgstr "<span class=\"no-hyphens\"> *auto-bind-dlq*</span>"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:573
+#: upstream/_guides/rabbitmq-reference.adoc:640
 #, fuzzy, no-wrap
 msgid ""
 "Whether to automatically declare the DLQ and bind it to the binder DLX\n"
@@ -1797,13 +1917,13 @@ msgid ""
 msgstr "DLQを自動的に宣言して、バインダーDLXにバインドするかどうか"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:575
+#: upstream/_guides/rabbitmq-reference.adoc:642
 #, fuzzy, no-wrap
 msgid "[.no-hyphens]#*dead-letter-queue-name*#"
 msgstr "<span class=\"no-hyphens\"> *デッドレター・キュー・ネーム*</span>"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:577
+#: upstream/_guides/rabbitmq-reference.adoc:644
 #, fuzzy, no-wrap
 msgid ""
 "The name of the DLQ; if not supplied will default to the queue name with '.dlq' appended\n"
@@ -1812,13 +1932,13 @@ msgid ""
 msgstr "DLQの名前。指定しない場合は、キュー名に「.dlq」が付加されたものがデフォルトとなります。"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:579
+#: upstream/_guides/rabbitmq-reference.adoc:646
 #, fuzzy, no-wrap
 msgid "[.no-hyphens]#*dead-letter-exchange*#"
 msgstr "<span class=\"no-hyphens\"> *デッドレター・エクスチェンジ*</span>"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:581
+#: upstream/_guides/rabbitmq-reference.adoc:648
 #, fuzzy, no-wrap
 msgid ""
 "A DLX to assign to the queue. Relevant only if auto-bind-dlq is true\n"
@@ -1827,19 +1947,19 @@ msgid ""
 msgstr "キューに割り当てるDLX。auto-bind-dlqがtrueの場合にのみ関係します。"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:583
+#: upstream/_guides/rabbitmq-reference.adoc:650
 #, fuzzy, no-wrap
 msgid "`DLX`"
 msgstr "`DLX`"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:583
+#: upstream/_guides/rabbitmq-reference.adoc:650
 #, fuzzy, no-wrap
 msgid "[.no-hyphens]#*dead-letter-exchange-type*#"
 msgstr "<span class=\"no-hyphens\"> *デッドレター・エクスチェンジ型*</span>"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:585
+#: upstream/_guides/rabbitmq-reference.adoc:652
 #, fuzzy, no-wrap
 msgid ""
 "The type of the DLX to assign to the queue. Relevant only if auto-bind-dlq is true\n"
@@ -1848,19 +1968,19 @@ msgid ""
 msgstr "キューに割り当てるDLXのタイプ。auto-bind-dlqがtrueの場合にのみ関係します。"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:587
+#: upstream/_guides/rabbitmq-reference.adoc:654
 #, fuzzy, no-wrap
 msgid "`direct`"
 msgstr "`direct`"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:587
+#: upstream/_guides/rabbitmq-reference.adoc:654
 #, fuzzy, no-wrap
 msgid "[.no-hyphens]#*dead-letter-routing-key*#"
 msgstr "<span class=\"no-hyphens\"> *デッドレター・ルーティング・キー*</span>"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:589
+#: upstream/_guides/rabbitmq-reference.adoc:656
 #, fuzzy, no-wrap
 msgid ""
 "A dead letter routing key to assign to the queue; if not supplied will default to the queue name\n"
@@ -1869,13 +1989,13 @@ msgid ""
 msgstr "キューに割り当てるデッドレター型のルーティングキー。何も指定しなければ、デフォルトでキュー名になる"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:591
+#: upstream/_guides/rabbitmq-reference.adoc:658
 #, fuzzy, no-wrap
 msgid "[.no-hyphens]#*dlx.declare*#"
 msgstr "<span class=\"no-hyphens\"> *dlx.declare*</span>"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:593
+#: upstream/_guides/rabbitmq-reference.adoc:660
 #, fuzzy, no-wrap
 msgid ""
 "Whether to declare the dead letter exchange binding. Relevant only if auto-bind-dlq is true; set to false if these are expected to be set up independently\n"
@@ -1884,13 +2004,13 @@ msgid ""
 msgstr "デッドレター交換のバインディングを宣言するかどうか。auto-bind-dlqがtrueの場合のみ関連します。これらが独立して設定されることが予想される場合はfalseに設定されます。"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:595
+#: upstream/_guides/rabbitmq-reference.adoc:662
 #, fuzzy, no-wrap
 msgid "[.no-hyphens]#*failure-strategy*#"
 msgstr "<span class=\"no-hyphens\"> *失敗戦略*</span>"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:597
+#: upstream/_guides/rabbitmq-reference.adoc:664
 #, fuzzy, no-wrap
 msgid ""
 "The failure strategy to apply when a RabbitMQ message is nacked. Accepted values are `fail`, `accept`, `reject` (default)\n"
@@ -1899,19 +2019,19 @@ msgid ""
 msgstr "RabbitMQメッセージがナッキングされたときに適用する失敗戦略。許容される値は `fail`, `accept`, `reject` (デフォルト) です。"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:599
+#: upstream/_guides/rabbitmq-reference.adoc:666
 #, fuzzy, no-wrap
 msgid "`reject`"
 msgstr "`reject`"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:599
+#: upstream/_guides/rabbitmq-reference.adoc:666
 #, fuzzy, no-wrap
 msgid "[.no-hyphens]#*broadcast*#"
 msgstr "<span class=\"no-hyphens\"> *ブロードキャスト*</span>"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:601
+#: upstream/_guides/rabbitmq-reference.adoc:668
 #, fuzzy, no-wrap
 msgid ""
 "Whether the received RabbitMQ messages must be dispatched to multiple _subscribers_\n"
@@ -1920,13 +2040,13 @@ msgid ""
 msgstr "受信したRabbitMQメッセージを複数の _サブスクライバ_にディスパッチする必要があるかどうか"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:603
+#: upstream/_guides/rabbitmq-reference.adoc:670
 #, fuzzy, no-wrap
 msgid "[.no-hyphens]#*auto-acknowledgement*#"
 msgstr "<span class=\"no-hyphens\"> *オートアクノリッジメント*</span>"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:605
+#: upstream/_guides/rabbitmq-reference.adoc:672
 #, fuzzy, no-wrap
 msgid ""
 "Whether the received RabbitMQ messages must be acknowledged when received; if true then delivery constitutes acknowledgement\n"
@@ -1935,13 +2055,13 @@ msgid ""
 msgstr "受信したRabbitMQメッセージを受信時に確認する必要があるかどうか、trueの場合は配信が確認を意味します。"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:607
+#: upstream/_guides/rabbitmq-reference.adoc:674
 #, fuzzy, no-wrap
 msgid "[.no-hyphens]#*keep-most-recent*#"
 msgstr "<span class=\"no-hyphens\"> *キープ・オブ・ザ・ラスト・レセント*</span>"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:609
+#: upstream/_guides/rabbitmq-reference.adoc:676
 #, fuzzy, no-wrap
 msgid ""
 "Whether to discard old messages instead of recent ones\n"
@@ -1950,13 +2070,13 @@ msgid ""
 msgstr "最近のメッセージではなく、古いメッセージを破棄するかどうか"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:611
+#: upstream/_guides/rabbitmq-reference.adoc:678
 #, fuzzy, no-wrap
 msgid "[.no-hyphens]#*routing-keys*#"
 msgstr "<span class=\"no-hyphens\"> *routing-keys*</span>"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:613
+#: upstream/_guides/rabbitmq-reference.adoc:680
 #, fuzzy, no-wrap
 msgid ""
 "A comma-separated list of routing keys to bind the queue to the exchange\n"
@@ -1965,25 +2085,25 @@ msgid ""
 msgstr "キューを交換機にバインドするためのルーティングキーのコンマ区切りのリスト"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:615
+#: upstream/_guides/rabbitmq-reference.adoc:682
 #, fuzzy, no-wrap
 msgid "`#`"
 msgstr "`#`"
 
 #. type: Title ===
-#: upstream/_guides/rabbitmq-reference.adoc:618
+#: upstream/_guides/rabbitmq-reference.adoc:685
 #, fuzzy, no-wrap
 msgid "Outgoing channel configuration"
 msgstr "送出チャンネルの設定"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:636
+#: upstream/_guides/rabbitmq-reference.adoc:703
 #, fuzzy, no-wrap
 msgid "[.no-hyphens]#*default-routing-key*#"
 msgstr "<span class=\"no-hyphens\"> *default-routing-key*</span>"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:638
+#: upstream/_guides/rabbitmq-reference.adoc:705
 #, fuzzy, no-wrap
 msgid ""
 "The default routing key to use when sending messages to the exchange\n"
@@ -1992,13 +2112,13 @@ msgid ""
 msgstr "Exchangeにメッセージを送信する際に使用するデフォルトのルーティングキー"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:640
+#: upstream/_guides/rabbitmq-reference.adoc:707
 #, fuzzy, no-wrap
 msgid "[.no-hyphens]#*default-ttl*#"
 msgstr "<span class=\"no-hyphens\"> *default-ttl*</span>"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:642
+#: upstream/_guides/rabbitmq-reference.adoc:709
 #, fuzzy, no-wrap
 msgid ""
 "If specified, the time (ms) sent messages can remain in queues undelivered before they are dead\n"
@@ -2007,13 +2127,13 @@ msgid ""
 msgstr "指定された場合、送信されたメッセージが死滅する前に未配信でキューに残ることができる時間（ms）"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:678
+#: upstream/_guides/rabbitmq-reference.adoc:745
 #, fuzzy, no-wrap
 msgid "[.no-hyphens]#*max-inflight-messages*#"
 msgstr "<span class=\"no-hyphens\"> *max-inflight-messages*</span>"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:680
+#: upstream/_guides/rabbitmq-reference.adoc:747
 #, fuzzy, no-wrap
 msgid ""
 "The maximum number of messages to be written to RabbitMQ concurrently; must be a positive number\n"
@@ -2022,19 +2142,19 @@ msgid ""
 msgstr "同時にRabbitMQに書き込むメッセージの最大数（正の数でなければなりません"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:682
+#: upstream/_guides/rabbitmq-reference.adoc:749
 #, fuzzy, no-wrap
 msgid "`1024`"
 msgstr "`1024`"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:682
+#: upstream/_guides/rabbitmq-reference.adoc:749
 #, fuzzy, no-wrap
 msgid "[.no-hyphens]#*max-outgoing-internal-queue-size*#"
 msgstr "<span class=\"no-hyphens\"> *max-outgoing-internal-queue-size*</span>"
 
 #. type: Table
-#: upstream/_guides/rabbitmq-reference.adoc:684
+#: upstream/_guides/rabbitmq-reference.adoc:751
 #, fuzzy, no-wrap
 msgid ""
 "The maximum size of the outgoing internal queue\n"

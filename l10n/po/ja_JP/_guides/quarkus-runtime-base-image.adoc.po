@@ -1,0 +1,192 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2021-12-22 15:05+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. This guide is maintained in the main Quarkus repository
+#. and pull requests should be submitted there:
+#. https://github.com/quarkusio/quarkus/tree/main/docs/src/main/asciidoc
+#. type: Title =
+#: upstream/_guides/quarkus-runtime-base-image.adoc:6
+#, no-wrap
+msgid "Quarkus Base Runtime Image"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quarkus-runtime-base-image.adoc:12
+msgid "To ease the containerization of native executables, Quarkus provides a base image providing the requirements to run these executables.  The `quarkus-micro-image:1.0` image is:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quarkus-runtime-base-image.adoc:14
+msgid "small (based on `ubi8-micro`)"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quarkus-runtime-base-image.adoc:15
+msgid "designed for containers"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quarkus-runtime-base-image.adoc:16
+msgid "contains the right set of dependencies (glibc, libstdc++, zlib)"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quarkus-runtime-base-image.adoc:17
+msgid "support upx-compressed executables (more details on the xref:upx.adoc[enabling compression documentation])"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/quarkus-runtime-base-image.adoc:18
+#, no-wrap
+msgid "Using the base image"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quarkus-runtime-base-image.adoc:21
+msgid "In your `Dockerfile`, just use:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quarkus-runtime-base-image.adoc:30
+#, no-wrap
+msgid ""
+"FROM quay.io/quarkus/quarkus-micro-image:1.0\n"
+"WORKDIR /work/\n"
+"COPY target/*-runner /work/application\n"
+"RUN chmod 775 /work\n"
+"EXPOSE 8080\n"
+"CMD [\"./application\", \"-Dquarkus.http.host=0.0.0.0\"]\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/quarkus-runtime-base-image.adoc:32
+#, no-wrap
+msgid "Extending the image"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quarkus-runtime-base-image.adoc:37
+msgid "Your application may have additional requirements.  For example, if you have an application that requires `libfreetype.so`, you need to copy the native libraries to the container.  In this case, you need to use a multi-stage `dockerfile` to copy the required libraries:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quarkus-runtime-base-image.adoc:43
+#, no-wrap
+msgid ""
+"# First stage - install the dependencies in an intermediate container\n"
+"FROM registry.access.redhat.com/ubi8/ubi-minimal:8.5 as BUILD\n"
+"RUN microdnf install freetype\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quarkus-runtime-base-image.adoc:51
+#, no-wrap
+msgid ""
+"# Second stage - copy the dependencies\n"
+"FROM quay.io/quarkus/quarkus-micro-image:1.0\n"
+"COPY --from=BUILD \\\n"
+"   /lib64/libfreetype.so.6 \\\n"
+"   /lib64/libbz2.so.1 \\\n"
+"   /lib64/libpng16.so.16 \\\n"
+"   /lib64/\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quarkus-runtime-base-image.adoc:57
+#: upstream/_guides/quarkus-runtime-base-image.adoc:101
+#, no-wrap
+msgid ""
+"WORKDIR /work/\n"
+"COPY target/*-runner /work/application\n"
+"RUN chmod 775 /work\n"
+"EXPOSE 8080\n"
+"CMD [\"./application\", \"-Dquarkus.http.host=0.0.0.0\"]\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/quarkus-runtime-base-image.adoc:60
+msgid "If you need to have access to the full AWT support, you need more than just `libfreetype.so`, but also the font and font configurations:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quarkus-runtime-base-image.adoc:66
+#, no-wrap
+msgid ""
+"# First stage - install the dependencies in an intermediate container\n"
+"FROM registry.access.redhat.com/ubi8/ubi-minimal:8.5 as BUILD\n"
+"RUN microdnf install freetype fontconfig\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quarkus-runtime-base-image.adoc:79
+#, no-wrap
+msgid ""
+"# Second stage - copy the dependencies\n"
+"FROM quay.io/quarkus/quarkus-micro-image:1.0\n"
+"COPY --from=BUILD \\\n"
+"   /lib64/libfreetype.so.6 \\\n"
+"   /lib64/libgcc_s.so.1 \\\n"
+"   /lib64/libbz2.so.1 \\\n"
+"   /lib64/libpng16.so.16 \\\n"
+"   /lib64/libm.so.6 \\\n"
+"   /lib64/libbz2.so.1 \\\n"
+"   /lib64/libexpat.so.1 \\\n"
+"   /lib64/libuuid.so.1 \\\n"
+"   /lib64/\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quarkus-runtime-base-image.adoc:83
+#, no-wrap
+msgid ""
+"COPY --from=BUILD \\\n"
+"   /usr/lib64/libfontconfig.so.1 \\\n"
+"   /usr/lib64/\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quarkus-runtime-base-image.adoc:86
+#, no-wrap
+msgid ""
+"COPY --from=BUILD \\\n"
+"    /usr/share/fonts /usr/share/fonts\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quarkus-runtime-base-image.adoc:89
+#, no-wrap
+msgid ""
+"COPY --from=BUILD \\\n"
+"    /usr/share/fontconfig /usr/share/fontconfig\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quarkus-runtime-base-image.adoc:92
+#, no-wrap
+msgid ""
+"COPY --from=BUILD \\\n"
+"    /usr/lib/fontconfig /usr/lib/fontconfig\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/quarkus-runtime-base-image.adoc:95
+#, no-wrap
+msgid ""
+"COPY --from=BUILD \\\n"
+"     /etc/fonts /etc/fonts\n"
+msgstr ""
