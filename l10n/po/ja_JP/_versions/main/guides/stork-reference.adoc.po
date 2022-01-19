@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2022-01-06 02:25+0000\n"
+"POT-Creation-Date: 2022-01-19 02:19+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -89,7 +89,7 @@ msgstr ""
 msgid ""
 "<dependency>\n"
 "    <groupId>io.smallrye.stork</groupId>\n"
-"    <artifactId>smallrye-stork-service-discovery-kubernetes</artifactId>\n"
+"    <artifactId>stork-service-discovery-kubernetes</artifactId>\n"
 "</dependency>\n"
 msgstr ""
 
@@ -118,141 +118,167 @@ msgid "Implementing a custom service discovery"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/stork-reference.adoc:56
-msgid "Stork is extensible, and you can implement your own service discovery mechanism.  Stork uses the SPI mechanism for loading implementations matching the Service Discovery Provider interface."
+#: upstream/_versions/main/guides/stork-reference.adoc:55
+msgid "Stork is extensible, and you can implement your own service discovery mechanism."
 msgstr ""
 
 #. type: Title ===
-#: upstream/_versions/main/guides/stork-reference.adoc:57
-#: upstream/_versions/main/guides/stork-reference.adoc:181
+#: upstream/_versions/main/guides/stork-reference.adoc:56
+#: upstream/_versions/main/guides/stork-reference.adoc:183
 #, no-wrap
 msgid "Dependency"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/stork-reference.adoc:59
-msgid "To implement your Service Discovery Provider, make sure your project depends on:"
+#: upstream/_versions/main/guides/stork-reference.adoc:58
+msgid "To implement your Service Discovery Provider, make sure your project depends on Core and Configuration Generator. The former brings classes necessary to implement custom discovery, the latter contains an annotation processor that generates classes needed by Stork."
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/stork-reference.adoc:66
-#: upstream/_versions/main/guides/stork-reference.adoc:190
+#: upstream/_versions/main/guides/stork-reference.adoc:71
+#: upstream/_versions/main/guides/stork-reference.adoc:198
 #, no-wrap
 msgid ""
 "<dependency>\n"
 "    <groupI>io.smallrye.stork</groupI>\n"
-"    <artifactId>smallrye-stork-api</artifactId>\n"
+"    <artifactId>stork-core</artifactId>\n"
+"</dependency>\n"
+"<dependency>\n"
+"    <groupId>io.smallrye.stork</groupId>\n"
+"    <artifactId>stork-configuration-generator</artifactId>\n"
+"    <!-- provided scope is sufficient for the annotation processor -->\n"
+"    <scope>provided</scope>\n"
 "</dependency>\n"
 msgstr ""
 
 #. type: Title ===
-#: upstream/_versions/main/guides/stork-reference.adoc:68
+#: upstream/_versions/main/guides/stork-reference.adoc:73
 #, no-wrap
 msgid "Implementing a service discovery provider"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/stork-reference.adoc:71
-msgid "Stork uses the SPI mechanism for loading implementations matching the Service Discovery Provider interface during its initialization."
-msgstr ""
-
-#. type: Plain text
-#: upstream/_versions/main/guides/stork-reference.adoc:75
+#: upstream/_versions/main/guides/stork-reference.adoc:78
 msgid "The custom provider is a factory that creates an `io.smallrye.stork.ServiceDiscovery` instance for each configured service using this service discovery provider.  A type, for example, `acme` identifies each provider.  This type is used in the configuration to reference the provider:"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/stork-reference.adoc:79
+#: upstream/_versions/main/guides/stork-reference.adoc:82
 #, no-wrap
 msgid "stork.my-service.service-discovery=acme\n"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/stork-reference.adoc:82
+#: upstream/_versions/main/guides/stork-reference.adoc:85
 msgid "The first step consists of implementing the `io.smallrye.stork.spi.ServiceDiscoveryProvider` interface:"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/stork-reference.adoc:86
-#: upstream/_versions/main/guides/stork-reference.adoc:117
-#: upstream/_versions/main/guides/stork-reference.adoc:210
-#: upstream/_versions/main/guides/stork-reference.adoc:242
+#: upstream/_versions/main/guides/stork-reference.adoc:89
+#: upstream/_versions/main/guides/stork-reference.adoc:128
+#: upstream/_versions/main/guides/stork-reference.adoc:222
+#: upstream/_versions/main/guides/stork-reference.adoc:251
 #, no-wrap
 msgid "package examples;\n"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/stork-reference.adoc:91
+#: upstream/_versions/main/guides/stork-reference.adoc:96
 #, no-wrap
 msgid ""
-"import io.smallrye.stork.ServiceDiscovery;\n"
-"import io.smallrye.stork.config.ServiceConfig;\n"
-"import io.smallrye.stork.config.ServiceDiscoveryConfig;\n"
+"import io.smallrye.stork.api.ServiceDiscovery;\n"
+"import io.smallrye.stork.api.config.ServiceConfig;\n"
+"import io.smallrye.stork.api.config.ServiceDiscoveryAttribute;\n"
+"import io.smallrye.stork.api.config.ServiceDiscoveryType;\n"
+"import io.smallrye.stork.spi.StorkInfrastructure;\n"
 "import io.smallrye.stork.spi.ServiceDiscoveryProvider;\n"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/stork-reference.adoc:97
+#: upstream/_versions/main/guides/stork-reference.adoc:104
 #, no-wrap
 msgid ""
-"public class AcmeServiceDiscoveryProvider implements ServiceDiscoveryProvider {\n"
-"    @Override\n"
-"    public String type() {\n"
-"        return \"acme\";\n"
-"    }\n"
+"@ServiceDiscoveryType(\"acme\") // <1>\n"
+"@ServiceDiscoveryAttribute(name = \"host\",\n"
+"        description = \"Host name of the service discovery server.\", required = true) // <2>\n"
+"@ServiceDiscoveryAttribute(name = \"port\",\n"
+"        description = \"Hort of the service discovery server.\", required = false)\n"
+"public class AcmeServiceDiscoveryProvider // <3>\n"
+"        implements ServiceDiscoveryProvider<AcmeServiceDiscoveryProviderConfiguration> {\n"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/stork-reference.adoc:105
+#: upstream/_versions/main/guides/stork-reference.adoc:114
 #, no-wrap
 msgid ""
+"    // <4>\n"
 "    @Override\n"
-"    public ServiceDiscovery createServiceDiscovery(ServiceDiscoveryConfig config,\n"
-"            String serviceName,\n"
-"            ServiceConfig serviceConfig) {\n"
-"        return new AcmeServiceDiscovery(config.parameters());\n"
+"    public ServiceDiscovery createServiceDiscovery(AcmeServiceDiscoveryProviderConfiguration config,\n"
+"                                                   String serviceName,\n"
+"                                                   ServiceConfig serviceConfig,\n"
+"                                                   StorkInfrastructure storkInfrastructure) {\n"
+"        return new AcmeServiceDiscovery(config);\n"
 "    }\n"
 "}\n"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/stork-reference.adoc:111
-msgid "This implementation is straightforward.  The type method returns the service discovery provider identifier.  The `createServiceDiscovery` method is the factory method.  It receives the instance configuration (a map constructed from all `stork.my-service.service-discovery.attr=value` properties)"
+#: upstream/_versions/main/guides/stork-reference.adoc:117
+msgid "This implementation is straightforward."
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/stork-reference.adoc:113
-msgid "Then, obviously, we need to implement the ServiceDiscovery interface:"
+#: upstream/_versions/main/guides/stork-reference.adoc:119
+msgid "`@ServiceDiscoveryType` annotation defines the type of the service discovery provider. For each `ServiceDiscoveryProvider` annotated with this annotation, a configuration class will be generated. The name of the configuration class is constructed by appending `Configuration` to the name of the provider."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/stork-reference.adoc:120
+msgid "Use `@ServiceDiscoveryAttribute` to define configuration properties for services configured with this service discovery provider. Configuration properties are gathered from all properties of a form: `stork.my-service.service-discovery.attr=value`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/stork-reference.adoc:121
+msgid "The provider needs to implement `ServiceDiscoveryType` typed by the configuration class."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/stork-reference.adoc:122
+msgid "`createServiceDiscovery` method is the factory method. It receives the configuration and access to the name of the service and available infrastructure."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/stork-reference.adoc:124
+msgid "Then, we need to implement the `ServiceDiscovery` interface:"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/stork-reference.adoc:123
-#, no-wrap
-msgid ""
-"import io.smallrye.mutiny.Uni;\n"
-"import io.smallrye.stork.DefaultServiceInstance;\n"
-"import io.smallrye.stork.ServiceDiscovery;\n"
-"import io.smallrye.stork.ServiceInstance;\n"
-"import io.smallrye.stork.spi.ServiceInstanceIds;\n"
-msgstr ""
-
-#. type: delimited block -
-#: upstream/_versions/main/guides/stork-reference.adoc:127
+#: upstream/_versions/main/guides/stork-reference.adoc:131
 #, no-wrap
 msgid ""
 "import java.util.Collections;\n"
 "import java.util.List;\n"
-"import java.util.Map;\n"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/stork-reference.adoc:129
+#: upstream/_versions/main/guides/stork-reference.adoc:137
+#, no-wrap
+msgid ""
+"import io.smallrye.mutiny.Uni;\n"
+"import io.smallrye.stork.api.ServiceDiscovery;\n"
+"import io.smallrye.stork.api.ServiceInstance;\n"
+"import io.smallrye.stork.impl.DefaultServiceInstance;\n"
+"import io.smallrye.stork.utils.ServiceInstanceIds;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/stork-reference.adoc:139
 #, no-wrap
 msgid "public class AcmeServiceDiscovery implements ServiceDiscovery {\n"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/stork-reference.adoc:132
+#: upstream/_versions/main/guides/stork-reference.adoc:142
 #, no-wrap
 msgid ""
 "    private final String host;\n"
@@ -260,17 +286,17 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/stork-reference.adoc:137
+#: upstream/_versions/main/guides/stork-reference.adoc:147
 #, no-wrap
 msgid ""
-"    public AcmeServiceDiscovery(Map<String, String> configuration) {\n"
-"        this.host = configuration.get(\"host\");\n"
-"        this.port = Integer.parseInt(configuration.get(\"port\"));\n"
+"    public AcmeServiceDiscovery(AcmeServiceDiscoveryProviderConfiguration configuration) {\n"
+"        this.host = configuration.getHost();\n"
+"        this.port = Integer.parseInt(configuration.getPort());\n"
 "    }\n"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/stork-reference.adoc:148
+#: upstream/_versions/main/guides/stork-reference.adoc:158
 #, no-wrap
 msgid ""
 "    @Override\n"
@@ -286,35 +312,24 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/stork-reference.adoc:154
+#: upstream/_versions/main/guides/stork-reference.adoc:164
 msgid "Again, this implementation is simplistic.  Typically, instead of creating a service instance with values from the configuration, you would connect to a service discovery backend, look for the service and build the list of service instances accordingly.  That's why the method returns a `Uni`.  Most of the time, the lookup is a remote operation."
 msgstr ""
 
-#. type: Plain text
-#: upstream/_versions/main/guides/stork-reference.adoc:156
-msgid "The final step is to declare our `ServiceDiscoveryProvider` in the `META-INF/services/io.smallrye.stork.spi.ServiceDiscoveryProvider` file:"
-msgstr ""
-
-#. type: delimited block -
-#: upstream/_versions/main/guides/stork-reference.adoc:160
-#, no-wrap
-msgid "examples.AcmeServiceDiscoveryProvider\n"
-msgstr ""
-
 #. type: Title ===
-#: upstream/_versions/main/guides/stork-reference.adoc:162
+#: upstream/_versions/main/guides/stork-reference.adoc:165
 #, no-wrap
 msgid "Using your service discovery"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/stork-reference.adoc:166
-#: upstream/_versions/main/guides/stork-reference.adoc:280
+#: upstream/_versions/main/guides/stork-reference.adoc:169
+#: upstream/_versions/main/guides/stork-reference.adoc:291
 msgid "In the project using it, don't forget to add the dependency on the module providing your implementation.  Then, in the configuration, just add:"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/stork-reference.adoc:172
+#: upstream/_versions/main/guides/stork-reference.adoc:175
 #, no-wrap
 msgid ""
 "stork.my-service.service-discovery=acme\n"
@@ -323,109 +338,114 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/stork-reference.adoc:175
+#: upstream/_versions/main/guides/stork-reference.adoc:178
 msgid "Then, Stork will use your implementation to locate the `my-service` service."
 msgstr ""
 
 #. type: Title ==
-#: upstream/_versions/main/guides/stork-reference.adoc:176
+#: upstream/_versions/main/guides/stork-reference.adoc:179
 #, no-wrap
 msgid "Implementing a custom service selection / load-balancer"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/stork-reference.adoc:180
-msgid "Stork is extensible, and you can implement your own service selection (load-balancer) mechanism.  Stork uses the SPI mechanism for loading implementations matching the Load Balancer Provider interface."
+#: upstream/_versions/main/guides/stork-reference.adoc:182
+msgid "Stork is extensible, and you can implement your own service selection (load-balancer) mechanism."
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/stork-reference.adoc:183
-msgid "To implement your Load Balancer Provider, make sure your project depends on:"
+#: upstream/_versions/main/guides/stork-reference.adoc:185
+msgid "To implement your Load Balancer Provider, make sure your project depends on Core and Configuration Generator. The former brings classes necessary to implement custom load balancer, the latter contains an annotation processor that generates classes needed by Stork."
 msgstr ""
 
 #. type: Title ===
-#: upstream/_versions/main/guides/stork-reference.adoc:192
+#: upstream/_versions/main/guides/stork-reference.adoc:200
 #, no-wrap
 msgid "Implementing a load balancer provider"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/stork-reference.adoc:195
-msgid "Stork uses the SPI mechanism for loading implementations matching the Load Balancer Provider interface during its initialization."
+#: upstream/_versions/main/guides/stork-reference.adoc:203
+msgid "Load balancer implementation consists of three elements:"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/stork-reference.adoc:199
-msgid "The custom provider is a factory that creates an `io.smallrye.stork.LoadBalancer` instance for each configured service using this load balancer provider.  A type identifies each provider.  You will use that type in the configuration to reference the load-balancer provider you want for each service:"
+#: upstream/_versions/main/guides/stork-reference.adoc:205
+msgid "`LoadBalancer` which is responsible for selecting service instances for a single Stork service"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/stork-reference.adoc:206
+msgid "`LoadBalancerProvider` which creates instances of `LoadBalancer` for a given load balancer _type_"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/stork-reference.adoc:207
+msgid "`LoadBalancerProviderConfiguration` which is a configuration for the load balancer"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/stork-reference.adoc:211
+msgid "A _type_, for example, `acme`, identifies each provider.  This _type_ is used in the configuration to reference the provider:"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/stork-reference.adoc:203
+#: upstream/_versions/main/guides/stork-reference.adoc:215
 #, no-wrap
 msgid "stork.my-service.load-balancer=acme\n"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/stork-reference.adoc:206
-msgid "The first step consists of implementing the `io.smallrye.stork.spi.LoadBalancerProvider` interface:"
+#: upstream/_versions/main/guides/stork-reference.adoc:219
+msgid "Similarly to `ServiceDiscoveryProvider, a `LoadBalancerProvider` implementation needs to be annotated with `@LoadBalancerType` that defines the _type_.  Any configuration properties that the provider expects should be defined with `@LoadBalancerAttribute` annotations placed on the provider."
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/stork-reference.adoc:217
+#: upstream/_versions/main/guides/stork-reference.adoc:228
 #, no-wrap
 msgid ""
-"import io.smallrye.stork.LoadBalancer;\n"
-"import io.smallrye.stork.ServiceDiscovery;\n"
-"import io.smallrye.stork.config.LoadBalancerConfig;\n"
-"import io.smallrye.stork.config.ServiceDiscoveryConfig;\n"
+"import io.smallrye.stork.api.LoadBalancer;\n"
+"import io.smallrye.stork.api.ServiceDiscovery;\n"
+"import io.smallrye.stork.api.config.LoadBalancerAttribute;\n"
+"import io.smallrye.stork.api.config.LoadBalancerType;\n"
 "import io.smallrye.stork.spi.LoadBalancerProvider;\n"
-"import io.smallrye.stork.spi.ServiceDiscoveryProvider;\n"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/stork-reference.adoc:224
+#: upstream/_versions/main/guides/stork-reference.adoc:234
 #, no-wrap
 msgid ""
-"public class AcmeLoadBalancerProvider implements LoadBalance\n"
-"rProvider {\n"
-"    @Override\n"
-"    public String type() {\n"
-"        return \"acme\";\n"
-"    }\n"
+"@LoadBalancerType(\"acme\")\n"
+"@LoadBalancerAttribute(name = \"my-attribute\",\n"
+"        description = \"Attribute that alters the behavior of the LoadBalancer\")\n"
+"public class AcmeLoadBalancerProvider implements\n"
+"        LoadBalancerProvider<AcmeLoadBalancerProviderConfiguration> {\n"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/stork-reference.adoc:230
+#: upstream/_versions/main/guides/stork-reference.adoc:241
 #, no-wrap
 msgid ""
 "    @Override\n"
-"    public LoadBalancer createLoadBalancer(LoadBalancerConfig config, ServiceDiscovery serviceDiscovery) {\n"
+"    public LoadBalancer createLoadBalancer(AcmeLoadBalancerProviderConfiguration config,\n"
+"                                           ServiceDiscovery serviceDiscovery) {\n"
 "        return new AcmeLoadBalancer(config);\n"
 "    }\n"
 "}\n"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/stork-reference.adoc:236
-msgid "This implementation is straightforward.  The type method returns the load balancer provider identifier.  The `createLoadBalancer` method is the factory method.  It receives the instance configuration (a map constructed from all `stork.my-service.load-balancer.attr=value` properties)"
+#: upstream/_versions/main/guides/stork-reference.adoc:245
+msgid "Note, that similarly to the `ServiceDiscoveryProvider`, the `LoadBalancerProvider` interface takes a configuration class as a parameter. This configuration class is generated automatically by the _Configuration Generator_.  Its name is created by appending `Configuration` to the name of the provider class."
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/stork-reference.adoc:238
-msgid "Then, obviously, we need to implement the `LoadBalancer` interface:"
+#: upstream/_versions/main/guides/stork-reference.adoc:247
+msgid "The next step is to implement the `LoadBalancer` interface:"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/stork-reference.adoc:246
-#, no-wrap
-msgid ""
-"import io.smallrye.stork.LoadBalancer;\n"
-"import io.smallrye.stork.ServiceInstance;\n"
-"import io.smallrye.stork.config.LoadBalancerConfig;\n"
-msgstr ""
-
-#. type: delimited block -
-#: upstream/_versions/main/guides/stork-reference.adoc:250
+#: upstream/_versions/main/guides/stork-reference.adoc:255
 #, no-wrap
 msgid ""
 "import java.util.ArrayList;\n"
@@ -434,32 +454,44 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/stork-reference.adoc:252
+#: upstream/_versions/main/guides/stork-reference.adoc:259
+#, no-wrap
+msgid ""
+"import io.smallrye.stork.api.LoadBalancer;\n"
+"import io.smallrye.stork.api.NoServiceInstanceFoundException;\n"
+"import io.smallrye.stork.api.ServiceInstance;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/stork-reference.adoc:261
 #, no-wrap
 msgid "public class AcmeLoadBalancer implements LoadBalancer {\n"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/stork-reference.adoc:254
+#: upstream/_versions/main/guides/stork-reference.adoc:263
 #, no-wrap
 msgid "    private final Random random;\n"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/stork-reference.adoc:258
+#: upstream/_versions/main/guides/stork-reference.adoc:267
 #, no-wrap
 msgid ""
-"    public AcmeLoadBalancer(LoadBalancerConfig config) {\n"
+"    public AcmeLoadBalancer(AcmeLoadBalancerProviderConfiguration config) {\n"
 "        random = new Random();\n"
 "    }\n"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/stork-reference.adoc:265
+#: upstream/_versions/main/guides/stork-reference.adoc:277
 #, no-wrap
 msgid ""
 "    @Override\n"
 "    public ServiceInstance selectServiceInstance(Collection<ServiceInstance> serviceInstances) {\n"
+"        if (serviceInstances.isEmpty()) {\n"
+"            throw new NoServiceInstanceFoundException(\"No services found.\");\n"
+"        }\n"
 "        int index = random.nextInt(serviceInstances.size());\n"
 "        return new ArrayList<>(serviceInstances).get(index);\n"
 "    }\n"
@@ -467,29 +499,24 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/stork-reference.adoc:268
+#: upstream/_versions/main/guides/stork-reference.adoc:280
 msgid "Again, this implementation is simplistic and just picks a random instance from the received list."
 msgstr ""
 
-#. type: Plain text
-#: upstream/_versions/main/guides/stork-reference.adoc:270
-msgid "The final step is to declare our `LoadBalancerProvider` in the `META-INF/services/io.smallrye.stork.spi.LoadBalancerProvider` file:"
-msgstr ""
-
 #. type: delimited block -
-#: upstream/_versions/main/guides/stork-reference.adoc:274
+#: upstream/_versions/main/guides/stork-reference.adoc:285
 #, no-wrap
 msgid "examples.AcmeLoadBalancerProvider\n"
 msgstr ""
 
 #. type: Title ===
-#: upstream/_versions/main/guides/stork-reference.adoc:276
+#: upstream/_versions/main/guides/stork-reference.adoc:287
 #, no-wrap
 msgid "Using your load balancer"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/stork-reference.adoc:285
+#: upstream/_versions/main/guides/stork-reference.adoc:296
 #, no-wrap
 msgid ""
 "stork.my-service.service-discovery=...\n"
@@ -497,6 +524,6 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/stork-reference.adoc:288
+#: upstream/_versions/main/guides/stork-reference.adoc:299
 msgid "Then, Stork will use your implementation to select the `my-service` service instance."
 msgstr ""
