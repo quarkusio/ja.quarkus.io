@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2022-01-20 02:29+0000\n"
+"POT-Creation-Date: 2022-02-02 02:15+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -241,6 +241,7 @@ msgstr ""
 #: upstream/_versions/main/guides/rest-client-reactive.adoc:106
 #: upstream/_versions/main/guides/rest-client-reactive.adoc:154
 #: upstream/_versions/main/guides/rest-client-reactive.adoc:354
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:878
 #, no-wrap
 msgid "import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;\n"
 msgstr ""
@@ -1530,50 +1531,286 @@ msgid "quarkus.log.category.\"org.jboss.resteasy.reactive.client.logging\".level
 msgstr ""
 
 #. type: Title ==
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:863
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:861
+#, no-wrap
+msgid "Mocking the client for tests"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:864
+msgid "If you use a client injected with the `@RestClient` annotation, you can easily mock it for tests.  You can do it with Mockito's `@InjectMock` or with `QuarkusMock`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:866
+msgid "This section shows how to replace your client with a mock. If you would like to get a more in-depth understanding of how mocking works in Quarkus, see the blog post on https://quarkus.io/blog/mocking/[Mocking CDI beans]."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:868
+msgid "Mocking does not work when using `@NativeImageTest` or `@QuarkusIntegrationTest`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:870
+msgid "Let's assume you have the following client:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:873
+#, no-wrap
+msgid "package io.quarkus.it.rest.client.main;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:876
+#, no-wrap
+msgid ""
+"import javax.ws.rs.GET;\n"
+"import javax.ws.rs.Path;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:886
+#, fuzzy, no-wrap
+#| msgid ""
+#| "@Path(\"/v2\")\n"
+#| "@RegisterRestClient\n"
+#| "public interface CountriesService {\n"
+msgid ""
+"@Path(\"/\")\n"
+"@RegisterRestClient\n"
+"public interface Client {\n"
+"    @GET\n"
+"    String get();\n"
+"}\n"
+msgstr ""
+"@Path(\"/v2\")\n"
+"@RegisterRestClient\n"
+"public interface CountriesService {\n"
+
+#. type: Title ===
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:889
+#, no-wrap
+msgid "Mocking with InjectMock"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:891
+msgid "The simplest approach to mock a client for tests is to use Mockito and `@InjectMock`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:893
+#, fuzzy
+#| msgid "This will add the following to your `pom.xml`:"
+msgid "First, add the following dependency to your application:"
+msgstr "これにより、 `pom.xml` に以下が追加されます。"
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:900
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-junit5-mockito</artifactId>\n"
+"    <scope>test</scope>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:903
+msgid "Then, in your test you can simply use `@InjectMock` to create and inject a mock:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:908
+#, no-wrap
+msgid ""
+"import static org.assertj.core.api.Assertions.assertThat;\n"
+"import static org.mockito.Mockito.when;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:911
+#, no-wrap
+msgid ""
+"import org.junit.jupiter.api.BeforeEach;\n"
+"import org.junit.jupiter.api.Test;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:914
+#, no-wrap
+msgid ""
+"import io.quarkus.test.junit.QuarkusTest;\n"
+"import io.quarkus.test.junit.mockito.InjectMock;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:917
+#, fuzzy, no-wrap
+#| msgid ""
+#| "@Path(\"/country\")\n"
+#| "public class CountriesResource {\n"
+msgid ""
+"@QuarkusTest\n"
+"public class InjectMockTest {\n"
+msgstr ""
+"@Path(\"/country\")\n"
+"public class CountriesResource {\n"
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:920
+#, no-wrap
+msgid ""
+"    @InjectMock\n"
+"    Client mock;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:925
+#, no-wrap
+msgid ""
+"    @BeforeEach\n"
+"    public void setUp() {\n"
+"        when(mock.get()).thenReturn(\"MockAnswer\");\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:931
+#, no-wrap
+msgid ""
+"    @Test\n"
+"    void doTest() {\n"
+"        // ...\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:933
+#, no-wrap
+msgid "Mocking with QuarkusMock"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:935
+msgid "If Mockito doesn't meet your needs, you can create a mock programmatically using `QuarkusMock`, e.g.:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:941
+#, no-wrap
+msgid ""
+"import org.eclipse.microprofile.rest.client.inject.RestClient;\n"
+"import org.junit.jupiter.api.BeforeEach;\n"
+"import org.junit.jupiter.api.Test;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:944
+#, no-wrap
+msgid ""
+"import io.quarkus.test.junit.QuarkusMock;\n"
+"import io.quarkus.test.junit.QuarkusTest;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:947
+#, fuzzy, no-wrap
+#| msgid ""
+#| "@Path(\"/country\")\n"
+#| "public class CountriesResource {\n"
+msgid ""
+"@QuarkusTest\n"
+"public class QuarkusMockTest {\n"
+msgstr ""
+"@Path(\"/country\")\n"
+"public class CountriesResource {\n"
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:963
+#, no-wrap
+msgid ""
+"    @BeforeEach\n"
+"    public void setUp() {\n"
+"        Client customMock = new Client() { //<1>\n"
+"            @Override\n"
+"            public String get() {\n"
+"                return \"MockAnswer\";\n"
+"            }\n"
+"        };\n"
+"        QuarkusMock.installMockForType(customMock, Client.class, RestClient.LITERAL); // <2>\n"
+"    }\n"
+"    @Test\n"
+"    void doTest() {\n"
+"        // ...\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:966
+msgid "here we use a manually created implementation of the client interface to replace the actual Client"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:967
+msgid "note that `RestClient.LITERAL` has to be passed as the last argument of the `installMockForType` method"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:969
 #, no-wrap
 msgid "Using a Mock HTTP Server for tests"
 msgstr "テストにモックHTTPサーバーを使用する"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:868
-msgid "For tests, you can easily mock the HTTP server with Wiremock.  The xref:rest-client.adoc#using-a-mock-http-server-for-tests[Wiremock section of the Quarkus - Using the REST Client] describes how to set it up in detail."
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:972
+msgid "In some cases you may want to mock the remote endpoint - the HTTP server - instead of mocking the client itself.  This may be especially useful for native tests, or for programmatically created clients."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:976
+msgid "You can easily mock an HTTP Server with Wiremock.  The xref:rest-client.adoc#using-a-mock-http-server-for-tests[Wiremock section of the Quarkus - Using the REST Client] describes how to set it up in detail."
 msgstr ""
 
 #. type: Title ==
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:869
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:977
 #, no-wrap
 msgid "Known limitations"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:872
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:980
 msgid "While the REST Client Reactive extension aims to be a drop-in replacement for the REST Client extension, there are some differences and limitations:"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:875
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:983
 msgid "the default scope of the client for the new extension is `@ApplicationScoped` while the `quarkus-rest-client` defaults to `@Dependent` To change this behavior, set the `quarkus.rest-client-reactive.scope` property to the fully qualified scope name."
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:876
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:984
 msgid "it is not possible to set `HostnameVerifier` or `SSLContext`"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:877
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:985
 msgid "a few things that don't make sense for a non-blocking implementations, such as setting the `ExecutorService`, don't work"
 msgstr ""
 
 #. type: Title ==
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:880
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:988
 #, no-wrap
 msgid "Further reading"
 msgstr "さらに詳しく"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:882
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:990
 msgid "link:https://download.eclipse.org/microprofile/microprofile-rest-client-2.0/microprofile-rest-client-spec-2.0.html[MicroProfile Rest Client specification]"
 msgstr ""
 
