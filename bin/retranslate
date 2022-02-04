@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -eu
+
+SCRIPT_DIR=$(cd $(dirname $0); pwd)
+L10N_HOME=$(cd $(dirname $SCRIPT_DIR); pwd)
+cd $L10N_HOME
+
+source config/l10n-kit.conf
+
+for ITEM in `\find l10n/po/$TARGET_LANG -name "*.po"`; do
+  if [ -f $ITEM ] ; then
+    echo $ITEM
+    msgattrib --no-fuzzy --empty -o $ITEM $ITEM
+    msgcat --to-code=utf-8 --no-wrap -o $ITEM $ITEM
+  fi
+done
+
+bin/exec-po4a-updatepo
+
+bin/apply-tmx
+bin/machine-translate
