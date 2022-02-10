@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2022-02-04 01:49+0900\n"
+"POT-Creation-Date: 2022-02-10 02:20+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -192,7 +192,7 @@ msgstr "まずは `/{tenant}` エンドポイントを実装してみましょ�
 #: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:86
 #: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:129
 #: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:163
-#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:432
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:479
 #, no-wrap
 msgid "package org.acme.quickstart.oidc;\n"
 msgstr ""
@@ -278,7 +278,7 @@ msgstr ""
 #. type: delimited block -
 #: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:131
 #: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:165
-#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:436
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:483
 #, no-wrap
 msgid "import javax.enterprise.context.ApplicationScoped;\n"
 msgstr "import javax.enterprise.context.ApplicationScoped;\n"
@@ -295,7 +295,7 @@ msgstr ""
 #. type: delimited block -
 #: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:137
 #: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:171
-#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:443
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:490
 #, no-wrap
 msgid ""
 "@ApplicationScoped\n"
@@ -314,7 +314,7 @@ msgstr ""
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:147
-#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:379
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:426
 #, no-wrap
 msgid ""
 "        if (parts.length == 0) {\n"
@@ -686,28 +686,95 @@ msgstr ""
 
 #. type: Title ==
 #: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:348
+#, fuzzy, no-wrap
+#| msgid "Disabling Tenant Configurations"
+msgid "Resolving Tenant Identifiers with Annotations"
+msgstr "テナント設定を無効にする"
+
+#. type: Plain text
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:353
+msgid "You can use the annotations and CDI interceptors for resolving the tenant identifiers as an alternative to using `quarkus.oidc.TenantResolver`. This can be done by setting the value for the key `OidcUtils.TENANT_ID_ATTRIBUTE` on the current `RoutingContext`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:356
+msgid "Assuming your application supports two OIDC tenants (`hr`, and default) first you need to define one annotation per tenant ID other than default:"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:361
+msgid "Proactive HTTP authentication needs to be disabled (`quarkus.http.auth.proactive=false`) for this to work. See xref:security-built-in-authentication.adoc#proactive-authentication[Proactive Authentication] section for further details."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:371
+#, no-wrap
+msgid ""
+"@Inherited\n"
+"@InterceptorBinding\n"
+"@Retention(RetentionPolicy.RUNTIME)\n"
+"@Target({ElementType.METHOD, ElementType.TYPE})\n"
+"public @interface HrTenant {\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:374
+msgid "Next, you'll need one interceptor for each of those annotations:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:382
+#, no-wrap
+msgid ""
+"@Interceptor\n"
+"@HrTenant\n"
+"public class HrTenantInterceptor {\n"
+"    @Inject\n"
+"    RoutingContext routingContext;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:389
+#, no-wrap
+msgid ""
+"    @AroundInvoke\n"
+"    Object setTenant(InvocationContext context) throws Exception {\n"
+"        routingContext.put(OidcUtils.TENANT_ID_ATTRIBUTE, \"hr\");\n"
+"        return context.proceed();\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:394
+msgid "Now all methods and classes carrying `@HrTenant` will be authenticated using the OIDC provider configured by `quarkus.oidc.hr.auth-server-url`, while all other classes and methods will still be authenticated using the default OIDC provider."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:395
 #, no-wrap
 msgid "Programmatically Resolving Tenants Configuration"
 msgstr "テナントの設定をプログラムで解決"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:352
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:399
 msgid "If you need a more dynamic configuration for the different tenants you want to support and don't want to end up with multiple entries in your configuration file, you can use the `io.quarkus.oidc.TenantConfigResolver`."
 msgstr "サポートしたいさまざまなテナントに対して、より動的な設定が必要で、設定ファイルに複数のエントリーを入れたくない場合は、 `io.quarkus.oidc.TenantConfigResolver` が利用出来ます。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:354
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:401
 msgid "This interface allows you to dynamically create tenant configurations at runtime:"
 msgstr "このインターフェイスを使用すると、実行時にテナント設定を動的に作成することができます。"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:358
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:405
 #, no-wrap
 msgid "package io.quarkus.it.keycloak;\n"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:361
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:408
 #, fuzzy, no-wrap
 msgid ""
 "import javax.enterprise.context.ApplicationScoped;\n"
@@ -715,7 +782,7 @@ msgid ""
 msgstr "import javax.enterprise.context.ApplicationScoped;\n"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:366
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:413
 #, no-wrap
 msgid ""
 "import io.smallrye.mutiny.Uni;\n"
@@ -725,7 +792,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:369
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:416
 #, no-wrap
 msgid ""
 "@ApplicationScoped\n"
@@ -733,7 +800,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:374
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:421
 #, no-wrap
 msgid ""
 "    @Override\n"
@@ -743,7 +810,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:385
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:432
 #, no-wrap
 msgid ""
 "        if (\"tenant-c\".equals(parts[1])) {\n"
@@ -754,7 +821,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:389
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:436
 #, no-wrap
 msgid ""
 "        // resolve to default tenant configuration\n"
@@ -763,7 +830,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:392
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:439
 #, no-wrap
 msgid ""
 "    private Supplier<OidcTenantConfig> createTenantConfig() {\n"
@@ -771,7 +838,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:397
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:444
 #, no-wrap
 msgid ""
 "        config.setTenantId(\"tenant-c\");\n"
@@ -781,25 +848,25 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:399
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:446
 #, no-wrap
 msgid "        credentials.setSecret(\"my-secret\");\n"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:401
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:448
 #, no-wrap
 msgid "        config.setCredentials(credentials);\n"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:403
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:450
 #, no-wrap
 msgid "        // any other setting support by the quarkus-oidc extension\n"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:407
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:454
 #, no-wrap
 msgid ""
 "        return () -> config;\n"
@@ -808,74 +875,74 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:410
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:457
 msgid "The `OidcTenantConfig` returned from this method is the same used to parse the `oidc` namespace configuration from the `application.properties`. You can populate it using any of the settings supported by the `quarkus-oidc` extension."
 msgstr ""
 
 #. type: Title ==
-#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:411
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:458
 #, no-wrap
 msgid "Tenant Resolution for OIDC 'web-app' applications"
 msgstr "OIDCの \"web-app\" アプリケーションのためのテナント解決"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:414
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:461
 msgid "Several options are available for selecting the tenant configuration which should be used to secure the current HTTP request for both `service` and `web-app` OIDC applications, such as:"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:416
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:463
 msgid "Check URL paths, for example, a `tenant-service` configuration has to be used for the \"/service\" paths, while a `tenant-manage` configuration - for the \"/management\" paths"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:417
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:464
 msgid "Check HTTP headers, for example, with a URL path always being '/service', a header such as \"Realm: service\" or \"Realm: management\" can help selecting between the `tenant-service` and `tenant-manage` configurations"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:418
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:465
 msgid "Check URL query parameters - it can work similarly to the way the headers are used to select the tenant configuration"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:420
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:467
 msgid "All these options can be easily implemented with the custom `TenantResolver` and `TenantConfigResolver` implementations for the OIDC `service` applications."
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:422
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:469
 msgid "However, due to an HTTP redirect required to complete the code authentication flow for the OIDC `web-app` applications, a custom HTTP cookie may be needed to select the same tenant configuration before and after this redirect request because:"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:424
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:471
 msgid "URL path may not be the same after the redirect request if a single redirect URL has been registered in the OIDC Provider - the original request path can be restored but after the the tenant configuration is resolved"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:425
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:472
 msgid "HTTP headers used during the original request are not available after the redirect"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:426
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:473
 msgid "Custom URL query parameters are restored after the redirect but after the tenant configuration is resolved"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:428
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:475
 msgid "One option to ensure the information for resolving the tenant configurations for `web-app` applications is available before and after the redirect is to use a cookie, for example:"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:434
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:481
 #, no-wrap
 msgid "import java.util.List;\n"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:440
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:487
 #, no-wrap
 msgid ""
 "import io.quarkus.oidc.TenantResolver;\n"
@@ -884,7 +951,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:454
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:501
 #, no-wrap
 msgid ""
 "    @Override\n"
@@ -900,7 +967,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:458
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:505
 #, no-wrap
 msgid ""
 "        return null;\n"
@@ -909,59 +976,59 @@ msgid ""
 msgstr ""
 
 #. type: Title ==
-#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:461
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:508
 #, no-wrap
 msgid "Disabling Tenant Configurations"
 msgstr "テナント設定を無効にする"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:464
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:511
 msgid "Custom `TenantResolver` and `TenantConfigResolver` implementations may return `null` if no tenant can be inferred from the current request and a fallback to the default tenant configuration is required."
 msgstr "カスタムの `TenantResolver` および `TenantConfigResolver` の実装では、現在のリクエストからテナントを推測できず、デフォルトのテナント設定へのフォールバックが必要な場合は `null` を返すことがあります。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:466
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:513
 msgid "If it is expected that the custom resolvers will always infer a tenant then the default tenant configuration is not needed. One can disable it with the `quarkus.oidc.tenant-enabled=false` setting."
 msgstr "カスタムリゾルバが常にテナントを推論することが予想される場合、デフォルトのテナント設定は必要ありません。 `quarkus.oidc.tenant-enabled=false` の設定で無効にすることができます。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:468
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:515
 msgid "Note that tenant specific configurations can also be disabled, for example: `quarkus.oidc.tenant-a.tenant-enabled=false`."
 msgstr "テナント固有の設定を無効にすることもできます。例: `quarkus.oidc.tenant-a.tenant-enabled=false`"
 
 #. type: Title ==
-#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:469
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:516
 #, no-wrap
 msgid "Configuration Reference"
 msgstr "設定リファレンス"
 
 #. type: Title ==
-#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:473
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:520
 #, no-wrap
 msgid "References"
 msgstr "リファレンス"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:476
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:523
 msgid "https://www.keycloak.org/documentation.html[Keycloak Documentation]"
 msgstr "https://www.keycloak.org/documentation.html[Keycloak Documentation]"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:477
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:524
 msgid "https://openid.net/connect/[OpenID Connect]"
 msgstr "https://openid.net/connect/[OpenID Connect]"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:478
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:525
 msgid "https://tools.ietf.org/html/rfc7519[JSON Web Token]"
 msgstr "https://tools.ietf.org/html/rfc7519[JSON Web Token]"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:479
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:526
 msgid "https://developers.google.com/identity/protocols/OpenIDConnect[Google OpenID Connect]"
 msgstr "https://developers.google.com/identity/protocols/OpenIDConnect[Google OpenID Connect]"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:479
+#: upstream/_versions/main/guides/security-openid-connect-multitenancy.adoc:526
 msgid "xref:security.adoc[Quarkus Security]"
 msgstr "xref:security.adoc[Quarkus Security]"
