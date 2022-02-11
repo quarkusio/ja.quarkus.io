@@ -1,0 +1,316 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2022-02-11 12:10+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. type: Plain text
+#: upstream/_posts/2022-02-17-stork-kubernetes-discovery.adoc:1
+#, no-wrap
+msgid "---\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-02-17-stork-kubernetes-discovery.adoc:8
+#, no-wrap
+msgid ""
+"layout: post\n"
+"title: 'Kubernetes Service Discovery and Selection with Stork'\n"
+"date: 2022-02-17\n"
+"tags: extension smallrye-stork\n"
+"synopsis: How to configure Smallrye Stork in a client-side microservice for using Kubernetes Service Discovery strategy\n"
+"author: aureamunoz\n"
+"---\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-02-17-stork-kubernetes-discovery.adoc:12
+msgid "As we already described in the https://quarkus.io/blog/smallrye-stork-intro/[previous post], SmallRye Stork is a service discovery and client-side load-balancing framework that brings out-of-the-box integration with Kubernetes, among others. This post will explain this integration, how to configure Stork in a client-side microservice, and how it differs from the classic Kubernetes service discovery and load-balancing."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_posts/2022-02-17-stork-kubernetes-discovery.adoc:13
+#, no-wrap
+msgid "Kubernetes service discovery and load balancing"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-02-17-stork-kubernetes-discovery.adoc:16
+msgid "Kubernetes has built-in service discovery and load balancing."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-02-17-stork-kubernetes-discovery.adoc:18
+msgid "Let's imagine you have an application deployed in Kubernetes and exposing an HTTP API. You declare a Kubernetes service that delegates the calls to your application. This service acts as a proxy in front of a set of pods (often application replicas). When another application calls our HTTP API, it uses DNS to locate the Kubernetes service and uses the resolved address. It's important to understand that it does not locate and call the application instance but the Kubernetes service. This service then delegates the call to the actual application and implements a round-robin when there are multiple replicas."
+msgstr ""
+
+#. type: Named 'alt' AttributeList argument for macro 'image'
+#: upstream/_posts/2022-02-17-stork-kubernetes-discovery.adoc:19
+#, no-wrap
+msgid "Kubernetes"
+msgstr ""
+
+#. type: Target for macro image
+#: upstream/_posts/2022-02-17-stork-kubernetes-discovery.adoc:19
+#, no-wrap
+msgid "kubernetes-service-discovery.png"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_posts/2022-02-17-stork-kubernetes-discovery.adoc:21
+#, no-wrap
+msgid "What does Stork bring for Kubernetes?"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-02-17-stork-kubernetes-discovery.adoc:24
+msgid "Even though Kubernetes has built-in support for service discovery, sometimes we need more flexibility in the service instance selection. As we have seen, the Kubernetes service implements a round-robin.  With Stork, you can customize the selection."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-02-17-stork-kubernetes-discovery.adoc:26
+msgid "Unlike in the previous example, Stork does not use DNS to locate the Kubernetes service. It uses the Kubernetes API to retrieve the set of pods behind a Kubernetes service. Then, you can apply any Stork service selection or even implement your own."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-02-17-stork-kubernetes-discovery.adoc:28
+msgid "The following figure depicts the architecture and how Stork locates and selects the service instance."
+msgstr ""
+
+#. type: Named 'alt' AttributeList argument for macro 'image'
+#: upstream/_posts/2022-02-17-stork-kubernetes-discovery.adoc:29
+#, no-wrap
+msgid "Service"
+msgstr ""
+
+#. type: Target for macro image
+#: upstream/_posts/2022-02-17-stork-kubernetes-discovery.adoc:29
+#, no-wrap
+msgid "service-instances-location.png"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-02-17-stork-kubernetes-discovery.adoc:32
+msgid "As shown in the architecture above, the Kubernetes rest-service is backed by two pods.  While classic Kubernetes service discovery would ensure that requests to the rest-service are load-balanced across these two pods, Stork retrieves the pods' addresses directly. Thus it can handle the service selection (using a round-robin for now)."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-02-17-stork-kubernetes-discovery.adoc:34
+msgid "Note that while applications using Stork do not use the Kubernetes service delegation, they still require a Kubernetes service to discover the backed pods. So, it does not change your Kubernetes deployment."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_posts/2022-02-17-stork-kubernetes-discovery.adoc:36
+#, no-wrap
+msgid "Configuring and Using Stork Kubernetes Service Discovery"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-02-17-stork-kubernetes-discovery.adoc:39
+msgid "On the client-side, our Quarkus application uses the REST Client Reactive to interact with the REST API exposed by the `rest-service`. The Client app uses Stork to discover the rest-service instances. The easiest way to enable Stork is to add the corresponding Jar to the classpath of your project:"
+msgstr ""
+
+#. type: Block title
+#: upstream/_posts/2022-02-17-stork-kubernetes-discovery.adoc:40
+#: upstream/_posts/2022-02-17-stork-kubernetes-discovery.adoc:96
+#, no-wrap
+msgid "pom.xml"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2022-02-17-stork-kubernetes-discovery.adoc:47
+#, no-wrap
+msgid ""
+"    <dependency>\n"
+"        <groupId>io.smallrye.stork</groupId>\n"
+"        <artifactId>smallrye-stork-service-discovery-kubernetes</artifactId>\n"
+"    </dependency>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-02-17-stork-kubernetes-discovery.adoc:50
+msgid "With Stork and the Stork Kubernetes Service Discovery on the classpath, we need to tell Stork how to locate and select the service. To achieve this, we just add `stork.[service-name].[kebab-cased-property-name]` into the Quarkus application configuration. In our case, to configure the rest-service and indicate to Stork that it should use Kubernetes, we add:"
+msgstr ""
+
+#. type: Block title
+#: upstream/_posts/2022-02-17-stork-kubernetes-discovery.adoc:52
+#: upstream/_posts/2022-02-17-stork-kubernetes-discovery.adoc:108
+#, no-wrap
+msgid "application.properties"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2022-02-17-stork-kubernetes-discovery.adoc:56
+#, no-wrap
+msgid ""
+"stork.rest-service.service-discovery=kubernetes\n"
+"stork.rest-service.service-discovery.k8s-namespace=my-namespace\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-02-17-stork-kubernetes-discovery.adoc:59
+msgid "Note that you can also configure them via annotations, check the `@ServiceDiscoveryType` and `@ServiceDiscoveryAttribute` annotations."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-02-17-stork-kubernetes-discovery.adoc:61
+msgid "We also can limit the service lookup to our namespace. We can also use the `all` value to look for services in all namespaces."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-02-17-stork-kubernetes-discovery.adoc:63
+msgid "There are a few more properties that we can configure to tune the service discovery:"
+msgstr ""
+
+#. type: Table
+#: upstream/_posts/2022-02-17-stork-kubernetes-discovery.adoc:66
+#, no-wrap
+msgid "Property"
+msgstr ""
+
+#. type: Table
+#: upstream/_posts/2022-02-17-stork-kubernetes-discovery.adoc:68
+#, no-wrap
+msgid "Description"
+msgstr ""
+
+#. type: Table
+#: upstream/_posts/2022-02-17-stork-kubernetes-discovery.adoc:68
+#, no-wrap
+msgid "stork.service-name.service-discovery.k8s-host"
+msgstr ""
+
+#. type: Table
+#: upstream/_posts/2022-02-17-stork-kubernetes-discovery.adoc:69
+#, no-wrap
+msgid "The Kubernetes API url"
+msgstr ""
+
+#. type: Table
+#: upstream/_posts/2022-02-17-stork-kubernetes-discovery.adoc:69
+#, no-wrap
+msgid "stork.service-name.service-discovery.application"
+msgstr ""
+
+#. type: Table
+#: upstream/_posts/2022-02-17-stork-kubernetes-discovery.adoc:70
+#, no-wrap
+msgid "The name of the target application"
+msgstr ""
+
+#. type: Table
+#: upstream/_posts/2022-02-17-stork-kubernetes-discovery.adoc:70
+#, no-wrap
+msgid "stork.service-name.service-discovery.refresh-period"
+msgstr ""
+
+#. type: Table
+#: upstream/_posts/2022-02-17-stork-kubernetes-discovery.adoc:71
+#, no-wrap
+msgid "Service discovery cache refresh period"
+msgstr ""
+
+#. type: Table
+#: upstream/_posts/2022-02-17-stork-kubernetes-discovery.adoc:71
+#, no-wrap
+msgid "stork.service-name.service-discovery.secure"
+msgstr ""
+
+#. type: Table
+#: upstream/_posts/2022-02-17-stork-kubernetes-discovery.adoc:73
+#, no-wrap
+msgid "Use a secure connection (e.g. HTTPS)"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-02-17-stork-kubernetes-discovery.adoc:76
+msgid "That's how easy it is to have Stork Kubernetes service discovery."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-02-17-stork-kubernetes-discovery.adoc:78
+msgid "Once Stork is configured, we need to configure the REST Client to use it. It can be done in the `@RegisterRestClient` annotated interface by adding the `baseUri` attribute with the `stork://` scheme:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2022-02-17-stork-kubernetes-discovery.adoc:88
+#, no-wrap
+msgid ""
+"@Path(\"/test\")\n"
+"@RegisterRestClient(baseUri = \"stork://rest-service\")\n"
+"public interface Client {\n"
+"@GET\n"
+"@Path(\"/\")\n"
+"Uni<String> get();\n"
+"}\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_posts/2022-02-17-stork-kubernetes-discovery.adoc:90
+#, no-wrap
+msgid "Customizing the service selection"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-02-17-stork-kubernetes-discovery.adoc:93
+msgid "Now that the service is located, we need to select the _best_ instance. For example, you can use the least-response-time load-balancer implementation. This selection strategy monitors the interactions and selects the fastest instance to improve the response time."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-02-17-stork-kubernetes-discovery.adoc:95
+msgid "To achieve this, you need to add the load-balancer implementation on your classpath:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2022-02-17-stork-kubernetes-discovery.adoc:103
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"    <groupId>io.smallrye.stork</groupId>\n"
+"    <artifactId>smallrye-stork-load-balancer-response-time</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-02-17-stork-kubernetes-discovery.adoc:106
+msgid "Then, in the application configuration, add:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2022-02-17-stork-kubernetes-discovery.adoc:111
+#, no-wrap
+msgid "stork.my-service.load-balancer=least-response-time\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-02-17-stork-kubernetes-discovery.adoc:114
+msgid "Obviously, you can pick any load-balancing strategy or even implement your own one!"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_posts/2022-02-17-stork-kubernetes-discovery.adoc:115
+#, no-wrap
+msgid "Summary"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-02-17-stork-kubernetes-discovery.adoc:118
+msgid "This post shows how you can use Stork in a Kubernetes environment to customize the service selection. While Kubernetes offers built-in service discovery and load-balancing, Stork adds another level of flexibility."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-02-17-stork-kubernetes-discovery.adoc:119
+msgid "You can check the code of the example in https://github.com/michalszynkiewicz/rest-client-reactive-stork/tree/kubernetes[this repo] for the client-side, and https://github.com/michalszynkiewicz/configurable-rest-service/tree/kubernetes[this one] for the HTTP service."
+msgstr ""
