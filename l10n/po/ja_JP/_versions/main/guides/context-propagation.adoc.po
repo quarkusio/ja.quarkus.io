@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2022-02-04 01:49+0900\n"
+"POT-Creation-Date: 2022-02-18 02:23+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -554,23 +554,91 @@ msgid ""
 "    }\n"
 msgstr ""
 
+#. type: Plain text
+#: upstream/_versions/main/guides/context-propagation.adoc:278
+msgid "Likewise, there is a similar way to inject a configured instance of `ManagedExecutor` using the https://javadoc.io/doc/io.smallrye/smallrye-context-propagation-api/latest/io/smallrye/context/api/ManagedExecutorConfig.html[`@ManagedExecutorConfig`] annotation:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/context-propagation.adoc:285
+#, no-wrap
+msgid ""
+"    // Custom ManagedExecutor with different async limit, queue and no propagation\n"
+"    @Inject\n"
+"    @ManagedExecutorConfig(maxAsync = 2, maxQueued = 3, cleared = ThreadContext.ALL_REMAINING)\n"
+"    ManagedExecutor configuredCustomExecutor;\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/main/guides/context-propagation.adoc:287
+#, no-wrap
+msgid "Sharing configured CDI instances of ManagedExecutor and ThreadContext"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/context-propagation.adoc:292
+msgid "If you need to inject the same `ManagedExecutor` or `ThreadContext` into several places and share it's capacity, you can name the instance with https://javadoc.io/doc/io.smallrye/smallrye-context-propagation-api/latest/io/smallrye/context/api/NamedInstance.html[`@NamedInstance`] annotation.  `@NamedInstance` is a CDI qualifier and all injections of the same type and name will therefore share the same underlying instance.  If you also need to customize your instance, you can do so using `@ManagedExecutorConfig`/`ThreadContextConfig` annotation on one of its injection points:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/context-propagation.adoc:300
+#, no-wrap
+msgid ""
+"    // Custom configured ManagedExecutor with name\n"
+"    @Inject\n"
+"    @ManagedExecutorConfig(maxAsync = 2, maxQueued = 3, cleared = ThreadContext.ALL_REMAINING)\n"
+"    @NamedInstance(\"myExecutor\")\n"
+"    ManagedExecutor sharedConfiguredExecutor;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/context-propagation.adoc:305
+#, no-wrap
+msgid ""
+"    // Since this executor has the same name, it will be the same instance as above\n"
+"    @Inject\n"
+"    @NamedInstance(\"myExecutor\")\n"
+"    ManagedExecutor sameExecutor;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/context-propagation.adoc:311
+#, no-wrap
+msgid ""
+"    // Custom ThreadContext with a name\n"
+"    @Inject\n"
+"    @ThreadContextConfig(unchanged = ThreadContext.ALL_REMAINING)\n"
+"    @NamedInstance(\"myContext\")\n"
+"    ThreadContext sharedConfiguredThreadContext;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/context-propagation.adoc:316
+#, no-wrap
+msgid ""
+"    // Given equal value of @NamedInstance, this ThreadContext will be the same as the above one\n"
+"    @Inject\n"
+"    @NamedInstance(\"myContext\")\n"
+"    ThreadContext sameContext;\n"
+msgstr ""
+
 #. type: Title ==
-#: upstream/_versions/main/guides/context-propagation.adoc:277
+#: upstream/_versions/main/guides/context-propagation.adoc:318
 #, no-wrap
 msgid "Context Propagation for CDI"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/context-propagation.adoc:281
+#: upstream/_versions/main/guides/context-propagation.adoc:322
 msgid "In terms of CDI, `@RequestScoped`, `@ApplicationScoped` and `@Singleton` beans get propagated and are available in other threads.  `@Dependent` beans as well as any custom scoped beans cannot be automatically propagated via CDI Context Propagation."
 msgstr "CDI の観点からは、 `@RequestScoped`, `@ApplicationScoped`, `@Singleton` Beanは伝播され、他のスレッドで利用可能です。 `@Dependent` BeanやカスタムスコープされたBeanは、CDI コンテキスト伝播を介して自動的に伝播されることはありません。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/context-propagation.adoc:288
+#: upstream/_versions/main/guides/context-propagation.adoc:329
 msgid "`@ApplicationScoped` and `@Singleton` beans are always active scopes and as such are easy to deal with - context propagation tasks can work with those beans so long as the CDI container is running.  However, `@RequestScoped` beans are a different story. They are only active for a short period of time which can be bound either to HTTP request or some other request/task when manually activated/deactivated.  In this case user must be aware that once the original thread gets to an end of a request, it will terminate the context, calling `@PreDestroy` on those beans and then clearing them from the context.  Subsequent attempts to access those beans from other threads can result in unexpected behaviour.  It is therefore recommended to make sure all tasks using request scoped beans via context propagation are performed in such a manner that they don't outlive the original request duration."
 msgstr "`@ApplicationScoped` と `@Singleton` のBeanは常にアクティブなスコープであり、そのため対処が簡単です - コンテキスト伝播タスクは、CDI コンテナーが動作している限り、これらのBeanで動作します。しかし、 `@RequestScoped` Beanは話が違います。手動で有効化/無効化すると、HTTP リクエストや他のリクエスト/タスクにバインドされます。この場合、元のスレッドがリクエストの終了に到達すると、コンテキストを終了し、それらのBeanで `@PreDestroy` を呼び出し、コンテキストからクリアされることに注意しなければなりません。その後、他のスレッドからこれらのBeanにアクセスしようとすると、予期せぬ動作をすることがあります。したがって、コンテキストの伝播を介してリクエストスコープされたBeanを使用するすべてのタスクは、元のリクエストの持続時間を超えないような方法で実行されることを確認することが推奨されます。"
 
 #. type: delimited block =
-#: upstream/_versions/main/guides/context-propagation.adoc:293
+#: upstream/_versions/main/guides/context-propagation.adoc:334
 msgid "Due to the above described behavior, it is recommended to avoid using `@PreDestroy` on `@RequestScoped` beans when working with Context Propagation in CDI."
 msgstr "上記で説明した動作のため、CDI で Context Propagation を使用する際には `@PreDestroy` を `@RequestScoped` Beanで使用しないことをお勧めします。"
