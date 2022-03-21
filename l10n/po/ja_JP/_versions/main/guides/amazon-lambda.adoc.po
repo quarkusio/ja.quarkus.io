@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2022-02-24 02:26+0000\n"
+"POT-Creation-Date: 2022-03-21 02:38+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1066,16 +1066,173 @@ msgstr ""
 #. type: Title ==
 #: upstream/_versions/main/guides/amazon-lambda.adoc:609
 #, no-wrap
-msgid "Amazon Alexa Integration"
+msgid "Deploy to AWS Lambda using a Container Image"
 msgstr ""
 
 #. type: Plain text
 #: upstream/_versions/main/guides/amazon-lambda.adoc:612
-msgid "To use Alexa with Quarkus native, you need to use the https://github.com/quarkiverse/quarkus-amazon-alexa[Quarkus Amazon Alexa extension hosted at the Quarkiverse Hub]."
+msgid "AWS Lambda supports creating your lambdas by referencing https://docs.aws.amazon.com/lambda/latest/dg/lambda-images.html[container images] rather than uploading ZIP files. This can have some benefits such as bypassing the size limit of the uploaded ZIP files. You can define lambda functions for both native builds as well as regular JVM builds."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/main/guides/amazon-lambda.adoc:613
+#, no-wrap
+msgid "JVM container image"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-lambda.adoc:616
+msgid "For a regular JVM distribution you need to base your image off the official AWS Java base images. Below is an example of a Dockerfile that would create a container image from your Quarkus Lambda project. It assumes that `mvn package` has been executed and binaries are available in the `target/` directory:"
 msgstr ""
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/amazon-lambda.adoc:620
+#, no-wrap
+msgid "FROM  public.ecr.aws/lambda/java:11\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-lambda.adoc:623
+#, no-wrap
+msgid ""
+"ADD target/my-service-0.0.1-SNAPSHOT-runner.jar /var/task/lib/my-service.jar\n"
+"ADD target/lib/  /var/task/lib/\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-lambda.adoc:625
+#: upstream/_versions/main/guides/amazon-lambda.adoc:639
+#, no-wrap
+msgid "CMD [\"io.quarkus.amazon.lambda.runtime.QuarkusStreamHandler::handleRequest\"]\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/main/guides/amazon-lambda.adoc:627
+#, no-wrap
+msgid "Native executable container image"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-lambda.adoc:630
+msgid "To create a lambda container image that uses the native executable we'll need to do things a little differently. In this case, we won't need to use the `java:11` base image from AWS but instead we'll use a special image that assumes that the runtime environment for the lambda is provided. The example below creates such a container. It assumes that a Maven build has been executed (such as `mvn package -Dnative=true`) and has generated the native binary into the `target/` directory. The binary needs to be named `bootstrap` and be placed in `/var/runtime/`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-lambda.adoc:634
+#, no-wrap
+msgid "FROM  public.ecr.aws/lambda/provided\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-lambda.adoc:637
+#, no-wrap
+msgid ""
+"ADD target/my-service-0.0.1-SNAPSHOT-runner /var/runtime/bootstrap\n"
+"RUN chmod ugo+x /var/runtime/bootstrap\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/main/guides/amazon-lambda.adoc:641
+#, no-wrap
+msgid "Deploying a container image lambda"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-lambda.adoc:644
+msgid "Below, you can see how the container images created above can be built and deployed to AWS using the `docker` and `aws` command line tools. These instructions work for both native and jvm container images and assume that the `aws` command line tool has been logged in."
+msgstr ""
+
+#. type: Title ====
+#: upstream/_versions/main/guides/amazon-lambda.adoc:645
+#, no-wrap
+msgid "Build the Docker image"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-lambda.adoc:655
+#, no-wrap
+msgid ""
+"# Assuming we are located in the root directory of the project and created a Dockerfile there\n"
+"docker build .\n"
+"   [output omitted]\n"
+"    => exporting to image                    0.0s\n"
+"    => => exporting layers                   0.0s\n"
+"    => => writing image sha256:[SOME SHA]    0.0s\n"
+msgstr ""
+
+#. type: Title ====
+#: upstream/_versions/main/guides/amazon-lambda.adoc:657
+#, no-wrap
+msgid "Create an ECR repository in the users AWS account"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-lambda.adoc:662
+#, no-wrap
+msgid "aws ecr create-repository --repository-name my/test/quarkus-lambda\n"
+msgstr ""
+
+#. type: Title ====
+#: upstream/_versions/main/guides/amazon-lambda.adoc:664
+#, no-wrap
+msgid "Tag the image using your ECR registry information"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-lambda.adoc:669
+#, no-wrap
+msgid "docker tag [SOME SHA] [YOUR AWS ACCOUNT ID].dkr.ecr.[YOUR AWS ACCOUNT REGION].amazonaws.com/my/test/quarkus-lambda:v1\n"
+msgstr ""
+
+#. type: Title ====
+#: upstream/_versions/main/guides/amazon-lambda.adoc:671
+#, no-wrap
+msgid "Log Docker into your ECR registry and push the Docker image to it"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-lambda.adoc:677
+#, no-wrap
+msgid ""
+"aws ecr get-login-password --region region | docker login --username AWS --password-stdin [YOUR AWS ACCOUNT ID].dkr.ecr.[YOUR AWS ACCOUNT REGION].amazonaws.com\n"
+"docker push [YOUR AWS ACCOUNT ID].dkr.ecr.[YOUR AWS ACCOUNT REGION].amazonaws.com/my/test/quarkus-lambda:v1\n"
+msgstr ""
+
+#. type: Title ====
+#: upstream/_versions/main/guides/amazon-lambda.adoc:679
+#, no-wrap
+msgid "Create the AWS lambda function with the AWS CLI tool"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-lambda.adoc:682
+msgid "Make sure you reference the image you uploaded previously (assumes that a role exists that can be used to run the lambda). Please note that it is not unlikely that for the JVM lambda function, the default memory limit of `128Mb` will not be enough to run the function. In that case, you can increase the memory limit when creating the function by providing the `--memory-size 256` parameter to your `aws lambda create-function` command. You can also adjust the function in the AWS console after you've created it."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-lambda.adoc:686
+#, no-wrap
+msgid "aws lambda create-function --function-name my-test-quarkus-lambda-function --package-type Image --code ImageUri=[YOUR AWS ACCOUNT ID].dkr.ecr.[YOUR AWS ACCOUNT REGION].amazonaws.com/my/test/quarkus-lambda:v1 --role arn:aws:iam::[YOUR AWS ACCOUNT ID]:role/[SOME ROLE]\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-lambda.adoc:689
+msgid "Now you can use the AWS console to view and test your new lambda function."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/amazon-lambda.adoc:690
+#, no-wrap
+msgid "Amazon Alexa Integration"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/amazon-lambda.adoc:693
+msgid "To use Alexa with Quarkus native, you need to use the https://github.com/quarkiverse/quarkus-amazon-alexa[Quarkus Amazon Alexa extension hosted at the Quarkiverse Hub]."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/amazon-lambda.adoc:701
 #, no-wrap
 msgid ""
 "<dependency>\n"
@@ -1086,17 +1243,17 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/amazon-lambda.adoc:622
+#: upstream/_versions/main/guides/amazon-lambda.adoc:703
 msgid "Define the latest version of the extension in your POM file."
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/amazon-lambda.adoc:624
+#: upstream/_versions/main/guides/amazon-lambda.adoc:705
 msgid "Create your Alexa handler, as normal, by sub-classing the abstract `com.amazon.ask.SkillStreamHandler`, and add your request handler implementation."
 msgstr "通常通り、抽象クラス `com.amazon.ask.SkillStreamHandler` をサブクラス化して Alexa ハンドラーを作成し、リクエストハンドラーの実装を追加します。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/amazon-lambda.adoc:625
+#: upstream/_versions/main/guides/amazon-lambda.adoc:706
 msgid "That's all there is to it!"
 msgstr "それだけだよ!"
 
