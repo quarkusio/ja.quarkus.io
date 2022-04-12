@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2022-02-04 01:50+0900\n"
+"POT-Creation-Date: 2022-04-12 10:10+0000\n"
 "PO-Revision-Date: 2022-02-04 16:44+0900\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -27,32 +27,59 @@ msgstr "エクステンションケイパビリティ"
 
 #. type: Plain text
 #: upstream/_guides/capabilities.adoc:11
-msgid "Quarkus extensions may declare in their descriptors (`META-INF/quarkus-extension.properties` found in the runtime extension JAR artifact) that they provide certain capabilities. A capability represents a technical aspect, e.g. an implementation of some functionality or a specification. Each capability has a name which should follow the Java package naming convention, e.g. `io.quarkus.rest`."
-msgstr "Quarkusのエクステンションは、その記述子（ランタイムエクステンションのJARアーティファクトにある `META-INF/quarkus-extension.properties` ）の中で、特定の能力を提供することを宣言することができます。ケイパビリティは技術的な側面を表しており、例えばある機能の実装や仕様などです。各ケイパビリティには名前がついており、Javaパッケージの命名規則に従うべきです（例： `io.quarkus.rest` ）。"
+msgid "Quarkus extensions may provide certain capabilities and require certain capabilities to be provided by other extensions in an application to function properly."
+msgstr ""
 
 #. type: Plain text
 #: upstream/_guides/capabilities.adoc:13
+#, fuzzy
+#| msgid "Quarkus extensions may declare in their descriptors (`META-INF/quarkus-extension.properties` found in the runtime extension JAR artifact) that they provide certain capabilities. A capability represents a technical aspect, e.g. an implementation of some functionality or a specification. Each capability has a name which should follow the Java package naming convention, e.g. `io.quarkus.rest`."
+msgid "A capability represents a technical aspect, for example, it could be an implementation of some functionality, a contract or a specification. Each capability has a name which should follow the Java package naming convention, e.g. `io.quarkus.rest`."
+msgstr "Quarkusのエクステンションは、その記述子（ランタイムエクステンションのJARアーティファクトにある `META-INF/quarkus-extension.properties` ）の中で、特定の能力を提供することを宣言することができます。ケイパビリティは技術的な側面を表しており、例えばある機能の実装や仕様などです。各ケイパビリティには名前がついており、Javaパッケージの命名規則に従うべきです（例： `io.quarkus.rest` ）。"
+
+#. type: Plain text
+#: upstream/_guides/capabilities.adoc:15
+msgid "Capability promises and requirements are described in Quarkus extension descriptors - `META-INF/quarkus-extension.properties` entries of the runtime extension JAR artifacts."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/capabilities.adoc:17
 msgid "Only a single provider of any given capability is allowed in an application. If more than one provider of a capability is detected, the application build will fail with the corresponding error message."
 msgstr "1つのアプリケーションで許可されるのは、任意のケイパビリティの単一のプロバイダーのみです。1つのケイパビリティに対して複数のプロバイダーが検出された場合、アプリケーションのビルドは対応するエラーメッセージを表示して失敗します。"
 
 #. type: Plain text
-#: upstream/_guides/capabilities.adoc:15
+#: upstream/_guides/capabilities.adoc:19
+#, fuzzy
+#| msgid "Only a single provider of any given capability is allowed in an application. If more than one provider of a capability is detected, the application build will fail with the corresponding error message."
+msgid "If one extension requires a certain capability, there must be another one among the application dependencies that provides that capability, otherwise the build will fail with the corresponding error message."
+msgstr "1つのアプリケーションで許可されるのは、任意のケイパビリティの単一のプロバイダーのみです。1つのケイパビリティに対して複数のプロバイダーが検出された場合、アプリケーションのビルドは対応するエラーメッセージを表示して失敗します。"
+
+#. type: Plain text
+#: upstream/_guides/capabilities.adoc:21
 msgid "At build time all the capabilities found in the application will be aggregated in an instance of the `io.quarkus.deployment.Capabilities` build item that extension build steps can inject to check whether a given capability is available or not."
 msgstr "ビルド時には、アプリケーションで見つかったすべてのケイパビリティが `io.quarkus.deployment.Capabilities` ビルドアイテムのインスタンスに集約され、エクステンションビルドステップが注入して、所定のケイパビリティが利用可能かどうかをチェックできるようになります。"
 
 #. type: Title ==
-#: upstream/_guides/capabilities.adoc:16
+#: upstream/_guides/capabilities.adoc:22
 #, no-wrap
 msgid "Declaring capabilities"
 msgstr "ケイパビリティの宣言"
 
 #. type: Plain text
-#: upstream/_guides/capabilities.adoc:19
-msgid "The `quarkus-bootstrap-maven-plugin:extension-descriptor` Maven goal, that generates the extension descriptor, allows to declare provided capabilities in the following way:"
+#: upstream/_guides/capabilities.adoc:25
+#, fuzzy
+#| msgid "The `quarkus-bootstrap-maven-plugin:extension-descriptor` Maven goal, that generates the extension descriptor, allows to declare provided capabilities in the following way:"
+msgid "The `quarkus-bootstrap-maven-plugin:extension-descriptor` Maven goal and the `extensionDescriptor` Gradle task, that generate extension descriptors, allow configuring provided and required capabilities in the following way:"
 msgstr "エクステンション記述子を生成する `quarkus-bootstrap-maven-plugin:extension-descriptor` Maven ゴールでは、提供されたケイパビリティを以下のように宣言できます。"
 
+#. type: Block title
+#: upstream/_guides/capabilities.adoc:27 upstream/_guides/capabilities.adoc:89
+#, no-wrap
+msgid "Maven"
+msgstr ""
+
 #. type: delimited block -
-#: upstream/_guides/capabilities.adoc:31
+#: upstream/_guides/capabilities.adoc:41
 #, no-wrap
 msgid ""
 "<plugin>\n"
@@ -60,31 +87,81 @@ msgid ""
 "    <artifactId>quarkus-bootstrap-maven-plugin</artifactId>\n"
 "    <configuration>\n"
 "        <capabilities>\n"
-"            <provides>io.quarkus.rest</provides>\n"
-"            <provides>io.quarkus.resteasy</provides>\n"
+"            <provides>io.quarkus.hibernate.orm</provides> <1>\n"
+"            <requires>io.quarkus.agroal</requires> <2>\n"
 "        </capabilities>\n"
 "    </configuration>\n"
 "</plugin>\n"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_guides/capabilities.adoc:34
-msgid "In this case, the extension is declaring two capabilities."
-msgstr "この場合、エクステンションは2つのケイパビリティを宣言しています。"
-
-#. type: Title ===
-#: upstream/_guides/capabilities.adoc:35
-#, no-wrap
-msgid "Declaring conditional capabilities"
-msgstr "条件付きケイパビリティの宣言"
+#: upstream/_guides/capabilities.adoc:43 upstream/_guides/capabilities.adoc:60
+#: upstream/_guides/capabilities.adoc:79
+msgid "the extension provides the `io.quarkus.hibernate.orm` capability (multiple `provides` elements are allowed)"
+msgstr ""
 
 #. type: Plain text
-#: upstream/_guides/capabilities.adoc:38
-msgid "A capability may be provided only if a certain condition is satisfied, e.g. if a certain configuration option is enabled or based on some other condition. This could be expressed in the following way:"
+#: upstream/_guides/capabilities.adoc:44 upstream/_guides/capabilities.adoc:61
+#: upstream/_guides/capabilities.adoc:80
+msgid "the extension requires the `io.quarkus.agroal` capability to be provided to function properly (multiple `requires` elements are allowed)"
+msgstr ""
+
+#. type: Block title
+#: upstream/_guides/capabilities.adoc:48 upstream/_guides/capabilities.adoc:117
+#, no-wrap
+msgid "Gradle (Groovy DSL)"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/capabilities.adoc:58
+#, no-wrap
+msgid ""
+"quarkusExtension {\n"
+"    capabilities {\n"
+"        provides 'io.quarkus.rest' <1>\n"
+"        requires 'io.quarkus.resteasy' <2>\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/capabilities.adoc:63 upstream/_guides/capabilities.adoc:82
+msgid "The Gradle extension plugin is still experimental and may change in the future."
+msgstr ""
+
+#. type: Block title
+#: upstream/_guides/capabilities.adoc:67 upstream/_guides/capabilities.adoc:133
+#, no-wrap
+msgid "Gradle (Kotlin DSL)"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/capabilities.adoc:77
+#, no-wrap
+msgid ""
+"quarkusExtension {\n"
+"    capabilities {\n"
+"        provides(\"io.quarkus.rest\") <1>\n"
+"        requires(\"io.quarkus.resteasy\") <2>\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/capabilities.adoc:84
+#, no-wrap
+msgid "Conditional capability promises and requirements"
+msgstr ""
+
+#. type: delimited block *
+#: upstream/_guides/capabilities.adoc:87
+#, fuzzy
+#| msgid "A capability may be provided only if a certain condition is satisfied, e.g. if a certain configuration option is enabled or based on some other condition. This could be expressed in the following way:"
+msgid "A capability may be provided or required only if a certain condition is satisfied, for example, if a certain configuration option is enabled or based on some other condition. Here is how a conditional capability promise can be configured:"
 msgstr "ケイパビリティは、特定の条件が満たされた場合、例えば、特定の構成オプションが有効な場合、または他の条件に基づいてのみ提供される場合があります。これは以下のように表現できます。"
 
 #. type: delimited block -
-#: upstream/_guides/capabilities.adoc:52
+#: upstream/_guides/capabilities.adoc:105
 #, no-wrap
 msgid ""
 "<plugin>\n"
@@ -102,61 +179,100 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: upstream/_guides/capabilities.adoc:54
+#: upstream/_guides/capabilities.adoc:107
 msgid "declaration of a conditional capability"
 msgstr "条件付きケイパビリティの宣言"
 
 #. type: Plain text
-#: upstream/_guides/capabilities.adoc:55
+#: upstream/_guides/capabilities.adoc:108
+#: upstream/_guides/capabilities.adoc:128
+#: upstream/_guides/capabilities.adoc:144
 msgid "condition that must be resolved to `true` by a class implementing `java.util.function.BooleanSupplier`"
 msgstr "`java.util.function.BooleanSupplier` を実装したクラスが `true` に解決しなければならない条件"
 
 #. type: Plain text
-#: upstream/_guides/capabilities.adoc:56
+#: upstream/_guides/capabilities.adoc:109
 msgid "provided capability name"
 msgstr "提供されたケイパビリティ名"
 
 #. type: Plain text
-#: upstream/_guides/capabilities.adoc:58
+#: upstream/_guides/capabilities.adoc:111
 msgid "`providesIf` allows listing multiple `<positive>` as well as `<negative>` elements."
 msgstr "`providesIf` は、複数の `<positive>` と `<negative>` の要素をリストアップできます。"
 
 #. type: Plain text
-#: upstream/_guides/capabilities.adoc:60
+#: upstream/_guides/capabilities.adoc:113
+msgid "The corresponding `requiresIf` element is also supported."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/capabilities.adoc:126
+#, no-wrap
+msgid ""
+"quarkusExtension {\n"
+"    capabilities {\n"
+"        provides 'io.quarkus.container.image.openshift' onlyIf ['io.quarkus.container.image.openshift.deployment.OpenshiftBuild'] <1>\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/capabilities.adoc:130
+msgid "It is possible to specify `onlyIfNot` conditions as well. Conditions can also be set for required capabilities."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/capabilities.adoc:142
+#, no-wrap
+msgid ""
+"quarkusExtension {\n"
+"    capabilities {\n"
+"        provides(\"io.quarkus.container.image.openshift\").onlyIf([\"io.quarkus.container.image.openshift.deployment.OpenshiftBuild\"]) <1>\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/capabilities.adoc:146
+msgid "It is possible to specify `onlyIfNot` conditions as well. . Conditions can also be set for required capabilities."
+msgstr ""
+
+#. type: delimited block *
+#: upstream/_guides/capabilities.adoc:149
 msgid "In this case, `io.quarkus.container.image.openshift.deployment.OpenshiftBuild` should be included in one of the extension deployment dependencies and implement `java.util.function.BooleanSupplier`. At build time, the Quarkus bootstrap will create an instance of it and register `io.quarkus.container.image.openshift` capability only if its `getAsBoolean()` method returns true."
 msgstr "この場合、 `io.quarkus.container.image.openshift.deployment.OpenshiftBuild` は、エクステンションのデプロイメント依存関係の1つに含まれ、 `java.util.function.BooleanSupplier` を実装する必要があります。ビルド時に、Quarkusのブートストラップはそのインスタンスを作成し、その `getAsBoolean()` メソッドがtrueを返す場合にのみ、 `io.quarkus.container.image.openshift` ケイパビリティを登録します。"
 
-#. type: Plain text
-#: upstream/_guides/capabilities.adoc:62
+#. type: delimited block *
+#: upstream/_guides/capabilities.adoc:151
 msgid "An implementation of the `OpenshiftBuild` could look like this:"
 msgstr "`OpenshiftBuild` の実装は以下のようになります。"
 
 #. type: delimited block -
-#: upstream/_guides/capabilities.adoc:65
+#: upstream/_guides/capabilities.adoc:154
 #, no-wrap
 msgid "import java.util.function.BooleanSupplier;\n"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/capabilities.adoc:67
+#: upstream/_guides/capabilities.adoc:156
 #, no-wrap
 msgid "import io.quarkus.container.image.deployment.ContainerImageConfig;\n"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/capabilities.adoc:69
+#: upstream/_guides/capabilities.adoc:158
 #, no-wrap
 msgid "public class OpenshiftBuild implements BooleanSupplier {\n"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/capabilities.adoc:71
+#: upstream/_guides/capabilities.adoc:160
 #, no-wrap
 msgid "    private ContainerImageConfig containerImageConfig;\n"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/capabilities.adoc:75
+#: upstream/_guides/capabilities.adoc:164
 #, no-wrap
 msgid ""
 "    OpenshiftBuild(ContainerImageConfig containerImageConfig) {\n"
@@ -165,7 +281,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/capabilities.adoc:81
+#: upstream/_guides/capabilities.adoc:170
 #, no-wrap
 msgid ""
 "    @Override\n"
@@ -176,34 +292,34 @@ msgid ""
 msgstr ""
 
 #. type: Title ==
-#: upstream/_guides/capabilities.adoc:83
+#: upstream/_guides/capabilities.adoc:172
 #, no-wrap
 msgid "CapabilityBuildItem"
 msgstr "CapabilityBuildItem"
 
 #. type: Plain text
-#: upstream/_guides/capabilities.adoc:86
+#: upstream/_guides/capabilities.adoc:175
 msgid "Each provided capability will be represented with an instance of `io.quarkus.deployment.builditem.CapabilityBuildItem` at build time. Theoretically, `CapabilityBuildItem`'s could be produced by extension build steps directly, bypassing the corresponding declaration in the extension descriptors. However, this way of providing capabilities should be avoided, unless there is a very good reason not to declare a capability in the descriptor."
 msgstr "提供された各ケイパビリティはビルド時に `io.quarkus.deployment.builditem.CapabilityBuildItem` のインスタンスで表されます。理論的には、`CapabilityBuildItem'sはエクステンションのビルドステップで直接生成することができ、エクステンションの記述子で対応する宣言をバイパスします。しかし、ケイパビリティを提供するこの方法は、記述子で能力を宣言しない非常に良い理由がない限り、避けるべきです。"
 
 #. type: Plain text
-#: upstream/_guides/capabilities.adoc:88
+#: upstream/_guides/capabilities.adoc:177
 msgid "Capabilities produced from extension build steps aren't available for the Quarkus dev tools. As a consequences, such capabilities can not be taken into account when analyzing extension compatibility during project creation or when adding new extensions to a project."
 msgstr "エクステンションのビルドステップから生成されたケイパビリティは、Quarkus開発ツールでは利用できません。そのため、プロジェクト作成時にエクステンションの互換性を分析する際や、プロジェクトに新しいエクステンションを追加する際に、そのような機能を考慮することはできません。"
 
 #. type: Title ==
-#: upstream/_guides/capabilities.adoc:89
+#: upstream/_guides/capabilities.adoc:178
 #, no-wrap
 msgid "Querying capabilities"
 msgstr "ケイパビリティをクエリ"
 
 #. type: Plain text
-#: upstream/_guides/capabilities.adoc:92
+#: upstream/_guides/capabilities.adoc:181
 msgid "All the capabilities found in an application will be aggregated during the build in an instance of `io.quarkus.deployment.Capabilities` build item, which can be injected by extension build steps to check whether a certain capability is present or not. E.g."
 msgstr "アプリケーションで見つかったすべてのケイパビリティは、ビルド中に `io.quarkus.deployment.Capabilities` ビルドアイテムのインスタンスに集約されます。このアイテムは、エクステンションビルドステップによって注入され、特定のケイパビリティが存在するかどうかをチェックすることができます。例えば、以下のようになります。"
 
 #. type: delimited block -
-#: upstream/_guides/capabilities.adoc:104
+#: upstream/_guides/capabilities.adoc:193
 #, no-wrap
 msgid ""
 "    @BuildStep\n"
@@ -218,67 +334,73 @@ msgid ""
 msgstr ""
 
 #. type: Title ===
-#: upstream/_guides/capabilities.adoc:106
+#: upstream/_guides/capabilities.adoc:195
 #, no-wrap
 msgid "Capability prefixes"
 msgstr "ケイパビリティ接頭辞"
 
 #. type: Plain text
-#: upstream/_guides/capabilities.adoc:109
+#: upstream/_guides/capabilities.adoc:198
 msgid "Like a capability name, a capability prefix is a dot-separated string that is composed of either the first capability name element or a dot-separated sequence of the capability name elements starting from the first one. E.g. for capability `io.quarkus.resteasy.json.jackson` the following prefixes will be registered:"
 msgstr "ケイパビリティ名と同様に、ケイパビリティのプレフィックスは、最初のケイパビリティ名要素、または最初のケイパビリティ名要素から始まるドット区切りのシーケンスのいずれかで構成されるドット区切りの文字列です。例）ケイパビリティ `io.quarkus.resteasy.json.jackson` には以下のプレフィックスが登録されます。"
 
 #. type: Plain text
-#: upstream/_guides/capabilities.adoc:111
+#: upstream/_guides/capabilities.adoc:200
 msgid "`io`"
 msgstr "`io`"
 
 #. type: Plain text
-#: upstream/_guides/capabilities.adoc:112
+#: upstream/_guides/capabilities.adoc:201
 msgid "`io.quarkus`"
 msgstr "`io.quarkus`"
 
 #. type: Plain text
-#: upstream/_guides/capabilities.adoc:113
+#: upstream/_guides/capabilities.adoc:202
 msgid "`io.quarkus.resteasy`"
 msgstr "`io.quarkus.resteasy`"
 
 #. type: Plain text
-#: upstream/_guides/capabilities.adoc:114
+#: upstream/_guides/capabilities.adoc:203
 msgid "`io.quarkus.resteasy.json`"
 msgstr "`io.quarkus.resteasy.json`"
 
 #. type: Plain text
-#: upstream/_guides/capabilities.adoc:116
+#: upstream/_guides/capabilities.adoc:205
 msgid "`Capabilities.isCapabilityWithPrefixPresent(prefix)` could be used to check whether a capability with a given prefix is present."
 msgstr "`Capabilities.isCapabilityWithPrefixPresent(prefix)` は、与えられた接頭辞を持つケイパビリティが存在するかどうかをチェックするために使用できます。"
 
 #. type: Plain text
-#: upstream/_guides/capabilities.adoc:118
+#: upstream/_guides/capabilities.adoc:207
 msgid "Given that only a single provider of a given capability is allowed in an application, capability prefixes allow expressing a certain common aspect among different but somewhat related capabilities. E.g. there could be extensions providing the following capabilities:"
 msgstr "1つのアプリケーションでは特定のケイパビリティの単一のプロバイダーしか認められないことを考えると、ケイパビリティのプレフィックスによって、異なるが多少関連するケイパビリティの間である共通の側面を表現することができます。例えば、以下のようなケイパビリティを提供するエクステンションがあるかもしれません。"
 
 #. type: Plain text
-#: upstream/_guides/capabilities.adoc:120
+#: upstream/_guides/capabilities.adoc:209
 msgid "`io.quarkus.resteasy.json.jackson`"
 msgstr "`io.quarkus.resteasy.json.jackson`"
 
 #. type: Plain text
-#: upstream/_guides/capabilities.adoc:121
+#: upstream/_guides/capabilities.adoc:210
 msgid "`io.quarkus.resteasy.json.jackson.client`"
 msgstr "`io.quarkus.resteasy.json.jackson.client`"
 
 #. type: Plain text
-#: upstream/_guides/capabilities.adoc:122
+#: upstream/_guides/capabilities.adoc:211
 msgid "`io.quarkus.resteasy.json.jsonb`"
 msgstr "`io.quarkus.resteasy.json.jsonb`"
 
 #. type: Plain text
-#: upstream/_guides/capabilities.adoc:123
+#: upstream/_guides/capabilities.adoc:212
 msgid "`io.quarkus.resteasy.json.jsonb.client`"
 msgstr "`io.quarkus.resteasy.json.jsonb.client`"
 
 #. type: Plain text
-#: upstream/_guides/capabilities.adoc:124
+#: upstream/_guides/capabilities.adoc:213
 msgid "Including any one of those extensions in an application will enable the RESTEasy JSON serializer. In case a build step needs to check whether the RESTEasy JSON serializer is already enabled in an application, instead of checking whether any of those capabilities is present, it could simply check whether an extension with prefix `io.quarkus.resteasy.json` is present."
 msgstr "これらのエクステンションのいずれかをアプリケーションに含めると、RESTEasy JSONシリアライザが有効になります。ビルド・ステップで、RESTEasy JSONシリアライザがアプリケーションですでに有効になっているかどうかをチェックする必要がある場合、これらのケイパビリティのいずれかが存在するかどうかをチェックする代わりに、プレフィックス `io.quarkus.resteasy.json` を持つエクステンションが存在するかどうかを単純にチェックすることができます。"
+
+#~ msgid "In this case, the extension is declaring two capabilities."
+#~ msgstr "この場合、エクステンションは2つのケイパビリティを宣言しています。"
+
+#~ msgid "Declaring conditional capabilities"
+#~ msgstr "条件付きケイパビリティの宣言"
