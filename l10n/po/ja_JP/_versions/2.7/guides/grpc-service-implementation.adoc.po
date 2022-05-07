@@ -1,0 +1,741 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2022-05-07 16:14+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. This guide is maintained in the main Quarkus repository
+#. and pull requests should be submitted there:
+#. https://github.com/quarkusio/quarkus/tree/main/docs/src/main/asciidoc
+#. type: Title =
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:6
+#, no-wrap
+msgid "Implementing a gRPC Service"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:11
+msgid "gRPC service implementations exposed as CDI beans are automatically registered and served by quarkus-grpc."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:14
+msgid "Implementing a gRPC service requires the gRPC classes to be generated.  Place your `proto` files in `src/main/proto` and run `mvn compile`."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:15
+#, no-wrap
+msgid "Generated Code"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:18
+msgid "Quarkus generates a few implementation classes for services declared in the `proto` file:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:20
+msgid "A _service interface_ using the Mutiny API"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:21
+msgid "the class name is `${JAVA_PACKAGE}.${NAME_OF_THE_SERVICE}`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:22
+msgid "An _implementation base_ class using the gRPC API"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:23
+msgid "the class name is structured as follows: `${JAVA_PACKAGE}.${NAME_OF_THE_SERVICE}Grpc.${NAME_OF_THE_SERVICE}ImplBase`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:25
+msgid "For example, if you use the following `proto` file snippet:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:29
+#, no-wrap
+msgid "option java_package = \"hello\"; <1>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:33
+#, no-wrap
+msgid ""
+"service Greeter { <2>\n"
+"    rpc SayHello (HelloRequest) returns (HelloReply) {}\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:35
+msgid "`hello` is the java package for the generated classes."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:36
+msgid "`Greeter` is the service name."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:38
+msgid "Then the service interface is `hello.Greeter` and the implementation base is the abstract static nested class: `hello.GreeterGrpc.GreeterImplBase`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:40
+msgid "You'll need to implement the _service interface_ or extend the _base class_ with your service implementation bean as described in the following sections."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:41
+#, no-wrap
+msgid "Implementing a Service with the Mutiny API"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:47
+msgid "To implement a gRPC service using the Mutiny API, create a class that implements the service interface.  Then, implement the methods defined in the service interface.  If you don't want to implement a service method just throw an `java.lang.UnsupportedOperationException` from the method body (the exception will be automatically converted to the appropriate gRPC exception).  Finally, implement the service and add the `@GrpcService` annotation:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:52
+#, no-wrap
+msgid ""
+"import io.quarkus.grpc.GrpcService;\n"
+"import hello.Greeter;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:55
+#, no-wrap
+msgid ""
+"@GrpcService <1>\n"
+"public class HelloService implements Greeter { <2>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:63
+#, no-wrap
+msgid ""
+"    @Override\n"
+"    public Uni<HelloReply> sayHello(HelloRequest request) {\n"
+"        return Uni.createFrom().item(() ->\n"
+"                HelloReply.newBuilder().setMessage(\"Hello \" + request.getName()).build()\n"
+"        );\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:65
+msgid "A gRPC service implementation bean must be annotated with the `@GrpcService` annotation and should not declare any other CDI qualifier. All gRPC services have the `javax.inject.Singleton` scope. Additionally, the request context is always active during a service call."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:66
+msgid "`hello.Greeter` is the generated service interface."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:68
+msgid "The service implementation bean can also extend the Mutiny implementation base, where the class name is structured as follows: `Mutiny${NAME_OF_THE_SERVICE}Grpc.${NAME_OF_THE_SERVICE}ImplBase`."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:69
+#, no-wrap
+msgid "Implementing a Service with the default gRPC API"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:74
+msgid "To implement a gRPC service using the default gRPC API, create a class that extends the default implementation base.  Then, override the methods defined in the service interface.  Finally, implement the service and add the `@GrpcService` annotation:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:78
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:125
+#, no-wrap
+msgid "import io.quarkus.grpc.GrpcService;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:81
+#, no-wrap
+msgid ""
+"@GrpcService\n"
+"public class HelloService extends GreeterGrpc.GreeterImplBase {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:90
+#, no-wrap
+msgid ""
+"    @Override\n"
+"    public void sayHello(HelloRequest request, StreamObserver<HelloReply> responseObserver) {\n"
+"        String name = request.getName();\n"
+"        String message = \"Hello \" + name;\n"
+"        responseObserver.onNext(HelloReply.newBuilder().setMessage(message).build());\n"
+"        responseObserver.onCompleted();\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:92
+#, no-wrap
+msgid "Blocking Service Implementation"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:97
+msgid "By default, all the methods from a gRPC service run on the event loop.  As a consequence, you must **not** block.  If your service logic must block, annotate the method with `io.smallrye.common.annotation.Blocking`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:105
+#, no-wrap
+msgid ""
+"@Override\n"
+"@Blocking\n"
+"public Uni<HelloReply> sayHelloBlocking(HelloRequest request) {\n"
+"    // Do something blocking before returning the Uni\n"
+"}\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:107
+#, no-wrap
+msgid "Handling Streams"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:110
+msgid "gRPC allows receiving and returning streams:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:118
+#, no-wrap
+msgid ""
+"service Streaming {\n"
+"    rpc Source(Empty) returns (stream Item) {} // Returns a stream\n"
+"    rpc Sink(stream Item) returns (Empty) {}   // Reads a stream\n"
+"    rpc Pipe(stream Item) returns (stream Item) {}  // Reads a streams and return a streams\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:121
+msgid "Using Mutiny, you can implement these as follows:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:128
+#, no-wrap
+msgid ""
+"@GrpcService\n"
+"public class StreamingService implements Streaming {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:136
+#, no-wrap
+msgid ""
+"    @Override\n"
+"    public Multi<Item> source(Empty request) {\n"
+"        // Just returns a stream emitting an item every 2ms and stopping after 10 items.\n"
+"        return Multi.createFrom().ticks().every(Duration.ofMillis(2))\n"
+"                .select().first(10)\n"
+"                .map(l -> Item.newBuilder().setValue(Long.toString(l)).build());\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:146
+#, no-wrap
+msgid ""
+"    @Override\n"
+"    public Uni<Empty> sink(Multi<Item> request) {\n"
+"        // Reads the incoming streams, consume all the items.\n"
+"        return request\n"
+"                .map(Item::getValue)\n"
+"                .map(Long::parseLong)\n"
+"                .collect().last()\n"
+"                .map(l -> Empty.newBuilder().build());\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:158
+#, no-wrap
+msgid ""
+"    @Override\n"
+"    public Multi<Item> pipe(Multi<Item> request) {\n"
+"        // Reads the incoming stream, compute a sum and return the cumulative results\n"
+"        // in the outbound stream.\n"
+"        return request\n"
+"                .map(Item::getValue)\n"
+"                .map(Long::parseLong)\n"
+"                .onItem().scan(() -> 0L, Long::sum)\n"
+"                .onItem().transform(l -> Item.newBuilder().setValue(Long.toString(l)).build());\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:160
+#, no-wrap
+msgid "Health Check"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:162
+msgid "For the implemented services, Quarkus gRPC exposes health information in the following format:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:165
+#, no-wrap
+msgid "syntax = \"proto3\";\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:167
+#, no-wrap
+msgid "package grpc.health.v1;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:171
+#, no-wrap
+msgid ""
+"message HealthCheckRequest {\n"
+"  string service = 1;\n"
+"}\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:180
+#, no-wrap
+msgid ""
+"message HealthCheckResponse {\n"
+"  enum ServingStatus {\n"
+"    UNKNOWN = 0;\n"
+"    SERVING = 1;\n"
+"    NOT_SERVING = 2;\n"
+"  }\n"
+"  ServingStatus status = 1;\n"
+"}\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:183
+#, no-wrap
+msgid ""
+"service Health {\n"
+"  rpc Check(HealthCheckRequest) returns (HealthCheckResponse);\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:186
+#, no-wrap
+msgid ""
+"  rpc Watch(HealthCheckRequest) returns (stream HealthCheckResponse);\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:190
+msgid "Clients can specify the fully qualified service name to get the health status of a specific service or skip specifying the service name to get the general status of the gRPC server."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:193
+msgid "For more details, check out the https://github.com/grpc/grpc/blob/v1.28.1/doc/health-checking.md[gRPC documentation]"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:196
+msgid "Additionally, if Quarkus SmallRye Health is added to the application, a readiness check for the state of the gRPC services will be added to the MicroProfile Health endpoint response, that is `/q/health`."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:197
+#, no-wrap
+msgid "Reflection Service"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:201
+msgid "Quarkus gRPC Server implements the https://github.com/grpc/grpc/blob/master/doc/server-reflection.md[reflection service].  This service allows tools like https://github.com/fullstorydev/grpcurl[grpcurl] or https://github.com/gusaul/grpcox[grpcox] to interact with your services."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:204
+msgid "The reflection service is enabled by default in _dev_ mode.  In test or production mode, you need to enable it explicitly by setting `quarkus.grpc.server.enable-reflection-service` to `true`."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:205
+#, no-wrap
+msgid "Scaling"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:207
+msgid "By default, quarkus-grpc starts a single gRPC server running on a single event loop."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:209
+msgid "If you wish to scale your server, you can set the number of server instances by setting `quarkus.grpc.server.instances`."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:210
+#, no-wrap
+msgid "Server Configuration"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:214
+#, no-wrap
+msgid "Example of Configuration"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:216
+#, no-wrap
+msgid "Enabling TLS"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:219
+msgid "To enable TLS, use the following configuration."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:222
+msgid "Note that all paths in the configuration may either specify a resource on the classpath (typically from `src/main/resources` or its subfolder) or an external file."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:227
+#, no-wrap
+msgid ""
+"quarkus.grpc.server.ssl.certificate=tls/server.pem\n"
+"quarkus.grpc.server.ssl.key=tls/server.key\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:230
+msgid "When SSL/TLS is configured, `plain-text` is automatically disabled."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:231
+#, no-wrap
+msgid "TLS with Mutual Auth"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:234
+msgid "To use TLS with mutual authentication, use the following configuration:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:242
+#, no-wrap
+msgid ""
+"quarkus.grpc.server.ssl.certificate=tls/server.pem\n"
+"quarkus.grpc.server.ssl.key=tls/server.key\n"
+"quarkus.grpc.server.ssl.trust-store=tls/ca.jks\n"
+"quarkus.grpc.server.ssl.trust-store-password=*****\n"
+"quarkus.grpc.server.ssl.client-auth=REQUIRED\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:244
+#, no-wrap
+msgid "Server Interceptors"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:247
+msgid "gRPC server interceptors let you perform logic, such as authentication, before your service is invoked."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:249
+msgid "You can implement a gRPC server interceptor by creating an `@ApplicationScoped` bean implementing `io.grpc.ServerInterceptor`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:255
+#, no-wrap
+msgid ""
+"@ApplicationScoped\n"
+"// add @GlobalInterceptor for interceptors meant to be invoked for every service\n"
+"public class MyInterceptor implements ServerInterceptor {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:262
+#, no-wrap
+msgid ""
+"    @Override\n"
+"    public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(ServerCall<ReqT, RespT> serverCall,\n"
+"            Metadata metadata, ServerCallHandler<ReqT, RespT> serverCallHandler) {\n"
+"        // ...\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:265
+msgid "Check the https://grpc.github.io/grpc-java/javadoc/io/grpc/ServerInterceptor.html[ServerInterceptor JavaDoc] to properly implement your interceptor."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:268
+msgid "To apply an interceptor to all exposed services, annotate it with `@io.quarkus.grpc.GlobalInterceptor`.  To apply an interceptor to a single service, register it on the service with `@io.quarkus.grpc.RegisterInterceptor`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:272
+#, no-wrap
+msgid ""
+"import io.quarkus.grpc.GrpcService;\n"
+"import io.quarkus.grpc.RegisterInterceptor;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:278
+#, no-wrap
+msgid ""
+"@GrpcService\n"
+"@RegisterInterceptor(MyInterceptor.class)\n"
+"public class StreamingService implements Streaming {\n"
+"    // ...\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:282
+msgid "When you have multiple server interceptors, you can order them by implementing the `javax.enterprise.inject.spi.Prioritized` interface. Please note that all the global interceptors are invoked before the service-specific interceptors."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:287
+#, no-wrap
+msgid ""
+"@ApplicationScoped\n"
+"public class MyInterceptor implements ServerInterceptor, Prioritized {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:293
+#, no-wrap
+msgid ""
+"    @Override\n"
+"    public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(ServerCall<ReqT, RespT> serverCall,\n"
+"            Metadata metadata, ServerCallHandler<ReqT, RespT> serverCallHandler) {\n"
+"        // ...\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:299
+#, no-wrap
+msgid ""
+"    @Override\n"
+"    public int getPriority() {\n"
+"        return 10;\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:303
+msgid "Interceptors with the highest priority are called first.  The default priority, used if the interceptor does not implement the `Prioritized` interface, is `0`."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:305
+#, no-wrap
+msgid "Testing your services"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:309
+msgid "The easiest way to test a gRPC service is to use a gRPC client as described in xref:grpc-service-consumption.adoc[Consuming a gRPC Service]."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:313
+msgid "Please note that in the case of using a client to test an exposed service that does not use TLS, there is no need to provide any configuration. E.g. to test the `HelloService` defined above, one could create the following test:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:317
+#, no-wrap
+msgid "public class HelloServiceTest implements Greeter {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:320
+#, no-wrap
+msgid ""
+"    @GrpcClient\n"
+"    Greeter client;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:329
+#, no-wrap
+msgid ""
+"    @Test\n"
+"    void shouldReturnHello() {\n"
+"        CompletableFuture<String> message = new CompletableFuture<>();\n"
+"        client.sayHello(HelloRequest.newBuilder().setName(\"Quarkus\").build())\n"
+"                .subscribe().with(reply -> message.complete(reply.getMessage()));\n"
+"        assertThat(message.get(5, TimeUnit.SECONDS)).isEqualTo(\"Hello Quarkus\");\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:331
+#, no-wrap
+msgid "Trying out your services manually"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:334
+msgid "In the dev mode, you can try out your gRPC services in the Quarkus Dev UI.  Just go to http://localhost:8080/q/dev and click on _Services_ under the gRPC tile."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:336
+msgid "Please note that your application needs to expose the \"normal\" HTTP port for the Dev UI to be accessible. If your application does not expose any HTTP endpoints, you can create a dedicated profile with a dependency on `quarkus-vertx-http`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:349
+#, no-wrap
+msgid ""
+"    <profiles>\n"
+"        <profile>\n"
+"            <id>development</id>\n"
+"            <dependencies>\n"
+"                <dependency>\n"
+"                    <groupId>io.quarkus</groupId>\n"
+"                    <artifactId>quarkus-vertx-http</artifactId>\n"
+"                </dependency>\n"
+"            </dependencies>\n"
+"        </profiles>\n"
+"    </profile>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:351
+msgid "Having it, you can run the dev mode with: `mvn quarkus:dev -Pdevelopment`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:353
+msgid "If you use Gradle, you can simply add a dependency for the `quarkusDev` task:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:359
+#, no-wrap
+msgid ""
+"dependencies {\n"
+"    quarkusDev 'io.quarkus:quarkus-vertx-http'\n"
+"}\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:361
+#, no-wrap
+msgid "gRPC Server metrics"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:363
+#, no-wrap
+msgid "Enabling metrics collection"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:367
+msgid "gRPC server metrics are automatically enabled when the application also uses the xref:micrometer.adoc[`quarkus-micrometer`] extension.  Micrometer collects the metrics of all the gRPC services implemented by the application."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:369
+msgid "As an example, if you export the metrics to Prometheus, you will get:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:385
+#, no-wrap
+msgid ""
+"# HELP grpc_server_responses_sent_messages_total The total number of responses sent\n"
+"# TYPE grpc_server_responses_sent_messages_total counter\n"
+"grpc_server_responses_sent_messages_total{method=\"SayHello\",methodType=\"UNARY\",service=\"helloworld.Greeter\",} 6.0\n"
+"# HELP grpc_server_processing_duration_seconds The total time taken for the server to complete the call\n"
+"# TYPE grpc_server_processing_duration_seconds summary\n"
+"grpc_server_processing_duration_seconds_count{method=\"SayHello\",methodType=\"UNARY\",service=\"helloworld.Greeter\",statusCode=\"OK\",} 6.0\n"
+"grpc_server_processing_duration_seconds_sum{method=\"SayHello\",methodType=\"UNARY\",service=\"helloworld.Greeter\",statusCode=\"OK\",} 0.016216771\n"
+"# HELP grpc_server_processing_duration_seconds_max The total time taken for the server to complete the call\n"
+"# TYPE grpc_server_processing_duration_seconds_max gauge\n"
+"grpc_server_processing_duration_seconds_max{method=\"SayHello\",methodType=\"UNARY\",service=\"helloworld.Greeter\",statusCode=\"OK\",} 0.007985236\n"
+"# HELP grpc_server_requests_received_messages_total The total number of requests received\n"
+"# TYPE grpc_server_requests_received_messages_total counter\n"
+"grpc_server_requests_received_messages_total{method=\"SayHello\",methodType=\"UNARY\",service=\"helloworld.Greeter\",} 6.0\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:388
+msgid "The service name, method and type can be found in the _tags_."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:389
+#, no-wrap
+msgid "Disabling metrics collection"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:392
+msgid "To disable the gRPC server metrics when `quarkus-micrometer` is used, add the following property to the application configuration:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/grpc-service-implementation.adoc:396
+#, no-wrap
+msgid "quarkus.micrometer.binder.grpc-server.enabled=false\n"
+msgstr ""

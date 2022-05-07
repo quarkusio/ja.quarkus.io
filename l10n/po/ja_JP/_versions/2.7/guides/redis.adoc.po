@@ -1,0 +1,1127 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2022-05-07 16:14+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. This guide is maintained in the main Quarkus repository
+#. and pull requests should be submitted there:
+#. https://github.com/quarkusio/quarkus/tree/main/docs/src/main/asciidoc
+#. type: Title =
+#: upstream/_versions/2.7/guides/redis.adoc:6
+#, no-wrap
+msgid "Using the Redis Client"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:11
+msgid "This guide demonstrates how your Quarkus application can connect to a Redis server using the Redis Client extension."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.7/guides/redis.adoc:14
+#, no-wrap
+msgid "Prerequisites"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:18
+msgid "A running Redis server, or Docker Compose to start one"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.7/guides/redis.adoc:19
+#, no-wrap
+msgid "Architecture"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:23
+msgid "In this guide, we are going to expose a simple Rest API to increment numbers by using the https://redis.io/commands/incrby[`INCRBY`] command.  Along the way, we'll see how to use other Redis commands like `GET`, `SET`, `DEL` and `KEYS`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:26
+msgid "We'll be using the Quarkus Redis Client extension to connect to our Redis Server. The extension is implemented on top of the https://vertx.io/docs/vertx-redis-client/java/[Vert.x Redis Client], providing an asynchronous and non-blocking way to connect to Redis."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.7/guides/redis.adoc:27
+#, no-wrap
+msgid "Solution"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:31
+msgid "We recommend that you follow the instructions in the next sections and create the application step by step.  However, you can go right to the completed example."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:33
+msgid "Clone the Git repository: `git clone {quickstarts-clone-url}`, or download an {quickstarts-archive-url}[archive]."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:35
+msgid "The solution is located in the `redis-quickstart` {quickstarts-tree-url}/redis-quickstart[directory]."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.7/guides/redis.adoc:36
+#, no-wrap
+msgid "Creating the Maven Project"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:39
+msgid "First, we need a new project. Create a new project with the following command:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:45
+msgid "This command generates a new project, importing the Redis extension."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:49
+msgid "If you already have your Quarkus project configured, you can add the `redis-client` extension to your project by running the following command in your project base directory:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:54
+msgid "This will add the following to your build file:"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.7/guides/redis.adoc:56
+#, no-wrap
+msgid "pom.xml"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:62
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-redis-client</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.7/guides/redis.adoc:65
+#, no-wrap
+msgid "build.gradle"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:68
+#, no-wrap
+msgid "implementation(\"io.quarkus:quarkus-redis-client\")\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.7/guides/redis.adoc:70
+#, no-wrap
+msgid "Starting the Redis server"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:73
+msgid "Then, we need to start a Redis instance (if you do not have one already) using the following command:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:77
+#, no-wrap
+msgid "docker run --ulimit memlock=-1:-1 -it --rm=true --memory-swappiness=0 --name redis_quarkus_test -p 6379:6379 redis:5.0.6\n"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.7/guides/redis.adoc:82
+msgid "If you use xref:redis-dev-services.adoc[Dev Services for Redis], launching the container manually is not necessary!"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.7/guides/redis.adoc:84
+#, no-wrap
+msgid "Configuring Redis properties"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:88
+msgid "Once we have the Redis server running, we need to configure the Redis connection properties.  This is done in the `application.properties` configuration file. Edit it to the following content:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:92
+#, no-wrap
+msgid "quarkus.redis.hosts=redis://localhost:6379 <1>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:95
+msgid "Configure Redis hosts to connect to. Here we connect to the Redis server we started in the previous section"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.7/guides/redis.adoc:99
+msgid "This is needed if you are not using xref:redis-dev-services.adoc[Dev Services for Redis]"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.7/guides/redis.adoc:102
+#, no-wrap
+msgid "Creating the Increment POJO"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:106
+msgid "We are going to model our increments using the `Increment` POJO.  Create the `src/main/java/org/acme/redis/Increment.java` file, with the following content:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:110
+#: upstream/_versions/2.7/guides/redis.adoc:138
+#: upstream/_versions/2.7/guides/redis.adoc:201
+#: upstream/_versions/2.7/guides/redis.adoc:257
+#, no-wrap
+msgid "package org.acme.redis;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:114
+#, no-wrap
+msgid ""
+"public class Increment {\n"
+"    public String key; // <1>\n"
+"    public int value; // <2>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:119
+#, no-wrap
+msgid ""
+"    public Increment(String key, int value) {\n"
+"        this.key = key;\n"
+"        this.value = value;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:123
+#, no-wrap
+msgid ""
+"    public Increment() {\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:125
+msgid "The key that will be used as the Redis key"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:126
+msgid "The value held by the Redis key"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.7/guides/redis.adoc:128
+#, no-wrap
+msgid "Creating the Increment Service"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:132
+msgid "We are going to create an `IncrementService` class which will play the role of a Redis client.  With this class, we'll be able to perform the `SET`, `GET` , `DELET`, `KEYS` and `INCRBY` Redis commands."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:134
+msgid "Create the `src/main/java/org/acme/redis/IncrementService.java` file, with the following content:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:142
+#, no-wrap
+msgid ""
+"import io.quarkus.redis.client.RedisClient;\n"
+"import io.quarkus.redis.client.reactive.ReactiveRedisClient;\n"
+"import io.smallrye.mutiny.Uni;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:144
+#, no-wrap
+msgid "import io.vertx.mutiny.redis.client.Response;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:148
+#, no-wrap
+msgid ""
+"import java.util.ArrayList;\n"
+"import java.util.Arrays;\n"
+"import java.util.List;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:151
+#, no-wrap
+msgid ""
+"import javax.inject.Inject;\n"
+"import javax.inject.Singleton;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:154
+#, no-wrap
+msgid ""
+"@Singleton\n"
+"class IncrementService {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:157
+#, no-wrap
+msgid ""
+"    @Inject\n"
+"    RedisClient redisClient; // <1>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:160
+#, no-wrap
+msgid ""
+"    @Inject\n"
+"    ReactiveRedisClient reactiveRedisClient; // <2>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:165
+#, no-wrap
+msgid ""
+"    Uni<Void> del(String key) {\n"
+"        return reactiveRedisClient.del(Arrays.asList(key))\n"
+"                .map(response -> null);\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:169
+#, no-wrap
+msgid ""
+"    String get(String key) {\n"
+"        return redisClient.get(key).toString();\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:173
+#, no-wrap
+msgid ""
+"    void set(String key, Integer value) {\n"
+"        redisClient.set(Arrays.asList(key, value.toString()));\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:177
+#, no-wrap
+msgid ""
+"    void increment(String key, Integer incrementBy) {\n"
+"        redisClient.incrby(key, incrementBy.toString());\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:190
+#, no-wrap
+msgid ""
+"    Uni<List<String>> keys() {\n"
+"        return reactiveRedisClient\n"
+"                .keys(\"*\")\n"
+"                .map(response -> {\n"
+"                    List<String> result = new ArrayList<>();\n"
+"                    for (Response r : response) {\n"
+"                        result.add(r.toString());\n"
+"                    }\n"
+"                    return result;\n"
+"                });\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:192
+msgid "Inject the Redis synchronous client"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:193
+msgid "Inject the Reactive Redis client"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.7/guides/redis.adoc:194
+#, no-wrap
+msgid "Creating the Increment Resource"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:197
+msgid "Create the `src/main/java/org/acme/redis/IncrementResource.java` file, with the following content:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:210
+#, no-wrap
+msgid ""
+"import javax.inject.Inject;\n"
+"import javax.ws.rs.GET;\n"
+"import javax.ws.rs.PathParam;\n"
+"import javax.ws.rs.PUT;\n"
+"import javax.ws.rs.Path;\n"
+"import javax.ws.rs.POST;\n"
+"import javax.ws.rs.DELETE;\n"
+"import java.util.List;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:212
+#, no-wrap
+msgid "import io.smallrye.mutiny.Uni;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:215
+#, no-wrap
+msgid ""
+"@Path(\"/increments\")\n"
+"public class IncrementResource {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:218
+#, no-wrap
+msgid ""
+"    @Inject\n"
+"    IncrementService service;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:223
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    public Uni<List<String>> keys() {\n"
+"        return service.keys();\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:229
+#, no-wrap
+msgid ""
+"    @POST\n"
+"    public Increment create(Increment increment) {\n"
+"        service.set(increment.key, increment.value);\n"
+"        return increment;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:235
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @Path(\"/{key}\")\n"
+"    public Increment get(@PathParam(\"key\") String key) {\n"
+"        return new Increment(key, Integer.valueOf(service.get(key)));\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:241
+#, no-wrap
+msgid ""
+"    @PUT\n"
+"    @Path(\"/{key}\")\n"
+"    public void increment(@PathParam(\"key\") String key, Integer value) {\n"
+"        service.increment(key, value);\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:248
+#, no-wrap
+msgid ""
+"    @DELETE\n"
+"    @Path(\"/{key}\")\n"
+"    public Uni<Void> delete(@PathParam(\"key\") String key) {\n"
+"        return service.del(key);\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.7/guides/redis.adoc:250
+#, no-wrap
+msgid "Creating the test class"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:253
+msgid "Create the `src/test/java/org/acme/redis/IncrementResourceTest.java` file with the following content:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:259
+#, no-wrap
+msgid "import static org.hamcrest.Matchers.is;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:261
+#, no-wrap
+msgid "import org.junit.jupiter.api.Test;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:263
+#, no-wrap
+msgid "import io.quarkus.test.junit.QuarkusTest;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:265
+#, no-wrap
+msgid "import static io.restassured.RestAssured.given;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:267
+#, no-wrap
+msgid "import io.restassured.http.ContentType;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:270
+#, no-wrap
+msgid ""
+"@QuarkusTest\n"
+"public class IncrementResourceTest {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:281
+#, no-wrap
+msgid ""
+"    @Test\n"
+"    public void testRedisOperations() {\n"
+"        // verify that we have nothing\n"
+"        given()\n"
+"                .accept(ContentType.JSON)\n"
+"                .when()\n"
+"                .get(\"/increments\")\n"
+"                .then()\n"
+"                .statusCode(200)\n"
+"                .body(\"size()\", is(0));\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:293
+#, no-wrap
+msgid ""
+"        // create a first increment key with an initial value of 0\n"
+"        given()\n"
+"                .contentType(ContentType.JSON)\n"
+"                .accept(ContentType.JSON)\n"
+"                .body(\"{\\\"key\\\":\\\"first-key\\\",\\\"value\\\":0}\")\n"
+"                .when()\n"
+"                .post(\"/increments\")\n"
+"                .then()\n"
+"                .statusCode(200)\n"
+"                .body(\"key\", is(\"first-key\"))\n"
+"                .body(\"value\", is(0));\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:305
+#, no-wrap
+msgid ""
+"        // create a second increment key with an initial value of 10\n"
+"        given()\n"
+"                .contentType(ContentType.JSON)\n"
+"                .accept(ContentType.JSON)\n"
+"                .body(\"{\\\"key\\\":\\\"second-key\\\",\\\"value\\\":10}\")\n"
+"                .when()\n"
+"                .post(\"/increments\")\n"
+"                .then()\n"
+"                .statusCode(200)\n"
+"                .body(\"key\", is(\"second-key\"))\n"
+"                .body(\"value\", is(10));\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:314
+#, no-wrap
+msgid ""
+"        // increment first key by 1\n"
+"        given()\n"
+"                .contentType(ContentType.JSON)\n"
+"                .body(\"1\")\n"
+"                .when()\n"
+"                .put(\"/increments/first-key\")\n"
+"                .then()\n"
+"                .statusCode(204);\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:324
+#, no-wrap
+msgid ""
+"        // verify that key has been incremented\n"
+"        given()\n"
+"                .accept(ContentType.JSON)\n"
+"                .when()\n"
+"                .get(\"/increments/first-key\")\n"
+"                .then()\n"
+"                .statusCode(200)\n"
+"                .body(\"key\", is(\"first-key\"))\n"
+"                .body(\"value\", is(1));\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:333
+#, no-wrap
+msgid ""
+"        // increment second key by 1000\n"
+"        given()\n"
+"                .contentType(ContentType.JSON)\n"
+"                .body(\"1000\")\n"
+"                .when()\n"
+"                .put(\"/increments/second-key\")\n"
+"                .then()\n"
+"                .statusCode(204);\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:343
+#, no-wrap
+msgid ""
+"        // verify that key has been incremented\n"
+"        given()\n"
+"                .accept(ContentType.JSON)\n"
+"                .when()\n"
+"                .get(\"/increments/second-key\")\n"
+"                .then()\n"
+"                .statusCode(200)\n"
+"                .body(\"key\", is(\"second-key\"))\n"
+"                .body(\"value\", is(1010));\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:352
+#, no-wrap
+msgid ""
+"        // verify that we have two keys in registered\n"
+"        given()\n"
+"                .accept(ContentType.JSON)\n"
+"                .when()\n"
+"                .get(\"/increments\")\n"
+"                .then()\n"
+"                .statusCode(200)\n"
+"                .body(\"size()\", is(2));\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:360
+#, no-wrap
+msgid ""
+"        // delete first key\n"
+"        given()\n"
+"                .accept(ContentType.JSON)\n"
+"                .when()\n"
+"                .delete(\"/increments/first-key\")\n"
+"                .then()\n"
+"                .statusCode(204);\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:369
+#, no-wrap
+msgid ""
+"        // verify that we have one key left after deletion\n"
+"        given()\n"
+"                .accept(ContentType.JSON)\n"
+"                .when()\n"
+"                .get(\"/increments\")\n"
+"                .then()\n"
+"                .statusCode(200)\n"
+"                .body(\"size()\", is(1));\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:377
+#, no-wrap
+msgid ""
+"        // delete second key\n"
+"        given()\n"
+"                .accept(ContentType.JSON)\n"
+"                .when()\n"
+"                .delete(\"/increments/second-key\")\n"
+"                .then()\n"
+"                .statusCode(204);\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:388
+#, no-wrap
+msgid ""
+"        // verify that there is no key left\n"
+"        given()\n"
+"                .accept(ContentType.JSON)\n"
+"                .when()\n"
+"                .get(\"/increments\")\n"
+"                .then()\n"
+"                .statusCode(200)\n"
+"                .body(\"size()\", is(0));\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.7/guides/redis.adoc:390
+#, no-wrap
+msgid "Get it running"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:394
+msgid "If you followed the instructions, you should have the Redis server running.  Then, you just need to run the application using:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:398
+msgid "Open another terminal and run the `curl http://localhost:8080/increments` command."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.7/guides/redis.adoc:399
+#, no-wrap
+msgid "Interacting with the application"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:404
+msgid "As we have seen above, the API exposes five Rest endpoints.  In this section we are going to see how to initialise an increment, see the list of current increments, incrementing a value given its key, retrieving the current value of an increment, and finally deleting a key."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.7/guides/redis.adoc:405
+#, no-wrap
+msgid "Creating a new increment"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:410
+#, no-wrap
+msgid "curl -X POST -H \"Content-Type: application/json\" -d '{\"key\":\"first\",\"value\":10}' http://localhost:8080/increments <1>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:412
+msgid "We create the first increment, with the key `first` and an initial value of `10`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:414
+msgid "Running the above command should return the result below:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:421
+#: upstream/_versions/2.7/guides/redis.adoc:450
+#, no-wrap
+msgid ""
+"{\n"
+"  \"key\": \"first\",\n"
+"  \"value\": 10\n"
+"}\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.7/guides/redis.adoc:423
+#, no-wrap
+msgid "See current increments keys"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:426
+msgid "To see the list of current increments keys, run the following command:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:430
+#, no-wrap
+msgid "curl http://localhost:8080/increments\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:433
+msgid "The above command should return `[\"first\"]` indicating that we have only one increment thus far."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.7/guides/redis.adoc:434
+#, no-wrap
+msgid "Retrieve a new increment"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:437
+msgid "To retrieve an increment using its key, we will have to run the below command:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:441
+#, no-wrap
+msgid "curl http://localhost:8080/increments/first <1>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:443
+msgid "Running this command, should return the following result:"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.7/guides/redis.adoc:452
+#, no-wrap
+msgid "Increment a value given its key"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:455
+msgid "To increment a value, run the following command:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:459
+#, no-wrap
+msgid "curl -X PUT -H \"Content-Type: application/json\" -d '27' http://localhost:8080/increments/first <1>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:461
+msgid "Increment the `first` value by 27."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:463
+msgid "Now, running the command `curl http://localhost:8080/increments/first` should return the following result:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:470
+#, no-wrap
+msgid ""
+"{\n"
+"  \"key\": \"first\",\n"
+"  \"value\": 37 <1>\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:472
+msgid "We see that the value of the `first` key is now `37` which is exactly the result of `10 + 27`, quick maths."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.7/guides/redis.adoc:473
+#, no-wrap
+msgid "Deleting a key"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:476
+msgid "Use the command below, to delete an increment given its key."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:480
+#, no-wrap
+msgid "curl -X DELETE  http://localhost:8080/increments/first <1>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:482
+msgid "Delete the `first` increment."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:484
+msgid "Now, running the command `curl http://localhost:8080/increments` should return an empty list `[]`"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.7/guides/redis.adoc:485
+#, no-wrap
+msgid "Packaging and running in JVM mode"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:488
+msgid "You can run the application as a conventional jar file."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:490
+msgid "First, we will need to package it:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:494
+msgid "This command will start a Redis instance to execute the tests. Thus your Redis containers need to be stopped."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:496
+msgid "Then run it:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:500
+#, no-wrap
+msgid "java -jar target/quarkus-app/quarkus-run.jar\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.7/guides/redis.adoc:502
+#, no-wrap
+msgid "Running Native"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:508
+msgid "You can also create a native executable from this application without making any source code changes. A native executable removes the dependency on the JVM: everything needed to run the application on the target platform is included in the executable, allowing the application to run with minimal resource overhead."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:512
+msgid "Compiling a native executable takes a bit longer, as GraalVM performs additional steps to remove unnecessary codepaths. Use the `native` profile to compile a native executable:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:516
+msgid "Once the build is finished, you can run the executable with:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:520
+#, no-wrap
+msgid "./target/redis-quickstart-1.0.0-SNAPSHOT-runner\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.7/guides/redis.adoc:522
+#, no-wrap
+msgid "Connection Health Check"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:526
+msgid "If you are using the `quarkus-smallrye-health` extension, `quarkus-vertx-redis` will automatically add a readiness health check to validate the connection to the Redis server."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:528
+msgid "So when you access the `/q/health/ready` endpoint of your application you will have information about the connection validation status."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:530
+msgid "This behavior can be disabled by setting the `quarkus.redis.health.enabled` property to `false` in your `application.properties`."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.7/guides/redis.adoc:532
+#, no-wrap
+msgid "Multiple Redis Clients"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:536
+msgid "The Redis extension allows you to configure multiple clients.  Using several clients works the same way as having a single client."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:541
+#, no-wrap
+msgid ""
+"quarkus.redis.hosts=redis://localhost:6379\n"
+"quarkus.redis.second.hosts=redis://localhost:6379\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:546
+msgid "Notice there's an extra bit in the key (the `second` segment).  The syntax is as follows: `quarkus.redis.[optional name.][redis configuration property]`.  If the name is omitted, it configures the default client."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.7/guides/redis.adoc:547
+#, no-wrap
+msgid "Named Redis Client Injection"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:551
+msgid "When using multiple clients, you can select the client to inject using the `io.quarkus.redis.client.RedisClientName` qualifier.  Using the above properties to configure three different clients, you can also inject each one as follows:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:556
+#, no-wrap
+msgid ""
+"@Inject\n"
+"RedisClient defaultRedisClient;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:560
+#, no-wrap
+msgid ""
+"@Inject\n"
+"@RedisClientName(\"second\")\n"
+"RedisClient redisClient2;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:564
+#, no-wrap
+msgid ""
+"@Inject\n"
+"@RedisClientName(\"second\")\n"
+"ReactiveRedisClient reactiveClient2;\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.7/guides/redis.adoc:566
+#, no-wrap
+msgid "Providing Redis Hosts Programmatically"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:569
+msgid "The `RedisHostsProvider` programmatically provides redis hosts. This allows for configuration of properties like redis connection password coming from other sources."
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.7/guides/redis.adoc:573
+msgid "This is useful as it removes the need to store sensitive data in application.properties."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:587
+#, no-wrap
+msgid ""
+"@ApplicationScoped\n"
+"@Named(\"hosts-provider\") // the name of the host provider\n"
+"public class ExampleRedisHostProvider implements RedisHostsProvider {\n"
+"    @Override\n"
+"    public Set<URI> getHosts() {\n"
+"        // do stuff to get the host\n"
+"        String host = \"redis://localhost:6379/3\"\n"
+"        return Collections.singleton(URI.create(host));\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:590
+msgid "The host provider can be used to configure the redis client like shown below"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:593
+#, no-wrap
+msgid "quarkus.redis.hosts-provider-name=hosts-provider\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.7/guides/redis.adoc:595
+#, no-wrap
+msgid "Creating Clients Programmatically"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:599
+msgid "The `RedisClient` and `ReactiveRedisClient` provide factory methods to create clients programmatically.  The client to be created are configured using the usual <<config-reference,Redis configuration>>."
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.7/guides/redis.adoc:606
+msgid "This is useful to create a client dynamically in a non-CDI bean e.g a xref:hibernate-orm-panache.adoc[Panache entity].  Or to create a different client when running in pub/sub mode. This mode requires two different connections because once a connection invokes a subscriber mode then it cannot be used for running other commands than the command to leave that mode."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:609
+msgid "The below code snippet shows how we can create dynamic clients using the configurations in <<multiple-clients-configuration>>."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:613
+#, no-wrap
+msgid ""
+"// creating default redis client\n"
+"RedisClient defaultRedisClient = RedisClient.createClient();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:616
+#, no-wrap
+msgid ""
+"// creating named redis client whose configuration name is \"second\"\n"
+"RedisClient namedRedisClient = RedisClient.createClient(\"second\");\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:619
+#, no-wrap
+msgid ""
+"// creating a default reactive redis client\n"
+"ReactiveRedisClient defaultReactiveRedisClient = ReactiveRedisClient.createClient();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/redis.adoc:622
+#, no-wrap
+msgid ""
+"// creating a named reactive redis client whose configuration name is \"second\"\n"
+"ReactiveRedisClient namedReactiveRedisClient = ReactiveRedisClient.createClient(\"second\");\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/redis.adoc:625
+msgid "Please see also <<redis-reference.adoc#custom_redis_commands,How to use custom Redis Commands>>."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.7/guides/redis.adoc:627
+#, no-wrap
+msgid "Configuration Reference"
+msgstr ""

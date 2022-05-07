@@ -1,0 +1,4111 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2022-05-07 16:14+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. This guide is maintained in the main Quarkus repository
+#. and pull requests should be submitted there:
+#. https://github.com/quarkusio/quarkus/tree/main/docs/src/main/asciidoc
+#. type: Title =
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:6
+#, no-wrap
+msgid "Kubernetes extension"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:14
+msgid "Quarkus offers the ability to automatically generate Kubernetes resources based on sane defaults and user-supplied configuration using https://github.com/dekorateio/dekorate/[dekorate].  It currently supports generating resources for vanilla <<#kubernetes,Kubernetes>>, <<#openshift,OpenShift>> and <<#knative,Knative>>.  Furthermore, Quarkus can deploy the application to a target Kubernetes cluster by applying the generated manifests to the target cluster's API Server.  Finally, when either one of container image extensions is present (see the xref:container-imag.adoc[container image guide] for more details), Quarkus has the ability to create a container image and push it to a registry *before* deploying the application to the target platform."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:15
+#, no-wrap
+msgid "Prerequisites"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:20
+msgid "Access to a Kubernetes cluster (Minikube is a viable option)"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:22
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:672
+#, no-wrap
+msgid "Kubernetes"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:25
+msgid "Let's create a new project that contains both the Kubernetes and Jib extensions:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:31
+msgid "This added the following dependencies to the build file:"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:33
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:517
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:597
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:621
+#, no-wrap
+msgid "pom.xml"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:47
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-resteasy</artifactId>\n"
+"</dependency>\n"
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-kubernetes</artifactId>\n"
+"</dependency>\n"
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-container-image-jib</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:50
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:526
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:606
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:630
+#, no-wrap
+msgid "build.gradle"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:55
+#, no-wrap
+msgid ""
+"implementation(\"io.quarkus:quarkus-resteasy\")\n"
+"implementation(\"io.quarkus:quarkus-kubernetes\")\n"
+"implementation(\"io.quarkus:quarkus-container-image-jib\")\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:59
+msgid "By adding these dependencies, we enable the generation of Kubernetes manifests each time we perform a build while also enabling the build of a container image using Jib.  For example, following the execution of:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:64
+msgid "you will notice amongst the other files that are created, two files named `kubernetes.json` and `kubernetes.yml` in the `target/kubernetes/` directory."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:66
+msgid "If you look at either file you will see that it contains both a Kubernetes `Deployment` and a `Service`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:68
+msgid "The full source of the `kubernetes.json` file looks something like this:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:147
+#, no-wrap
+msgid ""
+"{\n"
+"  {\n"
+"    \"apiVersion\" : \"apps/v1\",\n"
+"    \"kind\" : \"Deployment\",\n"
+"    \"metadata\" : {\n"
+"      \"annotations\": {\n"
+"       \"app.quarkus.io/vcs-url\" : \"<some url>\",\n"
+"       \"app.quarkus.io/commit-id\" : \"<some git SHA>\",\n"
+"      },\n"
+"      \"labels\" : {\n"
+"        \"app.kubernetes.io/name\" : \"test-quarkus-app\",\n"
+"        \"app.kubernetes.io/version\" : \"1.0.0-SNAPSHOT\",\n"
+"      },\n"
+"      \"name\" : \"test-quarkus-app\"\n"
+"    },\n"
+"    \"spec\" : {\n"
+"      \"replicas\" : 1,\n"
+"      \"selector\" : {\n"
+"        \"matchLabels\" : {\n"
+"          \"app.kubernetes.io/name\" : \"test-quarkus-app\",\n"
+"          \"app.kubernetes.io/version\" : \"1.0.0-SNAPSHOT\",\n"
+"        }\n"
+"      },\n"
+"      \"template\" : {\n"
+"        \"metadata\" : {\n"
+"          \"labels\" : {\n"
+"            \"app.kubernetes.io/name\" : \"test-quarkus-app\",\n"
+"            \"app.kubernetes.io/version\" : \"1.0.0-SNAPSHOT\"\n"
+"          }\n"
+"        },\n"
+"        \"spec\" : {\n"
+"          \"containers\" : [ {\n"
+"            \"env\" : [ {\n"
+"              \"name\" : \"KUBERNETES_NAMESPACE\",\n"
+"              \"valueFrom\" : {\n"
+"                \"fieldRef\" : {\n"
+"                  \"fieldPath\" : \"metadata.namespace\"\n"
+"                }\n"
+"              }\n"
+"            } ],\n"
+"            \"image\" : \"yourDockerUsername/test-quarkus-app:1.0.0-SNAPSHOT\",\n"
+"            \"imagePullPolicy\" : \"Always\",\n"
+"            \"name\" : \"test-quarkus-app\"\n"
+"          } ]\n"
+"        }\n"
+"      }\n"
+"    }\n"
+"  },\n"
+"  {\n"
+"  \"apiVersion\" : \"v1\",\n"
+"  \"kind\" : \"Service\",\n"
+"    \"metadata\" : {\n"
+"      \"annotations\": {\n"
+"       \"app.quarkus.io/vcs-url\" : \"<some url>\",\n"
+"       \"app.quarkus.io/commit-id\" : \"<some git SHA>\",\n"
+"      },\n"
+"      \"labels\" : {\n"
+"        \"app.kubernetes.io/name\" : \"test-quarkus-app\",\n"
+"        \"app.kubernetes.io/version\" : \"1.0.0-SNAPSHOT\",\n"
+"      },\n"
+"      \"name\" : \"test-quarkus-app\"\n"
+"    },\n"
+"  \"spec\" : {\n"
+"    \"ports\" : [ {\n"
+"      \"name\" : \"http\",\n"
+"      \"port\" : 8080,\n"
+"      \"targetPort\" : 8080\n"
+"    } ],\n"
+"    \"selector\" : {\n"
+"      \"app.kubernetes.io/name\" : \"test-quarkus-app\",\n"
+"      \"app.kubernetes.io/version\" : \"1.0.0-SNAPSHOT\"\n"
+"    },\n"
+"    \"type\" : \"ClusterIP\"\n"
+"  }\n"
+" }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:150
+msgid "Beside generating a `Deployment` resource, you can also choose to get a `StatefulSet` instead via `application.properties`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:154
+#, no-wrap
+msgid "quarkus.kubernetes.deployment-kind=StatefulSet\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:157
+msgid "The generated manifest can be applied to the cluster from the project root using `kubectl`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:161
+#, no-wrap
+msgid "kubectl apply -f target/kubernetes/kubernetes.json\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:165
+msgid "An important thing to note about the `Deployment` (or `StatefulSet`) is that is uses `yourDockerUsername/test-quarkus-app:1.0.0-SNAPSHOT` as the container image of the `Pod`.  The name of the image is controlled by the Jib extension and can be customized using the usual `application.properties`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:167
+msgid "For example with a configuration like:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:173
+#, no-wrap
+msgid ""
+"quarkus.container-image.group=quarkus #optional, default to the system user name\n"
+"quarkus.container-image.name=demo-app #optional, defaults to the application name\n"
+"quarkus.container-image.tag=1.0       #optional, defaults to the application version\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:176
+msgid "The image that will be used in the generated manifests will be `quarkus/demo-app:1.0`"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:177
+#, no-wrap
+msgid "Namespace"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:180
+msgid "By default Quarkus omits the namespace in the generated manifests, rather than enforce the `default` namespace. That means that you can apply the manifest to your chosen namespace when using `kubctl`, which in the example below is `test`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:184
+#, no-wrap
+msgid "kubectl apply -f target/kubernetes/kubernetes.json -n=test\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:187
+msgid "To specify the namespace in your manifest customize with the following property in your `application.properties`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:191
+#, no-wrap
+msgid "quarkus.kubernetes.namespace=mynamespace \n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:193
+#, no-wrap
+msgid "Defining a Docker registry"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:196
+msgid "The Docker registry can be specified with the following property:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:200
+#, no-wrap
+msgid "quarkus.container-image.registry=my.docker-registry.net\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:204
+msgid "By adding this property along with the rest of the container image properties of the previous section, the generated manifests will use the image `my.docker-registry.net/quarkus/demo-app:1.0`.  The image is not the only thing that can be customized in the generated manifests, as will become evident in the following sections."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:205
+#, no-wrap
+msgid "Labels and Annotations"
+msgstr ""
+
+#. type: Title ====
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:207
+#, no-wrap
+msgid "Labels"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:212
+msgid "The generated manifests use the Kubernetes link:https://kubernetes.io/docs/concepts/overview/working-with-objects/common-labels[recommended labels].  These labels can be customized using `quarkus.kubernetes.name`, `quarkus.kubernetes.version` and `quarkus.kubernetes.part-of`.  For example by adding the following configuration to your `application.properties`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:218
+#, no-wrap
+msgid ""
+"quarkus.kubernetes.part-of=todo-app\n"
+"quarkus.kubernetes.name=todo-rest\n"
+"quarkus.kubernetes.version=1.0-rc.1\n"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:224
+msgid "As is described in detail in the <<#openshift, OpenShift>> section, customizing OpenShift (or Knative) properties is done in the same way, but replacing `kubernetes` with `openshift` (or `knative`). The previous example for OpenShift would look like this:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:230
+#, no-wrap
+msgid ""
+"quarkus.openshift.part-of=todo-app\n"
+"quarkus.openshift.name=todo-rest\n"
+"quarkus.openshift.version=1.0-rc.1\n"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:234
+msgid "The labels in generated resources will look like:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:242
+#, no-wrap
+msgid ""
+"  \"labels\" : {\n"
+"    \"app.kubernetes.io/part-of\" : \"todo-app\",\n"
+"    \"app.kubernetes.io/name\" : \"todo-rest\",\n"
+"    \"app.kubernetes.io/version\" : \"1.0-rc.1\"\n"
+"  }\n"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:247
+msgid "You can also remove the `app.kubernetes.io/version` label by applying the following configuration:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:251
+#, no-wrap
+msgid "quarkus.kubernetes.add-version-to-label-selectors=false\n"
+msgstr ""
+
+#. type: Title ====
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:254
+#, no-wrap
+msgid "Custom Labels"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:257
+msgid "To add additional custom labels, for example `foo=bar` just apply the following configuration:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:261
+#, no-wrap
+msgid "quarkus.kubernetes.labels.foo=bar\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:264
+msgid "When using the `quarkus-container-image-jib` extension to build a container image, then any label added via the aforementioned property will also be added to the generated container image."
+msgstr ""
+
+#. type: Title ====
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:265
+#, no-wrap
+msgid "Annotations"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:268
+msgid "Out of the box, the generated resources will be annotated with version control related information that can be used either by tooling, or by the user for troubleshooting purposes."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:275
+#, no-wrap
+msgid ""
+"  \"annotations\": {\n"
+"    \"app.quarkus.io/vcs-url\" : \"<some url>\",\n"
+"    \"app.quarkus.io/commit-id\" : \"<some git SHA>\",\n"
+"   }\n"
+msgstr ""
+
+#. type: Title ====
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:277
+#, no-wrap
+msgid "Custom Annotations"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:280
+msgid "Custom annotations can be added in a way similar to labels.For example to add the annotation `foo=bar` and `app.quarkus/id=42` just apply the following configuration:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:285
+#, no-wrap
+msgid ""
+"quarkus.kubernetes.annotations.foo=bar\n"
+"quarkus.kubernetes.annotations.\"app.quarkus/id\"=42\n"
+msgstr ""
+
+#. type: Title ====
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:288
+#, no-wrap
+msgid "Environment variables"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:291
+msgid "Kubernetes provides multiple ways of defining environment variables:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:293
+msgid "key/value pairs"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:294
+msgid "import all values from a Secret or ConfigMap"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:295
+msgid "interpolate a single value identified by a given field in a Secret or ConfigMap"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:296
+msgid "interpolate a value from a field within the same resource"
+msgstr ""
+
+#. type: Title =====
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:297
+#, no-wrap
+msgid "Environment variables from key/value pairs"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:300
+msgid "To add a key/value pair as an environment variable in the generated resources:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:304
+#, no-wrap
+msgid "quarkus.kubernetes.env.vars.my-env-var=foobar\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:308
+msgid "The command above will add `MY_ENV_VAR=foobar` as an environment variable.  Please note that the key `my-env-var` will be converted to uppercase and dashes will be replaced by underscores resulting in `MY_ENV_VAR`."
+msgstr ""
+
+#. type: Title =====
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:310
+#, no-wrap
+msgid "Environment variables from Secret"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:314
+msgid "To add all key/value pairs of `Secret` as environment variables just apply the following configuration, separating each `Secret` to be used as source by a comma (`,`):"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:318
+#, no-wrap
+msgid "quarkus.kubernetes.env.secrets=my-secret,my-other-secret\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:321
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:365
+msgid "which would generate the following in the container definition:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:331
+#, no-wrap
+msgid ""
+"envFrom:\n"
+"  - secretRef:\n"
+"      name: my-secret\n"
+"      optional: false\n"
+"  - secretRef:\n"
+"      name: my-other-secret\n"
+"      optional: false\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:334
+msgid "The following extracts a value identified by the `keyName` field from the `my-secret` Secret into a `foo` environment variable:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:339
+#, no-wrap
+msgid ""
+"quarkus.kubernetes.env.mapping.foo.from-secret=my-secret\n"
+"quarkus.kubernetes.env.mapping.foo.with-key=keyName\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:342
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:387
+msgid "This would generate the following in the `env` section of your container:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:352
+#, no-wrap
+msgid ""
+"- env:\n"
+"  - name: FOO\n"
+"    valueFrom:\n"
+"      secretKeyRef:\n"
+"        key: keyName\n"
+"        name: my-secret\n"
+"        optional: false\n"
+msgstr ""
+
+#. type: Title =====
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:354
+#, no-wrap
+msgid "Environment variables from ConfigMap"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:358
+msgid "To add all key/value pairs from `ConfigMap` as environment variables just apply the following configuration, separating each `ConfigMap` to be used as source by a comma (`,`):"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:362
+#, no-wrap
+msgid "quarkus.kubernetes.env.configmaps=my-config-map,another-config-map\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:375
+#, no-wrap
+msgid ""
+"envFrom:\n"
+"  - configMapRef:\n"
+"      name: my-config-map\n"
+"      optional: false\n"
+"  - configMapRef:\n"
+"      name: another-config-map\n"
+"      optional: false\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:379
+msgid "The following extracts a value identified by the `keyName` field from the `my-config-map` ConfigMap into a `foo` environment variable:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:384
+#, no-wrap
+msgid ""
+"quarkus.kubernetes.env.mapping.foo.from-configmap=my-configmap\n"
+"quarkus.kubernetes.env.mapping.foo.with-key=keyName\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:397
+#, no-wrap
+msgid ""
+"- env:\n"
+"  - name: FOO\n"
+"    valueFrom:\n"
+"      configMapRefKey:\n"
+"        key: keyName\n"
+"        name: my-configmap\n"
+"        optional: false\n"
+msgstr ""
+
+#. type: Title =====
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:399
+#, no-wrap
+msgid "Environment variables from fields"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:402
+msgid "It's also possible to use the value from another field to add a new environment variable by specifying the path of the field to be used as a source, as follows:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:406
+#, no-wrap
+msgid "quarkus.kubernetes.env.fields.foo=metadata.name\n"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:412
+msgid "As is described in detail in the <<#openshift, OpenShift>> section, customizing OpenShift properties is done in the same way, but replacing `kubernetes` with `openshift`. The previous example for OpenShift would look like this:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:416
+#, no-wrap
+msgid "quarkus.openshift.env.fields.foo=metadata.name\n"
+msgstr ""
+
+#. type: Title =====
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:419
+#, no-wrap
+msgid "Validation"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:422
+msgid "A conflict between two definitions, e.g. mistakenly assigning both a value and specifying that a variable is derived from a field, will result in an error being thrown at build time so that you get the opportunity to fix the issue before you deploy your application to your cluster where it might be more difficult to diagnose the source of the issue."
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:424
+msgid "Similarly, two redundant definitions, e.g. defining an injection from the same secret twice, will not cause an issue but will indeed report a warning to let you know that you might not have intended to duplicate that definition."
+msgstr ""
+
+#. type: Title =====
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:426
+#, no-wrap
+msgid "Backwards compatibility"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:429
+msgid "Previous versions of the Kubernetes extension supported a different syntax to add environment variables.The older syntax is still supported but is deprecated and it's advised that you migrate to the new syntax."
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:430
+#, no-wrap
+msgid "Old vs. new syntax"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:432
+#, no-wrap
+msgid "Old"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:432
+#, no-wrap
+msgid "New"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:433
+#, no-wrap
+msgid "Plain variable"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:433
+#, no-wrap
+msgid "`quarkus.kubernetes.env-vars.my-env-var.value=foobar`"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:433
+#, no-wrap
+msgid "`quarkus.kubernetes.env.vars.my-env-var=foobar`"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:434
+#, no-wrap
+msgid "From field"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:434
+#, no-wrap
+msgid "`quarkus.kubernetes.env-vars.my-env-var.field=foobar`"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:434
+#, no-wrap
+msgid "`quarkus.kubernetes.env.fields.my-env-var=foobar`"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:435
+#, no-wrap
+msgid "All from `ConfigMap`"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:435
+#, no-wrap
+msgid "`quarkus.kubernetes.env-vars.xxx.configmap=foobar`"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:435
+#, no-wrap
+msgid "`quarkus.kubernetes.env.configmaps=foobar`"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:436
+#, no-wrap
+msgid "All from `Secret`"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:436
+#, no-wrap
+msgid "`quarkus.kubernetes.env-vars.xxx.secret=foobar`"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:436
+#, no-wrap
+msgid "`quarkus.kubernetes.env.secrets=foobar`"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:437
+#, no-wrap
+msgid "From one `Secret` field"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:437
+#, no-wrap
+msgid "`quarkus.kubernetes.env-vars.foo.secret=foobar`"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:437
+#, no-wrap
+msgid "`quarkus.kubernetes.env.mapping.foo.from-secret=foobar`"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:438
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:440
+#, no-wrap
+msgid "`quarkus.kubernetes.env-vars.foo.value=field`"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:438
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:440
+#, no-wrap
+msgid "`quarkus.kubernetes.env.mapping.foo.with-key=field`"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:439
+#, no-wrap
+msgid "From one `ConfigMap` field"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:439
+#, no-wrap
+msgid "`quarkus.kubernetes.env-vars.foo.configmap=foobar`"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:439
+#, no-wrap
+msgid "`quarkus.kubernetes.env.mapping.foo.from-configmap=foobar`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:447
+msgid "If you redefine the same variable using the new syntax while keeping the old syntax, **ONLY** the new version will be kept and a warning will be issued to alert you of the problem.For example, if you define both `quarkus.kubernetes.env-vars.my-env-var.value=foobar` and `quarkus.kubernetes.env.vars.my-env-var=newValue`, the extension will only generate an environment variable `MY_ENV_VAR=newValue` and issue a warning."
+msgstr ""
+
+#. type: Title ====
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:448
+#, no-wrap
+msgid "Mounting volumes"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:452
+msgid "The Kubernetes extension allows the user to configure both volumes and mounts for the application.  Any volume can be mounted with a simple configuration:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:456
+#, no-wrap
+msgid "quarkus.kubernetes.mounts.my-volume.path=/where/to/mount\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:460
+msgid "This will add a mount to the pod for volume `my-volume` to path `/where/to/mount`.  The volumes themselves can be configured as shown in the sections below."
+msgstr ""
+
+#. type: Title =====
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:461
+#, no-wrap
+msgid "Secret volumes"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:466
+#, no-wrap
+msgid "quarkus.kubernetes.secret-volumes.my-volume.secret-name=my-secret\n"
+msgstr ""
+
+#. type: Title =====
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:468
+#, no-wrap
+msgid "ConfigMap volumes"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:473
+#, no-wrap
+msgid "quarkus.kubernetes.config-map-volumes.my-volume.config-map-name=my-secret\n"
+msgstr ""
+
+#. type: Title ====
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:475
+#, no-wrap
+msgid "Passing application configuration"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:479
+msgid "Quarkus supports passing configuration from external locations (via Smallrye Config). This usually requires setting an additional environment variable or system propertiy.  When you need to use a secret or a config map for the purpose of application configuration, you need to:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:481
+msgid "define a volume"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:482
+msgid "mount the volume"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:483
+msgid "create an environment variable for `SMALLRYE_CONFIG_LOCATIONS`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:485
+msgid "To simplify things, quarkus provides single step alternative:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:489
+#, no-wrap
+msgid "quarkus.kubernetes.app-secret=<name of the secret containing the configuration>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:492
+msgid "or"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:496
+#, no-wrap
+msgid "quarkus.kubernetes.app-config-map=<name of the config map containing the configuration>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:500
+msgid "When these properties are used, the generated manifests will contain everything required.  The application config volumes will be created using path: `/mnt/app-secret` and `/mnt/app-config-map` for secrets and configmaps respectively."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:502
+msgid "Note: Users may use both properties at the same time."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:503
+#, no-wrap
+msgid "Changing the number of replicas:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:506
+msgid "To change the number of replicas from 1 to 3:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:510
+#, no-wrap
+msgid "quarkus.kubernetes.replicas=3\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:512
+#, no-wrap
+msgid "Add readiness and liveness probes"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:515
+msgid "By default, the Kubernetes resources do not contain readiness and liveness probes in the generated `Deployment`. Adding them however is just a matter of adding the SmallRye Health extension like so:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:523
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-smallrye-health</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:529
+#, no-wrap
+msgid "implementation(\"io.quarkus:quarkus-smallrye-health\")\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:533
+msgid "The values of the generated probes will be determined by the configured health properties: `quarkus.smallrye-health.root-path`, `quarkus.smallrye-health.liveness-path` and `quarkus.smallrye-health.readiness-path`.  More information about the health extension can be found in the relevant xref:microprofile-health.adoc[guide]."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:534
+#, no-wrap
+msgid "Customizing the readiness probe:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:536
+msgid "To set the initial delay of the probe to 20 seconds and the period to 45:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:541
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:724
+#, no-wrap
+msgid ""
+"quarkus.kubernetes.readiness-probe.initial-delay=20s\n"
+"quarkus.kubernetes.readiness-probe.period=45s\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:543
+#, no-wrap
+msgid "Add hostAliases"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:545
+msgid "To add entries to a Pod's `/etc/hosts` file (more information can be found in https://kubernetes.io/docs/concepts/services-networking/add-entries-to-pod-etc-hosts-with-host-aliases/[Kubernetes documentation]), just apply the following configuration:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:549
+#, no-wrap
+msgid "quarkus.kubernetes.hostaliases.\"10.0.0.0\".hostnames=foo.com,bar.org\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:552
+msgid "This would generate the following `hostAliases` section in the `deployment` definition:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:564
+#, no-wrap
+msgid ""
+"kind: Deployment\n"
+"spec:\n"
+"  template:\n"
+"    spec:\n"
+"      hostAliases:\n"
+"      - hostnames:\n"
+"        - foo.com\n"
+"        - bar.org\n"
+"        ip: 10.0.0.0\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:566
+#, no-wrap
+msgid "Container Resources Management"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:569
+msgid "CPU & Memory limits and requests can be applied to a `Container` (more info in https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/[Kubernetes documentation]) using the following configuration:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:576
+#, no-wrap
+msgid ""
+"quarkus.kubernetes.resources.requests.memory=64Mi\n"
+"quarkus.kubernetes.resources.requests.cpu=250m\n"
+"quarkus.kubernetes.resources.limits.memory=512Mi\n"
+"quarkus.kubernetes.resources.limits.cpu=1000m\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:579
+msgid "This would generate the following entry in the `container` section:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:590
+#, no-wrap
+msgid ""
+"containers:\n"
+"  resources:\n"
+"    limits:\n"
+"      cpu: 1000m\n"
+"      memory: 512Mi\n"
+"    requests:\n"
+"      cpu: 250m\n"
+"      memory: 64Mi\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:592
+#, no-wrap
+msgid "Using the Kubernetes client"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:595
+msgid "Applications that are deployed to Kubernetes and need to access the API server will usually make use of the `kubernetes-client` extension:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:603
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-kubernetes-client</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:609
+#, no-wrap
+msgid "implementation(\"io.quarkus:quarkus-kubernetes-client\")\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:614
+msgid "To access the API server from within a Kubernetes cluster, some RBAC related resources are required (e.g. a ServiceAccount, a RoleBinding etc.).  So, when the `kubernetes-client` extension is present, the `kubernetes` extension is going to create those resources automatically, so that application will be granted the `view` role.  If more roles are required, they will have to be added manually."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:615
+#, no-wrap
+msgid "Deploying to Minikube"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:619
+msgid "https://github.com/kubernetes/minikube[Minikube] is quite popular when a Kubernetes cluster is needed for development purposes. To make the deployment to Minikube experience as frictionless as possible, Quarkus provides the `quarkus-minikube` extension. This extension can be added to a project like so:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:627
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-minikube</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:633
+#, no-wrap
+msgid "implementation(\"io.quarkus:quarkus-minikube\")\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:637
+msgid "The purpose of this extension is to generate Kubernetes manifests (`minikube.yaml` and `minikube.json`) that are tailored to Minikube.  This extension assumes a couple things:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:640
+msgid "Users won't be using an image registry and will instead make their container image accessible to the Kubernetes cluster by building it directly into Minikube's Docker daemon. To use Minikube's Docker daemon you must first execute:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:644
+#, no-wrap
+msgid "eval $(minikube -p minikube docker-env)\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:648
+msgid "Applications deployed to Kubernetes won't be accessed via a Kubernetes `Ingress`, but rather as a `NodePort` `Service`.  The advantage of doing this is that the URL of an application can be retrieved trivially by executing:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:652
+#, no-wrap
+msgid "minikube service list\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:656
+msgid "To control the https://kubernetes.io/docs/concepts/services-networking/service/#nodeport[nodePort] that is used in this case, users can set `quarkus.kubernetes.node-port`.  Note however that this configuration is entirely optional because Quarkus will automatically use a proper (and non-changing) value if none is set."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:659
+msgid "It is highly discouraged to use the manifests generated by the Minikube extension when deploying to production as these manifests are intended for development purposes only. When deploying to production, consider using the vanilla Kubernetes manifests (or the OpenShift ones when targeting OpenShift)."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:662
+msgid "If the assumptions the Minikube extension makes don't fit your workflow, nothing prevents you from using the regular Kubernetes extension to generate Kubernetes manifests and apply those to your Minikube cluster."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:663
+#, no-wrap
+msgid "Tuning the generated resources using application.properties"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:667
+msgid "The Kubernetes extension allows tuning the generated manifest, using the `application.properties` file.  Here are some examples:"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:668
+#, no-wrap
+msgid "Configuration options"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:671
+msgid "The table below describe all the available configuration options."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:674
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:751
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:760
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:771
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:780
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:795
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:803
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:811
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:819
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:828
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:839
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:848
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:856
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:863
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:962
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1062
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1104
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1113
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1123
+#, no-wrap
+msgid "Property"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:674
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:751
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:760
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:771
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:780
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:795
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:803
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:811
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:819
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:828
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:839
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:848
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:856
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:863
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:962
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1062
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1104
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1113
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1123
+#, no-wrap
+msgid "Type"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:674
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:751
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:760
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:771
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:780
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:795
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:803
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:811
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:819
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:828
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:839
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:848
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:856
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:863
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:962
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1062
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1104
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1113
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1123
+#, no-wrap
+msgid "Description"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:675
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:752
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:761
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:772
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:781
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:796
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:804
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:812
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:820
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:829
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:840
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:849
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:857
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:864
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:963
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1063
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1105
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1114
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1124
+#, no-wrap
+msgid "Default Value"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:675
+#, no-wrap
+msgid "quarkus.kubernetes.name"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:675
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:676
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:677
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:678
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:680
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:683
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:684
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:686
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:690
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:707
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:711
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:712
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:713
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:714
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:752
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:753
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:754
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:755
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:761
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:762
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:763
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:774
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:781
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:783
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:804
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:805
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:812
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:820
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:829
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:830
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:831
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:832
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:833
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:840
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:842
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:849
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:850
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:851
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:857
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:864
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:865
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:963
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:964
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:965
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:966
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:970
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:971
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:973
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:977
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:994
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1063
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1064
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1065
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1069
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1070
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1072
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1076
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1077
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1093
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1105
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1106
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1114
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1115
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1124
+#, no-wrap
+msgid "String"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:676
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:964
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1064
+#, no-wrap
+msgid "${quarkus.container-image.name}"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:676
+#, no-wrap
+msgid "quarkus.kubernetes.version"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:677
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:965
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1065
+#, no-wrap
+msgid "${quarkus.container-image.tag}"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:677
+#, no-wrap
+msgid "quarkus.kubernetes.deployment-kind"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:678
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1189
+#, no-wrap
+msgid "Deployment"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:678
+#, no-wrap
+msgid "quarkus.kubernetes.part-of"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:679
+#, no-wrap
+msgid "quarkus.kubernetes.init-containers"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:679
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:705
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:967
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:992
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1066
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1092
+#, no-wrap
+msgid "Map<String, Container>"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:680
+#, no-wrap
+msgid "quarkus.kubernetes.namespace"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:681
+#, no-wrap
+msgid "quarkus.kubernetes.labels"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:681
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:682
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:968
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:969
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1067
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1068
+#, no-wrap
+msgid "Map"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:682
+#, no-wrap
+msgid "quarkus.kubernetes.annotations"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:683
+#, no-wrap
+msgid "quarkus.kubernetes.app-secret"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:684
+#, no-wrap
+msgid "quarkus.kubernetes.app-config-map"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:685
+#, no-wrap
+msgid "quarkus.kubernetes.env-vars"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:685
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:972
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1071
+#, no-wrap
+msgid "Map<String, Env>"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:686
+#, no-wrap
+msgid "quarkus.kubernetes.working-dir"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:687
+#, no-wrap
+msgid "quarkus.kubernetes.command"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:687
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:688
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:702
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:784
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:785
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:796
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:974
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:975
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:989
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1073
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1074
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1089
+#, no-wrap
+msgid "String[]"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:688
+#, no-wrap
+msgid "quarkus.kubernetes.arguments"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:689
+#, no-wrap
+msgid "quarkus.kubernetes.replicas"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:689
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:772
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:773
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:813
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:821
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:841
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:976
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1075
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1095
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1096
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1116
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1117
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1118
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1125
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1126
+#, no-wrap
+msgid "int"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:690
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:977
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1076
+#, no-wrap
+msgid "1"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:690
+#, no-wrap
+msgid "quarkus.kubernetes.service-account"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:691
+#, no-wrap
+msgid "quarkus.kubernetes.ports"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:691
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:978
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1078
+#, no-wrap
+msgid "Map<String, Port>"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:692
+#, no-wrap
+msgid "quarkus.kubernetes.service-type"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:692
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:746
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:979
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1079
+#, no-wrap
+msgid "ServiceType"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:693
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:980
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1080
+#, no-wrap
+msgid "ClusterIP"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:693
+#, no-wrap
+msgid "quarkus.kubernetes.pvc-volumes"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:693
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:980
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1080
+#, no-wrap
+msgid "Map<String, PersistentVolumeClaimVolume>"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:694
+#, no-wrap
+msgid "quarkus.kubernetes.secret-volumes"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:694
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:981
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1081
+#, no-wrap
+msgid "Map<String, SecretVolume>"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:695
+#, no-wrap
+msgid "quarkus.kubernetes.config-map-volumes"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:695
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:982
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1082
+#, no-wrap
+msgid "Map<String, ConfigMapVolume>"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:696
+#, no-wrap
+msgid "quarkus.kubernetes.git-repo-volumes"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:696
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:983
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1083
+#, no-wrap
+msgid "Map<String, GitRepoVolume>"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:697
+#, no-wrap
+msgid "quarkus.kubernetes.aws-elastic-block-store-volumes"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:697
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:984
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1084
+#, no-wrap
+msgid "Map<String, AwsElasticBlockStoreVolume>"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:698
+#, no-wrap
+msgid "quarkus.kubernetes.azure-disk-volumes"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:698
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:985
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1085
+#, no-wrap
+msgid "Map<String, AzureDiskVolume>"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:699
+#, no-wrap
+msgid "quarkus.kubernetes.azure-file-volumes"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:699
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:986
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1086
+#, no-wrap
+msgid "Map<String, AzureFileVolume>"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:700
+#, no-wrap
+msgid "quarkus.kubernetes.mounts"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:700
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:987
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1087
+#, no-wrap
+msgid "Map<String, Mount>"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:701
+#, no-wrap
+msgid "quarkus.kubernetes.image-pull-policy"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:701
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:788
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:988
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1088
+#, no-wrap
+msgid "ImagePullPolicy"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:702
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:789
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:989
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1089
+#, no-wrap
+msgid "Always"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:702
+#, no-wrap
+msgid "quarkus.kubernetes.image-pull-secrets"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:703
+#, no-wrap
+msgid "quarkus.kubernetes.liveness-probe"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:703
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:704
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:758
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:789
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:790
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:990
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:991
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1090
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1091
+#, no-wrap
+msgid "Probe"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:704
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:705
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:991
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:992
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1091
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1092
+#, no-wrap
+msgid "( see Probe )"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:704
+#, no-wrap
+msgid "quarkus.kubernetes.readiness-probe"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:705
+#, no-wrap
+msgid "quarkus.kubernetes.sidecars"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:706
+#, no-wrap
+msgid "quarkus.kubernetes.ingress.expose"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:706
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:709
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:806
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:814
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:822
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:834
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:843
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:858
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:866
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:993
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:996
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1097
+#, no-wrap
+msgid "boolean"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:707
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:710
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:807
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:815
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:823
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:835
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:844
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:859
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:867
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:994
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:997
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1108
+#, no-wrap
+msgid "false"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:707
+#, no-wrap
+msgid "quarkus.kubernetes.ingress.host"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:708
+#, no-wrap
+msgid "quarkus.kubernetes.ingress.annotations"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:708
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:995
+#, no-wrap
+msgid "Map<String, String>"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:709
+#, no-wrap
+msgid "quarkus.kubernetes.headless"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:710
+#, no-wrap
+msgid "quarkus.kubernetes.hostaliases"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:710
+#, no-wrap
+msgid "Map<String, HostAlias>"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:711
+#, no-wrap
+msgid "quarkus.kubernetes.resources.requests.cpu"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:712
+#, no-wrap
+msgid "quarkus.kubernetes.resources.requests.memory"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:713
+#, no-wrap
+msgid "quarkus.kubernetes.resources.limits.cpu"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:714
+#, no-wrap
+msgid "quarkus.kubernetes.resources.limits.memory"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:719
+msgid "Properties that use non-standard types, can be referenced by expanding the property.  For example to define a `kubernetes-readiness-probe` which is of type `Probe`:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:728
+msgid "In this example `initial-delay` and `period` are fields of the type `Probe`.  Below you will find tables describing all available types."
+msgstr ""
+
+#. type: Title ====
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:729
+#, no-wrap
+msgid "Client Connection Configuration"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:732
+msgid "You may need to configure the connection to your Kubernetes cluster.  By default, it automatically uses the active _context_ used by `kubectl`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:734
+msgid "For instance, if your cluster API endpoint uses a self-signed SSL Certificate you need to explicitly configure the client to trust it. You can achieve this by defining the following property:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:738
+#, no-wrap
+msgid "quarkus.kubernetes-client.trust-certs=true\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:741
+msgid "The full list of the Kuberneters client configuration properties is provided below."
+msgstr ""
+
+#. type: Title ====
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:744
+#, no-wrap
+msgid "Basic Types"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:748
+msgid "Allowed values: `cluster-ip`, `node-port`, `load-balancer`, `external-name`"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:749
+#, no-wrap
+msgid "Env"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:752
+#, no-wrap
+msgid "value"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:753
+#, no-wrap
+msgid "secret"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:754
+#, no-wrap
+msgid "configmap"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:755
+#, no-wrap
+msgid "field"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:761
+#, no-wrap
+msgid "http-action-path"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:762
+#, no-wrap
+msgid "exec-action"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:763
+#, no-wrap
+msgid "tcp-socket-action"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:764
+#, no-wrap
+msgid "initial-delay"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:764
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:765
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:766
+#, no-wrap
+msgid "Duration"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:765
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:774
+#, no-wrap
+msgid "0"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:765
+#, no-wrap
+msgid "period"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:766
+#, no-wrap
+msgid "30s"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:766
+#, no-wrap
+msgid "timeout"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:767
+#, no-wrap
+msgid "10s"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:769
+#, no-wrap
+msgid "Port"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:772
+#, no-wrap
+msgid "container-port"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:773
+#, no-wrap
+msgid "host-port"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:774
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:804
+#, no-wrap
+msgid "path"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:775
+#, no-wrap
+msgid "/"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:775
+#, no-wrap
+msgid "protocol"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:775
+#, no-wrap
+msgid "Protocol"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:776
+#, no-wrap
+msgid "TCP"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:778
+#, no-wrap
+msgid "Container"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:781
+#, no-wrap
+msgid "image"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:782
+#, no-wrap
+msgid "env-vars"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:782
+#, no-wrap
+msgid "Env[]"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:783
+#, no-wrap
+msgid "working-dir"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:784
+#, no-wrap
+msgid "command"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:785
+#, no-wrap
+msgid "arguments"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:786
+#, no-wrap
+msgid "ports"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:786
+#, no-wrap
+msgid "Port[]"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:787
+#, no-wrap
+msgid "mounts"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:787
+#, no-wrap
+msgid "Mount[]"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:788
+#, no-wrap
+msgid "image-pull-policy"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:789
+#, no-wrap
+msgid "liveness-probe"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:790
+#, no-wrap
+msgid "readiness-probe"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:793
+#, no-wrap
+msgid "HostAlias"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:796
+#, no-wrap
+msgid "hostnames"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:796
+#, no-wrap
+msgid "list of hostnames"
+msgstr ""
+
+#. type: Title ====
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:799
+#, no-wrap
+msgid "Mounts and Volumes"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:801
+#, no-wrap
+msgid "Mount"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:805
+#, no-wrap
+msgid "sub-path"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:806
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:834
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:843
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:858
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:866
+#, no-wrap
+msgid "read-only"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:809
+#, no-wrap
+msgid "ConfigMapVolume"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:812
+#, no-wrap
+msgid "config-map-name"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:813
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:821
+#, no-wrap
+msgid "default-mode"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:814
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:822
+#, no-wrap
+msgid "0600"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:814
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:822
+#, no-wrap
+msgid "optional"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:817
+#, no-wrap
+msgid "SecretVolume"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:820
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:865
+#, no-wrap
+msgid "secret-name"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:826
+#, no-wrap
+msgid "AzureDiskVolume"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:829
+#, no-wrap
+msgid "disk-name"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:830
+#, no-wrap
+msgid "disk-uri"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:831
+#, no-wrap
+msgid "kind"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:832
+#, no-wrap
+msgid "Managed"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:832
+#, no-wrap
+msgid "caching-mode"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:833
+#, no-wrap
+msgid "ReadWrite"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:833
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:842
+#, no-wrap
+msgid "fs-type"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:834
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:843
+#, no-wrap
+msgid "ext4"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:837
+#, no-wrap
+msgid "AwsElasticBlockStoreVolume"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:840
+#, no-wrap
+msgid "volume-id"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:841
+#, no-wrap
+msgid "partition"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:846
+#, no-wrap
+msgid "GitRepoVolume"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:849
+#, no-wrap
+msgid "repository"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:850
+#, no-wrap
+msgid "directory"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:851
+#, no-wrap
+msgid "revision"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:854
+#, no-wrap
+msgid "PersistentVolumeClaimVolume"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:857
+#, no-wrap
+msgid "claim-name"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:861
+#, no-wrap
+msgid "AzureFileVolume"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:864
+#, no-wrap
+msgid "share-name"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:870
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:960
+#, no-wrap
+msgid "OpenShift"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:873
+msgid "One way to deploy an application to OpenShift is to use s2i (source to image) to create an image stream from the source and then deploy the image stream:"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:875
+#, no-wrap
+msgid "CLI"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:879
+#, no-wrap
+msgid ""
+"quarkus extension remove kubernetes,jib\n"
+"quarkus extension add openshift\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:882
+#, no-wrap
+msgid ""
+"oc new-project quarkus-project\n"
+"quarkus build -Dquarkus.container-image.build=true \n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:887
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:902
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:917
+#, no-wrap
+msgid ""
+"oc new-app --name=greeting  quarkus-project/kubernetes-quickstart:1.0.0-SNAPSHOT\n"
+"oc expose svc/greeting\n"
+"oc get route\n"
+"curl <route>/greeting\n"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:890
+#, no-wrap
+msgid "Maven"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:894
+#, no-wrap
+msgid ""
+"./mvnw quarkus:remove-extension -Dextensions=\"kubernetes, jib\"\n"
+"./mvnw quarkus:add-extension -Dextensions=\"openshift\"\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:897
+#, no-wrap
+msgid ""
+"oc new-project quarkus-project\n"
+"./mvnw clean package -Dquarkus.container-image.build=true \n"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:905
+#, no-wrap
+msgid "Gradle"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:909
+#, no-wrap
+msgid ""
+"./gradlew removeExtension --extensions=\"kubernetes, jib\"\n"
+"./gradlew addExtension --extensions=\"openshift\"\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:912
+#, no-wrap
+msgid ""
+"oc new-project quarkus-project\n"
+"./gradlew build -Dquarkus.container-image.build=true \n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:920
+msgid "See further information in xref:deploying-to-openshift.adoc[Deploying to OpenShift]."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:922
+#, no-wrap
+msgid "A description of OpenShift resources and customisable properties is given below alongside Kubernetes resources to show similarities where applicable.   This includes an alternative to  `oc new-app ...` above, i.e. `oc apply -f target/kubernetes/openshift.json` .\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:924
+msgid "To enable the generation of OpenShift resources, you need to include OpenShift in the target platforms:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:928
+#, no-wrap
+msgid "quarkus.kubernetes.deployment-target=openshift\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:931
+msgid "If you need to generate resources for both platforms (vanilla Kubernetes and OpenShift), then you need to include both (comma separated)."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:935
+#, no-wrap
+msgid "quarkus.kubernetes.deployment-target=kubernetes,openshift\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:939
+msgid "Following the execution of `./mvnw package -Dquarkus.container-image.build=true` you will notice amongst the other files that are created, two files named `openshift.json` and `openshift.yml` in the `target/kubernetes/` directory."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:941
+msgid "These manifests can be deployed as is to a running cluster, using `kubectl`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:945
+#, no-wrap
+msgid "kubectl apply -f target/kubernetes/openshift.json\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:948
+msgid "OpenShift users might want to use `oc` rather than `kubectl`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:952
+#, no-wrap
+msgid "oc apply -f target/kubernetes/openshift.json\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:957
+msgid "Quarkus also provides the xref:deploying-to-openshift.adoc[OpenShift] extension. This extension is basically a wrapper around the Kubernetes extension and relieves OpenShift users of the necessity of setting the `deployment-target` property to `openshift`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:959
+msgid "The OpenShift resources can be customized in a similar approach with Kubernetes."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:963
+#, no-wrap
+msgid "quarkus.openshift.name"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:964
+#, no-wrap
+msgid "quarkus.openshift.version"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:965
+#, no-wrap
+msgid "quarkus.openshift.deployment-kind"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:966
+#, no-wrap
+msgid "DeploymentConfig"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:966
+#, no-wrap
+msgid "quarkus.openshift.part-of"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:967
+#, no-wrap
+msgid "quarkus.openshift.init-containers"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:968
+#, no-wrap
+msgid "quarkus.openshift.labels"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:969
+#, no-wrap
+msgid "quarkus.openshift.annotations"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:970
+#, no-wrap
+msgid "quarkus.openshift.app-secret"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:971
+#, no-wrap
+msgid "quarkus.openshift.app-config-map"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:972
+#, no-wrap
+msgid "quarkus.openshift.env-vars"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:973
+#, no-wrap
+msgid "quarkus.openshift.working-dir"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:974
+#, no-wrap
+msgid "quarkus.openshift.command"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:975
+#, no-wrap
+msgid "quarkus.openshift.arguments"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:976
+#, no-wrap
+msgid "quarkus.openshift.replicas"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:977
+#, no-wrap
+msgid "quarkus.openshift.service-account"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:978
+#, no-wrap
+msgid "quarkus.openshift.ports"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:979
+#, no-wrap
+msgid "quarkus.openshift.service-type"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:980
+#, no-wrap
+msgid "quarkus.openshift.pvc-volumes"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:981
+#, no-wrap
+msgid "quarkus.openshift.secret-volumes"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:982
+#, no-wrap
+msgid "quarkus.openshift.config-map-volumes"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:983
+#, no-wrap
+msgid "quarkus.openshift.git-repo-volumes"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:984
+#, no-wrap
+msgid "quarkus.openshift.aws-elastic-block-store-volumes"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:985
+#, no-wrap
+msgid "quarkus.openshift.azure-disk-volumes"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:986
+#, no-wrap
+msgid "quarkus.openshift.azure-file-volumes"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:987
+#, no-wrap
+msgid "quarkus.openshift.mounts"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:988
+#, no-wrap
+msgid "quarkus.openshift.image-pull-policy"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:989
+#, no-wrap
+msgid "quarkus.openshift.image-pull-secrets"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:990
+#, no-wrap
+msgid "quarkus.openshift.liveness-probe"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:991
+#, no-wrap
+msgid "quarkus.openshift.readiness-probe"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:992
+#, no-wrap
+msgid "quarkus.openshift.sidecars"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:993
+#, no-wrap
+msgid "quarkus.openshift.route.expose"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:994
+#, no-wrap
+msgid "quarkus.openshift.route.host"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:995
+#, no-wrap
+msgid "quarkus.openshift.route.annotations"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:996
+#, no-wrap
+msgid "quarkus.openshift.headless"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1000
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1060
+#, no-wrap
+msgid "Knative"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1003
+msgid "To enable the generation of Knative resources, you need to include Knative in the target platforms:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1007
+#, no-wrap
+msgid "quarkus.kubernetes.deployment-target=knative\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1011
+msgid "Following the execution of `./mvnw package` you will notice amongst the other files that are created, two files named `knative.json` and `knative.yml` in the `target/kubernetes/` directory."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1013
+msgid "If you look at either file you will see that it contains a Knative `Service`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1015
+msgid "The full source of the `knative.json` file looks something like this:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1049
+#, no-wrap
+msgid ""
+"{\n"
+"  {\n"
+"    \"apiVersion\" : \"serving.quarkus.knative.dev/v1alpha1\",\n"
+"    \"kind\" : \"Service\",\n"
+"    \"metadata\" : {\n"
+"      \"annotations\": {\n"
+"       \"app.quarkus.io/vcs-url\" : \"<some url>\",\n"
+"       \"app.quarkus.io/commit-id\" : \"<some git SHA>\"\n"
+"      },\n"
+"      \"labels\" : {\n"
+"        \"app.kubernetes.io/name\" : \"test-quarkus-app\",\n"
+"        \"app.kubernetes.io/version\" : \"1.0.0-SNAPSHOT\"\n"
+"      },\n"
+"      \"name\" : \"knative\"\n"
+"    },\n"
+"    \"spec\" : {\n"
+"      \"runLatest\" : {\n"
+"        \"configuration\" : {\n"
+"          \"revisionTemplate\" : {\n"
+"            \"spec\" : {\n"
+"              \"container\" : {\n"
+"                \"image\" : \"dev.local/yourDockerUsername/test-quarkus-app:1.0.0-SNAPSHOT\",\n"
+"                \"imagePullPolicy\" : \"Always\"\n"
+"              }\n"
+"            }\n"
+"          }\n"
+"        }\n"
+"      }\n"
+"    }\n"
+"  }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1052
+msgid "The generated manifest can be deployed as is to a running cluster, using `kubectl`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1056
+#, no-wrap
+msgid "kubectl apply -f target/kubernetes/knative.json\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1059
+msgid "The generated service can be customized using the following properties:"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1063
+#, no-wrap
+msgid "quarkus.knative.name"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1064
+#, no-wrap
+msgid "quarkus.knative.version"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1065
+#, no-wrap
+msgid "quarkus.knative.part-of"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1066
+#, no-wrap
+msgid "quarkus.knative.init-containers"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1067
+#, no-wrap
+msgid "quarkus.knative.labels"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1068
+#, no-wrap
+msgid "quarkus.knative.annotations"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1069
+#, no-wrap
+msgid "quarkus.knative.app-secret"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1070
+#, no-wrap
+msgid "quarkus.knative.app-config-map"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1071
+#, no-wrap
+msgid "quarkus.knative.env-vars"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1072
+#, no-wrap
+msgid "quarkus.knative.working-dir"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1073
+#, no-wrap
+msgid "quarkus.knative.command"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1074
+#, no-wrap
+msgid "quarkus.knative.arguments"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1075
+#, no-wrap
+msgid "quarkus.knative.replicas"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1076
+#, no-wrap
+msgid "quarkus.knative.service-account"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1077
+#, no-wrap
+msgid "quarkus.knative.host"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1078
+#, no-wrap
+msgid "quarkus.knative.ports"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1079
+#, no-wrap
+msgid "quarkus.knative.service-type"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1080
+#, no-wrap
+msgid "quarkus.knative.pvc-volumes"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1081
+#, no-wrap
+msgid "quarkus.knative.secret-volumes"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1082
+#, no-wrap
+msgid "quarkus.knative.config-map-volumes"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1083
+#, no-wrap
+msgid "quarkus.knative.git-repo-volumes"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1084
+#, no-wrap
+msgid "quarkus.knative.aws-elastic-block-store-volumes"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1085
+#, no-wrap
+msgid "quarkus.knative.azure-disk-volumes"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1086
+#, no-wrap
+msgid "quarkus.knative.azure-file-volumes"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1087
+#, no-wrap
+msgid "quarkus.knative.mounts"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1088
+#, no-wrap
+msgid "quarkus.knative.image-pull-policy"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1089
+#, no-wrap
+msgid "quarkus.knative.image-pull-secrets"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1090
+#, no-wrap
+msgid "quarkus.knative.liveness-probe"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1091
+#, no-wrap
+msgid "quarkus.knative.readiness-probe"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1092
+#, no-wrap
+msgid "quarkus.knative.sidecars"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1093
+#, no-wrap
+msgid "quarkus.knative.revision-name"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1094
+#, no-wrap
+msgid "quarkus.knative.traffic"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1094
+#, no-wrap
+msgid "Traffic[]"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1095
+#, no-wrap
+msgid "( see Traffic )"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1095
+#, no-wrap
+msgid "quarkus.knative.min-scale"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1095
+#, no-wrap
+msgid "See link:https://knative.dev/docs/serving/autoscaling/scale-bounds/#lower-bound[link]"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1096
+#, no-wrap
+msgid "quarkus.knative.max-scale"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1096
+#, no-wrap
+msgid "See link:https://knative.dev/docs/serving/autoscaling/scale-bounds/#upper-bound[link]"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1097
+#, no-wrap
+msgid "quarkus.knative.scale-to-zero-enabled"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1097
+#, no-wrap
+msgid "See link:https://knative.dev/docs/serving/autoscaling/scale-to-zero/#enable-scale-to-zero[link]"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1098
+#, no-wrap
+msgid "true"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1098
+#, no-wrap
+msgid "quarkus.knative.revision-auto-scaling"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1098
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1111
+#, no-wrap
+msgid "AutoScalingConfig"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1099
+#, no-wrap
+msgid "( see AutoScalingConfig )"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1099
+#, no-wrap
+msgid "quarkus.knative.global-auto-scaling"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1099
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1121
+#, no-wrap
+msgid "GlobalAutoScalingConfig"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1100
+#, no-wrap
+msgid "( see GlobalAutoScalingConfig )"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1102
+#, no-wrap
+msgid "Traffic"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1105
+#, no-wrap
+msgid "revision-name"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1105
+#, no-wrap
+msgid "A specific revision to which to send this portion of traffic"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1106
+#, no-wrap
+msgid "tag"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1106
+#, no-wrap
+msgid "Expose a dedicated url for referncing this target"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1107
+#, no-wrap
+msgid "latest-revision"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1107
+#, no-wrap
+msgid "Boolean"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1107
+#, no-wrap
+msgid "Optionally provided to indicate that the latest revision should be used for this traffic target"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1108
+#, no-wrap
+msgid "percent"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1108
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1127
+#, no-wrap
+msgid "Logn"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1108
+#, no-wrap
+msgid "Indicates the percent of traffic that is be routed to this revision"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1109
+#, no-wrap
+msgid "100"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1114
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1124
+#, no-wrap
+msgid "auto-scaler-class"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1114
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1124
+#, no-wrap
+msgid "The auto-scaler class. Possible values: `kpa` for Knative Pod Autoscaler, `hpa` for Horizontal Pod Autoscaler"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1115
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1125
+#, no-wrap
+msgid "kpa"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1115
+#, no-wrap
+msgid "metric"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1115
+#, no-wrap
+msgid "The autoscaling metric to use. Possible values (concurency, rps, cpu)"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1116
+#, no-wrap
+msgid "target"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1116
+#, no-wrap
+msgid "This value specifies the autoscaling target"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1117
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1125
+#, no-wrap
+msgid "container-concurrency"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1117
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1125
+#, no-wrap
+msgid "The exact amount of requests allowed to the replica at a time"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1118
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1126
+#, no-wrap
+msgid "target-utilization-percentage"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1118
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1126
+#, no-wrap
+msgid "This value specifies a percentage of the target to actually be targeted by the autoscaler"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1127
+#, no-wrap
+msgid "requests-per-second"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1127
+#, no-wrap
+msgid "The requests per second per replica"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1130
+#, no-wrap
+msgid "Deployment targets"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1134
+msgid "Mentioned in the previous sections was the concept of `deployment-target`. This concept allows users to control which Kubernetes manifests will be generated and deployed to a cluster (if `quarkus.kubernetes.deploy` has been set to `true`)."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1138
+msgid "By default, when no `deployment-target` is set, then only vanilla Kubernetes resources are generated and deployed. When multiple values are set (for example `quarkus.kubernetes.deployment-target=kubernetes,openshift`) then the resources for all targets are generated, but only the resources that correspond to the *first* target are applied to the cluster (if deployment is enabled)."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1143
+msgid "In the case of wrapper extensions like OpenShift and Minikube, when these extensions have been explicitly added to the project, the default `deployment-target` is set by those extensions. For example if `quarkus-minikube` has been added to a project, then `minikube` becomes the default deployment target and its resources will be applied to the Kubernetes cluster when deployment via `quarkus.kubernetes.deploy` has been set.  Users can still override the deployment-targets manually using `quarkus.kubernetes.deployment-target`."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1144
+#, no-wrap
+msgid "Deprecated configuration"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1147
+msgid "The following categories of configuration properties have been deprecated."
+msgstr ""
+
+#. type: Title ====
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1148
+#, no-wrap
+msgid "Properties without the quarkus prefix"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1151
+msgid "In earlier versions of the extension, the `quarkus.` was missing from those properties. These properties are now deprecated."
+msgstr ""
+
+#. type: Title ====
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1152
+#, no-wrap
+msgid "Docker and S2i properties"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1155
+msgid "The properties for configuring `docker` and `s2i` are also deprecated in favor of the new container-image extensions."
+msgstr ""
+
+#. type: Title ====
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1156
+#, no-wrap
+msgid "Config group arrays"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1159
+msgid "Properties referring to config group arrays (e.g. `kubernetes.labels[0]`, `kubernetes.env-vars[0]` etc) have been converted to maps, to align with the rest of the Quarkus ecosystem."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1161
+msgid "The code below demonstrates the change in `labels` config:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1167
+#, no-wrap
+msgid ""
+"# Old labels config:\n"
+"kubernetes.labels[0].name=foo\n"
+"kubernetes.labels[0].value=bar\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1170
+#, no-wrap
+msgid ""
+"# New labels\n"
+"quarkus.kubernetes.labels.foo=bar\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1173
+msgid "The code below demonstrates the change in `env-vars` config:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1179
+#, no-wrap
+msgid ""
+"# Old env-vars config:\n"
+"kubernetes.env-vars[0].name=foo\n"
+"kubernetes.env-vars[0].configmap=my-configmap\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1182
+#, no-wrap
+msgid ""
+"# New env-vars\n"
+"quarkus.kubernetes.env-vars.foo.configmap=myconfigmap\n"
+msgstr ""
+
+#. type: Title ====
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1184
+#, no-wrap
+msgid "`env-vars` properties"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1188
+msgid "`quarkus.kubernetes.env-vars` are deprecated (though still currently supported as of this writing) and the new declaration style should be used instead.  See <<#env-vars>> and more specifically <<env-vars-backwards>> for more details."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1193
+msgid "To trigger building and deploying a container image you need to enable the `quarkus.kubernetes.deploy` flag (the flag is disabled by default - furthermore it has no effect during test runs or dev mode).  This can be easily done with the command line:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1197
+#, no-wrap
+msgid "./mvnw clean package -Dquarkus.kubernetes.deploy=true\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1199
+#, no-wrap
+msgid "Building a container image"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1202
+msgid "Building a container image is possible, using any of the 3 available `container-image` extensions:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1204
+msgid "xref:container-image.adoc#docker[Docker]"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1205
+msgid "xref:container-image.adoc#jib[Jib]"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1206
+msgid "xref:container-image.adoc#s2i[s2i]"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1208
+msgid "Each time deployment is requested, a container image build will be implicitly triggered (no additional properties are required when the Kubernetes deployment has been enabled)."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1209
+#, no-wrap
+msgid "Deploying"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1214
+msgid "When deployment is enabled, the Kubernetes extension will select the resources specified by `quarkus.kubernetes.deployment-target` and deploy them.  This assumes that a `.kube/config` is available in your user directory that points to the target Kubernetes cluster.  In other words the extension will use whatever cluster `kubectl` uses. The same applies to credentials."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1216
+msgid "At the moment no additional options are provided for further customization."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1217
+#, no-wrap
+msgid "Using existing resources"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1223
+msgid "Sometimes it's desirable to either provide additional resources (e.g. a ConfigMap, a Secret, a Deployment for a database etc) or provide custom ones that will be used as a `base` for the generation process.  Those resources can be added under `src/main/kubernetes` directory and can be named after the target environment (e.g. kubernetes.json, openshift.json, knative.json, or the yml equivalents). The correlation between provided and generated files is done by file name.  So, a `kubernetes.json`/`kubernetes.yml` file added in `src/main/kubernetes` will only affect the generated `kubernetes.json`/`kubernetes.yml`. An `openshift.json`/`openshift.yml` file added in `src/main/kubernetes` will only affect the generated `openshift.json`/`openshift.yml`.  A `knative.json`/`knative.yml` file added in `src/main/kubernetes` will only affect the generated `knative.json`/`knative.yml` and so on. The provided file may be either in json or yaml format and may contain one or more resources. These resources will end up in both generated formats (json and yaml). For example, a secret added in `src/main/kubernetes/kubernetes.yml` will be added to both the generated `kubernetes.yml` and `kubernetes.json`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1225
+msgid "Note: At the time of writing there is no mechanism in place that allows a one to many relationship between provided and generated files. Minikube is not an exception to the rule above, so if you want to customize the generated minikube manifests, the file placed under `src/main/kubernetes` will have to be named `minikube.json` or `minikube.yml` (naming it `kubernetes.yml` or `kubernetes.json` will result in having only the generated `kubernetes.yml` and `kubernetes.json` affected)."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1228
+msgid "Any resource found will be added in the generated manifests. Global modifications (e.g. labels, annotations etc) will also be applied to those resources.  If one of the provided resources has the same name as one of the generated ones, then the generated resource will be created on top of the provided resource, respecting existing content when possible (e.g. existing labels, annotations, environment variables, mounts, replicas etc)."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1230
+msgid "The name of the resource is determined by the application name and may be overridden by `quarkus.kubernetes.name`, `quarkus.openshift.name` and `quarkus.knative.name`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1232
+msgid "For example, in the `kubernetes-quickstart` application, we can add a `kubernetes.yml` file in the `src/main/kubernetes` that looks like:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1259
+#, no-wrap
+msgid ""
+"apiVersion: apps/v1\n"
+"kind: Deployment\n"
+"metadata:\n"
+"  name: kubernetes-quickstart\n"
+"  labels:\n"
+"    app: quickstart\n"
+"spec:\n"
+"  replicas: 3\n"
+"  selector:\n"
+"    matchLabels:\n"
+"      app: quickstart\n"
+"  template:\n"
+"    metadata:\n"
+"      labels:\n"
+"        app: quickstart\n"
+"    spec:\n"
+"      containers:\n"
+"      - name: kubernetes-quickstart\n"
+"        image: someimage:latest\n"
+"        ports:\n"
+"        - containerPort: 80\n"
+"        env:\n"
+"        - name: FOO\n"
+"          value: BAR\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1262
+msgid "The generated `kubernetes.yml` will look like:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1298
+#, no-wrap
+msgid ""
+"apiVersion: \"apps/v1\"\n"
+"kind: \"Deployment\"\n"
+"metadata:\n"
+"  annotations:\n"
+"    app.quarkus.io/build-timestamp: \"2020-04-10 - 12:54:37 +0000\"\n"
+"  labels:\n"
+"    app: \"quickstart\"\n"
+"  name: \"kubernetes-quickstart\"\n"
+"spec:\n"
+"  replicas: 3 <1>\n"
+"  selector:\n"
+"    matchLabels:\n"
+"      app.kubernetes.io/name: \"kubernetes-quickstart\"\n"
+"      app.kubernetes.io/version: \"1.0.0-SNAPSHOT\"\n"
+"  template:\n"
+"    metadata:\n"
+"      annotations:\n"
+"        app.quarkus.io/build-timestamp: \"2020-04-10 - 12:54:37 +0000\"\n"
+"      labels:\n"
+"        app: \"quickstart\" <2>\n"
+"    spec:\n"
+"      containers:\n"
+"      - env:\n"
+"        - name: \"FOO\" <3>\n"
+"          value: \"BAR\"\n"
+"        image: \"<<yourDockerUsername>>/kubernetes-quickstart:1.0.0-SNAPSHOT\" <4>\n"
+"        imagePullPolicy: \"Always\"\n"
+"        name: \"kubernetes-quickstart\"\n"
+"        ports:\n"
+"        - containerPort: 8080 <5>\n"
+"          name: \"http\"\n"
+"          protocol: \"TCP\"\n"
+"      serviceAccount: \"kubernetes-quickstart\"\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1301
+msgid "The provided replicas <1>, labels <2> and environment variables <3> were retained. However, the image <4> and container port <5> were modified. Moreover, the default annotations have been added."
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1305
+msgid "When the resource name does not match the application name (or the overridden name) rather than reusing the resource a new one will be added. Same goes for the container."
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1307
+msgid "When the name of the container does not match the application name (or the overridden name), container specific configuration will be ignored."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1309
+#, no-wrap
+msgid "Service Binding [[service_binding]]"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1312
+msgid "Quarkus supports the link:https://github.com/k8s-service-bindings/spec[Service Binding Specification for Kubernetes] to bind services to applications."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1314
+msgid "Specifically, Quarkus implements the link:https://github.com/k8s-service-bindings/spec#workload-projection[Workload Projection] part of the specification, therefore allowing applications to bind to services, such as a Database or a Broker, without the need for user configuration."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1316
+msgid "To enable Service Binding for supported extensions, add the `quarkus-kubernetes-service-binding` extension to the application dependencies."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1318
+msgid "The following extensions can be used with Service Binding and are supported for Workload Projection:"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1321
+msgid "`quarkus-jdbc-mariadb`"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1322
+msgid "`quarkus-jdbc-mssql`"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1323
+msgid "`quarkus-jdbc-mysql`"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1324
+msgid "`quarkus-jdbc-postgresql`"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1325
+msgid "`quarkus-mongo-client`"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1327
+msgid "`quarkus-kafka-client`"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1328
+msgid "`quarkus-smallrye-reactive-messaging-kafka`"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1331
+#, no-wrap
+msgid "Workload Projection"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1334
+msgid "Workload Projection is a process of obtaining the configuration for services from the Kubernetes cluster. This configuration takes the form of directory structures that follow certain conventions and is attached to an application or to a service as a mounted volume. The `kubernetes-service-binding` extension uses this directory structure to create configuration sources, which allows you to configure additional modules, such as databases or message brokers."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1336
+msgid "During application development, users can use workload projection to connect their application to a development database, or other locally-run services, without changing the actual application code or configuration."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1338
+msgid "For an example of a workload projection where the directory structure is included in the test resources and passed to integration test, see the link:https://github.com/quarkusio/quarkus/tree/e7efe6b3efba91b9c4ae26f9318f8397e23e7505/integration-tests/kubernetes-service-binding-jdbc/src/test/resources/k8s-sb[Kubernetes Service Binding datasource] GitHub repository."
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1342
+msgid "The `k8s-sb` directory is the root of all service bindings. In this example, only one database called `fruit-db` is intended to be bound. This binding database has the `type` file, that indicates `postgresql` as the database type, while the other files in the directory provide the necessary information to establish the connection."
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1344
+msgid "After your Quarkus project obtains information from `SERVICE_BINDING_ROOT` environment variables that are set by OpenShift, you can locate generated configuration files that are present in the file system and use them to map the configuration-file values to properties of certain extensions."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1347
+#, no-wrap
+msgid "Introduction to the Service Binding Operator"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1350
+msgid "The link:https://github.com/redhat-developer/service-binding-operator[Service Binding Operator] is an Operator that implements link:https://github.com/k8s-service-bindings/spec[Service Binding Specification for Kubernetes] and is meant to simplify the binding of services to an application. Containerized applications that support link:https://github.com/k8s-service-bindings/spec#workload-projection[Workload Projection] obtain service binding information in the form of volume mounts. The Service Binding Operator reads binding service information and mounts it to the application containers that need it."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1352
+msgid "The correlation between application and bound services is expressed through the `ServiceBinding` resources, which declares the intent of what services are meant to be bound to what application."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1354
+msgid "The Service Binding Operator watches for `ServiceBinding` resources, which inform the Operator what applications are meant to be bound with what services. When a listed application is deployed, the Service Binding Operator collects all the binding information that must be passed to the application, then upgrades the application container by attaching a volume mount with the binding information."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1356
+msgid "The Service Binding Operator completes the following actions:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1358
+msgid "Observes `ServiceBinding` resources for workloads intended to be bound to a particular service"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1359
+msgid "Applies the binding information to the workload using volume mounts"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1361
+msgid "The following chapter describes the automatic and semi-automatic service binding approaches and their use cases. With either approach, the `kubernetes-service-binding` extension generates a `ServiceBinding` resource. With the semi-automatic approach, users must provide a configuration for target services manually. With the automatic approach, for a limited set of services generating the `ServiceBinding` resource, no additional configuration is needed."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1363
+#, no-wrap
+msgid "Semi-automatic service binding"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1366
+msgid "A service binding process starts with a user specification of required services that will be bound to a certain application. This expression is summarized in the `ServiceBinding` resource that is generated by the `kubernetes-service-binding` extension. The use of the `kubernetes-service-binding` extensions helps users to generate `ServiceBinding` resources with minimal configuration, therefore simplifying the process overall."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1368
+msgid "The Service Binding Operator responsible for the binding process then reads the information from the `ServiceBinding` resource and mounts the required files to a container accordingly."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1371
+msgid "An example of the `ServiceBinding` resource:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1391
+#, no-wrap
+msgid ""
+"apiVersion: binding.operators.coreos.com/v1beta1\n"
+"kind: ServiceBinding\n"
+"metadata:\n"
+" name: binding-request\n"
+" namespace: service-binding-demo\n"
+"spec:\n"
+" application:\n"
+"   name: java-app\n"
+"   group: apps\n"
+"   version: v1\n"
+"   resource: deployments\n"
+" services:\n"
+" - group: postgres-operator.crunchydata.com\n"
+"   version: v1beta1\n"
+"   kind: Database\n"
+"   name: db-demo\n"
+"   id: postgresDB\n"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1396
+msgid "The `quarkus-kubernetes-service-binding` extension provides a more compact way of expressing the same information. For example:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1401
+#, no-wrap
+msgid ""
+"quarkus.kubernetes-service-binding.services.db-demo.api-version=postgres-operator.crunchydata.com/v1beta1\n"
+"quarkus.kubernetes-service-binding.services.db-demo.kind=Database\n"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1405
+msgid "After adding the earlier configuration properties inside your `application.properties`, the `quarkus-kubernetes`, in combination with the `quarkus-kubernetes-service-binding` extension, automatically generates the `ServiceBinding` resource."
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1407
+msgid "The earlier mentioned `db-demo` property-configuration identifier now has a double role and also completes the following actions:"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1409
+msgid "Correlates and groups `api-version` and `kind` properties together"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1410
+msgid "Defines the `name` property for the custom resource with a possibility for a later edit. For example:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1416
+#, no-wrap
+msgid ""
+"quarkus.kubernetes-service-binding.services.db-demo.api-version=postgres-operator.crunchydata.com/v1beta1\n"
+"quarkus.kubernetes-service-binding.services.db-demo.kind=Database\n"
+"quarkus.kubernetes-service-binding.services.db-demo.name=my-db\n"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1418
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1554
+#, no-wrap
+msgid "Additional resources"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1421
+msgid "For a semi-automatic service binding demonstration, see link:https://developers.redhat.com/articles/2021/12/22/how-use-quarkus-service-binding-operator#create_the_quarkus_application[How to use Quarkus with the Service Binding Operator]"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1423
+msgid "List of link:https://github.com/redhat-developer/service-binding-operator#known-bindable-operators[List of bindable Operators]"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1425
+#, no-wrap
+msgid "Automatic service binding"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1428
+msgid "The `quarkus-kubernetes-service-binding` extension can generate the `ServiceBinding` resource automatically after detecting that an application requires access to the external services that are provided by available bindable Operators."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1430
+msgid "Automatic service binding can be generated for a limited number of service types. To be consistent with established terminology for Kubernetes and Quarkus services, this chapter refers to these service types as kinds."
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1431
+#, no-wrap
+msgid "Operators that support the service auto-binding"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1434
+#, no-wrap
+msgid "Operator"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1434
+#, no-wrap
+msgid "API Version"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1435
+#, no-wrap
+msgid "Kind"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1435
+#, no-wrap
+msgid "`postgresql`"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1435
+#, no-wrap
+msgid "link:https://operatorhub.io/operator/postgresql[CrunchyData Postgres]"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1435
+#, no-wrap
+msgid "postgres-operator.crunchydata.com/v1beta1"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1436
+#, no-wrap
+msgid "PostgresCluster"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1436
+#, no-wrap
+msgid "`mysql`"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1436
+#, no-wrap
+msgid "link:https://operatorhub.io/operator/percona-xtradb-cluster-operator[Percona XtraDB Cluster]"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1436
+#, no-wrap
+msgid "pxc.percona.com/v1-9-0"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1437
+#, no-wrap
+msgid "PerconaXtraDBCluster"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1437
+#, no-wrap
+msgid "`mongo`"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1437
+#, no-wrap
+msgid "link:https://operatorhub.io/operator/percona-server-mongodb-operator[Percona Mongo]"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1437
+#, no-wrap
+msgid "psmdb.percona.com/v1-9-0"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1438
+#, no-wrap
+msgid "PerconaServerMongoDB"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1441
+#, no-wrap
+msgid "Automatic datasource binding"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1444
+msgid "For traditional databases, automatic binding is initiated whenever a datasource is configured as follows:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1448
+#, no-wrap
+msgid "quarkus.datasource.db-kind=postgresql\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1451
+msgid "The previous configuration, combined with the presence of `quarkus-datasource`, `quarkus-jdbc-postgresql`, `quarkus-kubernetes`, and `quarkus-kubernetes-service-binding` properties in the application, results in the generation of the `ServiceBinding` resource for the the `postgresql` database type."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1453
+msgid "By using the `apiVersion` and `kind` properties of the Operator resource, which matches the used `postgresql` Operator, the generated `ServiceBinding` resource binds the service or resource to the application."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1455
+msgid "When you do not specify a name for your database service, the the value of the `db-kind` property is used as the default name."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1462
+#, no-wrap
+msgid ""
+" services:\n"
+" - apiVersion: postgres-operator.crunchydata.com/v1beta1\n"
+"   kind: PostgresCluster\n"
+"   name: postgresql\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1465
+msgid "Specified the name of the datasource as follows:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1469
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1542
+#, no-wrap
+msgid "quarkus.datasource.fruits-db.db-kind=postgresql\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1472
+msgid "The `service` in the generated `ServiceBinding` then displays as follows:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1479
+#, no-wrap
+msgid ""
+" services:\n"
+" - apiVersion: postgres-operator.crunchydata.com/v1beta1\n"
+"   kind: PostgresCluster\n"
+"   name: fruits-db\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1482
+msgid "Similarly, if you use `mysql`, the name of the datasource can be specified as follows:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1486
+#, no-wrap
+msgid "quarkus.datasource.fruits-db.db-kind=mysql\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1489
+msgid "The generated `service` contains the following:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1496
+#, no-wrap
+msgid ""
+" services:\n"
+" - apiVersion: pxc.percona.com/v1-9-0\n"
+"   kind: PerconaXtraDBCluster\n"
+"   name: fruits-db\n"
+msgstr ""
+
+#. type: Title ====
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1499
+#, no-wrap
+msgid "Customizing Automatic Service Binding"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1502
+msgid "Even though automatic binding was developed to eliminate as much manual configuration as possible, there are cases where modifying the generated `ServiceBinding` resource might still be needed. The generation process exclusively relies on information extracted from the application and the knowledge of the supported Operators, which may not reflect what is deployed in the cluster. The generated resource is based purely on the knowledge of the supported bindable Operators for popular service kinds and a set of conventions that were developed to prevent possible mismatches, such as:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1504
+msgid "The target resource name does not match the datasource name"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1505
+msgid "A specific Operator needs to be used rather than the default Operator for that service kind"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1506
+msgid "Version conflicts that occur when a user needs to use any other version than default or latest"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1507
+#, no-wrap
+msgid "Conventions"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1510
+msgid "The target resource coordinates are determined based on the type of Operator and the kind of service."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1511
+msgid "The target resource name is set by default to match the service kind, such as `postgresql`, `mysql`, `mongo`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1512
+msgid "For named datasources, the name of the datasource is used."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1513
+msgid "For named `mongo` clients, the name of the client is used."
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1515
+#, no-wrap
+msgid "Example 1 - Name mismatch"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1518
+msgid "For cases in which you need to modify the generated `ServiceBinding` to fix a name mismatch, use the `quarkus.kubernetes-service-binding.services` properties and specify the service's name as the service key."
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1520
+msgid "The `service key` is usually the name of the service, for example the name of the datasource, or the name of the `mongo` client. When this value is not available, the datasource type, such as `postgresql`, `mysql`, `mongo`, is used instead."
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1522
+msgid "To avoid naming conflicts between different types of services, prefix the `service key` with a specific datasource type, such as `postgresql-__<person>__`."
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1524
+msgid "The following example shows how to customize the `apiVersion` property of the `PostgresCluster` resource:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1529
+#, no-wrap
+msgid ""
+"quarkus.datasource.db-kind=postgresql\n"
+"quarkus.kubernetes-service-binding.services.postgresql.api-version=postgres-operator.crunchydata.com/v1beta2\n"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1533
+#, no-wrap
+msgid "Example 2: Application of a custom name for a datasource"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1536
+msgid "In Example 1, the `db-kind`(`postgresql`) was used as a service key. In this example, because the datasource is named, according to convention, the datasource name (`fruits-db`) is used instead."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1538
+msgid "The following example shows that for a named datasource, the datasource name is used as the name of the target resource:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1545
+msgid "This has the same effect as the following configuration:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1551
+#, no-wrap
+msgid ""
+"quarkus.kubernetes-service-binding.services.fruits-db.api-version=postgres-operator.crunchydata.com/v1beta1\n"
+"quarkus.kubernetes-service-binding.services.fruits-db.kind=PostgresCluster\n"
+"quarkus.kubernetes-service-binding.services.fruits-db.name=fruits-db\n"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.7/guides/deploying-to-kubernetes.adoc:1555
+msgid "For more details about the available properties and how do they work, see the link:https://github.com/k8s-service-bindings/spec#workload-projection[Workload Projection] part of the Service Binding specification."
+msgstr ""

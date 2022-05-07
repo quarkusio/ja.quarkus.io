@@ -1,0 +1,576 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2022-05-07 16:14+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. This guide is maintained in the main Quarkus repository
+#. and pull requests should be submitted there:
+#. https://github.com/quarkusio/quarkus/tree/main/docs/src/main/asciidoc
+#. type: Title =
+#: upstream/_versions/2.7/guides/context-propagation.adoc:6
+#, no-wrap
+msgid "Context Propagation in Quarkus"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/context-propagation.adoc:15
+#, no-wrap
+msgid ""
+"Traditional blocking code uses link:https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/ThreadLocal.html[`ThreadLocal`]\n"
+" variables to store contextual objects in order to avoid\n"
+"passing them as parameters everywhere. Many Quarkus extensions require those contextual objects to operate\n"
+"properly: xref:rest-json.adoc[RESTEasy], xref:cdi-reference.adoc[ArC] and xref:transaction.adoc[Transaction]\n"
+"for example.\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/context-propagation.adoc:20
+msgid "If you write reactive/async code, you have to cut your work into a pipeline of code blocks that get executed \"later\", and in practice after the method you defined them in have returned. As such, `try/finally` blocks as well as `ThreadLocal` variables stop working, because your reactive code gets executed in another thread, after the caller ran its `finally` block."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/context-propagation.adoc:25
+msgid "link:https://github.com/smallrye/smallrye-context-propagation[SmallRye Context Propagation] an implementation of link:https://github.com/eclipse/microprofile-context-propagation[MicroProfile Context Propagation] was made to make those Quarkus extensions work properly in reactive/async settings. It works by capturing those contextual values that used to be in thread-locals, and restoring them when your code is called."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.7/guides/context-propagation.adoc:26
+#, no-wrap
+msgid "Solution"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/context-propagation.adoc:30
+msgid "We recommend that you follow the instructions in the next sections and create the application step by step.  However, you can go right to the completed example."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/context-propagation.adoc:32
+msgid "Clone the Git repository: `git clone {quickstarts-clone-url}`, or download an {quickstarts-archive-url}[archive]."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/context-propagation.adoc:34
+msgid "The solution is located in the `context-propagation-quickstart` {quickstarts-tree-url}/context-propagation-quickstart[directory]."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.7/guides/context-propagation.adoc:35
+#, no-wrap
+msgid "Setting it up"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/context-propagation.adoc:39
+msgid "If you are using link:http://smallrye.io/smallrye-mutiny[Mutiny] (the `quarkus-mutiny` extension), you just need to add the the `quarkus-smallrye-context-propagation` extension to enable context propagation."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/context-propagation.adoc:41
+msgid "In other words, add the following dependencies to your `pom.xml`:"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.7/guides/context-propagation.adoc:43
+#, no-wrap
+msgid "pom.xml"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/context-propagation.adoc:55
+#, no-wrap
+msgid ""
+"<!-- RESTEasy support extensions if not already included -->\n"
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-resteasy-mutiny</artifactId>\n"
+"</dependency>\n"
+"<!-- Context Propagation extension -->\n"
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-smallrye-context-propagation</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.7/guides/context-propagation.adoc:58
+#, no-wrap
+msgid "build.gradle"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/context-propagation.adoc:64
+#, no-wrap
+msgid ""
+"// RESTEasy support extensions if not already included\n"
+"implementation(\"io.quarkus:quarkus-resteasy-mutiny\")\n"
+"// Context Propagation extension\n"
+"implementation(\"io.quarkus:quarkus-smallrye-context-propagation\")\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/context-propagation.adoc:67
+msgid "With this, you will get context propagation for ArC, RESTEasy and transactions, if you are using them."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.7/guides/context-propagation.adoc:68
+#, no-wrap
+msgid "Usage example with Mutiny"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.7/guides/context-propagation.adoc:71
+#, no-wrap
+msgid "Mutiny"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.7/guides/context-propagation.adoc:75
+msgid "This section uses Mutiny reactive types.  If you are not familiar with Mutiny, check xref:mutiny-primer.adoc[Mutiny - an intuitive reactive programming library]."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/context-propagation.adoc:80
+msgid "Let's write a REST endpoint that reads the next 3 items from a xref:kafka.adoc[Kafka topic], stores them in a database using xref:hibernate-orm-panache.adoc[Hibernate ORM with Panache] (all in the same transaction) before returning them to the client, you can do it like this:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/context-propagation.adoc:86
+#: upstream/_versions/2.7/guides/context-propagation.adoc:235
+#, no-wrap
+msgid ""
+"    // Get the prices stream\n"
+"    @Inject\n"
+"    @Channel(\"prices\") Publisher<Double> prices;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/context-propagation.adoc:107
+#, no-wrap
+msgid ""
+"    @Transactional\n"
+"    @GET\n"
+"    @Path(\"/prices\")\n"
+"    @Produces(MediaType.SERVER_SENT_EVENTS)\n"
+"    @SseElementType(MediaType.TEXT_PLAIN)\n"
+"    public Publisher<Double> prices() {\n"
+"        // get the next three prices from the price stream\n"
+"        return Multi.createFrom().publisher(prices)\n"
+"                .select().first(3)\n"
+"                .map(price -> {\n"
+"                    // store each price before we send them\n"
+"                    Price priceEntity = new Price();\n"
+"                    priceEntity.value = price;\n"
+"                    // here we are all in the same transaction\n"
+"                    // thanks to context propagation\n"
+"                    priceEntity.persist();\n"
+"                    return price;\n"
+"                    // the transaction is committed once the stream completes\n"
+"                });\n"
+"    }\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/context-propagation.adoc:111
+msgid "Notice that thanks to Mutiny support for context propagation, this works out of the box.  The 3 items are persisted using the same transaction and this transaction is committed when the stream completes."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.7/guides/context-propagation.adoc:112
+#, no-wrap
+msgid "Usage example for `CompletionStage`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/context-propagation.adoc:120
+msgid "If you are using link:https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/concurrent/CompletionStage.html[`CompletionStage`] you need manual context propagation. You can do that by injecting a `ThreadContext` or `ManagedExecutor` that will propagate every context. For example, here we use the xref:vertx.adoc[Vert.x Web Client] to get the list of Star Wars people, then store them in the database using xref:hibernate-orm-panache.adoc[Hibernate ORM with Panache] (all in the same transaction) before returning them to the client as JSON using xref:rest-json.adoc[Jackson or JSON-B]:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/context-propagation.adoc:126
+#, no-wrap
+msgid ""
+"    @Inject ThreadContext threadContext;\n"
+"    @Inject ManagedExecutor managedExecutor;\n"
+"    @Inject Vertx vertx;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/context-propagation.adoc:153
+#, no-wrap
+msgid ""
+"    @Transactional\n"
+"    @GET\n"
+"    @Path(\"/people\")\n"
+"    public CompletionStage<List<Person>> people() throws SystemException {\n"
+"        // Create a REST client to the Star Wars API\n"
+"        WebClient client = WebClient.create(vertx,\n"
+"                         new WebClientOptions()\n"
+"                          .setDefaultHost(\"swapi.dev\")\n"
+"                          .setDefaultPort(443)\n"
+"                          .setSsl(true));\n"
+"        // get the list of Star Wars people, with context capture\n"
+"        return threadContext.withContextCapture(client.get(\"/api/people/\").send())\n"
+"                .thenApplyAsync(response -> {\n"
+"                    JsonObject json = response.bodyAsJsonObject();\n"
+"                    List<Person> persons = new ArrayList<>(json.getInteger(\"count\"));\n"
+"                    // Store them in the DB\n"
+"                    // Note that we're still in the same transaction as the outer method\n"
+"                    for (Object element : json.getJsonArray(\"results\")) {\n"
+"                        Person person = new Person();\n"
+"                        person.name = ((JsonObject) element).getString(\"name\");\n"
+"                        person.persist();\n"
+"                        persons.add(person);\n"
+"                    }\n"
+"                    return persons;\n"
+"                }, managedExecutor);\n"
+"    }\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/context-propagation.adoc:157
+msgid "Using `ThreadContext` or `ManagedExecutor` you can wrap most useful functional types and `CompletionStage` in order to get context propagated."
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.7/guides/context-propagation.adoc:161
+msgid "The injected `ManagedExecutor` uses the Quarkus thread pool."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.7/guides/context-propagation.adoc:163
+#, no-wrap
+msgid "Overriding which contexts are propagated"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/context-propagation.adoc:166
+msgid "By default, all available contexts are propagated. However, you can override this behaviour in several ways."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.7/guides/context-propagation.adoc:167
+#, no-wrap
+msgid "Using configuration"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/context-propagation.adoc:170
+msgid "The following configuration properties allow you to specify the default sets of propagated contexts:"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/context-propagation.adoc:173
+#, no-wrap
+msgid "Configuration Key"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/context-propagation.adoc:173
+#: upstream/_versions/2.7/guides/context-propagation.adoc:195
+#, no-wrap
+msgid "Description"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/context-propagation.adoc:175
+#, no-wrap
+msgid "Default Value"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/context-propagation.adoc:176
+#, no-wrap
+msgid "`mp.context.ThreadContext.propagated`"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/context-propagation.adoc:177
+#, no-wrap
+msgid "The comma-separated set of propagated contexts"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/context-propagation.adoc:179
+#, no-wrap
+msgid "`Remaining` (all non-explicitly list contexts)"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/context-propagation.adoc:180
+#, no-wrap
+msgid "`mp.context.ThreadContext.cleared`"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/context-propagation.adoc:181
+#, no-wrap
+msgid "The comma-separated set of cleared contexts"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/context-propagation.adoc:183
+#, no-wrap
+msgid "`None` (no context), unless neither the propagated nor cleared sets contain `Remaining`, in which case the default is `Remaining` (all non-explicitly listed contexts)"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/context-propagation.adoc:184
+#, no-wrap
+msgid "`mp.context.ThreadContext.unchanged`"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/context-propagation.adoc:185
+#, no-wrap
+msgid "The comma-separated set of unchanged contexts"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/context-propagation.adoc:186
+#, no-wrap
+msgid "`None` (no context)"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/context-propagation.adoc:190
+msgid "The following contexts are available in Quarkus either out of the box, or depending on whether you include their extensions:"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/context-propagation.adoc:193
+#, no-wrap
+msgid "Context Nam"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/context-propagation.adoc:193
+#, no-wrap
+msgid "Name Constant"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/context-propagation.adoc:196
+#, no-wrap
+msgid "`None`"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/context-propagation.adoc:197
+#, no-wrap
+msgid "https://javadoc.io/static/org.eclipse.microprofile.context-propagation/microprofile-context-propagation-api/1.2/org/eclipse/microprofile/context/ThreadContext.html#NONE[`ThreadContext.NONE`]"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/context-propagation.adoc:199
+#, no-wrap
+msgid "Can be used to specify an empty set of contexts, but setting the value to empty works too"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/context-propagation.adoc:200
+#, no-wrap
+msgid "`Remaining`"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/context-propagation.adoc:201
+#, no-wrap
+msgid "https://javadoc.io/static/org.eclipse.microprofile.context-propagation/microprofile-context-propagation-api/1.2/org/eclipse/microprofile/context/ThreadContext.html#ALL_REMAINING[`ThreadContext.ALL_REMAINING`]"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/context-propagation.adoc:203
+#, no-wrap
+msgid "All the contexts that are not explicitly listed in other sets"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/context-propagation.adoc:204
+#, no-wrap
+msgid "`Transaction`"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/context-propagation.adoc:205
+#, no-wrap
+msgid "https://javadoc.io/static/org.eclipse.microprofile.context-propagation/microprofile-context-propagation-api/1.2/org/eclipse/microprofile/context/ThreadContext.html#TRANSACTION[`ThreadContext.TRANSACTION`]"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/context-propagation.adoc:207
+#, no-wrap
+msgid "The JTA transaction context"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/context-propagation.adoc:208
+#, no-wrap
+msgid "`CDI`"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/context-propagation.adoc:209
+#, no-wrap
+msgid "https://javadoc.io/static/org.eclipse.microprofile.context-propagation/microprofile-context-propagation-api/1.2/org/eclipse/microprofile/context/ThreadContext.html#CDI[`ThreadContext.CDI`]"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/context-propagation.adoc:211
+#, no-wrap
+msgid "The CDI (ArC) context"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/context-propagation.adoc:212
+#, no-wrap
+msgid "`Servlet`"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/context-propagation.adoc:213
+#: upstream/_versions/2.7/guides/context-propagation.adoc:217
+#, no-wrap
+msgid "N/A"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/context-propagation.adoc:215
+#, no-wrap
+msgid "The servlet context"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/context-propagation.adoc:216
+#, no-wrap
+msgid "`JAX-RS`"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/context-propagation.adoc:219
+#, no-wrap
+msgid "The RESTEasy Classic context"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/context-propagation.adoc:220
+#, no-wrap
+msgid "`Application`"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/context-propagation.adoc:221
+#, no-wrap
+msgid "https://javadoc.io/static/org.eclipse.microprofile.context-propagation/microprofile-context-propagation-api/1.2/org/eclipse/microprofile/context/ThreadContext.html#APPLICATION[`ThreadContext.APPLICATION`]"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.7/guides/context-propagation.adoc:222
+#, no-wrap
+msgid "The current `ThreadContextClassLoader`"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.7/guides/context-propagation.adoc:224
+#, no-wrap
+msgid "Overriding the propagated contexts using annotations"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/context-propagation.adoc:229
+msgid "In order for automatic context propagation, such as Mutiny uses, to be overridden in specific methods, you can use the https://javadoc.io/doc/io.smallrye/smallrye-context-propagation-api/latest/io/smallrye/context/api/CurrentThreadContext.html[`@CurrentThreadContext`] annotation:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/context-propagation.adoc:247
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @Path(\"/prices\")\n"
+"    @Produces(MediaType.SERVER_SENT_EVENTS)\n"
+"    @SseElementType(MediaType.TEXT_PLAIN)\n"
+"    // Get rid of all context propagation, since we don't need it here\n"
+"    @CurrentThreadContext(unchanged = ThreadContext.ALL_REMAINING)\n"
+"    public Publisher<Double> prices() {\n"
+"        // get the next three prices from the price stream\n"
+"        return Multi.createFrom().publisher(prices)\n"
+"                .select().first(3);\n"
+"    }\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.7/guides/context-propagation.adoc:249
+#, no-wrap
+msgid "Overriding the propagated contexts using CDI injection"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/context-propagation.adoc:252
+msgid "You can also inject a custom-built `ThreadContext` using the https://javadoc.io/doc/io.smallrye/smallrye-context-propagation-api/latest/io/smallrye/context/api/ThreadContextConfig.html[`@ThreadContextConfig`] annotation on your injection point:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/context-propagation.adoc:262
+#, no-wrap
+msgid ""
+"    // Get the prices stream\n"
+"    @Inject\n"
+"    @Channel(\"prices\") Publisher<Double> prices;\n"
+"    // Get a ThreadContext that doesn't propagate context\n"
+"    @Inject\n"
+"    @ThreadContextConfig(unchanged = ThreadContext.ALL_REMAINING)\n"
+"    SmallRyeThreadContext threadContext;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.7/guides/context-propagation.adoc:275
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @Path(\"/prices\")\n"
+"    @Produces(MediaType.SERVER_SENT_EVENTS)\n"
+"    @SseElementType(MediaType.TEXT_PLAIN)\n"
+"    public Publisher<Double> prices() {\n"
+"        // Get rid of all context propagation, since we don't need it here\n"
+"        try(CleanAutoCloseable ac = SmallRyeThreadContext.withThreadContext(threadContext)){\n"
+"            // get the next three prices from the price stream\n"
+"            return Multi.createFrom().publisher(prices)\n"
+"                    .select().first(3);\n"
+"        }\n"
+"    }\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.7/guides/context-propagation.adoc:277
+#, no-wrap
+msgid "Context Propagation for CDI"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/context-propagation.adoc:281
+msgid "In terms of CDI, `@RequestScoped`, `@ApplicationScoped` and `@Singleton` beans get propagated and are available in other threads.  `@Dependent` beans as well as any custom scoped beans cannot be automatically propagated via CDI Context Propagation."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.7/guides/context-propagation.adoc:288
+msgid "`@ApplicationScoped` and `@Singleton` beans are always active scopes and as such are easy to deal with - context propagation tasks can work with those beans so long as the CDI container is running.  However, `@RequestScoped` beans are a different story. They are only active for a short period of time which can be bound either to HTTP request or some other request/task when manually activated/deactivated.  In this case user must be aware that once the original thread gets to an end of a request, it will terminate the context, calling `@PreDestroy` on those beans and then clearing them from the context.  Subsequent attempts to access those beans from other threads can result in unexpected behaviour.  It is therefore recommended to make sure all tasks using request scoped beans via context propagation are performed in such a manner that they don't outlive the original request duration."
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.7/guides/context-propagation.adoc:293
+msgid "Due to the above described behavior, it is recommended to avoid using `@PreDestroy` on `@RequestScoped` beans when working with Context Propagation in CDI."
+msgstr ""
