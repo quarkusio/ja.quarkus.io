@@ -1,0 +1,2084 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2022-05-11 10:12+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. This guide is maintained in the main Quarkus repository
+#. and pull requests should be submitted there:
+#. https://github.com/quarkusio/quarkus/tree/main/docs/src/main/asciidoc
+#. type: Title =
+#: upstream/_guides/security-webauthn.adoc:6
+#, no-wrap
+msgid "Using Security with WebAuthn"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:13
+msgid "This guide demonstrates how your Quarkus application can use WebAuthn authentication instead of passwords."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/security-webauthn.adoc:16
+#, no-wrap
+msgid "Prerequisites"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/security-webauthn.adoc:20
+#, no-wrap
+msgid "Introduction to WebAuthn"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:25
+msgid "https://webauthn.guide/[WebAuthn] is an authentication mechanism designed to replace passwords. In short, every time you write a service for registering new users, or logging them in, instead of asking for a password, you use WebAuthn, which will replace the password."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:30
+msgid "WebAuthn replaces the password with a proof of identity. In practice, users, instead of having to invent a password, store it or remember it, will use a hardware token that will generate a proof of identity specifically for your service or website. This can be done by asking users to press their thumb on their phone, or pressing a button on a https://www.yubico.com[YubiKey] on a computer."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:35
+msgid "So, when you register your user, you use your browser to enter your user information (user name, your name, etc…)  and instead of typing a password to identify yourself, you click a button which will invoke the WebAuthn browser API which will ask you to do something (press a button, use your fingerprint). Then, your browser will generate a proof of identity which you can send to your service instead of a password."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:42
+msgid "This proof of identity, when you register, consists mostly in a public key. Actually there's a lot of stuff in there but the most interesting is the public key. This public key is not stored on your device, or your browser.  It is generated especially for the target service (tied to its URI), and derived from the hardware authenticator.  So the association of the hardware authenticator and the target service will always derive the same private and public key pair, none of which are stored anywhere. You can for example, take your YubiKey to another computer and it will keep generating the same private/public keys for the same target service."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:45
+msgid "So, when you register, you send (mostly) a public key instead of a password, and the service stores that information as WebAuthn credentials for your new user account, and this is what will identify you later."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:51
+msgid "Then, when you need to login to that service, instead of typing your password (which doesn't exist, remember?), you press a button on the login form, and the browser will ask you to do something, and then it will send a signature to your service instead of a password. That signature requires the private key that is derived from your authenticator hardware and the target service, and so when your service receives it, it can verify that it corresponds to the signature of the public key you stored as credentials."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:54
+msgid "So, to recap: registration sends a generated public key instead of a password, and login sends a signature for that public key, allowing you to verify that the user is who they were when they registered."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:59
+msgid "In practice, it's a little bit more complex, because there needs to be a handshake with the server before you can use the hardware authenticator (ask for a challenge and other things), so there are always two calls to your service: one before login or registration, before calling the hardware authenticator, and then the normal login or registration."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:61
+msgid "And also there are a lot more fields to store than just a public key, but we will help you with that."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/security-webauthn.adoc:62
+#, no-wrap
+msgid "Architecture"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:65
+msgid "In this example, we build a very simple microservice which offers four endpoints:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:67
+msgid "`/api/public`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:68
+msgid "`/api/public/me`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:69
+msgid "`/api/users/me`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:70
+msgid "`/api/admin`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:75
+msgid "The `/api/public` endpoint can be accessed anonymously.  The `/api/public/me` endpoint can be accessed anonymously and returns the current user name if there is one, or `<not logged in>` if not.  The `/api/admin` endpoint is protected with RBAC (Role-Based Access Control) where only users granted with the `admin` role can access. At this endpoint, we use the `@RolesAllowed` annotation to declaratively enforce the access constraint.  The `/api/users/me` endpoint is also protected with RBAC (Role-Based Access Control) where only users granted with the `user` role can access. As a response, it returns a JSON document with details about the user."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/security-webauthn.adoc:76
+#, no-wrap
+msgid "Solution"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:80
+msgid "We recommend that you follow the instructions in the next sections and create the application step by step.  However, you can go right to the completed example."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:82
+msgid "Clone the Git repository: `git clone {quickstarts-clone-url}`, or download an {quickstarts-archive-url}[archive]."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:84
+msgid "The solution is located in the `security-webauthn-quickstart` {quickstarts-tree-url}/security-webauthn-quickstart[directory]."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/security-webauthn.adoc:85
+#, no-wrap
+msgid "Creating the Maven Project"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:88
+msgid "First, we need a new project. Create a new project with the following command:"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_guides/security-webauthn.adoc:96
+msgid "Don't forget to add the database connector library of choice. Here we are using PostgreSQL as identity store."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:100
+msgid "This command generates a Maven project, importing the `security-webauthn` extension which allows you to use WebAuthn to authenticate users."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:103
+msgid "If you already have your Quarkus project configured, you can add the `security-webauthn` extension to your project by running the following command in your project base directory:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:108
+msgid "This will add the following to your build file:"
+msgstr ""
+
+#. type: Block title
+#: upstream/_guides/security-webauthn.adoc:110
+#: upstream/_guides/security-webauthn.adoc:1065
+#, no-wrap
+msgid "pom.xml"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:116
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-security-webauthn</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: Block title
+#: upstream/_guides/security-webauthn.adoc:119
+#: upstream/_guides/security-webauthn.adoc:1074
+#, no-wrap
+msgid "build.gradle"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:122
+#, no-wrap
+msgid "implementation(\"io.quarkus:quarkus-security-webauthn\")\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/security-webauthn.adoc:124
+#, no-wrap
+msgid "Writing the application"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:127
+msgid "Let's start by implementing the `/api/public` endpoint. As you can see from the source code below, it is just a regular JAX-RS resource:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:131
+#: upstream/_guides/security-webauthn.adoc:166
+#: upstream/_guides/security-webauthn.adoc:191
+#: upstream/_guides/security-webauthn.adoc:219
+#: upstream/_guides/security-webauthn.adoc:338
+#: upstream/_guides/security-webauthn.adoc:363
+#: upstream/_guides/security-webauthn.adoc:411
+#: upstream/_guides/security-webauthn.adoc:933
+#, no-wrap
+msgid "package org.acme.security.webauthn;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:133
+#, no-wrap
+msgid "import java.security.Principal;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:140
+#, no-wrap
+msgid ""
+"import javax.ws.rs.GET;\n"
+"import javax.ws.rs.Path;\n"
+"import javax.ws.rs.Produces;\n"
+"import javax.ws.rs.core.Context;\n"
+"import javax.ws.rs.core.MediaType;\n"
+"import javax.ws.rs.core.SecurityContext;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:143
+#, no-wrap
+msgid ""
+"@Path(\"/api/public\")\n"
+"public class PublicResource {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:149
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @Produces(MediaType.TEXT_PLAIN)\n"
+"    public String publicResource() {\n"
+"        return \"public\";\n"
+"   }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:158
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @Path(\"/me\")\n"
+"    @Produces(MediaType.TEXT_PLAIN)\n"
+"    public String me(@Context SecurityContext securityContext) {\n"
+"        Principal user = securityContext.getUserPrincipal();\n"
+"        return user != null ? user.getName() : \"<not logged in>\";\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:161
+msgid "The source code for the `/api/admin` endpoint is also very simple. The main difference here is that we are using a `@RolesAllowed` annotation to make sure that only users granted with the `admin` role can access the endpoint:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:172
+#, no-wrap
+msgid ""
+"import javax.annotation.security.RolesAllowed;\n"
+"import javax.ws.rs.GET;\n"
+"import javax.ws.rs.Path;\n"
+"import javax.ws.rs.Produces;\n"
+"import javax.ws.rs.core.MediaType;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:175
+#, no-wrap
+msgid ""
+"@Path(\"/api/admin\")\n"
+"public class AdminResource {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:183
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @RolesAllowed(\"admin\")\n"
+"    @Produces(MediaType.TEXT_PLAIN)\n"
+"    public String adminResource() {\n"
+"         return \"admin\";\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:187
+msgid "Finally, let's consider the `/api/users/me` endpoint. As you can see from the source code below, we are trusting only users with the `user` role.  We are using `SecurityContext` to get access to the current authenticated Principal and we return the user's name. This information is loaded from the database."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:197
+#, no-wrap
+msgid ""
+"import javax.annotation.security.RolesAllowed;\n"
+"import javax.ws.rs.GET;\n"
+"import javax.ws.rs.Path;\n"
+"import javax.ws.rs.core.Context;\n"
+"import javax.ws.rs.core.SecurityContext;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:200
+#, no-wrap
+msgid ""
+"@Path(\"/api/users\")\n"
+"public class UserResource {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:208
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @RolesAllowed(\"user\")\n"
+"    @Path(\"/me\")\n"
+"    public String me(@Context SecurityContext securityContext) {\n"
+"        return securityContext.getUserPrincipal().getName();\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/security-webauthn.adoc:210
+#, no-wrap
+msgid "Storing our WebAuthn credentials"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:215
+msgid "We can now describe how our WebAuthn credentials are stored in our database with three entities. Note that we've simplified the model in order to only store one credential per user (who could actually have more than one WebAuthn credential and other data such as roles):"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:222
+#, no-wrap
+msgid ""
+"import java.util.ArrayList;\n"
+"import java.util.List;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:228
+#, no-wrap
+msgid ""
+"import javax.persistence.Entity;\n"
+"import javax.persistence.OneToMany;\n"
+"import javax.persistence.OneToOne;\n"
+"import javax.persistence.Table;\n"
+"import javax.persistence.UniqueConstraint;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:233
+#, no-wrap
+msgid ""
+"import io.quarkus.hibernate.reactive.panache.PanacheEntity;\n"
+"import io.smallrye.mutiny.Uni;\n"
+"import io.vertx.ext.auth.webauthn.Authenticator;\n"
+"import io.vertx.ext.auth.webauthn.PublicKeyCredential;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:237
+#, no-wrap
+msgid ""
+"@Table(uniqueConstraints = @UniqueConstraint(columnNames = {\"userName\", \"credID\"}))\n"
+"@Entity\n"
+"public class WebAuthnCredential extends PanacheEntity {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:242
+#, no-wrap
+msgid ""
+"    /**\n"
+"     * The username linked to this authenticator\n"
+"     */\n"
+"    public String userName;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:247
+#, no-wrap
+msgid ""
+"    /**\n"
+"     * The type of key (must be \"public-key\")\n"
+"     */\n"
+"    public String type = \"public-key\";\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:252
+#, no-wrap
+msgid ""
+"    /**\n"
+"     * The non user identifiable id for the authenticator\n"
+"     */\n"
+"    public String credID;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:257
+#, no-wrap
+msgid ""
+"    /**\n"
+"     * The public key associated with this authenticator\n"
+"     */\n"
+"    public String publicKey;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:262
+#, no-wrap
+msgid ""
+"    /**\n"
+"     * The signature counter of the authenticator to prevent replay attacks\n"
+"     */\n"
+"    public long counter;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:264
+#, no-wrap
+msgid "    public String aaguid;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:280
+#, no-wrap
+msgid ""
+"    /**\n"
+"     * The Authenticator attestation certificates object, a JSON like:\n"
+"     * <pre>{@code\n"
+"     *   {\n"
+"     *     \"alg\": \"string\",\n"
+"     *     \"x5c\": [\n"
+"     *       \"base64\"\n"
+"     *     ]\n"
+"     *   }\n"
+"     * }</pre>\n"
+"     */\n"
+"    /**\n"
+"     * The algorithm used for the public credential\n"
+"     */\n"
+"    public PublicKeyCredential alg;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:286
+#, no-wrap
+msgid ""
+"    /**\n"
+"     * The list of X509 certificates encoded as base64url.\n"
+"     */\n"
+"    @OneToMany(mappedBy = \"webAuthnCredential\")\n"
+"    public List<WebAuthnCertificate> x5c = new ArrayList<>();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:288
+#, no-wrap
+msgid "    public String fmt;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:292
+#, no-wrap
+msgid ""
+"    // owning side\n"
+"    @OneToOne\n"
+"    public User user;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:295
+#, no-wrap
+msgid ""
+"    public WebAuthnCredential() {\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:318
+#, no-wrap
+msgid ""
+"    public WebAuthnCredential(Authenticator authenticator, User user) {\n"
+"        aaguid = authenticator.getAaguid();\n"
+"        if(authenticator.getAttestationCertificates() != null)\n"
+"            alg = authenticator.getAttestationCertificates().getAlg();\n"
+"        counter = authenticator.getCounter();\n"
+"        credID = authenticator.getCredID();\n"
+"        fmt = authenticator.getFmt();\n"
+"        publicKey = authenticator.getPublicKey();\n"
+"        type = authenticator.getType();\n"
+"        userName = authenticator.getUserName();\n"
+"        if(authenticator.getAttestationCertificates() != null\n"
+"                && authenticator.getAttestationCertificates().getX5c() != null) {\n"
+"            for (String x5c : authenticator.getAttestationCertificates().getX5c()) {\n"
+"                WebAuthnCertificate cert = new WebAuthnCertificate();\n"
+"                cert.x5c = x5c;\n"
+"                cert.webAuthnCredential = this;\n"
+"                this.x5c.add(cert);\n"
+"            }\n"
+"        }\n"
+"        this.user = user;\n"
+"        user.webAuthnCredential = this;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:322
+#, no-wrap
+msgid ""
+"    public static Uni<List<WebAuthnCredential>> findByUserName(String userName) {\n"
+"        return list(\"userName\", userName);\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:326
+#, no-wrap
+msgid ""
+"    public static Uni<List<WebAuthnCredential>> findByCredID(String credID) {\n"
+"        return list(\"credID\", credID);\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:331
+#, no-wrap
+msgid ""
+"    public <T> Uni<T> fetch(T association) {\n"
+"        return getSession().flatMap(session -> session.fetch(association));\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:334
+msgid "We also need a second entity for the credentials:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:341
+#, no-wrap
+msgid ""
+"import javax.persistence.Entity;\n"
+"import javax.persistence.ManyToOne;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:343
+#, no-wrap
+msgid "import io.quarkus.hibernate.reactive.panache.PanacheEntity;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:347
+#, no-wrap
+msgid ""
+"@Entity\n"
+"public class WebAuthnCertificate extends PanacheEntity {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:350
+#, no-wrap
+msgid ""
+"    @ManyToOne\n"
+"    public WebAuthnCredential webAuthnCredential;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:356
+#, no-wrap
+msgid ""
+"    /**\n"
+"     * The list of X509 certificates encoded as base64url.\n"
+"     */\n"
+"    public String x5c;\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:359
+msgid "And last but not least, our user entity:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:368
+#, no-wrap
+msgid ""
+"import javax.persistence.Column;\n"
+"import javax.persistence.Entity;\n"
+"import javax.persistence.OneToOne;\n"
+"import javax.persistence.Table;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:371
+#, no-wrap
+msgid ""
+"import io.quarkus.hibernate.reactive.panache.PanacheEntity;\n"
+"import io.smallrye.mutiny.Uni;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:375
+#, no-wrap
+msgid ""
+"@Table(name = \"user_table\")\n"
+"@Entity\n"
+"public class User extends PanacheEntity {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:378
+#, no-wrap
+msgid ""
+"    @Column(unique = true)\n"
+"    public String userName;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:382
+#, no-wrap
+msgid ""
+"    // non-owning side, so we can add more credentials later\n"
+"    @OneToOne(mappedBy = \"user\")\n"
+"    public WebAuthnCredential webAuthnCredential;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:387
+#, no-wrap
+msgid ""
+"    public static Uni<User> findByUserName(String userName) {\n"
+"        return find(\"userName\", userName).firstResult();\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Title ====
+#: upstream/_guides/security-webauthn.adoc:389
+#, no-wrap
+msgid "A note about user names and credential IDs"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:392
+msgid "WebAuthn relies on a combination of user names (unique per user) and credential IDs (unique per authenticator device)."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:394
+msgid "The reasons why there are two such identifiers, and why they are not unique keys for the credentials themselves are:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:397
+msgid "A single user can have more than one authenticator device, which means a single user name can map to multiple credential IDs, all of which identify the same user."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:399
+msgid "An authenticator device may be shared by multiple users, because a single person may want multiple user accounts with different user names, all of which having the same authenticator device. So a single credential ID may be used by multiple different users."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:401
+msgid "The combination of user name and credential ID should be a unicity constraint for your credentials table, though."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/security-webauthn.adoc:402
+#, no-wrap
+msgid "Exposing your entities to Quarkus WebAuthn"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:407
+msgid "You need to define a bean implementing the `WebAuthnUserProvider` in order to allow the Quarkus WebAuthn extension to load and store credentials. This is where you tell Quarkus how to turn your data model into the WebAuthn security model:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:417
+#, no-wrap
+msgid ""
+"import java.util.ArrayList;\n"
+"import java.util.Collections;\n"
+"import java.util.HashSet;\n"
+"import java.util.List;\n"
+"import java.util.Set;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:419
+#: upstream/_guides/security-webauthn.adoc:1280
+#, no-wrap
+msgid "import javax.enterprise.context.ApplicationScoped;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:425
+#, no-wrap
+msgid ""
+"import io.quarkus.hibernate.reactive.panache.common.runtime.ReactiveTransactional;\n"
+"import io.quarkus.security.webauthn.WebAuthnUserProvider;\n"
+"import io.smallrye.mutiny.Uni;\n"
+"import io.vertx.ext.auth.webauthn.AttestationCertificates;\n"
+"import io.vertx.ext.auth.webauthn.Authenticator;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:428
+#, no-wrap
+msgid ""
+"@ApplicationScoped\n"
+"public class MyWebAuthnSetup implements WebAuthnUserProvider {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:435
+#, no-wrap
+msgid ""
+"    @ReactiveTransactional\n"
+"    @Override\n"
+"    public Uni<List<Authenticator>> findWebAuthnCredentialsByUserName(String userName) {\n"
+"        return WebAuthnCredential.findByUserName(userName)\n"
+"                .flatMap(MyWebAuthnSetup::toAuthenticators);\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:442
+#, no-wrap
+msgid ""
+"    @ReactiveTransactional\n"
+"    @Override\n"
+"    public Uni<List<Authenticator>> findWebAuthnCredentialsByCredID(String credID) {\n"
+"        return WebAuthnCredential.findByCredID(credID)\n"
+"                .flatMap(MyWebAuthnSetup::toAuthenticators);\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:463
+#, no-wrap
+msgid ""
+"    @ReactiveTransactional\n"
+"    @Override\n"
+"    public Uni<Void> updateOrStoreWebAuthnCredentials(Authenticator authenticator) {\n"
+"        return User.findByUserName(authenticator.getUserName())\n"
+"            .flatMap(user -> {\n"
+"                // new user\n"
+"                if(user == null) {\n"
+"                    User newUser = new User();\n"
+"                    newUser.userName = authenticator.getUserName();\n"
+"                    WebAuthnCredential credential = new WebAuthnCredential(authenticator, newUser);\n"
+"                    return credential.persist()\n"
+"                            .flatMap(c -> newUser.persist())\n"
+"                            .onItem().ignore().andContinueWithNull();\n"
+"                } else {\n"
+"                    // existing user\n"
+"                    user.webAuthnCredential.counter = authenticator.getCounter();\n"
+"                    return Uni.createFrom().nullItem();\n"
+"                }\n"
+"            });\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:474
+#, no-wrap
+msgid ""
+"    private static Uni<List<Authenticator>> toAuthenticators(List<WebAuthnCredential> dbs) {\n"
+"        // can't call combine/uni on empty list\n"
+"        if(dbs.isEmpty())\n"
+"            return Uni.createFrom().item(Collections.emptyList());\n"
+"        List<Uni<Authenticator>> ret = new ArrayList<>(dbs.size());\n"
+"        for (WebAuthnCredential db : dbs) {\n"
+"            ret.add(toAuthenticator(db));\n"
+"        }\n"
+"        return Uni.combine().all().unis(ret).combinedWith(f -> (List)f);\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:496
+#, no-wrap
+msgid ""
+"    private static Uni<Authenticator> toAuthenticator(WebAuthnCredential credential) {\n"
+"        return credential.fetch(credential.x5c)\n"
+"                .map(x5c -> {\n"
+"                    Authenticator ret = new Authenticator();\n"
+"                    ret.setAaguid(credential.aaguid);\n"
+"                    AttestationCertificates attestationCertificates = new AttestationCertificates();\n"
+"                    attestationCertificates.setAlg(credential.alg);\n"
+"                    List<String> x5cs = new ArrayList<>(x5c.size());\n"
+"                    for (WebAuthnCertificate webAuthnCertificate : x5c) {\n"
+"                        x5cs.add(webAuthnCertificate.x5c);\n"
+"                    }\n"
+"                    ret.setAttestationCertificates(attestationCertificates);\n"
+"                    ret.setCounter(credential.counter);\n"
+"                    ret.setCredID(credential.credID);\n"
+"                    ret.setFmt(credential.fmt);\n"
+"                    ret.setPublicKey(credential.publicKey);\n"
+"                    ret.setType(credential.type);\n"
+"                    ret.setUserName(credential.userName);\n"
+"                    return ret;\n"
+"                });\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:508
+#, no-wrap
+msgid ""
+"    @Override\n"
+"    public Set<String> getRoles(String userId) {\n"
+"        if(userId.equals(\"admin\")) {\n"
+"            Set<String> ret = new HashSet<>();\n"
+"            ret.add(\"user\");\n"
+"            ret.add(\"admin\");\n"
+"            return ret;\n"
+"        }\n"
+"        return Collections.singleton(\"user\");\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/security-webauthn.adoc:510
+#, no-wrap
+msgid "Writing the HTML application"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:514
+msgid "We now need to write a web page with links to all our APIs, as well as a way to register a new user, login, and logout, in `src/main/resources/META-INF/resources/index.html`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:541
+#, no-wrap
+msgid ""
+"<!DOCTYPE html>\n"
+"<html lang=\"en\">\n"
+"  <head>\n"
+"    <meta charset=\"UTF-8\">\n"
+"    <title>Login</title>\n"
+"    <script src=\"/q/webauthn/webauthn.js\" type=\"text/javascript\" charset=\"UTF-8\"></script>\n"
+"    <style>\n"
+"     .container {\n"
+"      display: grid;\n"
+"      grid-template-columns: auto auto auto;\n"
+"     }\n"
+"     button, input {\n"
+"      margin: 5px 0;\n"
+"     }\n"
+"     .item {\n"
+"      padding: 20px;\n"
+"     }\n"
+"     nav > ul {\n"
+"       list-style-type: none;\n"
+"       margin: 0;\n"
+"       padding: 0;\n"
+"       overflow: hidden;\n"
+"       background-color: #333;\n"
+"     }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:545
+#, no-wrap
+msgid ""
+"     nav > ul > li {\n"
+"       float: left;\n"
+"     }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:553
+#, no-wrap
+msgid ""
+"     nav > ul > li > a {\n"
+"       display: block;\n"
+"       color: white;\n"
+"       text-align: center;\n"
+"       padding: 14px 16px;\n"
+"       text-decoration: none;\n"
+"     }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:559
+#, no-wrap
+msgid ""
+"     nav > ul > li > a:hover {\n"
+"       background-color: #111;\n"
+"     }\n"
+"    </style>\n"
+"  </head>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:596
+#, no-wrap
+msgid ""
+"  <body>\n"
+"    <nav>\n"
+"     <ul>\n"
+"      <li><a href=\"/api/public\">Public API</a></li>\n"
+"      <li><a href=\"/api/users/me\">User API</a></li>\n"
+"      <li><a href=\"/api/admin\">Admin API</a></li>\n"
+"      <li><a href=\"/q/webauthn/logout\">Logout</a></li>\n"
+"    </nav>\n"
+"    <div class=\"container\">\n"
+"     <div class=\"item\">\n"
+"      <h1>Status</h1>\n"
+"      <div id=\"result\"></div>\n"
+"     </div>\n"
+"     <div class=\"item\">\n"
+"      <h1>Login</h1>\n"
+"      <p>\n"
+"       <input id=\"userNameLogin\" placeholder=\"User name\"/><br/>\n"
+"       <button id=\"login\">Login</button>\n"
+"      </p>\n"
+"     </div>\n"
+"     <div class=\"item\">\n"
+"      <h1>Register</h1>\n"
+"      <p>\n"
+"       <input id=\"userNameRegister\" placeholder=\"User name\"/><br/>\n"
+"       <input id=\"firstName\" placeholder=\"First name\"/><br/>\n"
+"       <input id=\"lastName\" placeholder=\"Last name\"/><br/>\n"
+"       <button id=\"register\">Register</button>\n"
+"      </p>\n"
+"     </div>\n"
+"    </div>\n"
+"    <script type=\"text/javascript\">\n"
+"      const webAuthn = new WebAuthn({\n"
+"        callbackPath: '/q/webauthn/callback',\n"
+"        registerPath: '/q/webauthn/register',\n"
+"        loginPath: '/q/webauthn/login'\n"
+"      });\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:598
+#, no-wrap
+msgid "      const result = document.getElementById('result');\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:602
+#, no-wrap
+msgid ""
+"      fetch('/api/public/me')\n"
+"        .then(response => response.text())\n"
+"        .then(name => result.append(\"User: \"+name));\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:604
+#, no-wrap
+msgid "      const loginButton = document.getElementById('login');\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:617
+#, no-wrap
+msgid ""
+"      loginButton.onclick = () => {\n"
+"        var userName = document.getElementById('userNameLogin').value;\n"
+"        result.replaceChildren();\n"
+"        webAuthn.login({ name: userName })\n"
+"          .then(body => {\n"
+"            result.append(\"User: \"+userName);\n"
+"          })\n"
+"          .catch(err => {\n"
+"            result.append(\"Login failed: \"+err);\n"
+"          });\n"
+"        return false;\n"
+"      };\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:619
+#, no-wrap
+msgid "      const registerButton = document.getElementById('register');\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:637
+#, no-wrap
+msgid ""
+"      registerButton.onclick = () => {\n"
+"        var userName = document.getElementById('userNameRegister').value;\n"
+"        var firstName = document.getElementById('firstName').value;\n"
+"        var lastName = document.getElementById('lastName').value;\n"
+"        result.replaceChildren();\n"
+"        webAuthn.register({ name: userName, displayName: firstName + \" \" + lastName })\n"
+"          .then(body => {\n"
+"            result.append(\"User: \"+userName);\n"
+"          })\n"
+"          .catch(err => {\n"
+"            result.append(\"Registration failed: \"+err);\n"
+"          });\n"
+"        return false;\n"
+"      };\n"
+"    </script>\n"
+"  </body>\n"
+"</html>\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/security-webauthn.adoc:639
+#, no-wrap
+msgid "Testing the application"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:642
+msgid "The application is now protected and the identities are provided by our database."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:644
+msgid "Run your application in dev mode with:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:649
+msgid "which will start a PostgreSQL Dev Service container, and open http://localhost:8080 in your browser."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:651
+msgid "Initially, you will have no credentials registered, and no current user:"
+msgstr ""
+
+#. type: Target for macro image
+#: upstream/_guides/security-webauthn.adoc:652
+#, no-wrap
+msgid "webauthn-1.png"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:656
+msgid "The current user is displayed on the left, and you can use the top menu to try accessing the public API, which should work, while the user and admin APIs will fail and redirect you to the current page."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:659
+msgid "Start by registering your WebAuthn credentials by entering a user name, first and last names on the `Register` form on the right, then pressing the `Register` button:"
+msgstr ""
+
+#. type: Target for macro image
+#: upstream/_guides/security-webauthn.adoc:660
+#, no-wrap
+msgid "webauthn-2.png"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:663
+msgid "Your browser will ask you to activate your WebAuthn authenticator:"
+msgstr ""
+
+#. type: Target for macro image
+#: upstream/_guides/security-webauthn.adoc:664
+#, no-wrap
+msgid "webauthn-3.png"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:667
+msgid "You will then be logged in, and can check that the user API is now accessible:"
+msgstr ""
+
+#. type: Target for macro image
+#: upstream/_guides/security-webauthn.adoc:668
+#: upstream/_guides/security-webauthn.adoc:676
+#, no-wrap
+msgid "webauthn-4.png"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:671
+msgid "At this stage you can `Logout` and enter your user name in the `Login` form:"
+msgstr ""
+
+#. type: Target for macro image
+#: upstream/_guides/security-webauthn.adoc:672
+#, no-wrap
+msgid "webauthn-5.png"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:675
+msgid "Then press the `Login` button and you will be logged in:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:679
+msgid "The admin API is only accessible if you register with the `admin` user name."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/security-webauthn.adoc:680
+#, no-wrap
+msgid "WebAuthn endpoints"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:683
+msgid "The Quarkus WebAuthn extension comes out of the box with these REST endpoints pre-defined:"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/security-webauthn.adoc:684
+#, no-wrap
+msgid "Obtain a registration challenge"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:687
+msgid "`POST /q/webauthn/register`: Set up and obtain a registration challenge"
+msgstr ""
+
+#. type: Block title
+#: upstream/_guides/security-webauthn.adoc:689
+#: upstream/_guides/security-webauthn.adoc:737
+#: upstream/_guides/security-webauthn.adoc:774
+#: upstream/_guides/security-webauthn.adoc:794
+#, no-wrap
+msgid "Request"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:695
+#, no-wrap
+msgid ""
+"{\n"
+" \"name\": \"userName\", \n"
+" \"displayName\": \"Mr Nice Guy\"\n"
+"}\n"
+msgstr ""
+
+#. type: Block title
+#: upstream/_guides/security-webauthn.adoc:698
+#: upstream/_guides/security-webauthn.adoc:745
+#, no-wrap
+msgid "Response"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:730
+#, no-wrap
+msgid ""
+"{\n"
+" \"rp\": {\n"
+"   \"name\": \"Quarkus server\"\n"
+"  },\n"
+" \"user\": {\n"
+"   \"id\": \"ryPi43NJSx6LFYNitrOvHg\",\n"
+"   \"name\": \"FroMage\",\n"
+"   \"displayName\": \"Mr Nice Guy\"\n"
+"  },\n"
+"  \"challenge\": \"6tkVLgYzp5yJz_MtnzCy6VRMkHuN4f4C-_hukRmsuQ_MQl7uxJweiqH8gaFkm_mEbKzlUbOabJM3nLbi08i1Uw\",\n"
+"  \"pubKeyCredParams\": [\n"
+"    {\n"
+"     \"alg\": -7,\n"
+"     \"type\":\"public-key\"\n"
+"    },\n"
+"    {\n"
+"     \"alg\": -257,\n"
+"     \"type\": \"public-key\"\n"
+"    }\n"
+"  ],\n"
+"  \"authenticatorSelection\": {\n"
+"   \"requireResidentKey\": false,\n"
+"   \"userVerification\": \"discouraged\"\n"
+"  },\n"
+"  \"timeout\": 60000,\n"
+"  \"attestation\": \"none\",\n"
+"  \"extensions\": {\n"
+"   \"txAuthSimple\": \"\"\n"
+"  }\n"
+" }\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/security-webauthn.adoc:732
+#, no-wrap
+msgid "Obtain a login challenge"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:735
+msgid "`POST /q/webauthn/login`: Set up and obtain a login challenge"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:742
+#, no-wrap
+msgid ""
+"{\n"
+" \"name\": \"userName\"\n"
+"}\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:767
+#, no-wrap
+msgid ""
+"{\n"
+" \"challenge\": \"RV4hqKHezkWSxpOICBkpx16yPJFGMZrkPlJP-Wp8w4rVl34VIzCT7AP0Q5Rv-3JCU3jwu-j3VlOgyNMDk2AqDg\",\n"
+" \"timeout\": 60000,\n"
+" \"userVerification\": \"discouraged\",\n"
+" \"extensions\": {\n"
+"  \"txAuthSimple\": \"\"\n"
+" },\n"
+" \"allowCredentials\": [\n"
+"  {\n"
+"   \"type\": \"public-key\",\n"
+"   \"id\": \"boMwU-QwZ_RsToPTG3iC50g8-yiKbLc3A53tgWMhzbNEQAJIlbWgchmwbt5m0ssqQNR0IM_WxCmcfKWlEao7Fg\",\n"
+"   \"transports\": [\n"
+"    \"usb\",\n"
+"    \"nfc\",\n"
+"    \"ble\",\n"
+"    \"internal\"\n"
+"   ]\n"
+"  }\n"
+" ]\n"
+"}\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/security-webauthn.adoc:769
+#, no-wrap
+msgid "Trigger a registration"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:772
+msgid "`POST /q/webauthn/callback`: Trigger a registration"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:785
+#, no-wrap
+msgid ""
+"{\n"
+" \"id\": \"boMwU-QwZ_RsToPTG3iC50g8-yiKbLc3A53tgWMhzbNEQAJIlbWgchmwbt5m0ssqQNR0IM_WxCmcfKWlEao7Fg\",\n"
+" \"rawId\": \"boMwU-QwZ_RsToPTG3iC50g8-yiKbLc3A53tgWMhzbNEQAJIlbWgchmwbt5m0ssqQNR0IM_WxCmcfKWlEao7Fg\",\n"
+" \"response\": {\n"
+"  \"attestationObject\": \"<DATA>\",\n"
+"  \"clientDataJSON\":\"<DATA>\"\n"
+" },\n"
+" \"type\": \"public-key\"\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:788
+#: upstream/_guides/security-webauthn.adoc:810
+msgid "This returns a 204 with no body."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/security-webauthn.adoc:789
+#, no-wrap
+msgid "Trigger a login"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:792
+msgid "`POST /q/webauthn/callback`: Trigger a login"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:807
+#, no-wrap
+msgid ""
+"{\n"
+" \"id\": \"boMwU-QwZ_RsToPTG3iC50g8-yiKbLc3A53tgWMhzbNEQAJIlbWgchmwbt5m0ssqQNR0IM_WxCmcfKWlEao7Fg\",\n"
+" \"rawId\": \"boMwU-QwZ_RsToPTG3iC50g8-yiKbLc3A53tgWMhzbNEQAJIlbWgchmwbt5m0ssqQNR0IM_WxCmcfKWlEao7Fg\",\n"
+" \"response\": {\n"
+"  \"clientDataJSON\": \"<DATA>\",\n"
+"  \"authenticatorData\": \"<DATA>\",\n"
+"  \"signature\": \"<DATA>\",\n"
+"  \"userHandle\": \"\"\n"
+" },\n"
+" \"type\": \"public-key\"\n"
+"}\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/security-webauthn.adoc:811
+#, no-wrap
+msgid "Logout"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:814
+msgid "`GET /q/webauthn/logout`: Logs you out"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:816
+msgid "This returns a 302 redirect to the root URI of your application."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/security-webauthn.adoc:817
+#, no-wrap
+msgid "WebAuthn JavaScript library"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:821
+msgid "Because there's so much JavaScript needed to set WebAuthn up in the browser, the Quarkus WebAuthn extension ships with a JavaScript library to help you talk to the WebAuthn endpoints, at `/q/webauthn/webauthn.js`. You can set it up like this:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:834
+#, no-wrap
+msgid ""
+"<script src=\"/q/webauthn/webauthn.js\" type=\"text/javascript\" charset=\"UTF-8\"></script>\n"
+"<script type=\"text/javascript\">\n"
+"  // configure where our endpoints are\n"
+"  const webAuthn = new WebAuthn({\n"
+"    callbackPath: '/q/webauthn/callback',\n"
+"    registerPath: '/q/webauthn/register',\n"
+"    loginPath: '/q/webauthn/login'\n"
+"  });\n"
+"  // use the webAuthn APIs here\n"
+"</script>\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/security-webauthn.adoc:836
+#, no-wrap
+msgid "Invoke registration"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:840
+msgid "The `webAuthn.register` method invokes the registration challenge endpoint, then calls the authenticator and invokes the callback endpoint for that registration, and returns a https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise[Promise object]:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:850
+#, no-wrap
+msgid ""
+"webAuthn.register({ name: userName, displayName: firstName + \" \" + lastName })\n"
+"  .then(body => {\n"
+"    // do something now that the user is registered\n"
+"  })\n"
+"  .catch(err => {\n"
+"    // registration failed\n"
+"  });\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/security-webauthn.adoc:852
+#, no-wrap
+msgid "Invoke login"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:856
+msgid "The `webAuthn.login` method invokes the login challenge endpoint, then calls the authenticator and invokes the callback endpoint for that login, and returns a https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise[Promise object]:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:866
+#, no-wrap
+msgid ""
+"webAuthn.login({ name: userName })\n"
+"  .then(body => {\n"
+"    // do something now that the user is logged in\n"
+"  })\n"
+"  .catch(err => {\n"
+"    // login failed\n"
+"  });\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_guides/security-webauthn.adoc:868
+#: upstream/_guides/security-webauthn.adoc:891
+#, no-wrap
+msgid "Only invoke the registration challenge and authenticator"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:874
+msgid "The `webAuthn.registerOnly` method invokes the registration challenge endpoint, then calls the authenticator and returns a https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise[Promise object] containing a JSON object suitable for being sent to the callback endpoint. You can use that JSON object in order to store the credentials in hidden form `input` elements, for example, and send it as part of a regular HTML form:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:889
+#, no-wrap
+msgid ""
+"webAuthn.registerOnly({ name: userName, displayName: firstName + \" \" + lastName })\n"
+"  .then(body => {\n"
+"    // store the registration JSON in form elements\n"
+"    document.getElementById('webAuthnId').value = body.id;\n"
+"    document.getElementById('webAuthnRawId').value = body.rawId;\n"
+"    document.getElementById('webAuthnResponseAttestationObject').value = body.response.attestationObject;\n"
+"    document.getElementById('webAuthnResponseClientDataJSON').value = body.response.clientDataJSON;\n"
+"    document.getElementById('webAuthnType').value = body.type;\n"
+"  })\n"
+"  .catch(err => {\n"
+"    // registration failed\n"
+"  });\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:897
+msgid "The `webAuthn.loginOnly` method invokes the login challenge endpoint, then calls the authenticator and returns a https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise[Promise object] containing a JSON object suitable for being sent to the callback endpoint. You can use that JSON object in order to store the credentials in hidden form `input` elements, for example, and send it as part of a regular HTML form:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:914
+#, no-wrap
+msgid ""
+"webAuthn.login({ name: userName })\n"
+"  .then(body => {\n"
+"    // store the login JSON in form elements\n"
+"    document.getElementById('webAuthnId').value = body.id;\n"
+"    document.getElementById('webAuthnRawId').value = body.rawId;\n"
+"    document.getElementById('webAuthnResponseClientDataJSON').value = body.response.clientDataJSON;\n"
+"    document.getElementById('webAuthnResponseAuthenticatorData').value = body.response.authenticatorData;\n"
+"    document.getElementById('webAuthnResponseSignature').value = body.response.signature;\n"
+"    document.getElementById('webAuthnResponseUserHandle').value = body.response.userHandle;\n"
+"    document.getElementById('webAuthnType').value = body.type;\n"
+"  })\n"
+"  .catch(err => {\n"
+"    // login failed\n"
+"  });\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/security-webauthn.adoc:916
+#, no-wrap
+msgid "Handling login and registration endpoints yourself"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:921
+msgid "Sometimes, you will want to ask for more data than just a username in order to register a user, or you want to deal with login and registration with custom validation, and so the WebAuthn callback endpoint is not enough."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:925
+msgid "In this case, you can use the `WebAuthn.loginOnly` and `WebAuthn.registerOnly` methods from the JavaScript library, store the authenticator data in hidden form elements, and send them as part of your form payload to the server to your custom login or registration endpoints."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:929
+msgid "If you are storing them in form input elements, you can then use the `WebAuthnLoginResponse` and `WebAuthnRegistrationResponse` classes, mark them as `@BeanParam` and then use the `WebAuthnSecurity.login` and `WebAuthnSecurity.register` methods. For example, here's how you can handle a custom login and register:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:935
+#, no-wrap
+msgid "import java.net.URI;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:943
+#, no-wrap
+msgid ""
+"import javax.inject.Inject;\n"
+"import javax.ws.rs.BeanParam;\n"
+"import javax.ws.rs.POST;\n"
+"import javax.ws.rs.Path;\n"
+"import javax.ws.rs.core.NewCookie;\n"
+"import javax.ws.rs.core.Response;\n"
+"import javax.ws.rs.core.Response.Status;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:945
+#, no-wrap
+msgid "import org.jboss.resteasy.reactive.RestForm;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:953
+#, no-wrap
+msgid ""
+"import io.quarkus.hibernate.reactive.panache.common.runtime.ReactiveTransactional;\n"
+"import io.quarkus.security.webauthn.WebAuthnLoginResponse;\n"
+"import io.quarkus.security.webauthn.WebAuthnRegisterResponse;\n"
+"import io.quarkus.security.webauthn.WebAuthnSecurity;\n"
+"import io.smallrye.mutiny.Uni;\n"
+"import io.vertx.ext.auth.webauthn.Authenticator;\n"
+"import io.vertx.ext.web.RoutingContext;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:956
+#, no-wrap
+msgid ""
+"@Path(\"\")\n"
+"public class LoginResource {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:959
+#, no-wrap
+msgid ""
+"    @Inject\n"
+"    WebAuthnSecurity webAuthnSecurity;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:972
+#, no-wrap
+msgid ""
+"    @Path(\"/login\")\n"
+"    @POST\n"
+"    @ReactiveTransactional\n"
+"    public Uni<Response> login(@RestForm String userName, \n"
+"                               @BeanParam WebAuthnLoginResponse webAuthnResponse,\n"
+"                               RoutingContext ctx) {\n"
+"        // Input validation\n"
+"        if(userName == null || userName.isEmpty()\n"
+"                || !webAuthnResponse.isSet()\n"
+"                || !webAuthnResponse.isValid()) {\n"
+"            return Uni.createFrom().item(Response.status(Status.BAD_REQUEST).build());\n"
+"        }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:980
+#, no-wrap
+msgid ""
+"        Uni<User> userUni = User.findByUserName(userName);\n"
+"        return userUni.flatMap(user -> {\n"
+"            if(user == null) {\n"
+"                // Invalid user\n"
+"                return Uni.createFrom().item(Response.status(Status.BAD_REQUEST).build());\n"
+"            }\n"
+"            Uni<Authenticator> authenticator = this.webAuthnSecurity.login(webAuthnResponse, ctx);\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:994
+#, no-wrap
+msgid ""
+"            return authenticator\n"
+"                    // bump the auth counter\n"
+"                    .invoke(auth -> user.webAuthnCredential.counter = auth.getCounter())\n"
+"                    .map(auth -> {\n"
+"                        // make a login JWT cookie\n"
+"                        NewCookie cookie = null;\n"
+"                        return Response.seeOther(URI.create(\"/\")).cookie(cookie).build();\n"
+"                    })\n"
+"                    // handle login failure\n"
+"                    .onFailure().recoverWithItem(x -> {\n"
+"                        // make a proper error response\n"
+"                        return Response.status(Status.BAD_REQUEST).build();\n"
+"                    });\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:997
+#, no-wrap
+msgid ""
+"        });\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:1010
+#, no-wrap
+msgid ""
+"    @Path(\"/register\")\n"
+"    @POST\n"
+"    @ReactiveTransactional\n"
+"    public Uni<Response> register(@RestForm String userName, \n"
+"                                  @BeanParam WebAuthnRegisterResponse webAuthnResponse,\n"
+"                                  RoutingContext ctx) {\n"
+"        // Input validation\n"
+"        if(userName == null || userName.isEmpty()\n"
+"                || !webAuthnResponse.isSet()\n"
+"                || !webAuthnResponse.isValid()) {\n"
+"            return Uni.createFrom().item(Response.status(Status.BAD_REQUEST).build());\n"
+"        }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:1018
+#, no-wrap
+msgid ""
+"        Uni<User> userUni = User.findByUserName(userName);\n"
+"        return userUni.flatMap(user -> {\n"
+"            if(user != null) {\n"
+"                // Duplicate user\n"
+"                return Uni.createFrom().item(Response.status(Status.BAD_REQUEST).build());\n"
+"            }\n"
+"            Uni<Authenticator> authenticator = this.webAuthnSecurity.register(webAuthnResponse, ctx);\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:1027
+#, no-wrap
+msgid ""
+"            return authenticator\n"
+"                    // store the user\n"
+"                    .flatMap(auth -> {\n"
+"                        User newUser = new User();\n"
+"                        newUser.userName = auth.getUserName();\n"
+"                        WebAuthnCredential credential = new WebAuthnCredential(auth, newUser);\n"
+"                        return credential.persist()\n"
+"                                .flatMap(c -> newUser.persist());\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:1039
+#, no-wrap
+msgid ""
+"                    })\n"
+"                    .map(newUser -> {\n"
+"                        // make a login JWT cookie\n"
+"                        NewCookie cookie = null;\n"
+"                        return Response.seeOther(URI.create(\"/\")).cookie(cookie).build();\n"
+"                    })\n"
+"                    // handle login failure\n"
+"                    .onFailure().recoverWithItem(x -> {\n"
+"                        // make a proper error response\n"
+"                        return Response.status(Status.BAD_REQUEST).build();\n"
+"                    });\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:1043
+#, no-wrap
+msgid ""
+"        });\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:1049
+msgid "The `WebAuthnSecurity` methods do not set or read the user cookie, so you will have to take care of it yourself, but it allows you to use other means of storing the user, such as JWT. You can use the `rememberUser(String userName, RoutingContext ctx)` and `logout(RoutingContext ctx)` methods on the same `WebAuthnSecurity` class if you want to manually set up login cookies."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/security-webauthn.adoc:1050
+#, no-wrap
+msgid "Blocking version"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:1055
+msgid "If you're using a blocking data access to the database, you can safely block on the `WebAuthnSecurity` methods, with `.await().indefinitely()`, because nothing is async in the `register` and `login` methods, besides the data access with your `WebAuthnUserProvider`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:1058
+#, no-wrap
+msgid ""
+"You will have to add the `@Blocking` annotation on your `WebAuthnUserProvider` class in order to tell the\n"
+"Quarkus WebAuthn endpoints to defer those calls to the worker pool.                \n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/security-webauthn.adoc:1059
+#, no-wrap
+msgid "Testing WebAuthn"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:1063
+msgid "Testing WebAuthn can be complicated because normally you need a hardware token, which is why we've made the `quarkus-test-security-webauthn` extension:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:1071
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-test-security-webauthn</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:1077
+#, no-wrap
+msgid "implementation(\"io.quarkus:quarkus-test-security-webauthn\")\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:1082
+msgid "With this, you can use `WebAuthnHardware` to emulate an authenticator token, as well as the `WebAuthnEndpointHelper` helper methods in order to invoke the WebAuthn endpoints, or even fill your form data for custom endpoints:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:1086
+#: upstream/_guides/security-webauthn.adoc:1278
+#, no-wrap
+msgid "package org.acme.security.webauthn.test;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:1088
+#, no-wrap
+msgid "import static io.restassured.RestAssured.given;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:1091
+#, no-wrap
+msgid ""
+"import java.util.function.Consumer;\n"
+"import java.util.function.Supplier;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:1094
+#, no-wrap
+msgid ""
+"import org.hamcrest.Matchers;\n"
+"import org.junit.jupiter.api.Test;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:1104
+#, no-wrap
+msgid ""
+"import io.quarkus.security.webauthn.WebAuthnController;\n"
+"import io.quarkus.test.junit.QuarkusTest;\n"
+"import io.quarkus.test.security.webauthn.WebAuthnEndpointHelper;\n"
+"import io.quarkus.test.security.webauthn.WebAuthnHardware;\n"
+"import io.restassured.RestAssured;\n"
+"import io.restassured.filter.Filter;\n"
+"import io.restassured.http.ContentType;\n"
+"import io.restassured.specification.RequestSpecification;\n"
+"import io.vertx.core.json.JsonObject;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:1107
+#, no-wrap
+msgid ""
+"@QuarkusTest\n"
+"public class WebAuthnResourceTest {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:1114
+#, no-wrap
+msgid ""
+"    enum User {\n"
+"        USER, ADMIN;\n"
+"    }\n"
+"    enum Endpoint {\n"
+"        DEFAULT, MANUAL;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:1120
+#, no-wrap
+msgid ""
+"    @Test\n"
+"    public void testWebAuthnUser() {\n"
+"        testWebAuthn(\"FroMage\", User.USER, Endpoint.DEFAULT);\n"
+"        testWebAuthn(\"scooby\", User.USER, Endpoint.MANUAL);\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:1125
+#, no-wrap
+msgid ""
+"    @Test\n"
+"    public void testWebAuthnAdmin() {\n"
+"        testWebAuthn(\"admin\", User.ADMIN, Endpoint.DEFAULT);\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:1129
+#, no-wrap
+msgid ""
+"    private void testWebAuthn(String userName, User user, Endpoint endpoint) {\n"
+"        Filter cookieFilter = new RenardeCookieFilter();\n"
+"        WebAuthnHardware token = new WebAuthnHardware();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:1131
+#: upstream/_guides/security-webauthn.adoc:1151
+#, no-wrap
+msgid "        verifyLoggedOut(cookieFilter);\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:1143
+#, no-wrap
+msgid ""
+"        // two-step registration\n"
+"        String challenge = WebAuthnEndpointHelper.invokeRegistration(userName, cookieFilter);\n"
+"        JsonObject registrationJson = token.makeRegistrationJson(challenge);\n"
+"        if(endpoint == Endpoint.DEFAULT)\n"
+"            WebAuthnEndpointHelper.invokeCallback(registrationJson, cookieFilter);\n"
+"        else {\n"
+"            invokeCustomEndpoint(\"/register\", cookieFilter, request -> {\n"
+"                WebAuthnEndpointHelper.addWebAuthnRegistrationFormParameters(request, registrationJson);\n"
+"                request.formParam(\"userName\", userName);\n"
+"            });\n"
+"        }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:1146
+#: upstream/_guides/security-webauthn.adoc:1166
+#, no-wrap
+msgid ""
+"        // verify that we can access logged-in endpoints\n"
+"        verifyLoggedIn(cookieFilter, userName, user);\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:1149
+#: upstream/_guides/security-webauthn.adoc:1169
+#, no-wrap
+msgid ""
+"        // logout\n"
+"        WebAuthnEndpointHelper.invokeLogout(cookieFilter);\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:1163
+#, no-wrap
+msgid ""
+"        // two-step login\n"
+"        challenge = WebAuthnEndpointHelper.invokeLogin(userName, cookieFilter);\n"
+"        JsonObject loginJson = token.makeLoginJson(challenge);\n"
+"        if(endpoint == Endpoint.DEFAULT)\n"
+"            WebAuthnEndpointHelper.invokeCallback(loginJson, cookieFilter);\n"
+"        else {\n"
+"            invokeCustomEndpoint(\"/login\", cookieFilter, request -> {\n"
+"                WebAuthnEndpointHelper.addWebAuthnLoginFormParameters(request, loginJson);\n"
+"                request.formParam(\"userName\", userName);\n"
+"            });\n"
+"        }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:1172
+#, no-wrap
+msgid ""
+"        verifyLoggedOut(cookieFilter);\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:1189
+#, no-wrap
+msgid ""
+"    private void invokeCustomEndpoint(String uri, Filter cookieFilter, Consumer<RequestSpecification> requestCustomiser) {\n"
+"        RequestSpecification request = given()\n"
+"        .when();\n"
+"        requestCustomiser.accept(request);\n"
+"        request\n"
+"        .filter(cookieFilter)\n"
+"        .redirects().follow(false)\n"
+"        .log().ifValidationFails()\n"
+"        .post(uri)\n"
+"        .then()\n"
+"        .statusCode(200)\n"
+"        .log().ifValidationFails()\n"
+"        .cookie(WebAuthnController.CHALLENGE_COOKIE, Matchers.is(\"\"))\n"
+"        .cookie(WebAuthnController.USERNAME_COOKIE, Matchers.is(\"\"))\n"
+"        .cookie(\"quarkus-credential\", Matchers.notNullValue());\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:1205
+#, no-wrap
+msgid ""
+"    private void verifyLoggedIn(Filter cookieFilter, String userName, User user) {\n"
+"        // public API still good\n"
+"        RestAssured.given().filter(cookieFilter)\n"
+"        .when()\n"
+"        .get(\"/api/public\")\n"
+"        .then()\n"
+"        .statusCode(200)\n"
+"        .body(Matchers.is(\"public\"));\n"
+"        // public API user name\n"
+"        RestAssured.given().filter(cookieFilter)\n"
+"        .when()\n"
+"        .get(\"/api/public/me\")\n"
+"        .then()\n"
+"        .statusCode(200)\n"
+"        .body(Matchers.is(userName));\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:1213
+#, no-wrap
+msgid ""
+"        // user API accessible\n"
+"        RestAssured.given().filter(cookieFilter)\n"
+"        .when()\n"
+"        .get(\"/api/users/me\")\n"
+"        .then()\n"
+"        .statusCode(200)\n"
+"        .body(Matchers.is(userName));\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:1230
+#, no-wrap
+msgid ""
+"        // admin API?\n"
+"        if(user == User.ADMIN) {\n"
+"            RestAssured.given().filter(cookieFilter)\n"
+"            .when()\n"
+"            .get(\"/api/admin\")\n"
+"            .then()\n"
+"            .statusCode(200)\n"
+"            .body(Matchers.is(\"admin\"));\n"
+"        } else {\n"
+"            RestAssured.given().filter(cookieFilter)\n"
+"            .when()\n"
+"            .get(\"/api/admin\")\n"
+"            .then()\n"
+"            .statusCode(403);\n"
+"        }\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:1246
+#, no-wrap
+msgid ""
+"    private void verifyLoggedOut(Filter cookieFilter) {\n"
+"        // public API still good\n"
+"        RestAssured.given().filter(cookieFilter)\n"
+"        .when()\n"
+"        .get(\"/api/public\")\n"
+"        .then()\n"
+"        .statusCode(200)\n"
+"        .body(Matchers.is(\"public\"));\n"
+"        // public API user name\n"
+"        RestAssured.given().filter(cookieFilter)\n"
+"        .when()\n"
+"        .get(\"/api/public/me\")\n"
+"        .then()\n"
+"        .statusCode(200)\n"
+"        .body(Matchers.is(\"<not logged in>\"));\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:1256
+#, no-wrap
+msgid ""
+"        // user API not accessible\n"
+"        RestAssured.given()\n"
+"        .filter(cookieFilter)\n"
+"        .redirects().follow(false)\n"
+"        .when()\n"
+"        .get(\"/api/users/me\")\n"
+"        .then()\n"
+"        .statusCode(302)\n"
+"        .header(\"Location\", Matchers.is(\"http://localhost:8081/\"));\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:1268
+#, no-wrap
+msgid ""
+"        // admin API not accessible\n"
+"        RestAssured.given()\n"
+"        .filter(cookieFilter)\n"
+"        .redirects().follow(false)\n"
+"        .when()\n"
+"        .get(\"/api/admin\")\n"
+"        .then()\n"
+"        .statusCode(302)\n"
+"        .header(\"Location\", Matchers.is(\"http://localhost:8081/\"));\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:1274
+msgid "For this test, since we're testing both the provided callback endpoint, which updates users in its `WebAuthnUserProvider` and the manual `LoginResource` endpoint, which deals with users manually, we need to override the `WebAuthnUserProvider` with one that doesn't update the `scooby` user:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:1282
+#, no-wrap
+msgid "import org.acme.security.webauthn.MyWebAuthnSetup;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:1286
+#, no-wrap
+msgid ""
+"import io.quarkus.test.Mock;\n"
+"import io.smallrye.mutiny.Uni;\n"
+"import io.vertx.ext.auth.webauthn.Authenticator;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-webauthn.adoc:1299
+#, no-wrap
+msgid ""
+"@Mock\n"
+"@ApplicationScoped\n"
+"public class TestUserProvider extends MyWebAuthnSetup {\n"
+"    @Override\n"
+"    public Uni<Void> updateOrStoreWebAuthnCredentials(Authenticator authenticator) {\n"
+"        // delegate the scooby user to the manual endpoint, because if we do it here it will be\n"
+"        // created/udated twice\n"
+"        if(authenticator.getUserName().equals(\"scooby\"))\n"
+"            return Uni.createFrom().nullItem();\n"
+"        return super.updateOrStoreWebAuthnCredentials(authenticator);\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/security-webauthn.adoc:1302
+#, no-wrap
+msgid "Configuration Reference"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_guides/security-webauthn.adoc:1306
+#, no-wrap
+msgid "References"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-webauthn.adoc:1308
+msgid "xref:security.adoc[Quarkus Security]"
+msgstr ""
