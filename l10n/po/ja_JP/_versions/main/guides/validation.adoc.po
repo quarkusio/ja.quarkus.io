@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2022-03-19 02:29+0000\n"
+"POT-Creation-Date: 2022-08-02 03:00+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -167,7 +167,7 @@ msgstr ""
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/validation.adoc:82
-#: upstream/_versions/main/guides/validation.adoc:400
+#: upstream/_versions/main/guides/validation.adoc:430
 #, no-wrap
 msgid "public class Book {\n"
 msgstr ""
@@ -345,7 +345,7 @@ msgstr ""
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/validation.adoc:169
-#: upstream/_versions/main/guides/validation.adoc:409
+#: upstream/_versions/main/guides/validation.adoc:439
 #, no-wrap
 msgid "}\n"
 msgstr "}\n"
@@ -639,19 +639,70 @@ msgstr ""
 msgid "However, in the case of ``ConstraintValidator``s that are dependent of attributes of the constraint annotation (typically when implementing the `initialize(A constraintAnnotation)` method), use the `@Dependent` scope to make sure each annotation context has a separate instance of the `ConstraintValidator` bean."
 msgstr ""
 
+#. type: Plain text
+#: upstream/_versions/main/guides/validation.adoc:314
+msgid "If customizing the `ValidatorFactory` through the available configuration properties and the CDI beans above doesn't cover your requirements, you can customize it further by registering `ValidatorFactoryCustomizer` beans."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/validation.adoc:316
+msgid "For instance, you could override the built-in validator enforcing the `@Email` constraint and use `MyEmailValidator` instead with the following class:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/validation.adoc:321
+#, no-wrap
+msgid ""
+"@ApplicationScoped\n"
+"public class MyEmailValidatorFactoryCustomizer implements ValidatorFactoryCustomizer {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/validation.adoc:325
+#, no-wrap
+msgid ""
+"    @Override\n"
+"    public void customize(BaseHibernateValidatorConfiguration<?> configuration) {\n"
+"        ConstraintMapping constraintMapping = configuration.createConstraintMapping();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/validation.adoc:330
+#, no-wrap
+msgid ""
+"        constraintMapping\n"
+"                .constraintDefinition(Email.class)\n"
+"                .includeExistingValidators(false)\n"
+"                .validatedBy(MyEmailValidator.class);\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/validation.adoc:334
+#, no-wrap
+msgid ""
+"        configuration.addMapping(constraintMapping);\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/validation.adoc:338
+msgid "All beans implementing `ValidatorFactoryCustomizer` are applied, meaning you can have several of them.  If you need to enforce some ordering, you can use the usual `@javax.annotation.Priority` annotation - beans with higher priority are applied first."
+msgstr ""
+
 #. type: Title ====
-#: upstream/_versions/main/guides/validation.adoc:312
+#: upstream/_versions/main/guides/validation.adoc:339
 #, no-wrap
 msgid "Constraint validators as beans"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/validation.adoc:315
+#: upstream/_versions/main/guides/validation.adoc:342
 msgid "You can declare your constraint validators as CDI beans:"
 msgstr "制約バリデーターをCDI Beanとして宣言することができます。"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/validation.adoc:320
+#: upstream/_versions/main/guides/validation.adoc:347
 #, no-wrap
 msgid ""
 "@ApplicationScoped\n"
@@ -659,7 +710,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/validation.adoc:323
+#: upstream/_versions/main/guides/validation.adoc:350
 #, no-wrap
 msgid ""
 "    @Inject\n"
@@ -667,7 +718,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/validation.adoc:329
+#: upstream/_versions/main/guides/validation.adoc:356
 #, no-wrap
 msgid ""
 "    @Override\n"
@@ -678,7 +729,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/validation.adoc:333
+#: upstream/_versions/main/guides/validation.adoc:360
 #, no-wrap
 msgid ""
 "        return service.validate(value);\n"
@@ -687,38 +738,50 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/validation.adoc:337
-msgid "When initializing a constraint validator of a given type, Quarkus will check if a bean of this type is available and, if so, it will use it instead of instantiating one."
+#: upstream/_versions/main/guides/validation.adoc:364
+#, fuzzy
+#| msgid "When initializing a constraint validator of a given type, Quarkus will check if a bean of this type is available and, if so, it will use it instead of instantiating one."
+msgid "When initializing a constraint validator of a given type, Quarkus will check if a bean of this type is available and, if so, it will use it instead of instantiating a `ConstraintValidator`."
 msgstr "指定された型の制約バリデーターを初期化する際、Quarkusはこの型のBeanが利用可能かどうかをチェックし、利用可能な場合はインスタンスを作成する代わりにそれを使用します。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/validation.adoc:339
+#: upstream/_versions/main/guides/validation.adoc:366
 msgid "Thus, as demonstrated in our example, you can fully use injection in your constraint validator beans."
 msgstr "このように、例で示したように、制約バリデーターBeanでインジェクションを完全に使用することができます。"
 
 #. type: delimited block =
-#: upstream/_versions/main/guides/validation.adoc:343
-msgid "Except in very specific situations, it is recommended to make the said beans `@ApplicationScoped`."
-msgstr "非常に特定の状況を除いて、このBeanは `@ApplicationScoped` として作ることをお勧めします."
+#: upstream/_versions/main/guides/validation.adoc:370
+msgid "The scope you choose for your `ConstraintValidator` bean is important:"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/main/guides/validation.adoc:372
+msgid "If the same instance of the `ConstraintValidator` bean can be used across the whole application, use the `@ApplicationScoped` scope."
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/main/guides/validation.adoc:373
+msgid "If the `ConstraintValidator` bean implements the `initialize(A constraintAnnotation)` method and depends on the state of the constraint annotation, use the `@Dependent` scope to make sure each annotation context has a separate and properly configured instance of the `ConstraintValidator` bean."
+msgstr ""
 
 #. type: Title ===
-#: upstream/_versions/main/guides/validation.adoc:345
+#: upstream/_versions/main/guides/validation.adoc:375
 #, no-wrap
 msgid "Validation and localization"
 msgstr "バリデーションとローカリゼーション"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/validation.adoc:348
+#: upstream/_versions/main/guides/validation.adoc:378
 msgid "By default, constraint violation messages will be returned in the build system locale."
 msgstr "デフォルトでは、制約違反のメッセージはビルドシステムのロケールで返されます。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/validation.adoc:350
+#: upstream/_versions/main/guides/validation.adoc:380
 msgid "You can configure this behavior by adding the following configuration in your `application.properties`:"
 msgstr "この動作は、以下の設定を `application.properties` に追加することで変更することが出来ます:"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/validation.adoc:355
+#: upstream/_versions/main/guides/validation.adoc:385
 #, no-wrap
 msgid ""
 "# The default locale to use\n"
@@ -726,13 +789,13 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/validation.adoc:359
+#: upstream/_versions/main/guides/validation.adoc:389
 #, fuzzy
 msgid "If you are using RESTEasy Reactive, in the context of a JAX-RS endpoint, Hibernate Validator will automatically resolve the optimal locale to use from the `Accept-Language` HTTP header, provided the supported locales have been properly specified in the `application.properties`:"
 msgstr "RESTEasyを使用している場合、JAX-RSエンドポイントのコンテキストでは、 サポートされるロケールが `application.properties` で適切に指定されている場合、Hibernate Validatorが使用する最適なロケールを `Accept-Language` HTTPヘッダから自動的に解決します。"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/validation.adoc:364
+#: upstream/_versions/main/guides/validation.adoc:394
 #, no-wrap
 msgid ""
 "# The list of all the supported locales\n"
@@ -740,33 +803,33 @@ msgid ""
 msgstr ""
 
 #. type: Title ===
-#: upstream/_versions/main/guides/validation.adoc:366
+#: upstream/_versions/main/guides/validation.adoc:396
 #, no-wrap
 msgid "Validation groups for REST endpoint or service method validation"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/validation.adoc:370
+#: upstream/_versions/main/guides/validation.adoc:400
 msgid "It's sometimes necessary to enable different validation constraints for the same class when it's passed to a different method."
 msgstr "同じクラスが別のメソッドに渡されたときに、異なるバリデーション制約を有効にする必要があることがあります。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/validation.adoc:375
+#: upstream/_versions/main/guides/validation.adoc:405
 msgid "For example, a `Book` may need to have a `null` identifier when passed to the `post` method (because the identifier will be generated), but a non-`null` identifier when passed to the `put` method (because the method needs the identifier to know what to update)."
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/validation.adoc:378
+#: upstream/_versions/main/guides/validation.adoc:408
 msgid "To address this, you can take advantage of validation groups.  Validation groups are markers that you put on your constraints in order to enable or disable them at will."
 msgstr "これに対処するために、バリデーション・グループを利用することができます。バリデーション・グループは、制約を有効または無効にするために制約に付けるマーカーです。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/validation.adoc:380
+#: upstream/_versions/main/guides/validation.adoc:410
 msgid "First, define the `Post` and `Put` groups, which are just Java interfaces."
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/validation.adoc:389
+#: upstream/_versions/main/guides/validation.adoc:419
 #, no-wrap
 msgid ""
 "public interface ValidationGroups {\n"
@@ -778,17 +841,17 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/validation.adoc:394
+#: upstream/_versions/main/guides/validation.adoc:424
 msgid "Make the custom groups extend the `Default` group.  This means that whenever these groups are enabled, the `Default` group is also enabled.  This is useful if you have constraints that you want validated in both the `Post` and `Put` method: you can simply use the default group on those constraints, like on the `title` property below."
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/validation.adoc:396
+#: upstream/_versions/main/guides/validation.adoc:426
 msgid "Then add the relevant constraints to `Book`, assigning the right group to each constraint:"
 msgstr "次に、関連する制約を `Book` に追加し、各制約に適切なグループを割り当てます。"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/validation.adoc:404
+#: upstream/_versions/main/guides/validation.adoc:434
 #, no-wrap
 msgid ""
 "    @Null(groups = ValidationGroups.Post.class)\n"
@@ -797,7 +860,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/validation.adoc:407
+#: upstream/_versions/main/guides/validation.adoc:437
 #, no-wrap
 msgid ""
 "    @NotBlank\n"
@@ -805,12 +868,12 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/validation.adoc:412
+#: upstream/_versions/main/guides/validation.adoc:442
 msgid "Finally, add a `@ConvertGroup` annotation next to your `@Valid` annotation in your validated method."
 msgstr "最後に、検証済みメソッドの `@Valid` アノテーションの横に `@ConvertGroup` アノテーションを追加します。"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/validation.adoc:421
+#: upstream/_versions/main/guides/validation.adoc:451
 #, no-wrap
 msgid ""
 "@Path(\"/\")\n"
@@ -822,7 +885,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/validation.adoc:428
+#: upstream/_versions/main/guides/validation.adoc:458
 #, no-wrap
 msgid ""
 "@Path(\"/\")\n"
@@ -834,20 +897,23 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/validation.adoc:432
+#: upstream/_versions/main/guides/validation.adoc:462
 msgid "Enable the `Post` group, meaning only constraints assigned to the `Post` (and `Default`) groups will be validated for the `book` parameter of the `post` method.  In this case, it means `Book.id` must be `null` and `Book.title` must not be blank."
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/validation.adoc:435
+#: upstream/_versions/main/guides/validation.adoc:465
 msgid "Enable the `Put` group, meaning only constraints assigned to the `Put` (and `Default`) groups will be validated for the `book` parameter of the `put` method.  In this case, it means `Book.id` must not be `null` and `Book.title` must not be blank."
 msgstr ""
 
 #. type: Title ==
-#: upstream/_versions/main/guides/validation.adoc:437
+#: upstream/_versions/main/guides/validation.adoc:467
 #, no-wrap
 msgid "Hibernate Validator Configuration Reference"
 msgstr ""
+
+#~ msgid "Except in very specific situations, it is recommended to make the said beans `@ApplicationScoped`."
+#~ msgstr "非常に特定の状況を除いて、このBeanは `@ApplicationScoped` として作ることをお勧めします."
 
 #~ msgid "To complete this guide, you need:"
 #~ msgstr "このガイドを完成させるには、以下が必要です:"
