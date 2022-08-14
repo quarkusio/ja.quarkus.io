@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2022-06-17 02:53+0000\n"
+"POT-Creation-Date: 2022-08-14 00:19+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -63,7 +63,7 @@ msgstr "GraalVM は多くの制約を課しており、アプリケーション�
 
 #. type: Title ===
 #: upstream/_versions/main/guides/writing-native-applications-tips.adoc:23
-#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:381
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:617
 #, no-wrap
 msgid "Including resources"
 msgstr "リソースを含む"
@@ -469,10 +469,10 @@ msgstr ""
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/writing-native-applications-tips.adoc:222
-#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:374
-#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:395
-#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:417
-#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:441
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:610
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:631
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:653
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:677
 #, no-wrap
 msgid "}\n"
 msgstr "}\n"
@@ -562,24 +562,24 @@ msgstr ""
 "</profiles>\n"
 
 #. type: Title ===
-#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:291
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:292
 #, no-wrap
 msgid "Delaying class initialization"
 msgstr "クラスの初期化を遅らせる"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:294
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:295
 msgid "By default, Quarkus initializes all classes at build time."
 msgstr "デフォルトでは、Quarkus はビルド時にすべてのクラスを初期化します。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:297
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:298
 #, fuzzy
 msgid "There are cases where the initialization of certain classes is done in a static block needs to be postponed to runtime.  Typically, omitting such configuration would result in a runtime exception like the following:"
 msgstr "特定のクラスの初期化が静的ブロックで行われる場合、実行時に延期する必要がある場合があります。通常、このような設定を省略すると、以下のような実行時例外が発生します。"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:304
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:305
 #, no-wrap
 msgid ""
 "Error: No instances are allowed in the image heap for a class that is initialized or reinitialized at image runtime: sun.security.provider.NativePRNG\n"
@@ -593,110 +593,402 @@ msgstr ""
 "Call path from entry point to com.amazonaws.services.s3.model.CryptoConfiguration.<init>(CryptoMode):\n"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:307
-msgid "If you need to delay the initialization of a class, you can use the `--initialize-at-run-time=<package or class>` configuration knob."
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:308
+msgid "Another common source of errors is when the image heap taken by GraalVM contains a `Random`/`SplittableRandom` instance:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:312
+#, no-wrap
+msgid "Error: com.oracle.graal.pointsto.constraints.UnsupportedFeatureException: Detected an instance of Random/SplittableRandom class in the image heap. Instances created during image generation have cached seed values and don't behave as expected.\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:316
+msgid "Which is more often than not caused by Quarkus initializing at build time a class with a static `Random`/`SplittableRandom` field, causing this particular instance to be tentatively included in the image heap."
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:320
+msgid "You can find detailed information about this `Random`/`SplittableRandom` issue in https://foivos.zakkak.net/tutorials/working-with-randoms-native-images/[this blog post]."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:324
+#, fuzzy
+msgid "In these cases, delaying the infringing class initialization at runtime might be the solution and, to achieve that, you can use the `--initialize-at-run-time=<package or class>` configuration knob."
 msgstr "クラスの初期化を遅らせる必要がある場合は、`--initialize-at-run-time=<package or class>` 設定ノブを使用します。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:309
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:326
 msgid "It should be added to the `native-image` configuration using the `quarkus.native.additional-build-args` configuration property as shown in the examples above."
 msgstr "上記の例のように、`quarkus.native.additional-build-args` 設定プロパティーを使用して `native-image` 設定に追加する必要があります。"
 
 #. type: delimited block =
-#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:313
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:330
 msgid "You can find more information about all this in https://github.com/oracle/graal/blob/master/docs/reference-manual/native-image/ClassInitialization.md[the GraalVM documentation]."
 msgstr "これらすべての情報は、 link:https://github.com/oracle/graal/blob/master/docs/reference-manual/native-image/ClassInitialization.md[GraalVMのドキュメント]に記載されています。"
 
 #. type: delimited block =
-#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:319
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:336
 msgid "When multiple classes or packages need to be specified via the `quarkus.native.additional-build-args` configuration property, the `,` symbol needs to be escaped.  An example of this is the following:"
 msgstr "`quarkus.native.additional-build-args` 設定プロパティーを介して複数のクラスやパッケージを指定する必要がある場合は、`,` シンボルをエスケープする必要があります。その例を以下に示します。"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:323
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:340
 #, no-wrap
 msgid "quarkus.native.additional-build-args=--initialize-at-run-time=com.example.SomeClass\\\\,org.acme.SomeOtherClass\n"
 msgstr "quarkus.native.additional-build-args=--initialize-at-run-time=com.example.SomeClass\\\\,org.acme.SomeOtherClass\n"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:326
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:343
 msgid "and in the case of using the Maven configuration instead of `application.properties`:"
 msgstr "`application.properties` の代わりに Maven 設定を使用する場合。"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:330
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:347
 #, no-wrap
 msgid "<quarkus.native.additional-build-args>--initialize-at-run-time=com.example.SomeClass\\,org.acme.SomeOtherClass</quarkus.native.additional-build-args>\n"
 msgstr "<quarkus.native.additional-build-args>--initialize-at-run-time=com.example.SomeClass\\,org.acme.SomeOtherClass</quarkus.native.additional-build-args>\n"
 
 #. type: Title ===
-#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:333
-#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:426
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:350
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:662
 #, no-wrap
 msgid "Managing Proxy Classes"
 msgstr "プロキシークラスの管理"
 
 #. type: delimited block =
-#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:336
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:353
 msgid "While writing native application you'll need to define proxy classes at image build time by specifying the list of interfaces that they implement."
 msgstr "ネイティブアプリケーションを書く際には、実装するインターフェースのリストを指定して、イメージのビルド時にプロキシークラスを定義する必要があります。"
 
 #. type: delimited block =
-#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:338
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:355
 msgid "In such a situation, the error you might encounter is:"
 msgstr "このような状況では、以下のようなエラーが発生します。"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:342
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:359
 #, no-wrap
 msgid "com.oracle.svm.core.jdk.UnsupportedFeatureError: Proxy class defined by interfaces [interface org.apache.http.conn.HttpClientConnectionManager, interface org.apache.http.pool.ConnPoolControl, interface com.amazonaws.http.conn.Wrapped] not found. Generating proxy classes at runtime is not supported. Proxy classes need to be defined at image build time by specifying the list of interfaces that they implement. To define proxy classes use -H:DynamicProxyConfigurationFiles=<comma-separated-config-files> and -H:DynamicProxyConfigurationResources=<comma-separated-config-resources> options.\n"
 msgstr "com.oracle.svm.core.jdk.UnsupportedFeatureError: Proxy class defined by interfaces [interface org.apache.http.conn.HttpClientConnectionManager, interface org.apache.http.pool.ConnPoolControl, interface com.amazonaws.http.conn.Wrapped] not found. Generating proxy classes at runtime is not supported. Proxy classes need to be defined at image build time by specifying the list of interfaces that they implement. To define proxy classes use -H:DynamicProxyConfigurationFiles=<comma-separated-config-files> and -H:DynamicProxyConfigurationResources=<comma-separated-config-resources> options.\n"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:346
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:363
 msgid "Solving this issue requires adding the `-H:DynamicProxyConfigurationResources=<comma-separated-config-resources>` option and to provide a dynamic proxy configuration file.  You can find all the information about the format of this file in https://github.com/oracle/graal/blob/master/docs/reference-manual/native-image/DynamicProxy.md#manual-configuration[the GraalVM documentation]."
 msgstr "この問題を解決するには、 `-H:DynamicProxyConfigurationResources=<comma-separated-config-resources>` オプションを追加し、ダイナミックプロキシ設定ファイルを用意する必要があります。このファイルのフォーマットに関するすべての情報は、 link:https://github.com/oracle/graal/blob/master/docs/reference-manual/native-image/DynamicProxy.md#manual-configuration[GraalVMのドキュメント]に記載されています。"
 
+#. type: Title ===
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:365
+#, no-wrap
+msgid "Modularity Benefits"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:371
+msgid "During native executable build time GraalVM analyses the application's call tree and generates a code-set that includes all the code it needs.  Having a modular codebase is key to avoiding problems with unused or optional parts of your application, while at the same time reducing both native executable build times and size.  In this section you will learn about the details behind the benefits of modularity for native applications."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:385
+msgid "When code is not modular enough, generated native executables can end up with more code than what the user needs.  If a feature is not used and the code gets compiled into the native executable, this is a waste of native compilation time and memory usage, as well as native executable disk space and starting heap size.  Even more problems arise when third party libraries or specialized API subsystems are used which cause native compilation or runtime errors, and their use is not modularised enough.  A recent problem can be found in the JAXB library, which is capable of deserializing XML files containing images using Java’s AWT APIs.  The vast majority of Quarkus XML users don’t need to deserialize images, so there shouldn’t be a need for users applications to include Java AWT code, unless they specifically configure Quarkus to add the JAXB AWT code to the native executable.  However, because JAXB code that uses AWT is in the same jar as the rest of the XML parsing code, achieving this separation was rather complex and required the use of Java bytecode substitutions to get around it.  These substitutions are hard to maintain and can easily break, hence they should be one's last resort."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:390
+msgid "A modular codebase is the best way to avoid these kind of issues.  Taking the JAXB/AWT problem above, if the JAXB code that dealt with images was in a separate module or jar (e.g. `jaxb-images`), then Quarkus could choose not to include that module unless the user specifically requested the need to serialize/deserialize XML files containing images at build time."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:393
+msgid "Another benefit of modular applications is that they can reduce the code-set that will need to get into the native executable.  The smaller the code-set, the faster the native executable builds will be and the smaller the native executable produced."
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:399
+msgid "The key takeaway point here is the following: Keeping optional features, particularly those that depend on third party libraries or API subsystems with a big footprint, in separate modules is the best solution."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:408
+msgid "How do I know if my application suffers from similar problems? Aside from a deep study of the application, finding usages of https://maven.apache.org/guides/introduction/introduction-to-optional-and-excludes-dependencies.html[Maven optional dependencies] is a clear indicator that your application might suffer from similar problems.  These type of dependencies should be avoided, and instead code that interacts with optional dependencies should be moved into separate modules."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:410
+#, no-wrap
+msgid "Enforcing Singletons"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:417
+msgid "As already explained in the <<delay-class-init-in-your-app, delay class initialization>> section, Quarkus marks all code to be initialized at build time by default.  This means that, unless marked otherwise, static variables will be assigned at build time, and static blocks will be executed at build time too."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:422
+msgid "This can cause values in Java programs that would normally vary from one run to another, to always return a constant value.  E.g. a static field that is assigned the value of `System.currentTimeMillis()` will always return the same value when executed as a Quarkus native executable."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:425
+msgid "Singletons that rely on static variable initialization will suffer similar problems.  For example, imagine you have a singleton based around static initialization along with a REST endpoint to query it:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:430
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:471
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:518
+#, no-wrap
+msgid ""
+"@Path(\"/singletons\")\n"
+"public class Singletons {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:437
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @Path(\"/static\")\n"
+"    public long withStatic() {\n"
+"        return StaticSingleton.startTime();\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:440
+#, no-wrap
+msgid ""
+"class StaticSingleton {\n"
+"    static final long START_TIME = System.currentTimeMillis();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:445
+#, fuzzy, no-wrap
+msgid ""
+"    static long startTime() {\n"
+"        return START_TIME;\n"
+"    }\n"
+"}\n"
+msgstr ""
+"        public String getLast() {\n"
+"            return last;\n"
+"        }\n"
+
+#. type: Plain text
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:450
+msgid "When the `singletons/static` endpoint is queried, it will always return the same value, even after the application is restarted:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:455
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:458
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:463
+#, no-wrap
+msgid ""
+"$ curl http://localhost:8080/singletons/static\n"
+"1656509254532%\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:460
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:507
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:553
+#, fuzzy, no-wrap
+msgid "### Restart the native application ###\n"
+msgstr "アプリケーションでのネイティブのサポート"
+
+#. type: Plain text
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:466
+msgid "Singletons that rely on `enum` classes are also affected by the same issue:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:478
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @Path(\"/enum\")\n"
+"    public long withEnum() {\n"
+"        return EnumSingleton.INSTANCE.startTime();\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:481
+#, no-wrap
+msgid ""
+"enum EnumSingleton {\n"
+"    INSTANCE(System.currentTimeMillis());\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:483
+#, fuzzy, no-wrap
+msgid "    private final long startTime;\n"
+msgstr "        private final Jsonb jsonb;\n"
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:487
+#, no-wrap
+msgid ""
+"    private EnumSingleton(long startTime) {\n"
+"        this.startTime = startTime;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:492
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:538
+#, fuzzy, no-wrap
+msgid ""
+"    long startTime() {\n"
+"        return startTime;\n"
+"    }\n"
+"}\n"
+msgstr ""
+"        public String getLast() {\n"
+"            return last;\n"
+"        }\n"
+
+#. type: Plain text
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:497
+msgid "When the `singletons/enum` endpoint is queried, it will always return the same value, even after the application is restarted:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:502
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:505
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:510
+#, no-wrap
+msgid ""
+"$ curl http://localhost:8080/singletons/enum\n"
+"1656509254601%\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:513
+msgid "One way to fix it is to build singletons using CDI's `@Singleton` annotation:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:521
+#, no-wrap
+msgid ""
+"    @Inject\n"
+"    CdiSingleton cdiSingleton;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:528
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @Path(\"/cdi\")\n"
+"    public long withCdi() {\n"
+"        return cdiSingleton.startTime();\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:533
+#, no-wrap
+msgid ""
+"@Singleton\n"
+"class CdiSingleton {\n"
+"    // Note that the field is not static\n"
+"    final long startTime = System.currentTimeMillis();\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:543
+msgid "After each restart, querying `singletons/cdi` will return a different value, just like it would in JVM mode:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:548
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:551
+#, no-wrap
+msgid ""
+"$ curl http://localhost:8080/singletons/cdi\n"
+"1656510218554%\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:556
+#, no-wrap
+msgid ""
+"$ curl http://localhost:8080/singletons/cdi\n"
+"1656510714689%\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:563
+msgid "An alternative way to enforce a singleton while relying static fields, or enums, is to <<delay-class-init-in-your-app,delay its class initialization until run time>>.  The nice advantage of CDI-based singletons is that your class initialization is not constrained, so you can freely decide whether it should be build-time or run-time initialized, depending on your use case."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:564
+#, no-wrap
+msgid "Beware of common Java API overrides"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:574
+msgid "Certain commonly used Java methods are overriden by user classes, e.g. `toString`, `equals`, `hashCode`...etc.  The majority of overrides do not cause problems, but if they use third party libraries (e.g. for additional formatting), or use dynamic language features (e.g. reflection or proxies), they can cause native image build to fail.  Some of those failures might be solvable via configuration, but others can be more tricky to handle."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:582
+msgid "From a GraalVM points-to analysis perspective, what happens in these method overrides matters, even if the application does not explicitly call them.  This is because these methods are used throughout the JDK, and all it takes is for one of those calls to be done on an unconstrained type, e.g. `java.lang.Object`, for the analysis to have to pull all implementations of that particular method."
+msgstr ""
+
 #. type: Title ==
-#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:348
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:584
 #, no-wrap
 msgid "Supporting native in a Quarkus extension"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:351
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:587
 msgid "Supporting native in a Quarkus extension is even easier as Quarkus provides a lot of tools to simplify all this."
 msgstr "Quarkus のエクステンションでのネイティブのサポートは、Quarkus がこれらすべてを単純化するための多くのツールを提供しているため、さらに簡単になりました。"
 
 #. type: delimited block =
-#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:355
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:591
 msgid "Everything described here will only work in the context of Quarkus extensions, it won't work in an application."
 msgstr "ここで説明したことはすべて、Quarkus エクステンションのコンテキストでのみ機能し、アプリケーションでは機能しません。"
 
 #. type: Title ===
-#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:357
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:593
 #, no-wrap
 msgid "Register reflection"
 msgstr "リフレクションの登録"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:360
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:596
 msgid "Quarkus makes registration of reflection in an extension a breeze by using `ReflectiveClassBuildItem`, thus eliminating the need for a JSON configuration file."
 msgstr "Quarkus では、`ReflectiveClassBuildItem` を使用することで、エクステンションへのリフレクションの登録が簡単になり、JSON 設定ファイルが不要になります。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:362
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:598
 msgid "To register a class for reflection, one would need to create a Quarkus processor class and add a build step that registers reflection:"
 msgstr "リフレクション用のクラスを登録するには、Quarkus プロセッサークラスを作成し、リフレクションを登録するビルドステップを追加する必要があります。"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:366
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:602
 #, no-wrap
 msgid "public class SaxParserProcessor {\n"
 msgstr "public class SaxParserProcessor {\n"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:372
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:608
 #, no-wrap
 msgid ""
 "    @BuildStep\n"
@@ -712,23 +1004,23 @@ msgstr ""
 "    }\n"
 
 #. type: delimited block =
-#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:379
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:615
 msgid "More information about reflection in GraalVM can be found https://github.com/oracle/graal/blob/master/docs/reference-manual/native-image/Reflection.md[here]."
 msgstr "GraalVMでのリフレクションについての詳細は link:https://github.com/oracle/graal/blob/master/docs/reference-manual/native-image/Reflection.md[こちら]をご覧ください。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:384
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:620
 msgid "In the context of an extension, Quarkus eliminates the need for a JSON configuration file by allowing extension authors to specify a `NativeImageResourceBuildItem`:"
 msgstr "エクステンションのコンテキストでは、Quarkus は、エクステンションの作成者が `NativeImageResourceBuildItem` .NET Frameworkを指定できるようにすることで、JSON 設定ファイルの必要性を排除しています。"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:388
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:624
 #, no-wrap
 msgid "public class ResourcesProcessor {\n"
 msgstr "public class ResourcesProcessor {\n"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:393
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:629
 #, no-wrap
 msgid ""
 "    @BuildStep\n"
@@ -742,30 +1034,30 @@ msgstr ""
 "    }\n"
 
 #. type: delimited block =
-#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:400
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:636
 msgid "For more information about GraalVM resource handling in native executables please refer to https://github.com/oracle/graal/blob/master/docs/reference-manual/native-image/Resources.md[the GraalVM documentation]."
 msgstr "ネイティブ実行可能ファイルにおけるGraalVMのリソース処理についての詳細は、 link:https://github.com/oracle/graal/blob/master/docs/reference-manual/native-image/Resources.md[GraalVMのドキュメント]を参照してください。"
 
 #. type: Title ==
-#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:403
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:639
 #, no-wrap
 msgid "Delay class initialization"
 msgstr "クラスの初期化を遅らせる"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:406
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:642
 msgid "Quarkus simplifies things by allowing extensions authors to simply register a `RuntimeInitializedClassBuildItem`. A simple example of doing so could be:"
 msgstr "Quarkus では、エクステンションの作成者が簡単に `RuntimeInitializedClassBuildItem` を登録できるようにすることで、物事を簡素化しています。簡単な例としては、次のようなものが考えられます。"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:410
-#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:433
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:646
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:669
 #, no-wrap
 msgid "public class S3Processor {\n"
 msgstr "public class S3Processor {\n"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:415
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:651
 #, no-wrap
 msgid ""
 "    @BuildStep\n"
@@ -779,22 +1071,22 @@ msgstr ""
 "    }\n"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:420
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:656
 msgid "Using such a construct means that a `--initialize-at-run-time` option will automatically be added to the `native-image` command line."
 msgstr "このような構文を使用すると、 `--initialize-at-run-time` オプションが自動的に `native-image` コマンドラインに追加されることを意味します。"
 
 #. type: delimited block =
-#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:424
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:660
 msgid "For more information about `--initialize-at-run-time`, please read https://github.com/oracle/graal/blob/master/docs/reference-manual/native-image/ClassInitialization.md[the GraalVM documentation]."
 msgstr "`--initialize-at-run-time` の詳細については、 link:https://github.com/oracle/graal/blob/master/docs/reference-manual/native-image/ClassInitialization.md[GraalVMのドキュメント]をお読みください。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:429
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:665
 msgid "Very similarly, Quarkus allows extensions authors to register a `NativeImageProxyDefinitionBuildItem`. An example of doing so is:"
 msgstr "同様に、Quarkus では、エクステンションの作成者が `NativeImageProxyDefinitionBuildItem` を登録することができます。その例としては、以下のようなものがあります。"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:439
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:675
 #, no-wrap
 msgid ""
 "    @BuildStep\n"
@@ -810,27 +1102,27 @@ msgstr ""
 "    }\n"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:444
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:680
 msgid "Using such a construct means that a `-H:DynamicProxyConfigurationResources` option will automatically be added to the `native-image` command line."
 msgstr "このような構文を使用すると、`-H:DynamicProxyConfigurationResources` オプションが自動的に `native-image` コマンドラインに追加されることを意味します。"
 
 #. type: delimited block =
-#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:448
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:684
 msgid "For more information about Proxy Classes you can read https://github.com/oracle/graal/blob/master/docs/reference-manual/native-image/DynamicProxy.md[the GraalVM documentation]."
 msgstr "プロキシクラスの詳細については、 link:https://github.com/oracle/graal/blob/master/docs/reference-manual/native-image/DynamicProxy.md[GraalVMのドキュメント]をご覧ください。"
 
 #. type: Title ===
-#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:450
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:686
 #, no-wrap
 msgid "Logging with Native Image"
 msgstr "ネイティブイメージでのロギング"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:453
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:689
 msgid "If you are using dependencies that require logging components such as Apache Commons Logging or Log4j and are experiencing a `ClassNotFoundException` when building the native executable, you can resolve this by excluding the logging library and adding the corresponding JBoss Logging adapter."
 msgstr "Apache Commons Logging や Log4j などのロギングコンポーネントを必要とする依存関係を使用していて、ネイティブ実行可能ファイルをビルドする際に `ClassNotFoundException` が発生する場合、ロギングライブラリーを除外し、対応する JBoss Logging アダプターを追加することで解決できます。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:454
+#: upstream/_versions/main/guides/writing-native-applications-tips.adoc:690
 msgid "For more details please refer to the xref:logging.adoc#logging-adapters[Logging guide]."
 msgstr "詳しくは、link:logging.html#logging-adapters[Loggingガイド] をご覧ください。"
