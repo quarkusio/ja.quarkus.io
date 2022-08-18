@@ -4,7 +4,7 @@ quarkus.io 翻訳プロジェクトでは、[quarkus.io](https://quarkus.io) の
 
 ## 翻訳方式
 
-[quarkus.io](https://quarkus.io)はJekyllを用いた静的サイトであり、そのコンテンツはコンテンツは asciidoctor (.adoc) で記述されています。
+[quarkus.io](https://quarkus.io)はJekyllを用いた静的サイトであり、コンテンツは asciidoctor (.adoc) で記述されています。
 レポジトリは [quarkusio/quarkusio.github.io](https://github.com/quarkusio/quarkusio.github.io ) に存在し、CC BY 3.0 に基づき公開されています。
 本プロジェクトでは、.adocファイルからpo4aというユーティリティを用いてテキストを抽出し、翻訳して.adocファイルに書き戻してビルドすることで日本語版サイトを構築する方式を採っています。
 po4aを用いたテキストの抽出、翻訳メモリを用いた訳文の適用、機械翻訳による下訳、書き戻し処理のワークフローは、本レポジトリのGitHub Actionsによって自動化されており、
