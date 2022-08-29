@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2022-07-28 02:48+0000\n"
+"POT-Creation-Date: 2022-08-28 00:29+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -72,8 +72,8 @@ msgstr "pom.xml"
 #, no-wrap
 msgid ""
 "<dependency>\n"
-"    <groupId>io.quarkiverse.redis</groupId>\n"
-"    <artifactId>quarkus-redis</artifactId>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-redis-client</artifactId>\n"
 "</dependency>\n"
 msgstr ""
 
@@ -157,7 +157,7 @@ msgstr ""
 
 #. type: Plain text
 #: upstream/_versions/main/guides/redis-reference.adoc:82
-msgid "If you are building a reactive Quarkus application integrating with Redis: use `io.quarkus.redis.datasource.RedisReactiveDataSource`."
+msgid "If you are building a reactive Quarkus application integrating with Redis: use `io.quarkus.redis.datasource.ReactiveRedisDataSource`."
 msgstr ""
 
 #. type: Plain text
@@ -208,7 +208,7 @@ msgstr ""
 msgid ""
 "@ApplicationScoped\n"
 "public class RedisExample {\n"
-"    @Inject RedisReactiveDataSource reactiveDataSource;\n"
+"    @Inject ReactiveRedisDataSource reactiveDataSource;\n"
 "    @Inject RedisDataSource redisDataSource;\n"
 "    @Inject RedisAPI redisAPI;\n"
 "    // ...\n"
@@ -244,7 +244,7 @@ msgstr ""
 msgid ""
 "@ApplicationScoped\n"
 "public class RedisExample {\n"
-"    @Inject @RedisClientName(\"my-redis-1\") RedisReactiveDataSource reactiveDataSource;\n"
+"    @Inject @RedisClientName(\"my-redis-1\") ReactiveRedisDataSource reactiveDataSource;\n"
 "    @Inject @RedisClientName(\"my-redis-2\") RedisDataSource redisDataSource;\n"
 "    // ...\n"
 "}\n"
@@ -1114,7 +1114,7 @@ msgstr ""
 #. type: delimited block -
 #: upstream/_versions/main/guides/redis-reference.adoc:535
 #: upstream/_versions/main/guides/redis-reference.adoc:553
-#: upstream/_versions/main/guides/redis-reference.adoc:585
+#: upstream/_versions/main/guides/redis-reference.adoc:634
 #, no-wrap
 msgid "// ...\n"
 msgstr ""
@@ -1142,7 +1142,7 @@ msgstr ""
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/redis-reference.adoc:551
-#: upstream/_versions/main/guides/redis-reference.adoc:583
+#: upstream/_versions/main/guides/redis-reference.adoc:632
 #, no-wrap
 msgid "@Inject ReactiveRedisDataSource ds;\n"
 msgstr ""
@@ -1182,85 +1182,159 @@ msgstr ""
 #. type: Title ====
 #: upstream/_versions/main/guides/redis-reference.adoc:576
 #, no-wrap
+msgid "Using optimistic locking"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/redis-reference.adoc:580
+msgid "To use optimistic locking, you need to use a variant of the `withTransaction` method, allowing the execution of code before the transaction starts.  In other words, it will be executed as follows:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/redis-reference.adoc:584
+#, no-wrap
+msgid "WATCH key\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/redis-reference.adoc:588
+#, no-wrap
+msgid ""
+"// Pre-transaction block\n"
+"// ....\n"
+"// Produce a result\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/redis-reference.adoc:592
+#, no-wrap
+msgid ""
+"MULTI\n"
+"  // In transaction code, receive the result produced by the pre-transaction block.\n"
+"EXEC\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/redis-reference.adoc:595
+msgid "For example, if you need to update a value in a hash only if the field exists, you will use the following API:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/redis-reference.adoc:611
+#, no-wrap
+msgid ""
+"OptimisticLockingTransactionResult<Boolean> result = blocking.withTransaction(ds -> {\n"
+"    // The pre-transaction block:\n"
+"    HashCommands<String, String, String> hashCommands = ds.hash(String.class);\n"
+"    return hashCommands.hexists(key, \"field\"); // Produce a result (boolean in this case)\n"
+"},\n"
+" (exists, tx) -> { // The transactional block, receives the result and the transactional data source\n"
+"        if (exists) {\n"
+"            tx.hash(String.class).hset(key, \"field\", \"new value\");\n"
+"        } else {\n"
+"            tx.discard();\n"
+"        }\n"
+" },\n"
+"  key); // The watched key\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/redis-reference.adoc:617
+msgid "If one of the watched keys is touched before or during the execution of the pre-transaction or transactional blocks, the transaction is aborted.  The pre-transactional block produces a result that the transactional block can use.  This construct is necessary because, within a transaction, the commands do not produce a result.  Results can only be retrieved after the execution of the transaction."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/redis-reference.adoc:622
+msgid "The pre-transaction and transactional blocks are invoked on the same Redis connection.  Consequently, the pre-transaction block must use the passed data source to execute commands.  Thus, the commands are emitted from that connection.  These commands must not modify the watched keys."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/redis-reference.adoc:624
+msgid "The transaction is aborted if the pre-transaction block throws an exception (or produces a failure when using the reactive API)."
+msgstr ""
+
+#. type: Title ====
+#: upstream/_versions/main/guides/redis-reference.adoc:625
+#, no-wrap
 msgid "Executing custom commands"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/redis-reference.adoc:579
+#: upstream/_versions/main/guides/redis-reference.adoc:628
 msgid "To execute a custom command, or a command not supported by the API, use the following approach:"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/redis-reference.adoc:587
+#: upstream/_versions/main/guides/redis-reference.adoc:636
 #, no-wrap
 msgid "Response response = ds.execute(\"my-command\", param1, param2, param3);\n"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/redis-reference.adoc:593
+#: upstream/_versions/main/guides/redis-reference.adoc:642
 msgid "The `execute` method sends the command to Redis and retrieves the `Response`.  The command name is passed as first parameters.  You can add an arbitrary number of **String** parameters to your command.  The result is wrapped into a `Response` object."
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/redis-reference.adoc:595
+#: upstream/_versions/main/guides/redis-reference.adoc:644
 msgid "The reactive variant returns a `Uni<Response>`."
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/redis-reference.adoc:597
+#: upstream/_versions/main/guides/redis-reference.adoc:646
 msgid "You can also execute custom command in a transaction."
 msgstr ""
 
 #. type: Title ==
-#: upstream/_versions/main/guides/redis-reference.adoc:598
+#: upstream/_versions/main/guides/redis-reference.adoc:647
 #, no-wrap
 msgid "Vert.x Redis Client"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/redis-reference.adoc:602
+#: upstream/_versions/main/guides/redis-reference.adoc:651
 msgid "In addition to the high-level API, you can use the Vertx Redis clients directly in your code.  The documentation of the Vert.x Redis Client is available on the https://vertx.io/docs/vertx-redis-client/java/[Vert.x Web Site]."
 msgstr ""
 
 #. type: Title ==
-#: upstream/_versions/main/guides/redis-reference.adoc:603
+#: upstream/_versions/main/guides/redis-reference.adoc:652
 #, no-wrap
 msgid "Redis Health Check"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/redis-reference.adoc:606
+#: upstream/_versions/main/guides/redis-reference.adoc:655
 msgid "If you are using the `quarkus-smallrye-health` extension, `quarkus-redis` will automatically add a readiness health check to validate the connection to the Redis server."
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/redis-reference.adoc:608
+#: upstream/_versions/main/guides/redis-reference.adoc:657
 msgid "So when you access the `/q/health/ready` endpoint of your application you will have information about the connection validation status."
 msgstr "そのため、アプリケーションの `/q/health/ready` エンドポイントにアクセスすると、接続の検証状況に関する情報が表示されます。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/redis-reference.adoc:610
+#: upstream/_versions/main/guides/redis-reference.adoc:659
 msgid "This behavior can be disabled by setting the `quarkus.redis.health.enabled` property to `false` in your `application.properties`."
 msgstr "この動作は、 `application.properties` の `quarkus.redis.health.enabled` プロパティーを `false` に設定することで無効にできます。"
 
 #. type: Title ==
-#: upstream/_versions/main/guides/redis-reference.adoc:611
+#: upstream/_versions/main/guides/redis-reference.adoc:660
 #, no-wrap
 msgid "Providing Redis Hosts Programmatically"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/redis-reference.adoc:615
+#: upstream/_versions/main/guides/redis-reference.adoc:664
 msgid "The `RedisHostsProvider` programmatically provides redis hosts.  This allows for configuration of properties like redis connection password coming from other sources."
 msgstr ""
 
 #. type: delimited block =
-#: upstream/_versions/main/guides/redis-reference.adoc:619
+#: upstream/_versions/main/guides/redis-reference.adoc:668
 msgid "This is useful as it removes the need to store sensitive data in application.properties."
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/redis-reference.adoc:633
+#: upstream/_versions/main/guides/redis-reference.adoc:682
 #, no-wrap
 msgid ""
 "@ApplicationScoped\n"
@@ -1276,29 +1350,29 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/redis-reference.adoc:636
+#: upstream/_versions/main/guides/redis-reference.adoc:685
 msgid "The host provider can be used to configure the redis client like shown below"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/redis-reference.adoc:640
+#: upstream/_versions/main/guides/redis-reference.adoc:689
 #, no-wrap
 msgid "quarkus.redis.hosts-provider-name=hosts-provider\n"
 msgstr ""
 
 #. type: Title ==
-#: upstream/_versions/main/guides/redis-reference.adoc:642
+#: upstream/_versions/main/guides/redis-reference.adoc:691
 #, no-wrap
 msgid "Customizing the Redis options programmatically"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/redis-reference.adoc:646
+#: upstream/_versions/main/guides/redis-reference.adoc:695
 msgid "You can expose a bean implementing the `io.quarkus.redis.client.RedisOptionsCustomizer` interface to customize the Redis client options.  The bean is called for each configured Redis client:"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/redis-reference.adoc:651
+#: upstream/_versions/main/guides/redis-reference.adoc:700
 #, no-wrap
 msgid ""
 "@ApplicationScoped\n"
@@ -1306,7 +1380,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/redis-reference.adoc:662
+#: upstream/_versions/main/guides/redis-reference.adoc:711
 #, no-wrap
 msgid ""
 "    @Override\n"
@@ -1322,18 +1396,18 @@ msgid ""
 msgstr ""
 
 #. type: Title ===
-#: upstream/_versions/main/guides/redis-reference.adoc:665
+#: upstream/_versions/main/guides/redis-reference.adoc:714
 #, no-wrap
 msgid "Dev Services"
 msgstr "Dev Services"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/redis-reference.adoc:668
+#: upstream/_versions/main/guides/redis-reference.adoc:717
 msgid "See link:redis-dev-services.adoc[Redis Dev Service]."
 msgstr ""
 
 #. type: Title ==
-#: upstream/_versions/main/guides/redis-reference.adoc:670
+#: upstream/_versions/main/guides/redis-reference.adoc:719
 #, no-wrap
 msgid "Configuration Reference"
 msgstr "設定リファレンス"
