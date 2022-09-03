@@ -1,0 +1,508 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2022-09-03 03:44+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. type: YAML Front Matter: author
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:1
+#, no-wrap
+msgid "cescoffier"
+msgstr ""
+
+#. type: YAML Front Matter: date
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:1
+#, no-wrap
+msgid "2022-08-30"
+msgstr ""
+
+#. type: YAML Front Matter: layout
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:1
+#, no-wrap
+msgid "post"
+msgstr ""
+
+#. type: YAML Front Matter: synopsis
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:1
+#, no-wrap
+msgid "JSON, Avro and Custom Kafka Serializers and Deserializers with Quarkus"
+msgstr ""
+
+#. type: YAML Front Matter: tags
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:1
+#, no-wrap
+msgid "kafka"
+msgstr ""
+
+#. type: YAML Front Matter: title
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:1
+#, no-wrap
+msgid "How to implement Kafka Serializers and Deserializers?"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:14
+msgid "When your application writes a _record_ into a Kafka topic or when it consumes a _record_ from a Kafka topic, a mechanism of serialization and deserialization happens.  The serialization process transforms the business objects you want to send to Kafka into bytes.  The deserialization process is the opposite.  It receives the bytes from Kafka and recreates the business objects."
+msgstr ""
+
+#. type: Target for macro image
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:15
+#, no-wrap
+msgid "/assets/images/posts/kafka-serde/serde.png"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:18
+msgid "This blog post explores different approaches for this serialization and deserialization and explains how you can implement a custom serializer and deserializer. It also highlights facilities provided by the Kafka connector from Quarkus."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:19
+#, no-wrap
+msgid "Why do I need a custom serializer and deserializer?"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:23
+msgid "https://javadoc.io/static/org.apache.kafka/kafka-clients/3.2.1/org/apache/kafka/common/serialization/package-summary.html[Kafka] provides a set of serializers and deserializers for the common types: `String`, `Double`, `Integer`, `Bytes`...  But that's rarely enough for business objects, even for objects are simple as:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:27
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:164
+#, no-wrap
+msgid "package me.escoffier.quarkus;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:29
+#, no-wrap
+msgid "public record Hero(String name, String picture) {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:31
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:190
+#, no-wrap
+msgid "}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:35
+msgid "Fortunately, Kafka lets us implement our own.  To achieve this, you need to implement the following interfaces:"
+msgstr ""
+
+#. type: Block title
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:36
+#, no-wrap
+msgid "The Serializer interface"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:40
+#, no-wrap
+msgid "public interface Serializer<T> extends Closeable {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:42
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:60
+#, no-wrap
+msgid "  default void configure(Map<String, ?> configs, boolean isKey) {  }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:44
+#, no-wrap
+msgid "  byte[] serialize(String topic, T data);\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:48
+#, no-wrap
+msgid ""
+"  default byte[] serialize(String topic, Headers headers, T data) {\n"
+"    return serialize(topic, data);\n"
+"  }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:52
+#, no-wrap
+msgid ""
+"  @Override\n"
+"  default void close() {   }\n"
+"}\n"
+msgstr ""
+
+#. type: Block title
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:54
+#, no-wrap
+msgid "The Deserializer interface"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:58
+#, no-wrap
+msgid "public interface Deserializer<T> extends Closeable {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:62
+#, no-wrap
+msgid "  T deserialize(String topic, byte[] data);\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:66
+#, no-wrap
+msgid ""
+"  default T deserialize(String topic, Headers headers, byte[] data) {\n"
+"    return deserialize(topic, data);\n"
+"  }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:69
+#, no-wrap
+msgid ""
+"  @Override\n"
+"  default void close() {  }\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:73
+msgid "Once implemented, you need to configure your Kafka producer and consumer's key and value serializer and deserializer.  If you are using the Kafka connector from Quarkus, it will look like this:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:78
+#, no-wrap
+msgid ""
+"mp.messaging.incoming.heroes.value.deserializer=me.escoffier.MyHeroDeserializer\n"
+"mp.messaging.outgoing.heroes.value.serializer=me.escoffier.MyHeroSerializer\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:81
+msgid "But, no worries, Quarkus has a few magic tricks for you."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:83
+msgid "In the rest of this post, we will use the following application:"
+msgstr ""
+
+#. type: Target for macro image
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:84
+#, no-wrap
+msgid "/assets/images/posts/kafka-serde/system.png"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:88
+msgid "The code can be found on https://github.com/cescoffier/quarkus-kafka-serde-demo.  We will develop three variants:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:90
+msgid "The first version uses JSON."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:91
+msgid "The second version uses Avro."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:92
+msgid "The third version uses custom (and dumb) serializer and deserializer."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:93
+#, no-wrap
+msgid "Using JSON"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:97
+msgid "Using JSON with Kafka is very popular.  As most web applications use JSON to exchange messages, using it with Kafka sounds like a natural extension."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:101
+msgid "In our case, it means transforming the instances of https://github.com/cescoffier/quarkus-kafka-serde-demo/blob/main/json-serde/json-serde-publisher/src/main/java/me/escoffier/quarkus/json/publisher/Hero.java[Hero] to a JSON document and then using the String serializer.  For the deserialization process, we would do the reverse process.  To do that with Quarkus, you have *nothing* to do: Quarkus generates the custom JSON serializer and deserializer for you."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:107
+msgid "In the https://github.com/cescoffier/quarkus-kafka-serde-demo/tree/main/json-serde[json-serde directory], you can find a version of the application using JSON to serialize and deserialize the records.  It does not contain any custom code or configuration.  Quarkus automatically detects that you need to write and consume Heroes and generates the serializer and deserializer for you.  It also configures the channels for you.  Of course, you can override the configuration, but it's what you want most of the time."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:113
+msgid "To run this application, open two terminals.  In the first one, navigate to `json-serde/json-serde-publisher`, and run `mvn quarkus:dev`.  In the second terminal, navigate to `json-serde/json-serde-consumer`, and run `mvn quarkus:dev`.  Then, open a browser to http://localhost:8080.  Every 5 seconds, a new picture of a hero is displayed."
+msgstr ""
+
+#. type: Target for macro image
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:114
+#, no-wrap
+msgid "/assets/images/posts/kafka-serde/heroes-screenshot.png"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:116
+#, no-wrap
+msgid "Using Avro"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:120
+msgid "The second approach uses https://avro.apache.org/[Avro].  Avro has several advantages over (bare) JSON:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:122
+msgid "It's a binary and compact protocol. The payloads will be a lot smaller than with JSON."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:123
+msgid "The serialization and deserialization processes are a lot faster (avoiding reflection)."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:124
+msgid "The format of the message is defined using a schema stored on a schema registry which enables versioning and enforces the structure."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:129
+msgid "The last point is essential.  To use Avro, you need a schema registry.  In this post, we are using https://www.apicur.io/registry/[Apicurio], but you can use the https://docs.confluent.io/platform/current/schema-registry/index.html[Confluent Schema Registry] or https://github.com/aiven/karapace[Karapace].  Quarkus provides a dev service for Apicurio, so you have nothing to do (as soon as you can run containers on your machine)."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:132
+msgid "To use Avro, we need a schema.  In https://github.com/cescoffier/quarkus-kafka-serde-demo/blob/main/avro-serde/avro-serde-consumer/src/main/avro/hero.avsc[hero.avsc], you can find the schema representing our heroes:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:150
+#, no-wrap
+msgid ""
+"{\n"
+"  \"namespace\": \"me.escoffier.quarkus.avro\",\n"
+"  \"type\": \"record\",\n"
+"  \"name\": \"Hero\",\n"
+"  \"fields\": [\n"
+"    {\n"
+"      \"name\": \"name\",\n"
+"      \"type\": \"string\"\n"
+"    },\n"
+"    {\n"
+"      \"name\": \"picture\",\n"
+"      \"type\": \"string\"\n"
+"    }\n"
+"  ]\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:154
+msgid "Avro relies on code generation.  It processes the schema to generate Java classes with the defined fields and serialization and deserialization methods."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:157
+msgid "While in general, using code generation is an extra step, with Quarkus, it's built-in! Once you have a schema in `src/main/avro`, it generates the code for you, and you are ready to use the produced classes."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:160
+msgid "In https://github.com/cescoffier/quarkus-kafka-serde-demo/blob/main/avro-serde/avro-serde-publisher/src/main/java/me/escoffier/quarkus/json/publisher/AvroPublisherApp.java[AvroPublisherApp] and https://github.com/cescoffier/quarkus-kafka-serde-demo/blob/main/avro-serde/avro-serde-consumer/src/main/java/me/escoffier/quarkus/AvroConsumerResource.java[AvroConsumerResource], we are using the `Hero` class generated from the schema.  As an example, the consumer application looks like this:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:169
+#, no-wrap
+msgid ""
+"import io.smallrye.mutiny.Multi;\n"
+"import me.escoffier.quarkus.avro.Hero;   // Generated class\n"
+"import org.eclipse.microprofile.reactive.messaging.Channel;\n"
+"import org.jboss.resteasy.reactive.RestStreamElementType;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:174
+#, no-wrap
+msgid ""
+"import javax.ws.rs.GET;\n"
+"import javax.ws.rs.Path;\n"
+"import javax.ws.rs.Produces;\n"
+"import javax.ws.rs.core.MediaType;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:177
+#, no-wrap
+msgid ""
+"@Path(\"/heroes\")\n"
+"public class AvroConsumerResource {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:180
+#, no-wrap
+msgid ""
+"    @Channel(\"heroes\")\n"
+"    Multi<Hero> heroes;  // The hero class is generated from the schema.\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:187
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @Produces(MediaType.SERVER_SENT_EVENTS)\n"
+"    @RestStreamElementType(MediaType.APPLICATION_JSON)\n"
+"    public Multi<Hero> stream() {\n"
+"        return heroes;\n"
+"    }\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:195
+msgid "Quarkus automatically finds the serializer and deserializer and configures the channels, so again: *no config*.  However, you still need to instruct Apicurio to register the schema.  In general, it's a manual operation, but for development, you can use the following property:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:199
+#, no-wrap
+msgid "kafka.apicurio.registry.auto-register=true\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:207
+msgid "To run this application, open two terminals.  In the first one, navigate to `avro-serde/avro-serde-publisher`, and run `mvn quarkus:dev`.  In the second terminal, navigate to `avro-serde/avro-serde-consumer`, and run `mvn quarkus:dev`.  Then, open a browser to http://localhost:8080.  As for the JSON variant, every 5 seconds, a new picture of a hero is displayed.  This time the Kafka records are serialized using Avro"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:208
+#, no-wrap
+msgid "Writing a custom serializer and deserializer"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:212
+msgid "Of course, you can still write your custom serializer and deserializer.  As mentioned above, you need to implement the `Serializer` and `Deserializer` interfaces."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:214
+msgid "For example, the https://github.com/cescoffier/quarkus-kafka-serde-demo/blob/main/custom-serde/custom-serde-publisher/src/main/java/me/escoffier/quarkus/json/publisher/HeroSerializer.java[HeroSerializer class] contains a straightforward (and inefficient) approach to serializing our heroes:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:218
+#, no-wrap
+msgid "package me.escoffier.quarkus.json.publisher;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:220
+#, no-wrap
+msgid "import org.apache.kafka.common.serialization.Serializer;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:222
+#, no-wrap
+msgid "import java.nio.charset.StandardCharsets;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:224
+#, no-wrap
+msgid "public class HeroSerializer implements Serializer<Hero> {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:231
+#, no-wrap
+msgid ""
+"    @Override\n"
+"    public byte[] serialize(String topic, Hero data) {\n"
+"        return (data.name() + \",\" + data.picture())\n"
+"                .getBytes(StandardCharsets.UTF_8);\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:234
+msgid "The https://github.com/cescoffier/quarkus-kafka-serde-demo/blob/main/custom-serde/custom-serde-consumer/src/main/java/me/escoffier/quarkus/HeroDeserializer.java[HeroDeserializer class] contains the deserialization counterpart."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:237
+msgid "As before, Quarkus discovers these implementations and configures the channels for you.  So you do not have to configure anything."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:240
+msgid "Custom serializers and deserializers can receive configuration attributes.  They receive the producer/consumer configuration in the `configure` method."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:242
+msgid "Custom serializers and deserializers cannot be CDI beans. Kafka instantiates them directly using reflection."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:243
+#, no-wrap
+msgid "Conclusion"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:246
+msgid "This post explores different possibilities to serialize and deserialize your messages with Kafka and how Quarkus reduces the amount of boilerplate and configuration you need to use."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:248
+msgid "So, what should you use?"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:250
+msgid "JSON is massively used, but the lack of structure verification, by default, can quickly be a problem if the format evolves rapidly."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:251
+msgid "Avro provides better performances and handles validation and evolutions. But it requires a schema registry. If your system exchanges lots of messages with evolving structures, Avro should be preferred. Also, Avro produces smaller payloads."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:252
+msgid "If you have stringent requirements not covered by the JSON and Avro approaches, you can develop a custom serializer and deserializer."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_posts/2022-08-30-kafka-serde.adoc:254
+msgid "Note that JSON can be combined with JSON-Schema (with the schema stored on a schema registry). Protobuf is also a possible alternative if you prefer a binary format."
+msgstr ""

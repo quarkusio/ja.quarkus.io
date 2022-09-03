@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2022-08-28 00:22+0000\n"
+"POT-Creation-Date: 2022-09-03 03:36+0000\n"
 "PO-Revision-Date: 2022-05-07 23:11+0900\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -1211,7 +1211,7 @@ msgstr ""
 #. type: delimited block -
 #: upstream/_guides/redis-reference.adoc:535
 #: upstream/_guides/redis-reference.adoc:553
-#: upstream/_guides/redis-reference.adoc:585
+#: upstream/_guides/redis-reference.adoc:634
 #, no-wrap
 msgid "// ...\n"
 msgstr ""
@@ -1241,7 +1241,7 @@ msgstr "データソースのリアクティブバリアントを使用する場
 
 #. type: delimited block -
 #: upstream/_guides/redis-reference.adoc:551
-#: upstream/_guides/redis-reference.adoc:583
+#: upstream/_guides/redis-reference.adoc:632
 #, no-wrap
 msgid "@Inject ReactiveRedisDataSource ds;\n"
 msgstr ""
@@ -1282,90 +1282,164 @@ msgstr "トランザクションの中からPub/Sub機能を使用すること�
 
 #. type: Title ====
 #: upstream/_guides/redis-reference.adoc:576
+#, no-wrap
+msgid "Using optimistic locking"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/redis-reference.adoc:580
+msgid "To use optimistic locking, you need to use a variant of the `withTransaction` method, allowing the execution of code before the transaction starts.  In other words, it will be executed as follows:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/redis-reference.adoc:584
+#, no-wrap
+msgid "WATCH key\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/redis-reference.adoc:588
+#, no-wrap
+msgid ""
+"// Pre-transaction block\n"
+"// ....\n"
+"// Produce a result\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/redis-reference.adoc:592
+#, no-wrap
+msgid ""
+"MULTI\n"
+"  // In transaction code, receive the result produced by the pre-transaction block.\n"
+"EXEC\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/redis-reference.adoc:595
+msgid "For example, if you need to update a value in a hash only if the field exists, you will use the following API:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/redis-reference.adoc:611
+#, no-wrap
+msgid ""
+"OptimisticLockingTransactionResult<Boolean> result = blocking.withTransaction(ds -> {\n"
+"    // The pre-transaction block:\n"
+"    HashCommands<String, String, String> hashCommands = ds.hash(String.class);\n"
+"    return hashCommands.hexists(key, \"field\"); // Produce a result (boolean in this case)\n"
+"},\n"
+" (exists, tx) -> { // The transactional block, receives the result and the transactional data source\n"
+"        if (exists) {\n"
+"            tx.hash(String.class).hset(key, \"field\", \"new value\");\n"
+"        } else {\n"
+"            tx.discard();\n"
+"        }\n"
+" },\n"
+"  key); // The watched key\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/redis-reference.adoc:617
+msgid "If one of the watched keys is touched before or during the execution of the pre-transaction or transactional blocks, the transaction is aborted.  The pre-transactional block produces a result that the transactional block can use.  This construct is necessary because, within a transaction, the commands do not produce a result.  Results can only be retrieved after the execution of the transaction."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/redis-reference.adoc:622
+msgid "The pre-transaction and transactional blocks are invoked on the same Redis connection.  Consequently, the pre-transaction block must use the passed data source to execute commands.  Thus, the commands are emitted from that connection.  These commands must not modify the watched keys."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/redis-reference.adoc:624
+msgid "The transaction is aborted if the pre-transaction block throws an exception (or produces a failure when using the reactive API)."
+msgstr ""
+
+#. type: Title ====
+#: upstream/_guides/redis-reference.adoc:625
 #, fuzzy, no-wrap
 msgid "Executing custom commands"
 msgstr "カスタムコマンドの実行"
 
 #. type: Plain text
-#: upstream/_guides/redis-reference.adoc:579
+#: upstream/_guides/redis-reference.adoc:628
 #, fuzzy
 msgid "To execute a custom command, or a command not supported by the API, use the following approach:"
 msgstr "カスタムコマンドやAPIでサポートされていないコマンドを実行するには、以下の方法を使用します。"
 
 #. type: delimited block -
-#: upstream/_guides/redis-reference.adoc:587
+#: upstream/_guides/redis-reference.adoc:636
 #, no-wrap
 msgid "Response response = ds.execute(\"my-command\", param1, param2, param3);\n"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_guides/redis-reference.adoc:593
+#: upstream/_guides/redis-reference.adoc:642
 #, fuzzy
 msgid "The `execute` method sends the command to Redis and retrieves the `Response`.  The command name is passed as first parameters.  You can add an arbitrary number of **String** parameters to your command.  The result is wrapped into a `Response` object."
 msgstr " `execute` メソッドは、Redis にコマンドを送信し、 `Response` を取得します。 最初のパラメータとして、コマンド名が渡されます。コマンドには、任意の数の *String* パラメータを追加することができます。結果は、 `Response` オブジェクトにラップされます。"
 
 #. type: Plain text
-#: upstream/_guides/redis-reference.adoc:595
+#: upstream/_guides/redis-reference.adoc:644
 #, fuzzy
 msgid "The reactive variant returns a `Uni<Response>`."
 msgstr "reactive variant は `Uni<Response>` を返します。"
 
 #. type: Plain text
-#: upstream/_guides/redis-reference.adoc:597
+#: upstream/_guides/redis-reference.adoc:646
 #, fuzzy
 msgid "You can also execute custom command in a transaction."
 msgstr "また、トランザクション内でカスタムコマンドを実行することも可能です。"
 
 #. type: Title ==
-#: upstream/_guides/redis-reference.adoc:598
+#: upstream/_guides/redis-reference.adoc:647
 #, fuzzy, no-wrap
 msgid "Vert.x Redis Client"
 msgstr "Vert.x Redisクライアント"
 
 #. type: Plain text
-#: upstream/_guides/redis-reference.adoc:602
+#: upstream/_guides/redis-reference.adoc:651
 msgid "In addition to the high-level API, you can use the Vertx Redis clients directly in your code.  The documentation of the Vert.x Redis Client is available on the https://vertx.io/docs/vertx-redis-client/java/[Vert.x Web Site]."
 msgstr ""
 
 #. type: Title ==
-#: upstream/_guides/redis-reference.adoc:603
+#: upstream/_guides/redis-reference.adoc:652
 #, no-wrap
 msgid "Redis Health Check"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_guides/redis-reference.adoc:606
+#: upstream/_guides/redis-reference.adoc:655
 msgid "If you are using the `quarkus-smallrye-health` extension, `quarkus-redis` will automatically add a readiness health check to validate the connection to the Redis server."
 msgstr ""
 
 #. type: Plain text
-#: upstream/_guides/redis-reference.adoc:608
+#: upstream/_guides/redis-reference.adoc:657
 msgid "So when you access the `/q/health/ready` endpoint of your application you will have information about the connection validation status."
 msgstr "そのため、アプリケーションの `/q/health/ready` エンドポイントにアクセスすると、接続の検証状況に関する情報が表示されます。"
 
 #. type: Plain text
-#: upstream/_guides/redis-reference.adoc:610
+#: upstream/_guides/redis-reference.adoc:659
 msgid "This behavior can be disabled by setting the `quarkus.redis.health.enabled` property to `false` in your `application.properties`."
 msgstr "この動作は、 `application.properties` の `quarkus.redis.health.enabled` プロパティーを `false` に設定することで無効にできます。"
 
 #. type: Title ==
-#: upstream/_guides/redis-reference.adoc:611
+#: upstream/_guides/redis-reference.adoc:660
 #, no-wrap
 msgid "Providing Redis Hosts Programmatically"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_guides/redis-reference.adoc:615
+#: upstream/_guides/redis-reference.adoc:664
 msgid "The `RedisHostsProvider` programmatically provides redis hosts.  This allows for configuration of properties like redis connection password coming from other sources."
 msgstr ""
 
 #. type: delimited block =
-#: upstream/_guides/redis-reference.adoc:619
+#: upstream/_guides/redis-reference.adoc:668
 msgid "This is useful as it removes the need to store sensitive data in application.properties."
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/redis-reference.adoc:633
+#: upstream/_guides/redis-reference.adoc:682
 #, no-wrap
 msgid ""
 "@ApplicationScoped\n"
@@ -1381,29 +1455,64 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: upstream/_guides/redis-reference.adoc:636
+#: upstream/_guides/redis-reference.adoc:685
 msgid "The host provider can be used to configure the redis client like shown below"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/redis-reference.adoc:640
+#: upstream/_guides/redis-reference.adoc:689
 #, no-wrap
 msgid "quarkus.redis.hosts-provider-name=hosts-provider\n"
 msgstr ""
 
+#. type: Title ==
+#: upstream/_guides/redis-reference.adoc:691
+#, no-wrap
+msgid "Customizing the Redis options programmatically"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/redis-reference.adoc:695
+msgid "You can expose a bean implementing the `io.quarkus.redis.client.RedisOptionsCustomizer` interface to customize the Redis client options.  The bean is called for each configured Redis client:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/redis-reference.adoc:700
+#, no-wrap
+msgid ""
+"@ApplicationScoped\n"
+"public static class MyExampleCustomizer implements RedisOptionsCustomizer {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/redis-reference.adoc:711
+#, no-wrap
+msgid ""
+"    @Override\n"
+"    public void customize(String clientName, RedisOptions options) {\n"
+"        if (clientName.equalsIgnoreCase(\"my-redis\")\n"
+"                || clientName.equalsIgnoreCase(RedisConfig.DEFAULT_CLIENT_NAME)) {\n"
+"            // modify the given options\n"
+"        } else {\n"
+"            throw new IllegalStateException(\"Unknown client name: \" + clientName);\n"
+"        }\n"
+"    }\n"
+"}\n"
+msgstr ""
+
 #. type: Title ===
-#: upstream/_guides/redis-reference.adoc:642
+#: upstream/_guides/redis-reference.adoc:714
 #, no-wrap
 msgid "Dev Services"
 msgstr "Dev Services"
 
 #. type: Plain text
-#: upstream/_guides/redis-reference.adoc:645
+#: upstream/_guides/redis-reference.adoc:717
 msgid "See link:redis-dev-services.adoc[Redis Dev Service]."
 msgstr ""
 
 #. type: Title ==
-#: upstream/_guides/redis-reference.adoc:647
+#: upstream/_guides/redis-reference.adoc:719
 #, no-wrap
 msgid "Configuration Reference"
 msgstr "設定リファレンス"
