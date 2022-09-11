@@ -132,6 +132,18 @@ msgid ""
 "    </profile>\n"
 "</profiles>\n"
 msgstr ""
+"<profiles>\n"
+"    <profile>\n"
+"        <id>native</id>\n"
+"        <dependencies>\n"
+"            <dependency>\n"
+"                <groupId>com.blazebit</groupId>\n"
+"                <artifactId>blaze-persistence-entity-view-processor</artifactId>\n"
+"                <scope>provided</scope>\n"
+"            </dependency>\n"
+"        </dependencies>\n"
+"    </profile>\n"
+"</profiles>\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/blaze-persistence.adoc:77
@@ -162,6 +174,14 @@ msgid ""
 "    @Inject\n"
 "    EntityViewManager evm; <3>\n"
 msgstr ""
+"@ApplicationScoped\n"
+"public class SantaClausService {\n"
+"    @Inject\n"
+"    EntityManager em; <1>\n"
+"    @Inject\n"
+"    CriteriaBuilderFactory cbf; <2>\n"
+"    @Inject\n"
+"    EntityViewManager evm; <3>\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/blaze-persistence.adoc:98
@@ -174,6 +194,12 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    @Transactional <4>\n"
+"    public List<GiftView> findAllGifts() {\n"
+"        CriteriaBuilder<Gift> cb = cbf.create(em, Gift.class);\n"
+"        return evm.applySetting(EntityViewSetting.create(GiftView.class), cb).getResultList();\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/blaze-persistence.adoc:101
@@ -211,6 +237,11 @@ msgid ""
 "    private String name;\n"
 "    private String description;\n"
 msgstr ""
+"@Entity\n"
+"public class Gift {\n"
+"    private Long id;\n"
+"    private String name;\n"
+"    private String description;\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/blaze-persistence.adoc:118
@@ -221,6 +252,10 @@ msgid ""
 "        return id;\n"
 "    }\n"
 msgstr ""
+"    @Id @GeneratedValue(strategy = GenerationType.SEQUENCE, generator=\"giftSeq\")\n"
+"    public Long getId() {\n"
+"        return id;\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/blaze-persistence.adoc:122
@@ -266,6 +301,9 @@ msgid ""
 "        return description;\n"
 "    }\n"
 msgstr ""
+"    public String getDescription() {\n"
+"        return description;\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/blaze-persistence.adoc:140
@@ -276,6 +314,10 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    public void setDescription(String description) {\n"
+"        this.description = description;\n"
+"    }\n"
+"}\n"
 
 #. type: Block title
 #: upstream/_versions/2.2/guides/blaze-persistence.adoc:143
@@ -290,6 +332,8 @@ msgid ""
 "@EntityView(Gift.class)\n"
 "public interface GiftView {\n"
 msgstr ""
+"@EntityView(Gift.class)\n"
+"public interface GiftView {\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/blaze-persistence.adoc:150
@@ -298,6 +342,8 @@ msgid ""
 "    @IdMapping\n"
 "    Long getId();\n"
 msgstr ""
+"    @IdMapping\n"
+"    Long getId();\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/blaze-persistence.adoc:153
@@ -306,6 +352,8 @@ msgid ""
 "    String getName();\n"
 "}\n"
 msgstr ""
+"    String getName();\n"
+"}\n"
 
 #. type: Block title
 #: upstream/_versions/2.2/guides/blaze-persistence.adoc:156
@@ -322,6 +370,10 @@ msgid ""
 "@EntityView(Gift.class)\n"
 "public interface GiftUpdateView extends GiftView {\n"
 msgstr ""
+"@UpdatableEntityView\n"
+"@CreatableEntityView\n"
+"@EntityView(Gift.class)\n"
+"public interface GiftUpdateView extends GiftView {\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/blaze-persistence.adoc:165
@@ -330,6 +382,8 @@ msgid ""
 "    void setName(String name);\n"
 "}\n"
 msgstr ""
+"    void setName(String name);\n"
+"}\n"
 
 #. type: Block title
 #: upstream/_versions/2.2/guides/blaze-persistence.adoc:168
@@ -350,6 +404,14 @@ msgid ""
 "    @Inject\n"
 "    SantaClausService santaClausService;\n"
 msgstr ""
+"@Path(\"/gifts\")\n"
+"public class GiftResource {\n"
+"    @Inject\n"
+"    EntityManager entityManager;\n"
+"    @Inject\n"
+"    EntityViewManager entityViewManager;\n"
+"    @Inject\n"
+"    SantaClausService santaClausService;\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/blaze-persistence.adoc:185
@@ -362,6 +424,12 @@ msgid ""
 "        return Response.created(URI.create(\"/gifts/\" + view.getId())).build();\n"
 "    }\n"
 msgstr ""
+"    @POST\n"
+"    @Transactional\n"
+"    public Response createGift(GiftUpdateView view) {\n"
+"        entityViewManager.save(entityManager, view);\n"
+"        return Response.created(URI.create(\"/gifts/\" + view.getId())).build();\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/blaze-persistence.adoc:191
@@ -373,6 +441,11 @@ msgid ""
 "        return santaClausService.findAllGifts();\n"
 "    }\n"
 msgstr ""
+"    @GET\n"
+"    @Produces(MediaType.APPLICATION_JSON)\n"
+"    public List<GiftView> getGifts() {\n"
+"        return santaClausService.findAllGifts();\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/blaze-persistence.adoc:199
@@ -386,6 +459,13 @@ msgid ""
 "        return entityViewManager.find(entityManager, GiftView.class, view.getId());\n"
 "    }\n"
 msgstr ""
+"    @PUT\n"
+"    @Path(\"{id}\")\n"
+"    @Transactional\n"
+"    public GiftView updateGift(@EntityViewId(\"id\") GiftUpdateView view) {\n"
+"        entityViewManager.save(entityManager, view);\n"
+"        return entityViewManager.find(entityManager, GiftView.class, view.getId());\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/blaze-persistence.adoc:207
