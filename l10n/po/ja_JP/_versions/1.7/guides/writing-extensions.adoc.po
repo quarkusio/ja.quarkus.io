@@ -1011,12 +1011,12 @@ msgstr "4つの新しいMavenモジュールを作成します。"
 #. type: Plain text
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:493
 msgid "`quarkus-my-ext-parent` in the `extensions/my-ext` directory"
-msgstr ""
+msgstr "`extensions/my-ext` ディレクトリーにある `quarkus-my-ext-parent` を使用します。"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:494
 msgid "`quarkus-my-ext` in the `extensions/my-ext/runtime` directory"
-msgstr ""
+msgstr "`extensions/my-ext/runtime` ディレクトリーにある `quarkus-my-ext` を使用します。"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:495
@@ -1036,7 +1036,7 @@ msgstr "必要に応じて、これらの3つのモジュールをリンクし�
 #. type: Plain text
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:498
 msgid "`quarkus-my-ext-parent` is added to the `<modules>` of `quarkus-extensions-parent`"
-msgstr ""
+msgstr "`quarkus-my-ext-parent` が `quarkus-extensions-parent` の `<modules>` に追加されました。"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:499
@@ -1051,7 +1051,7 @@ msgstr ""
 #. type: Plain text
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:501
 msgid "`quarkus-my-ext-integration-test` is added to the `<modules>` of `quarkus-integration-tests-parent`"
-msgstr ""
+msgstr "quarkus-my-ext-integration-test` は `quarkus-integration-tests-parent` の `<modules>` に追加されました。"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:503
@@ -1229,12 +1229,18 @@ msgid ""
 " */\n"
 "public final class ApplicationIndexBuildItem extends SimpleBuildItem {\n"
 msgstr ""
+"/**\n"
+" * The build item which represents the Jandex index of the application,\n"
+" * and would normally be used by many build steps to find usages\n"
+" * of annotations.\n"
+" */\n"
+"public final class ApplicationIndexBuildItem extends SimpleBuildItem {\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:607
 #, no-wrap
 msgid "    private final Index index;\n"
-msgstr ""
+msgstr "    private final Index index;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:611
@@ -1244,6 +1250,9 @@ msgid ""
 "        this.index = index;\n"
 "    }\n"
 msgstr ""
+"    public ApplicationIndexBuildItem(Index index) {\n"
+"        this.index = index;\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:616
@@ -1254,6 +1263,10 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    public Index getIndex() {\n"
+"        return index;\n"
+"    }\n"
+"}\n"
 
 #. type: Title =====
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:620
@@ -1280,6 +1293,9 @@ msgid ""
 "    private final String serviceName;\n"
 "    private final List<String> implementations;\n"
 msgstr ""
+"public final class ServiceWriterBuildItem extends MultiBuildItem {\n"
+"    private final String serviceName;\n"
+"    private final List<String> implementations;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:642
@@ -1295,6 +1311,15 @@ msgid ""
 "        );\n"
 "    }\n"
 msgstr ""
+"    public ServiceWriterBuildItem(String serviceName, String... implementations) {\n"
+"        this.serviceName = serviceName;\n"
+"        // Make sure it's immutable\n"
+"        this.implementations = Collections.unmodifiableList(\n"
+"            Arrays.asList(\n"
+"                implementations.clone()\n"
+"            )\n"
+"        );\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:646
@@ -1304,6 +1329,9 @@ msgid ""
 "        return serviceName;\n"
 "    }\n"
 msgstr ""
+"    public String getServiceName() {\n"
+"        return serviceName;\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:651
@@ -1314,6 +1342,10 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    public List<String> getImplementations() {\n"
+"        return implementations;\n"
+"    }\n"
+"}\n"
 
 #. type: Block title
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:653
@@ -1338,6 +1370,18 @@ msgid ""
 "    );\n"
 "}\n"
 msgstr ""
+"/**\n"
+" * This build step produces a single multi build item that declares two\n"
+" * providers of one configuration-related service.\n"
+" */\n"
+"@BuildStep\n"
+"public ServiceWriterBuildItem registerOneService() {\n"
+"    return new ServiceWriterBuildItem(\n"
+"        Converter.class.getName(),\n"
+"        MyFirstConfigConverterImpl.class.getName(),\n"
+"        MySecondConfigConverterImpl.class.getName()\n"
+"    );\n"
+"}\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:687
@@ -1362,6 +1406,24 @@ msgid ""
 "    ));\n"
 "}\n"
 msgstr ""
+"/**\n"
+" * This build step produces several multi build items that declare multiple\n"
+" * providers of multiple configuration-related services.\n"
+" */\n"
+"@BuildStep\n"
+"public void registerSeveralServices(\n"
+"    BuildProducer<ServiceWriterBuildItem> providerProducer\n"
+") {\n"
+"    providerProducer.produce(new ServiceWriterBuildItem(\n"
+"        Converter.class.getName(),\n"
+"        MyThirdConfigConverterImpl.class.getName(),\n"
+"        MyFourthConfigConverterImpl.class.getName()\n"
+"    ));\n"
+"    providerProducer.produce(new ServiceWriterBuildItem(\n"
+"        ConfigSource.class.getName(),\n"
+"        MyConfigSourceImpl.class.getName()\n"
+"    ));\n"
+"}\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:698
@@ -1394,6 +1456,16 @@ msgid ""
 "        }\n"
 "    }\n"
 msgstr ""
+"    Map<String, Set<String>> map = new HashMap<>();\n"
+"    for (ServiceWriterBuildItem item : items) {\n"
+"        String serviceName = item.getName();\n"
+"        for (String implName : item.getImplementations()) {\n"
+"            map.computeIfAbsent(\n"
+"                serviceName,\n"
+"                (k, v) -> new LinkedHashSet<>()\n"
+"            ).add(implName);\n"
+"        }\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:730
@@ -1446,6 +1518,9 @@ msgid ""
 "    // empty\n"
 "}\n"
 msgstr ""
+"public final class NativeImageBuildItem extends EmptyBuildItem {\n"
+"    // empty\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:750
@@ -1475,6 +1550,18 @@ msgid ""
 "    // ...\n"
 "}\n"
 msgstr ""
+"/**\n"
+" * Contrived build step that produces the native image on disk.  The main augmentation\n"
+" * step (which is run by Maven or Gradle) would be declared to consume this empty item,\n"
+" * causing this step to be run.\n"
+" */\n"
+"@BuildStep\n"
+"@Produce(NativeImageBuildItem.class)\n"
+"void produceNativeImage() {\n"
+"    // ...\n"
+"    // (produce the native image)\n"
+"    // ...\n"
+"}\n"
 
 #. type: Block title
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:768
@@ -1496,6 +1583,15 @@ msgid ""
 "    return new SomeOtherBuildItem(\"foobar\");\n"
 "}\n"
 msgstr ""
+"/**\n"
+" * This would always run after {@link #produceNativeImage()} completes, producing\n"
+" * an instance of {@code SomeOtherBuildItem}.\n"
+" */\n"
+"@BuildStep\n"
+"@Consume(NativeImageBuildItem.class)\n"
+"SomeOtherBuildItem secondBuildStep() {\n"
+"    return new SomeOtherBuildItem(\"foobar\");\n"
+"}\n"
 
 #. type: Title ====
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:783
@@ -1695,6 +1791,19 @@ msgid ""
 "        executorClassConsumer.produce(new ExecutorClassBuildItem(className));\n"
 "}\n"
 msgstr ""
+"/**\n"
+" * This build step is only run if something consumes the ExecutorClassBuildItem.\n"
+" */\n"
+"@BuildStep\n"
+"void createExecutor(\n"
+"        @Weak BuildProducer<GeneratedClassBuildItem> classConsumer,\n"
+"        BuildProducer<ExecutorClassBuildItem> executorClassConsumer\n"
+") {\n"
+"        ClassWriter cw = new ClassWriter(Gizmo.ASM_API_VERSION);\n"
+"        String className = generateClassThatCreatesExecutor(cw); // <1>\n"
+"        classConsumer.produce(new GeneratedClassBuildItem(true, className, cw.toByteArray()));\n"
+"        executorClassConsumer.produce(new ExecutorClassBuildItem(className));\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:877
@@ -1976,7 +2085,7 @@ msgstr ""
 #. type: Plain text
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1015
 msgid "`keepAliveTime` becomes `keep-alive-time`"
-msgstr ""
+msgstr "`keepAliveTime` becomes `keep-alive-time`"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1016
@@ -2537,18 +2646,26 @@ msgid ""
 "    @ConfigItem(defaultValue = \"NO\")\n"
 "    Boolean answer;\n"
 msgstr ""
+"@ConfigRoot\n"
+"public class SomeConfig {\n"
+"    /**\n"
+"     * Config item with enhanced converter\n"
+"     */\n"
+"    @ConvertWith(YesNoConverter.class) // <1>\n"
+"    @ConfigItem(defaultValue = \"NO\")\n"
+"    Boolean answer;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1255
 #, no-wrap
 msgid "    public static class YesNoConverter implements Converter<Boolean> {\n"
-msgstr ""
+msgstr "    public static class YesNoConverter implements Converter<Boolean> {\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1257
 #, no-wrap
 msgid "        public YesNoConverter() {}\n"
-msgstr ""
+msgstr "        public YesNoConverter() {}\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1263
@@ -2560,6 +2677,11 @@ msgid ""
 "                return false;\n"
 "            }\n"
 msgstr ""
+"        @Override\n"
+"        public Boolean convert(String s) {\n"
+"            if (s == null || s.isEmpty()) {\n"
+"                return false;\n"
+"            }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1270
@@ -2572,6 +2694,12 @@ msgid ""
 "                    return false;\n"
 "            }\n"
 msgstr ""
+"            switch (s) {\n"
+"                case \"YES\":\n"
+"                    return true;\n"
+"                case \"NO\":\n"
+"                    return false;\n"
+"            }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1275
@@ -2582,6 +2710,10 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"            throw new IllegalArgumentException(\"Unsupported value \" + s + \" given\");\n"
+"        }\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1277
@@ -2719,6 +2851,15 @@ msgid ""
 "    Level level;\n"
 "}\n"
 msgstr ""
+"@ConfigRoot\n"
+"public class SomeLogConfig {\n"
+"    /**\n"
+"     * The level of logs to be written into the file.\n"
+"     */\n"
+"    @DefaultConverter // <1>\n"
+"    @ConfigItem(defaultValue = \"ALL\")\n"
+"    Level level;\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1329
@@ -2761,6 +2902,10 @@ msgid ""
 "    return new LogCategoryBuildItem(\"org.your.quarkus.extension\", Level.DEBUG);\n"
 "}\n"
 msgstr ""
+"@BuildStep(onlyIf = IsDevMode.class)\n"
+"LogCategoryBuildItem enableDebugLogging() {\n"
+"    return new LogCategoryBuildItem(\"org.your.quarkus.extension\", Level.DEBUG);\n"
+"}\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1355
@@ -2769,6 +2914,8 @@ msgid ""
 "static class IsDevMode implements BooleanSupplier {\n"
 "    LaunchMode launchMode;\n"
 msgstr ""
+"static class IsDevMode implements BooleanSupplier {\n"
+"    LaunchMode launchMode;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1360
@@ -2779,6 +2926,10 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    public boolean getAsBoolean() {\n"
+"        return launchMode == LaunchMode.DEVELOPMENT;\n"
+"    }\n"
+"}\n"
 
 #. type: Title ===
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1363
@@ -2808,6 +2959,8 @@ msgid ""
 "@Recorder\n"
 "class HelloRecorder {\n"
 msgstr ""
+"@Recorder\n"
+"class HelloRecorder {\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1384
@@ -2817,6 +2970,9 @@ msgid ""
 "    System.out.println(\"Hello\" + name);\n"
 "  }\n"
 msgstr ""
+"  public void sayHello(String name) {\n"
+"    System.out.println(\"Hello\" + name);\n"
+"  }\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1389
@@ -2833,6 +2989,11 @@ msgid ""
 "    recorder.sayHello(\"World\");\n"
 "}\n"
 msgstr ""
+"@Record(RUNTIME_INIT)\n"
+"@BuildStep\n"
+"public void helloBuildStep(HelloRecorder recorder) {\n"
+"    recorder.sayHello(\"World\");\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1402
@@ -2872,7 +3033,7 @@ msgstr "String"
 #. type: Plain text
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1421
 msgid "Class<?> objects"
-msgstr ""
+msgstr "クラス<?> オブジェクト"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1422
@@ -3031,6 +3192,11 @@ msgid ""
 "            agroalBuildTimeConfig.healthEnabled);\n"
 "}\n"
 msgstr ""
+"@BuildStep\n"
+"HealthBuildItem addHealthCheck(AgroalBuildTimeConfig agroalBuildTimeConfig) {\n"
+"    return new HealthBuildItem(\"io.quarkus.agroal.runtime.health.DataSourceHealthCheck\",\n"
+"            agroalBuildTimeConfig.healthEnabled);\n"
+"}\n"
 
 #. type: Title ===
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1497
@@ -3152,6 +3318,12 @@ msgid ""
 "        BuildProducer<MetricsFactoryConsumerBuildItem> datasourceMetrics,\n"
 "        List<AggregatedDataSourceBuildTimeConfigBuildItem> aggregatedDataSourceBuildTimeConfigs) {\n"
 msgstr ""
+"@BuildStep\n"
+"@Record(ExecutionTime.RUNTIME_INIT)\n"
+"void registerMetrics(AgroalMetricsRecorder recorder,\n"
+"        DataSourcesBuildTimeConfig dataSourcesBuildTimeConfig,\n"
+"        BuildProducer<MetricsFactoryConsumerBuildItem> datasourceMetrics,\n"
+"        List<AggregatedDataSourceBuildTimeConfigBuildItem> aggregatedDataSourceBuildTimeConfigs) {\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1556
@@ -3169,6 +3341,17 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    for (AggregatedDataSourceBuildTimeConfigBuildItem aggregatedDataSourceBuildTimeConfig : aggregatedDataSourceBuildTimeConfigs) {\n"
+"        // Create a MetricsFactory consumer to register metrics for a data source\n"
+"        // IFF metrics are enabled globally and for the data source\n"
+"        // (they are enabled for each data source by default if they are also enabled globally)\n"
+"        if (dataSourcesBuildTimeConfig.metricsEnabled &&\n"
+"                aggregatedDataSourceBuildTimeConfig.getJdbcConfig().enableMetrics.orElse(true)) {\n"
+"            datasourceMetrics.produce(new MetricsFactoryConsumerBuildItem(\n"
+"                    recorder.registerDataSourceMetrics(aggregatedDataSourceBuildTimeConfig.getName())));\n"
+"        }\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1559
@@ -3187,6 +3370,13 @@ msgid ""
 "            String tagValue = DataSourceUtil.isDefault(dataSourceName) ? \"default\" : dataSourceName;\n"
 "            AgroalDataSourceMetrics metrics = getDataSource(dataSourceName).getMetrics();\n"
 msgstr ""
+"/* RUNTIME_INIT */\n"
+"public Consumer<MetricsFactory> registerDataSourceMetrics(String dataSourceName) {\n"
+"    return new Consumer<MetricsFactory>() {\n"
+"        @Override\n"
+"        public void accept(MetricsFactory metricsFactory) {\n"
+"            String tagValue = DataSourceUtil.isDefault(dataSourceName) ? \"default\" : dataSourceName;\n"
+"            AgroalDataSourceMetrics metrics = getDataSource(dataSourceName).getMetrics();\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1577
@@ -3200,6 +3390,13 @@ msgid ""
 "                    .buildGauge(metrics::activeCount);\n"
 "            ....\n"
 msgstr ""
+"            // When using MP Metrics, the builder uses the VENDOR registry by default.\n"
+"            metricsFactory.builder(\"agroal.active.count\")\n"
+"                    .description(\n"
+"                            \"Number of active connections. These connections are in use and not available to be acquired.\")\n"
+"                    .tag(\"datasource\", tagValue)\n"
+"                    .buildGauge(metrics::activeCount);\n"
+"            ....\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1580
@@ -3232,6 +3429,11 @@ msgid ""
 "void setupTracer(JaegerDeploymentRecorder jdr, JaegerBuildTimeConfig buildTimeConfig, JaegerConfig jaeger,\n"
 "        ApplicationConfig appConfig, Optional<MetricsCapabilityBuildItem> metricsCapability) {\n"
 msgstr ""
+"/* RUNTIME_INIT */\n"
+"@BuildStep\n"
+"@Record(ExecutionTime.RUNTIME_INIT)\n"
+"void setupTracer(JaegerDeploymentRecorder jdr, JaegerBuildTimeConfig buildTimeConfig, JaegerConfig jaeger,\n"
+"        ApplicationConfig appConfig, Optional<MetricsCapabilityBuildItem> metricsCapability) {\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1597
@@ -3240,6 +3442,8 @@ msgid ""
 "    // Indicates that this extension would like the SSL support to be enabled\n"
 "    extensionSslNativeSupport.produce(new ExtensionSslNativeSupportBuildItem(Feature.JAEGER.getName()));\n"
 msgstr ""
+"    // Indicates that this extension would like the SSL support to be enabled\n"
+"    extensionSslNativeSupport.produce(new ExtensionSslNativeSupportBuildItem(Feature.JAEGER.getName()));\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1609
@@ -3289,6 +3493,11 @@ msgid ""
 "    return new MetricsFactoryConsumerBuildItem(recorder.registerMetrics());\n"
 "}\n"
 msgstr ""
+"@BuildStep\n"
+"@Record(ExecutionTime.RUNTIME_INIT)\n"
+"MetricsFactoryConsumerBuildItem registerMetrics(MyExtensionRecorder recorder) {\n"
+"    return new MetricsFactoryConsumerBuildItem(recorder.registerMetrics());\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1629
@@ -3299,7 +3508,7 @@ msgstr "関連するレコーダーは、提供された `MetricsFactory` を使
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1633
 #, no-wrap
 msgid "final LongAdder extensionCounter = new LongAdder();\n"
-msgstr ""
+msgstr "final LongAdder extensionCounter = new LongAdder();\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1642
@@ -3314,6 +3523,14 @@ msgid ""
 "                    .buildGauge(extensionCounter::longValue);\n"
 "            ....\n"
 msgstr ""
+"/* RUNTIME_INIT */\n"
+"public Consumer<MetricsFactory> registerMetrics() {\n"
+"    return new Consumer<MetricsFactory>() {\n"
+"        @Override\n"
+"        public void accept(MetricsFactory metricsFactory) {\n"
+"            metricsFactory.builder(\"my.extension.counter\")\n"
+"                    .buildGauge(extensionCounter::longValue);\n"
+"            ....\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1645
@@ -3372,6 +3589,11 @@ msgid ""
 "  <optional>true</optional>\n"
 "</dependency>\n"
 msgstr ""
+"<dependency>\n"
+"  <groupId>io.quarkus</groupId>\n"
+"  <artifactId>quarkus-jsonb</artifactId>\n"
+"  <optional>true</optional>\n"
+"</dependency>\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1673
@@ -3391,6 +3613,14 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"public class ObjectIdSerializer implements JsonbSerializer<ObjectId> {\n"
+"    @Override\n"
+"    public void serialize(ObjectId obj, JsonGenerator generator, SerializationContext ctx) {\n"
+"        if (obj != null) {\n"
+"            generator.write(obj.toString());\n"
+"        }\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1687
@@ -3406,6 +3636,10 @@ msgid ""
 "  <artifactId>quarkus-jsonb-spi</artifactId>\n"
 "</dependency>\n"
 msgstr ""
+"<dependency>\n"
+"  <groupId>io.quarkus</groupId>\n"
+"  <artifactId>quarkus-jsonb-spi</artifactId>\n"
+"</dependency>\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1697
@@ -3421,6 +3655,10 @@ msgid ""
 "    return new JsonbSerializerBuildItem(io.quarkus.mongodb.panache.jsonb.ObjectIdSerializer.class.getName()));\n"
 "}\n"
 msgstr ""
+"@BuildStep\n"
+"JsonbSerializerBuildItem registerJsonbSerializer() {\n"
+"    return new JsonbSerializerBuildItem(io.quarkus.mongodb.panache.jsonb.ObjectIdSerializer.class.getName()));\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1707
@@ -3453,6 +3691,11 @@ msgid ""
 "  <optional>true</optional>\n"
 "</dependency>\n"
 msgstr ""
+"<dependency>\n"
+"  <groupId>io.quarkus</groupId>\n"
+"  <artifactId>quarkus-jackson</artifactId>\n"
+"  <optional>true</optional>\n"
+"</dependency>\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1726
@@ -3476,6 +3719,18 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"public class ObjectIdSerializer extends StdSerializer<ObjectId> {\n"
+"    public ObjectIdSerializer() {\n"
+"        super(ObjectId.class);\n"
+"    }\n"
+"    @Override\n"
+"    public void serialize(ObjectId objectId, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)\n"
+"            throws IOException {\n"
+"        if (objectId != null) {\n"
+"            jsonGenerator.writeString(objectId.toString());\n"
+"        }\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1744
@@ -3491,6 +3746,10 @@ msgid ""
 "  <artifactId>quarkus-jackson-spi</artifactId>\n"
 "</dependency>\n"
 msgstr ""
+"<dependency>\n"
+"  <groupId>io.quarkus</groupId>\n"
+"  <artifactId>quarkus-jackson-spi</artifactId>\n"
+"</dependency>\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1755
@@ -3510,6 +3769,14 @@ msgid ""
 "                    .build();\n"
 "}\n"
 msgstr ""
+"@BuildStep\n"
+"JacksonModuleBuildItem registerJacksonSerDeser() {\n"
+"    return new JacksonModuleBuildItem.Builder(\"ObjectIdModule\")\n"
+"                    .add(io.quarkus.mongodb.panache.jackson.ObjectIdSerializer.class.getName(),\n"
+"                            io.quarkus.mongodb.panache.jackson.ObjectIdDeserializer.class.getName(),\n"
+"                            ObjectId.class.getName())\n"
+"                    .build();\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1769
@@ -3551,7 +3818,7 @@ msgstr "テストクラスの例は次のようになります。"
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1792
 #, no-wrap
 msgid "package io.quarkus.health.test;\n"
-msgstr ""
+msgstr "package io.quarkus.health.test;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1794
@@ -3566,6 +3833,8 @@ msgid ""
 "import java.util.ArrayList;\n"
 "import java.util.List;\n"
 msgstr ""
+"import java.util.ArrayList;\n"
+"import java.util.List;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1800
@@ -3574,6 +3843,8 @@ msgid ""
 "import javax.enterprise.inject.Instance;\n"
 "import javax.inject.Inject;\n"
 msgstr ""
+"import javax.enterprise.inject.Instance;\n"
+"import javax.inject.Inject;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1810
@@ -3594,13 +3865,13 @@ msgstr ""
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1812
 #, no-wrap
 msgid "import io.restassured.RestAssured;\n"
-msgstr ""
+msgstr "import io.restassured.RestAssured;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1814
 #, no-wrap
 msgid "public class FailingUnitTest {\n"
-msgstr ""
+msgstr "public class FailingUnitTest {\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1822
@@ -3614,6 +3885,13 @@ msgid ""
 "                            .addAsManifestResource(EmptyAsset.INSTANCE, \"beans.xml\")\n"
 "            );\n"
 msgstr ""
+"    @RegisterExtension                                                                  // <1>\n"
+"    static final QuarkusUnitTest config = new QuarkusUnitTest()\n"
+"            .setArchiveProducer(() ->\n"
+"                    ShrinkWrap.create(JavaArchive.class)                                // <2>\n"
+"                            .addClasses(FailingHealthCheck.class)\n"
+"                            .addAsManifestResource(EmptyAsset.INSTANCE, \"beans.xml\")\n"
+"            );\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1826
@@ -3649,6 +3927,16 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    @Test\n"
+"    public void testHealthBeans() {\n"
+"        List<HealthCheck> check = new ArrayList<>();                                    // <5>\n"
+"        for (HealthCheck i : checks) {\n"
+"            check.add(i);\n"
+"        }\n"
+"        assertEquals(1, check.size());\n"
+"        assertEquals(HealthCheckResponse.State.DOWN, check.get(0).call().getState());\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1845
@@ -3684,7 +3972,7 @@ msgstr "エクステンションがビルド時に正しく失敗することを
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1856
 #, no-wrap
 msgid "package io.quarkus.hibernate.orm;\n"
-msgstr ""
+msgstr "package io.quarkus.hibernate.orm;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1864
@@ -3703,7 +3991,7 @@ msgstr ""
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1866
 #, no-wrap
 msgid "public class PersistenceAndQuarkusConfigTest {\n"
-msgstr ""
+msgstr "public class PersistenceAndQuarkusConfigTest {\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1873
@@ -3729,6 +4017,13 @@ msgid ""
 "        Assertions.fail();\n"
 "    }\n"
 msgstr ""
+"    @Test\n"
+"    public void testPersistenceAndConfigTest() {\n"
+"        // should not be called, deployment exception should happen first:\n"
+"        // it's illegal to have Hibernate configuration properties in both the\n"
+"        // application.properties and in the persistence.xml\n"
+"        Assertions.fail();\n"
+"    }\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1886
@@ -3755,7 +4050,7 @@ msgstr "ほとんどのエクステンションでは、これは「箱から出
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1900
 #, no-wrap
 msgid "public class ServletChangeTestCase {\n"
-msgstr ""
+msgstr "public class ServletChangeTestCase {\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1911
@@ -3783,12 +4078,17 @@ msgid ""
 "                .statusCode(200)\n"
 "                .body(is(\"Hello World\"));\n"
 msgstr ""
+"    @Test\n"
+"    public void testServletChange() throws InterruptedException {\n"
+"        RestAssured.when().get(\"/dev\").then()\n"
+"                .statusCode(200)\n"
+"                .body(is(\"Hello World\"));\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1919
 #, no-wrap
 msgid "        test.modifySourceFile(\"DevServlet.java\", new Function<String, String>() {  <2>\n"
-msgstr ""
+msgstr "        test.modifySourceFile(\"DevServlet.java\", new Function<String, String>() {  <2>\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1925
@@ -3800,6 +4100,11 @@ msgid ""
 "            }\n"
 "        });\n"
 msgstr ""
+"            @Override\n"
+"            public String apply(String s) {\n"
+"                return s.replace(\"Hello World\", \"Hello Quarkus\");\n"
+"            }\n"
+"        });\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1930
@@ -3810,6 +4115,10 @@ msgid ""
 "                .body(is(\"Hello Quarkus\"));\n"
 "    }\n"
 msgstr ""
+"        RestAssured.when().get(\"/dev\").then()\n"
+"                .statusCode(200)\n"
+"                .body(is(\"Hello Quarkus\"));\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1935
@@ -3820,12 +4129,16 @@ msgid ""
 "        RestAssured.when().get(\"/new\").then()\n"
 "                .statusCode(404);\n"
 msgstr ""
+"    @Test\n"
+"    public void testAddServlet() throws InterruptedException {\n"
+"        RestAssured.when().get(\"/new\").then()\n"
+"                .statusCode(404);\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1937
 #, no-wrap
 msgid "        test.addSourceFile(NewServlet.class);                                       <3>\n"
-msgstr ""
+msgstr "        test.addSourceFile(NewServlet.class);                                       <3>\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1942
@@ -3836,6 +4149,10 @@ msgid ""
 "                .body(is(\"A new Servlet\"));\n"
 "    }\n"
 msgstr ""
+"        RestAssured.when().get(\"/new\").then()\n"
+"                .statusCode(200)\n"
+"                .body(is(\"A new Servlet\"));\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1948
@@ -3847,12 +4164,17 @@ msgid ""
 "                .statusCode(200)\n"
 "                .body(is(\"Hello Resource\"));\n"
 msgstr ""
+"    @Test\n"
+"    public void testResourceChange() throws InterruptedException {\n"
+"        RestAssured.when().get(\"/file.txt\").then()\n"
+"                .statusCode(200)\n"
+"                .body(is(\"Hello Resource\"));\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1950
 #, no-wrap
 msgid "        test.modifyResourceFile(\"META-INF/resources/file.txt\", new Function<String, String>() { <4>\n"
-msgstr ""
+msgstr "        test.modifyResourceFile(\"META-INF/resources/file.txt\", new Function<String, String>() { <4>\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1956
@@ -3864,6 +4186,11 @@ msgid ""
 "            }\n"
 "        });\n"
 msgstr ""
+"            @Override\n"
+"            public String apply(String s) {\n"
+"                return \"A new resource\";\n"
+"            }\n"
+"        });\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1961
@@ -3874,6 +4201,10 @@ msgid ""
 "                .body(is(\"A new resource\"));\n"
 "    }\n"
 msgstr ""
+"        RestAssured.when().get(\"file.txt\").then()\n"
+"                .statusCode(200)\n"
+"                .body(is(\"A new resource\"));\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1964
@@ -3882,6 +4213,8 @@ msgid ""
 "    @Test\n"
 "    public void testAddResource() throws InterruptedException {\n"
 msgstr ""
+"    @Test\n"
+"    public void testAddResource() throws InterruptedException {\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1967
@@ -3890,12 +4223,14 @@ msgid ""
 "        RestAssured.when().get(\"/new.txt\").then()\n"
 "                .statusCode(404);\n"
 msgstr ""
+"        RestAssured.when().get(\"/new.txt\").then()\n"
+"                .statusCode(404);\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1969
 #, no-wrap
 msgid "        test.addResourceFile(\"META-INF/resources/new.txt\", \"New File\");  <5>\n"
-msgstr ""
+msgstr "        test.addResourceFile(\"META-INF/resources/new.txt\", \"New File\");  <5>\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1973
@@ -3905,6 +4240,9 @@ msgid ""
 "                .statusCode(200)\n"
 "                .body(is(\"New File\"));\n"
 msgstr ""
+"        RestAssured.when().get(\"/new.txt\").then()\n"
+"                .statusCode(200)\n"
+"                .body(is(\"New File\"));\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:1976
@@ -4145,7 +4483,7 @@ msgstr "例えば、 `quarkus.debug.generated-classes-dir` システムプロパ
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2058
 #, no-wrap
 msgid "./mvnw quarkus:dev -Dquarkus.debug.generated-classes-dir=dump-classes\n"
-msgstr ""
+msgstr "./mvnw quarkus:dev -Dquarkus.debug.generated-classes-dir=dump-classes\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2061
@@ -4161,7 +4499,7 @@ msgstr "ディレクトリーに書き込まれた各クラスのログに行が
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2067
 #, no-wrap
 msgid "INFO  [io.qua.run.boo.StartupActionImpl] (main) Wrote /path/to/my/app/target/dump-classes/io/quarkus/arc/impl/ActivateRequestContextInterceptor_Bean.class\n"
-msgstr ""
+msgstr "INFO  [io.qua.run.boo.StartupActionImpl] (main) Wrote /path/to/my/app/target/dump-classes/io/quarkus/arc/impl/ActivateRequestContextInterceptor_Bean.class\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2070
@@ -4172,7 +4510,7 @@ msgstr "このプロパティーは、テストを実行するときにも尊重
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2074
 #, no-wrap
 msgid "./mvnw clean test -Dquarkus.debug.generated-classes-dir=target/dump-generated-classes\n"
-msgstr ""
+msgstr "./mvnw clean test -Dquarkus.debug.generated-classes-dir=target/dump-generated-classes\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2077
@@ -4194,7 +4532,7 @@ msgstr "example \"モジュールを含むマルチモジュールのMavenプロ
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2088
 #, no-wrap
 msgid "./mvnw compile quarkus:dev -DnoDeps\n"
-msgstr ""
+msgstr "./mvnw compile quarkus:dev -DnoDeps\n"
 
 #. type: Title ====
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2090
@@ -4276,6 +4614,10 @@ msgid ""
 "        return new FeatureBuildItem(\"test-extension\");\n"
 "    }\n"
 msgstr ""
+"    @BuildStep\n"
+"    FeatureBuildItem feature() {\n"
+"        return new FeatureBuildItem(\"test-extension\");\n"
+"    }\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2127
@@ -4326,6 +4668,11 @@ msgid ""
 "        capabilityProducer.produce(new CapabilityBuildItem(\"org.acme.test-metrics\"));\n"
 "    }\n"
 msgstr ""
+"    @BuildStep\n"
+"    void capabilities(BuildProducer<CapabilityBuildItem> capabilityProducer) {\n"
+"        capabilityProducer.produce(new CapabilityBuildItem(\"org.acme.test-transactions\"));\n"
+"        capabilityProducer.produce(new CapabilityBuildItem(\"org.acme.test-metrics\"));\n"
+"    }\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2162
@@ -4349,6 +4696,12 @@ msgid ""
 "        }\n"
 "    }\n"
 msgstr ""
+"    @BuildStep\n"
+"    void doSomeCoolStuff(Capabilities capabilities) {\n"
+"        if (capabilities.isPresent(Capability.TRANSACTIONS)) {\n"
+"          // do something only if JTA transactions are in...\n"
+"        }\n"
+"    }\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2176
@@ -4359,7 +4712,7 @@ msgstr "ケイパビリティは、`io.quarkus.security.jpa` のように、Java
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2177
 #, no-wrap
 msgid "Bean Defining Annotations"
-msgstr ""
+msgstr "アノテーションを定義する Bean"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2179
@@ -4380,6 +4733,9 @@ msgid ""
 "import org.jboss.jandex.DotName;\n"
 "import io.quarkus.extest.runtime.TestAnnotation;\n"
 msgstr ""
+"import javax.enterprise.context.ApplicationScoped;\n"
+"import org.jboss.jandex.DotName;\n"
+"import io.quarkus.extest.runtime.TestAnnotation;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2190
@@ -4389,6 +4745,9 @@ msgid ""
 "    static DotName TEST_ANNOTATION = DotName.createSimple(TestAnnotation.class.getName());\n"
 "    static DotName TEST_ANNOTATION_SCOPE = DotName.createSimple(ApplicationScoped.class.getName());\n"
 msgstr ""
+"public final class TestProcessor {\n"
+"    static DotName TEST_ANNOTATION = DotName.createSimple(TestAnnotation.class.getName());\n"
+"    static DotName TEST_ANNOTATION_SCOPE = DotName.createSimple(ApplicationScoped.class.getName());\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2192
@@ -4409,6 +4768,13 @@ msgid ""
 "...\n"
 "}\n"
 msgstr ""
+"    @BuildStep\n"
+"    BeanDefiningAnnotationBuildItem registerX() {\n"
+"        <1>\n"
+"        return new BeanDefiningAnnotationBuildItem(TEST_ANNOTATION, TEST_ANNOTATION_SCOPE);\n"
+"    }\n"
+"...\n"
+"}\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2210
@@ -4424,6 +4790,15 @@ msgid ""
 "public @interface TestAnnotation {\n"
 "}\n"
 msgstr ""
+"/**\n"
+" * Marker annotation for test configuration target beans\n"
+" */\n"
+"@Target({ TYPE })\n"
+"@Retention(RUNTIME)\n"
+"@Documented\n"
+"@Inherited\n"
+"public @interface TestAnnotation {\n"
+"}\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2216
@@ -4435,6 +4810,11 @@ msgid ""
 "@TestAnnotation <2>\n"
 "public class ConfiguredBean implements IConfigConsumer {\n"
 msgstr ""
+"/**\n"
+" * A sample bean\n"
+" */\n"
+"@TestAnnotation <2>\n"
+"public class ConfiguredBean implements IConfigConsumer {\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2220
@@ -4487,6 +4867,20 @@ msgid ""
 "        return serviceBuildItem;\n"
 "    }\n"
 msgstr ""
+"    @BuildStep\n"
+"    @Record(STATIC_INIT)\n"
+"    RuntimeServiceBuildItem parseServiceXmlConfig(TestRecorder recorder) throws JAXBException {\n"
+"        RuntimeServiceBuildItem serviceBuildItem = null;\n"
+"        JAXBContext context = JAXBContext.newInstance(XmlConfig.class);\n"
+"        Unmarshaller unmarshaller = context.createUnmarshaller();\n"
+"        InputStream is = getClass().getResourceAsStream(\"/config.xml\"); <1>\n"
+"        if (is != null) {\n"
+"            log.info(\"Have XmlConfig, loading\");\n"
+"            XmlConfig config = (XmlConfig) unmarshaller.unmarshal(is); <2>\n"
+"...\n"
+"        }\n"
+"        return serviceBuildItem;\n"
+"    }\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2246
@@ -4542,6 +4936,8 @@ msgid ""
 "    static DotName TEST_ANNOTATION = DotName.createSimple(TestAnnotation.class.getName());\n"
 "...\n"
 msgstr ""
+"    static DotName TEST_ANNOTATION = DotName.createSimple(TestAnnotation.class.getName());\n"
+"...\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2293
@@ -4735,6 +5131,23 @@ msgid ""
 "        return serviceBuildItem;\n"
 "    }\n"
 msgstr ""
+"// TestProcessor#parseServiceXmlConfig\n"
+"    @BuildStep\n"
+"    @Record(STATIC_INIT)\n"
+"    RuntimeServiceBuildItem parseServiceXmlConfig(TestRecorder recorder) throws JAXBException {\n"
+"        RuntimeServiceBuildItem serviceBuildItem = null;\n"
+"        JAXBContext context = JAXBContext.newInstance(XmlConfig.class);\n"
+"        Unmarshaller unmarshaller = context.createUnmarshaller();\n"
+"        InputStream is = getClass().getResourceAsStream(\"/config.xml\");\n"
+"        if (is != null) {\n"
+"            log.info(\"Have XmlConfig, loading\");\n"
+"            XmlConfig config = (XmlConfig) unmarshaller.unmarshal(is);\n"
+"            log.info(\"Loaded XmlConfig, creating service\");\n"
+"            RuntimeValue<RuntimeXmlConfigService> service = recorder.initRuntimeService(config); //<1>\n"
+"            serviceBuildItem = new RuntimeServiceBuildItem(service); //<3>\n"
+"        }\n"
+"        return serviceBuildItem;\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2364
@@ -4746,6 +5159,11 @@ msgid ""
 "        return new RuntimeValue<>(service);\n"
 "    }\n"
 msgstr ""
+"// TestRecorder#initRuntimeService\n"
+"    public RuntimeValue<RuntimeXmlConfigService> initRuntimeService(XmlConfig config) {\n"
+"        RuntimeXmlConfigService service = new RuntimeXmlConfigService(config); //<2>\n"
+"        return new RuntimeValue<>(service);\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2368
@@ -4755,6 +5173,9 @@ msgid ""
 "    final public class RuntimeServiceBuildItem extends SimpleBuildItem {\n"
 "    private RuntimeValue<RuntimeXmlConfigService> service;\n"
 msgstr ""
+"// RuntimeServiceBuildItem\n"
+"    final public class RuntimeServiceBuildItem extends SimpleBuildItem {\n"
+"    private RuntimeValue<RuntimeXmlConfigService> service;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2372
@@ -4764,6 +5185,9 @@ msgid ""
 "        this.service = service;\n"
 "    }\n"
 msgstr ""
+"    public RuntimeServiceBuildItem(RuntimeValue<RuntimeXmlConfigService> service) {\n"
+"        this.service = service;\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2377
@@ -4774,6 +5198,10 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    public RuntimeValue<RuntimeXmlConfigService> getService() {\n"
+"        return service;\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2379
@@ -4923,6 +5351,8 @@ msgid ""
 "import io.quarkus.runtime.ShutdownEvent;\n"
 "import io.quarkus.runtime.StartupEvent;\n"
 msgstr ""
+"import io.quarkus.runtime.ShutdownEvent;\n"
+"import io.quarkus.runtime.StartupEvent;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2440
@@ -4951,6 +5381,14 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    /**\n"
+"     * Called when the runtime is shutting down\n"
+"     * @param event\n"
+"    */\n"
+"    void onStop(@Observes ShutdownEvent event) { // <2>\n"
+"        System.out.printf(\"onStop, event=%s%n\", event);\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2451
@@ -4991,6 +5429,14 @@ msgid ""
 "        return new ServiceStartBuildItem(\"RuntimeXmlConfigService\"); //<1>\n"
 "    }\n"
 msgstr ""
+"// TestProcessor#startRuntimeService\n"
+"    @BuildStep\n"
+"    @Record(RUNTIME_INIT)\n"
+"    ServiceStartBuildItem startRuntimeService(TestRecorder recorder, ShutdownContextBuildItem shutdownContextBuildItem,\n"
+"            RuntimeServiceBuildItem serviceBuildItem) throws IOException {\n"
+"...\n"
+"        return new ServiceStartBuildItem(\"RuntimeXmlConfigService\"); //<1>\n"
+"    }\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2476
@@ -5024,6 +5470,11 @@ msgid ""
 "    @Inject\n"
 "    BuildProducer<NativeImageResourceBundleBuildItem> resourceBundle;\n"
 msgstr ""
+"public final class MyExtProcessor {\n"
+"    @Inject\n"
+"    BuildProducer<NativeImageResourceBuildItem> resource;\n"
+"    @Inject\n"
+"    BuildProducer<NativeImageResourceBundleBuildItem> resourceBundle;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2492
@@ -5033,6 +5484,9 @@ msgid ""
 "    void registerNativeImageResources() {\n"
 "        resource.produce(new NativeImageResourceBuildItem(\"/security/runtime.keys\")); //<1>\n"
 msgstr ""
+"    @BuildStep\n"
+"    void registerNativeImageResources() {\n"
+"        resource.produce(new NativeImageResourceBuildItem(\"/security/runtime.keys\")); //<1>\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2495
@@ -5041,6 +5495,8 @@ msgid ""
 "        resource.produce(new NativeImageResourceBuildItem(\n"
 "                \"META-INF/my-descriptor.xml\")); //<2>\n"
 msgstr ""
+"        resource.produce(new NativeImageResourceBuildItem(\n"
+"                \"META-INF/my-descriptor.xml\")); //<2>\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2499
@@ -5050,6 +5506,9 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"        resourceBundle.produce(new NativeImageResourceBuildItem(\"javax.xml.bind.Messages\")); //<3>\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2501
@@ -5083,7 +5542,7 @@ msgstr "`META-INF/services` ファイルを使用している場合は、ネイ�
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2571
 #, no-wrap
 msgid "public final class MyExtProcessor {\n"
-msgstr ""
+msgstr "public final class MyExtProcessor {\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2516
@@ -5093,6 +5552,9 @@ msgid ""
 "    void registerNativeImageResources(BuildProducer<ServiceProviderBuildItem> services) {\n"
 "        String service = \"META-INF/services/\" + io.quarkus.SomeService.class.getName();\n"
 msgstr ""
+"    @BuildStep\n"
+"    void registerNativeImageResources(BuildProducer<ServiceProviderBuildItem> services) {\n"
+"        String service = \"META-INF/services/\" + io.quarkus.SomeService.class.getName();\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2521
@@ -5103,6 +5565,10 @@ msgid ""
 "            ServiceUtil.classNamesNamedIn(Thread.currentThread().getContextClassLoader(),\n"
 "                                          service);\n"
 msgstr ""
+"        // find out all the implementation classes listed in the service files\n"
+"        Set<String> implementations =\n"
+"            ServiceUtil.classNamesNamedIn(Thread.currentThread().getContextClassLoader(),\n"
+"                                          service);\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2529
@@ -5116,6 +5582,13 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"        // register every listed implementation class so they can be instantiated\n"
+"        // in native-image at run-time\n"
+"        services.produce(\n"
+"            new ServiceProviderBuildItem(io.quarkus.SomeService.class.getName(),\n"
+"                                         implementations.toArray(new String[0])));\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2535
@@ -5136,6 +5609,10 @@ msgid ""
 "                                     BuildProducer<ReflectiveClassBuildItem> reflectionClasses) {\n"
 "        String service = \"META-INF/services/\" + io.quarkus.SomeService.class.getName();\n"
 msgstr ""
+"    @BuildStep\n"
+"    void registerNativeImageResources(BuildProducer<NativeImageResourceBuildItem> resource,\n"
+"                                     BuildProducer<ReflectiveClassBuildItem> reflectionClasses) {\n"
+"        String service = \"META-INF/services/\" + io.quarkus.SomeService.class.getName();\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2550
@@ -5144,6 +5621,8 @@ msgid ""
 "        // register the service file so it is visible in native-image\n"
 "        resource.produce(new NativeImageResourceBuildItem(service));\n"
 msgstr ""
+"        // register the service file so it is visible in native-image\n"
+"        resource.produce(new NativeImageResourceBuildItem(service));\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2560
@@ -5159,6 +5638,15 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"        // register every listed implementation class so they can be inspected/instantiated\n"
+"        // in native-image at run-time\n"
+"        Set<String> implementations =\n"
+"            ServiceUtil.classNamesNamedIn(Thread.currentThread().getContextClassLoader(),\n"
+"                                          service);\n"
+"        reflectionClasses.produce(\n"
+"            new ReflectiveClassBuildItem(true, true, implementations.toArray(new String[0])));\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2564
@@ -5180,6 +5668,11 @@ msgid ""
 "                                     SomeServiceRecorder recorder) {\n"
 "        String service = \"META-INF/services/\" + io.quarkus.SomeService.class.getName();\n"
 msgstr ""
+"    @BuildStep\n"
+"    @Record(ExecutionTime.STATIC_INIT)\n"
+"    void registerNativeImageResources(RecorderContext recorderContext,\n"
+"                                     SomeServiceRecorder recorder) {\n"
+"        String service = \"META-INF/services/\" + io.quarkus.SomeService.class.getName();\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2586
@@ -5194,6 +5687,14 @@ msgid ""
 "                recorderContext.classProxy(implementation));\n"
 "        }\n"
 msgstr ""
+"        // read the implementation classes\n"
+"        Collection<Class<? extends io.quarkus.SomeService>> implementationClasses = new LinkedHashSet<>();\n"
+"        Set<String> implementations = ServiceUtil.classNamesNamedIn(Thread.currentThread().getContextClassLoader(),\n"
+"                                                                    service);\n"
+"        for(String implementation : implementations) {\n"
+"            implementationClasses.add((Class<? extends io.quarkus.SomeService>)\n"
+"                recorderContext.classProxy(implementation));\n"
+"        }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2591
@@ -5204,6 +5705,10 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"        // produce a static-initializer with those classes\n"
+"        recorder.configure(implementationClasses);\n"
+"    }\n"
+"}\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2594
@@ -5212,6 +5717,8 @@ msgid ""
 "@Recorder\n"
 "public class SomeServiceRecorder {\n"
 msgstr ""
+"@Recorder\n"
+"public class SomeServiceRecorder {\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2599
@@ -5222,6 +5729,10 @@ msgid ""
 "        SomeServiceProvider serviceProvider = SomeServiceProvider.instance();\n"
 "        SomeServiceBuilder builder = serviceProvider.getSomeServiceBuilder();\n"
 msgstr ""
+"    public void configure(List<Class<? extends io.quarkus.SomeService>> implementations) {\n"
+"        // configure our service statically\n"
+"        SomeServiceProvider serviceProvider = SomeServiceProvider.instance();\n"
+"        SomeServiceBuilder builder = serviceProvider.getSomeServiceBuilder();\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2609
@@ -5237,6 +5748,15 @@ msgid ""
 "            }\n"
 "        }\n"
 msgstr ""
+"        List<io.quarkus.SomeService> services = new ArrayList<>(implementations.size());\n"
+"        // instantiate the service implementations\n"
+"        for (Class<? extends io.quarkus.SomeService> implementationClass : implementations) {\n"
+"            try {\n"
+"                services.add(implementationClass.getConstructor().newInstance());\n"
+"            } catch (Exception e) {\n"
+"                throw new IllegalArgumentException(\"Unable to instantiate service \" + implementationClass, e);\n"
+"            }\n"
+"        }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2613
@@ -5246,6 +5766,9 @@ msgid ""
 "        builder.withSomeServices(implementations.toArray(new io.quarkus.SomeService[0]));\n"
 "        ServiceManager serviceManager = builder.build();\n"
 msgstr ""
+"        // build our service\n"
+"        builder.withSomeServices(implementations.toArray(new io.quarkus.SomeService[0]));\n"
+"        ServiceManager serviceManager = builder.build();\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2618
@@ -5256,6 +5779,10 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"        // register it\n"
+"        serviceProvider.registerServiceManager(serviceManager, Thread.currentThread().getContextClassLoader());\n"
+"    }\n"
+"}\n"
 
 #. type: Title ====
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2621
@@ -5285,6 +5812,12 @@ msgid ""
 "\tat io.quarkus.runner.RuntimeRunner.run(RuntimeRunner.java:99)\n"
 "\t... 36 more\n"
 msgstr ""
+"\t[error]: Build step io.quarkus.deployment.steps.MainClassBuildStep#build threw an exception: java.lang.RuntimeException: Unable to serialize objects of type class sun.security.provider.DSAPublicKeyImpl to bytecode as it has no default constructor\n"
+"\tat io.quarkus.builder.Execution.run(Execution.java:123)\n"
+"\tat io.quarkus.builder.BuildExecutionBuilder.execute(BuildExecutionBuilder.java:136)\n"
+"\tat io.quarkus.deployment.QuarkusAugmentor.run(QuarkusAugmentor.java:110)\n"
+"\tat io.quarkus.runner.RuntimeRunner.run(RuntimeRunner.java:99)\n"
+"\t... 36 more\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2636
@@ -5301,7 +5834,7 @@ msgstr ""
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2641
 #, no-wrap
 msgid "package io.quarkus.extest.runtime.subst;\n"
-msgstr ""
+msgstr "package io.quarkus.extest.runtime.subst;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2648
@@ -5314,12 +5847,18 @@ msgid ""
 "import java.security.spec.X509EncodedKeySpec;\n"
 "import java.util.logging.Logger;\n"
 msgstr ""
+"import java.security.KeyFactory;\n"
+"import java.security.NoSuchAlgorithmException;\n"
+"import java.security.interfaces.DSAPublicKey;\n"
+"import java.security.spec.InvalidKeySpecException;\n"
+"import java.security.spec.X509EncodedKeySpec;\n"
+"import java.util.logging.Logger;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2650
 #, no-wrap
 msgid "import io.quarkus.runtime.ObjectSubstitution;\n"
-msgstr ""
+msgstr "import io.quarkus.runtime.ObjectSubstitution;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2661
@@ -5336,6 +5875,16 @@ msgid ""
 "        return proxy;\n"
 "    }\n"
 msgstr ""
+"public class DSAPublicKeyObjectSubstitution implements ObjectSubstitution<DSAPublicKey, KeyProxy> {\n"
+"    private static final Logger log = Logger.getLogger(\"DSAPublicKeyObjectSubstitution\");\n"
+"    @Override\n"
+"    public KeyProxy serialize(DSAPublicKey obj) { //<1>\n"
+"        log.info(\"DSAPublicKeyObjectSubstitution.serialize\");\n"
+"        byte[] encoded = obj.getEncoded();\n"
+"        KeyProxy proxy = new KeyProxy();\n"
+"        proxy.setContent(encoded);\n"
+"        return proxy;\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2671
@@ -5351,6 +5900,15 @@ msgid ""
 "            KeyFactory kf = KeyFactory.getInstance(\"DSA\");\n"
 "            dsaPublicKey = (DSAPublicKey) kf.generatePublic(publicKeySpec);\n"
 msgstr ""
+"    @Override\n"
+"    public DSAPublicKey deserialize(KeyProxy obj) { //<2>\n"
+"        log.info(\"DSAPublicKeyObjectSubstitution.deserialize\");\n"
+"        byte[] encoded = obj.getContent();\n"
+"        X509EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(encoded);\n"
+"        DSAPublicKey dsaPublicKey = null;\n"
+"        try {\n"
+"            KeyFactory kf = KeyFactory.getInstance(\"DSA\");\n"
+"            dsaPublicKey = (DSAPublicKey) kf.generatePublic(publicKeySpec);\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2678
@@ -5363,6 +5921,12 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {\n"
+"            e.printStackTrace();\n"
+"        }\n"
+"        return dsaPublicKey;\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2680
@@ -5400,6 +5964,16 @@ msgid ""
 "        ObjectSubstitutionBuildItem keysub = new ObjectSubstitutionBuildItem(holder);\n"
 "        substitutions.produce(keysub);\n"
 msgstr ""
+"    @BuildStep\n"
+"    @Record(STATIC_INIT)\n"
+"    PublicKeyBuildItem loadDSAPublicKey(TestRecorder recorder,\n"
+"            BuildProducer<ObjectSubstitutionBuildItem> substitutions) throws IOException, GeneralSecurityException {\n"
+"...\n"
+"        // Register how to serialize DSAPublicKey\n"
+"        ObjectSubstitutionBuildItem.Holder<DSAPublicKey, KeyProxy> holder = new ObjectSubstitutionBuildItem.Holder(\n"
+"                DSAPublicKey.class, KeyProxy.class, DSAPublicKeyObjectSubstitution.class);\n"
+"        ObjectSubstitutionBuildItem keysub = new ObjectSubstitutionBuildItem(holder);\n"
+"        substitutions.produce(keysub);\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2701
@@ -5409,6 +5983,9 @@ msgid ""
 "        return new PublicKeyBuildItem(publicKey);\n"
 "    }\n"
 msgstr ""
+"        log.info(\"loadDSAPublicKey run\");\n"
+"        return new PublicKeyBuildItem(publicKey);\n"
+"    }\n"
 
 #. type: Title ====
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2703
@@ -5437,6 +6014,11 @@ msgid ""
 "import com.oracle.svm.core.annotate.TargetClass;\n"
 "import io.quarkus.extest.runtime.config.XmlData;\n"
 msgstr ""
+"package io.quarkus.extest.runtime.graal;\n"
+"import java.util.Date;\n"
+"import com.oracle.svm.core.annotate.Substitute;\n"
+"import com.oracle.svm.core.annotate.TargetClass;\n"
+"import io.quarkus.extest.runtime.config.XmlData;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2718
@@ -5446,6 +6028,9 @@ msgid ""
 "@Substitute\n"
 "public final class Target_XmlConfig {\n"
 msgstr ""
+"@TargetClass(XmlConfig.class)\n"
+"@Substitute\n"
+"public final class Target_XmlConfig {\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2725
@@ -5458,6 +6043,12 @@ msgid ""
 "    @Substitute\n"
 "    private ArrayList<XData> dataList;\n"
 msgstr ""
+"    @Substitute\n"
+"    private String address;\n"
+"    @Substitute\n"
+"    private int port;\n"
+"    @Substitute\n"
+"    private ArrayList<XData> dataList;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2730
@@ -5468,6 +6059,10 @@ msgid ""
 "        return address;\n"
 "    }\n"
 msgstr ""
+"    @Substitute\n"
+"    public String getAddress() {\n"
+"        return address;\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2735
@@ -5478,6 +6073,10 @@ msgid ""
 "        return port;\n"
 "    }\n"
 msgstr ""
+"    @Substitute\n"
+"    public int getPort() {\n"
+"        return port;\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2740
@@ -5488,6 +6087,10 @@ msgid ""
 "        return dataList;\n"
 "    }\n"
 msgstr ""
+"    @Substitute\n"
+"    public ArrayList<XData> getDataList() {\n"
+"        return dataList;\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2751
@@ -5504,6 +6107,16 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    @Substitute\n"
+"    @Override\n"
+"    public String toString() {\n"
+"        return \"Target_XmlConfig{\" +\n"
+"                \"address='\" + address + '\\'' +\n"
+"                \", port=\" + port +\n"
+"                \", dataList=\" + dataList +\n"
+"                '}';\n"
+"    }\n"
+"}\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2755
@@ -5513,6 +6126,9 @@ msgid ""
 "@Substitute\n"
 "public final class Target_XmlData {\n"
 msgstr ""
+"@TargetClass(XmlData.class)\n"
+"@Substitute\n"
+"public final class Target_XmlData {\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2762
@@ -5525,6 +6141,12 @@ msgid ""
 "    @Substitute\n"
 "    private Date date;\n"
 msgstr ""
+"    @Substitute\n"
+"    private String name;\n"
+"    @Substitute\n"
+"    private String model;\n"
+"    @Substitute\n"
+"    private Date date;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2767
@@ -5535,6 +6157,10 @@ msgid ""
 "        return name;\n"
 "    }\n"
 msgstr ""
+"    @Substitute\n"
+"    public String getName() {\n"
+"        return name;\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2772
@@ -5545,6 +6171,10 @@ msgid ""
 "        return model;\n"
 "    }\n"
 msgstr ""
+"    @Substitute\n"
+"    public String getModel() {\n"
+"        return model;\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2777
@@ -5555,6 +6185,10 @@ msgid ""
 "        return date;\n"
 "    }\n"
 msgstr ""
+"    @Substitute\n"
+"    public Date getDate() {\n"
+"        return date;\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2788
@@ -5571,6 +6205,16 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    @Substitute\n"
+"    @Override\n"
+"    public String toString() {\n"
+"        return \"Target_XmlData{\" +\n"
+"                \"name='\" + name + '\\'' +\n"
+"                \", model='\" + model + '\\'' +\n"
+"                \", date='\" + date + '\\'' +\n"
+"                '}';\n"
+"    }\n"
+"}\n"
 
 #. type: Title ==
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2790
@@ -5918,7 +6562,7 @@ msgstr "設定リファレンス"
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2989
 msgid "\\include::{generated-dir}/config/quarkus-your-extension.adoc[opts=optional, leveloffset=+1]"
-msgstr ""
+msgstr "\\include::{generated-dir}/config/quarkus-your-extension.adoc[opts=optional, leveloffset=+1]"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/writing-extensions.adoc:2992
