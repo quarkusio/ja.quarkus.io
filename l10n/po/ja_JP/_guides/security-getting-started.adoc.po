@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2022-09-11 00:19+0000\n"
+"POT-Creation-Date: 2022-10-02 00:31+0000\n"
 "PO-Revision-Date: 2022-09-18 21:49+0900\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -22,126 +22,164 @@ msgstr ""
 #. type: Title =
 #: upstream/_guides/security-getting-started.adoc:6
 #, no-wrap
-msgid "Getting Started with Quarkus Security"
-msgstr "Quarkus セキュリティー入門"
+msgid "Secure a Quarkus application with Basic authentication"
+msgstr ""
 
 #. type: Plain text
 #: upstream/_guides/security-getting-started.adoc:11
-msgid "This guide demonstartes how you can quickly create a secure Quarkus application by using xref:security-built-in-authentication.adoc#basic-auth[Basic AuthenticationMechanism] and `JPA IdentityProvider` to create `SecurityIdentity` which is authorized by the `Role Based Access Control` (RBAC) layer before the access to application is permitted."
-msgstr "このガイドでは、xref:security-built-in-authentication.adoc#basic-auth[Basic AuthenticationMechanism] と `JPA IdentityProvider` を使用して、アプリケーションへのアクセスを許可する前に `Role Based Access Control` (RBAC) レイヤーで認可される `SecurityIdentity` を作成して、セキュアな Quarkus アプリケーションを迅速に作成する方法を説明します。"
-
-#. type: delimited block =
-#: upstream/_guides/security-getting-started.adoc:15
-msgid "Using `Basic AuthenticationMechanism` with `JPA IdentityProvider` is better than configuring the users and roles in `application.properties` therefore this guide recommends to combine `Basic AuthenticationMechanism` and `JPA IdentityProvider`. We will update this recommendation to use a reactive equivalent of the `JPA IdentityProvider` as soon as it is introduced."
-msgstr "`Basic AuthenticationMechanism` と `JPA IdentityProvider` の組み合わせは、`application.properties` でユーザーやロールを設定するよりも優れているため、このガイドでは `Basic AuthenticationMechanism` と `JPA IdentityProvider` を組み合わせて使用することを推奨しています。`JPA IdentityProvider` に相当するリアクティブが導入され次第、推奨内容を更新する予定です。"
+msgid "Secure your Quarkus application endpoints by combining xref:security-built-in-authentication.adoc#basic-auth[Quarkus built-in basic HTTP authentication] with the JPA identity provider to enable role-based access control (RBAC).  The JPA `IdentityProvider` creates a `SecurityIdentity` instance, which is used during user authentication to verify and authorize access requests making your Quarkus application secure."
+msgstr ""
 
 #. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:18
-msgid "This guide will conclude with recommending how to learn more about Quarkus Security, and in particular about its `OpenId Connect Authentication Mechanism`."
-msgstr "このガイドの最後では、Quarkus セキュリティー、特にその `OpenId Connect Authentication Mechanism` についてさらに学ぶ方法を推奨しています。"
+#: upstream/_guides/security-getting-started.adoc:13
+msgid "This tutorial prepares you for implementing more advanced security mechanisms in Quarkus, for example, how to use the OpenID Connect (OIDC) authentication mechanism."
+msgstr ""
 
 #. type: Title ==
-#: upstream/_guides/security-getting-started.adoc:20
+#: upstream/_guides/security-getting-started.adoc:14
 #, no-wrap
 msgid "Prerequisites"
 msgstr "前提条件"
 
 #. type: Title ==
+#: upstream/_guides/security-getting-started.adoc:18
+#, no-wrap
+msgid "What you will build"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-getting-started.adoc:21
+msgid "The steps in this tutorial guide you through building an application that provides the following endpoints:"
+msgstr ""
+
+#. type: Table
 #: upstream/_guides/security-getting-started.adoc:24
 #, no-wrap
-msgid "Architecture"
-msgstr "アーキテクチャ"
+msgid "Endpoint"
+msgstr ""
 
-#. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:27
-msgid "In this example, we build a very simple microservice which offers three endpoints:"
-msgstr "この例では、3つのエンドポイントを提供する非常にシンプルなマイクロサービスを構築します:"
+#. type: Table
+#: upstream/_guides/security-getting-started.adoc:25
+#, no-wrap
+msgid "Description"
+msgstr ""
 
-#. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:29
+#. type: Table
+#: upstream/_guides/security-getting-started.adoc:25
+#, no-wrap
 msgid "`/api/public`"
 msgstr "`/api/public`"
 
-#. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:30
+#. type: Table
+#: upstream/_guides/security-getting-started.adoc:26
+#, no-wrap
+msgid "The `/api/public` endpoint can be accessed anonymously."
+msgstr ""
+
+#. type: Table
+#: upstream/_guides/security-getting-started.adoc:26
+#, no-wrap
 msgid "`/api/users/me`"
 msgstr "`/api/users/me`"
 
-#. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:31
+#. type: Table
+#: upstream/_guides/security-getting-started.adoc:28
+#, no-wrap
+msgid ""
+"The `/api/admin` endpoint is protected with role-based access control (RBAC), and only users who have been granted the `admin` role can access it. \n"
+"At this endpoint, the `@RolesAllowed` annotation is used to declaratively enforce the access constraint."
+msgstr ""
+
+#. type: Table
+#: upstream/_guides/security-getting-started.adoc:28
+#, no-wrap
 msgid "`/api/admin`"
 msgstr "`/api/admin`"
 
-#. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:35
-msgid "The `/api/public` endpoint can be accessed anonymously.  The `/api/admin` endpoint is protected with RBAC (Role-Based Access Control) where only users granted with the `admin` role can access. At this endpoint, we use the `@RolesAllowed` annotation to declaratively enforce the access constraint.  The `/api/users/me` endpoint is also protected with RBAC (Role-Based Access Control) where only users granted with the `user` role can access. As a response, it returns a JSON document with details about the user."
-msgstr "`/api/public` エンドポイントは匿名でアクセスできます。 `/api/admin` エンドポイントは RBAC (Role-Based Access Control) で保護されており、 `admin` の役割を与えられたユーザーのみがアクセスできます。このエンドポイントでは、 `@RolesAllowed` アノテーションを使用して、アクセス制約を宣言的に強制します。 `/api/users/me` エンドポイントも RBAC (Role-Based Access Control) で保護されており、 `user` ロールで付与されたユーザーのみがアクセスできます。レスポンスとして、ユーザーに関する詳細を含むJSONドキュメントを返します。"
-
-#. type: Title ==
-#: upstream/_guides/security-getting-started.adoc:36
+#. type: Table
+#: upstream/_guides/security-getting-started.adoc:29
 #, no-wrap
-msgid "Solution"
-msgstr "ソリューション"
+msgid "The `/api/users/me` endpoint is protected with RBAC and only users that have been granted the `user` role can access it. A JSON document with details about the user is returned as a response."
+msgstr ""
 
-#. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:40
-msgid "We recommend that you follow the instructions in the next sections and create the application step by step.  However, you can go right to the completed example."
-msgstr "次の章で紹介する手順に沿って、ステップを踏んでアプリを作成することをお勧めします。ただし、完成した例にそのまま進んでも構いません。"
+#. type: delimited block =
+#: upstream/_guides/security-getting-started.adoc:34
+msgid "If you just want to examine the code, you can fast-forward to the completed example by using one of the following ways:"
+msgstr ""
 
-#. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:42
-msgid "Clone the Git repository: `git clone {quickstarts-clone-url}`, or download an {quickstarts-archive-url}[archive]."
+#. type: delimited block =
+#: upstream/_guides/security-getting-started.adoc:36
+msgid "Download the {quickstarts-archive-url}[archive]"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_guides/security-getting-started.adoc:37
+#, fuzzy
+#| msgid "Clone the Git repository: `git clone {quickstarts-clone-url}`, or download an {quickstarts-archive-url}[archive]."
+msgid "Clone the Git repository: `git clone {quickstarts-clone-url}`"
 msgstr "Gitリポジトリをクローンする: `git clone {quickstarts-clone-url}` 、または {quickstarts-archive-url}[アーカイブ] をダウンロードします。"
 
-#. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:44
-msgid "The solution is located in the `security-jpa-quickstart` {quickstarts-tree-url}/security-jpa-quickstart[directory]."
+#. type: delimited block =
+#: upstream/_guides/security-getting-started.adoc:39
+#, fuzzy
+#| msgid "The solution is located in the `security-jpa-quickstart` {quickstarts-tree-url}/security-jpa-quickstart[directory]."
+msgid "You can find the solution in the `security-jpa-quickstart` {quickstarts-tree-url}/security-jpa-quickstart[directory]."
 msgstr "ソリューションは `security-jpa-quickstart` {quickstarts-tree-url}/security-jpa-quickstart[ディレクトリー] にあります。"
 
 #. type: Title ==
-#: upstream/_guides/security-getting-started.adoc:45
-#, no-wrap
-msgid "Creating the Maven Project"
+#: upstream/_guides/security-getting-started.adoc:44
+#, fuzzy, no-wrap
+#| msgid "Creating the Maven Project"
+msgid "Create a Maven project"
 msgstr "Maven プロジェクトの作成"
 
 #. type: Plain text
 #: upstream/_guides/security-getting-started.adoc:48
-msgid "First, we need a new project. Create a new project with the following command:"
-msgstr "まず、新しいプロジェクトが必要です。以下のコマンドで新規プロジェクトを作成します。"
+msgid "For Quarkus security to be able to map your security source to JPA entities, ensure that the Maven project that is used in this tutorial includes the `security-jpa` extension.  You can either create a new Maven project with the `security-jpa` extension or you can add the extension to an existing Maven project."
+msgstr ""
 
 #. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:55
-msgid "This command generates a Maven project, importing the `security-jpa` extension which allows you to map your security source to JPA entities."
-msgstr "このコマンドは、セキュリティー ソースを JPA エンティティーにマップできる `security-jpa` エクステンションをインポートして、Maven プロジェクトを生成します。"
+#: upstream/_guides/security-getting-started.adoc:50
+#, fuzzy
+#| msgid "First, we need a new project. Create a new project with the following command:"
+msgid "To create the Maven project, use the following command:"
+msgstr "まず、新しいプロジェクトが必要です。以下のコマンドで新規プロジェクトを作成します。"
 
 #. type: delimited block =
 #: upstream/_guides/security-getting-started.adoc:59
-msgid "xref:hibernate-orm-panache.adoc[Hibernate ORM with Panache] is used to store your user identities but you can also use xref:hibernate-orm.adoc[Hibernate ORM]."
+#, fuzzy
+#| msgid "xref:hibernate-orm-panache.adoc[Hibernate ORM with Panache] is used to store your user identities but you can also use xref:hibernate-orm.adoc[Hibernate ORM]."
+msgid "xref:hibernate-orm-panache.adoc[Hibernate ORM with Panache] is used to store your user identities but you can also use xref:hibernate-orm.adoc[Hibernate ORM].  You must also add your preferred database connector library.  The instructions in this example tutorial use a PostgreSQL database for the identity store."
 msgstr "ユーザー ID の保存には xref:hibernate-orm-panache.adoc[Hibernate ORM with Panache] が使用されていますが、xref:hibernate-orm.adoc[Hibernate ORM] を使用することも可能です。"
 
-#. type: delimited block =
-#: upstream/_guides/security-getting-started.adoc:61
-msgid "Don't forget to add the database connector library of choice. Here we are using PostgreSQL as identity store."
-msgstr "選択したデータベースコネクタライブラリを追加することを忘れないでください。ここでは、PostgreSQLをIDストアとして使用しています。"
-
 #. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:65
-msgid "If you already have your Quarkus project configured, you can add the `security-jpa` extension to your project by running the following command in your project base directory:"
+#: upstream/_guides/security-getting-started.adoc:61
+#, fuzzy
+#| msgid "If you already have your Quarkus project configured, you can add the `security-jpa` extension to your project by running the following command in your project base directory:"
+msgid "To add the `security-jpa` extension to an existing Maven project, run the following command from your project base directory:"
 msgstr "すでにQuarkusプロジェクトが設定されている場合は、プロジェクトのベースディレクトリーで以下のコマンドを実行することで、プロジェクトに `security-jpa` エクステンションを追加することができます:"
 
+#. type: Title ===
+#: upstream/_guides/security-getting-started.adoc:65
+#, no-wrap
+msgid "Verification"
+msgstr ""
+
 #. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:70
-msgid "This will add the following to your build file:"
+#: upstream/_guides/security-getting-started.adoc:68
+#, fuzzy
+#| msgid "This will add the following to your build file:"
+msgid "When you run either command, the following XML is added to your build file:"
 msgstr "これにより、 `pom.xml` に以下が追加されます:"
 
 #. type: Block title
-#: upstream/_guides/security-getting-started.adoc:72
+#: upstream/_guides/security-getting-started.adoc:70
 #, no-wrap
 msgid "pom.xml"
 msgstr "pom.xml"
 
 #. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:78
+#: upstream/_guides/security-getting-started.adoc:76
 #, no-wrap
 msgid ""
 "<dependency>\n"
@@ -155,40 +193,43 @@ msgstr ""
 "</dependency>\n"
 
 #. type: Block title
-#: upstream/_guides/security-getting-started.adoc:81
+#: upstream/_guides/security-getting-started.adoc:79
 #, no-wrap
 msgid "build.gradle"
 msgstr "build.gradle"
 
 #. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:84
+#: upstream/_guides/security-getting-started.adoc:82
 #, no-wrap
 msgid "implementation(\"io.quarkus:quarkus-security-jpa\")\n"
 msgstr "implementation(\"io.quarkus:quarkus-security-jpa\")\n"
 
 #. type: Title ==
-#: upstream/_guides/security-getting-started.adoc:86
-#, no-wrap
-msgid "Writing the application"
+#: upstream/_guides/security-getting-started.adoc:84
+#, fuzzy, no-wrap
+#| msgid "Writing the application"
+msgid "Write the application"
 msgstr "アプリケーションの記述"
 
 #. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:89
-msgid "Let's start by implementing the `/api/public` endpoint. As you can see from the source code below, it is just a regular JAX-RS resource:"
+#: upstream/_guides/security-getting-started.adoc:88
+#, fuzzy
+#| msgid "Let's start by implementing the `/api/public` endpoint. As you can see from the source code below, it is just a regular JAX-RS resource:"
+msgid "Let's start by implementing the `/api/public` endpoint to allow all users access to access the application.  Add a regular JAX-RS resource to your Java source code, as outlined in the following code snippet:"
 msgstr "`/api/public` エンドポイントの実装から始めましょう。以下のソースコードから分かるように、通常のJAX-RSリソースです:"
 
 #. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:93
-#: upstream/_guides/security-getting-started.adoc:118
-#: upstream/_guides/security-getting-started.adoc:143
-#: upstream/_guides/security-getting-started.adoc:170
-#: upstream/_guides/security-getting-started.adoc:241
+#: upstream/_guides/security-getting-started.adoc:92
+#: upstream/_guides/security-getting-started.adoc:116
+#: upstream/_guides/security-getting-started.adoc:139
+#: upstream/_guides/security-getting-started.adoc:166
+#: upstream/_guides/security-getting-started.adoc:249
 #, no-wrap
 msgid "package org.acme.security.jpa;\n"
 msgstr "package org.acme.security.jpa;\n"
 
 #. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:99
+#: upstream/_guides/security-getting-started.adoc:98
 #, no-wrap
 msgid ""
 "import javax.annotation.security.PermitAll;\n"
@@ -204,7 +245,7 @@ msgstr ""
 "import javax.ws.rs.core.MediaType;\n"
 
 #. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:102
+#: upstream/_guides/security-getting-started.adoc:101
 #, no-wrap
 msgid ""
 "@Path(\"/api/public\")\n"
@@ -214,7 +255,7 @@ msgstr ""
 "public class PublicResource {\n"
 
 #. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:110
+#: upstream/_guides/security-getting-started.adoc:109
 #, no-wrap
 msgid ""
 "    @GET\n"
@@ -234,12 +275,14 @@ msgstr ""
 "}\n"
 
 #. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:113
-msgid "The source code for the `/api/admin` endpoint is also very simple. The main difference here is that we are using a `@RolesAllowed` annotation to make sure that only users granted with the `admin` role can access the endpoint:"
+#: upstream/_guides/security-getting-started.adoc:112
+#, fuzzy
+#| msgid "The source code for the `/api/admin` endpoint is also very simple. The main difference here is that we are using a `@RolesAllowed` annotation to make sure that only users granted with the `admin` role can access the endpoint:"
+msgid "The source code for the `/api/admin` endpoint is similar but instead you use a `@RolesAllowed` annotation to make sure that only users granted the `admin` role can access the endpoint.  Add a JAX-RS resource with the following `@RolesAllowed` annotation:"
 msgstr "`/api/admin` エンドポイントのソースコードも非常にシンプルです。ここでの主な違いは、 `admin` ロールで付与されたユーザーだけがエンドポイントにアクセスできるように `@RolesAllowed` アノテーションを使用していることです:"
 
 #. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:124
+#: upstream/_guides/security-getting-started.adoc:122
 #, no-wrap
 msgid ""
 "import javax.annotation.security.RolesAllowed;\n"
@@ -255,7 +298,7 @@ msgstr ""
 "import javax.ws.rs.core.MediaType;\n"
 
 #. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:127
+#: upstream/_guides/security-getting-started.adoc:125
 #, no-wrap
 msgid ""
 "@Path(\"/api/admin\")\n"
@@ -265,7 +308,7 @@ msgstr ""
 "public class AdminResource {\n"
 
 #. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:135
+#: upstream/_guides/security-getting-started.adoc:133
 #, no-wrap
 msgid ""
 "    @GET\n"
@@ -285,12 +328,14 @@ msgstr ""
 "}\n"
 
 #. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:139
-msgid "Finally, let's consider the `/api/users/me` endpoint. As you can see from the source code below, we are trusting only users with the `user` role.  We are using `SecurityContext` to get access to the current authenticated Principal, and we return the user's name. This information is loaded from the database."
+#: upstream/_guides/security-getting-started.adoc:136
+#, fuzzy
+#| msgid "Finally, let's consider the `/api/users/me` endpoint. As you can see from the source code below, we are trusting only users with the `user` role.  We are using `SecurityContext` to get access to the current authenticated Principal, and we return the user's name. This information is loaded from the database."
+msgid "Finally, implement the `/api/users/me` endpoint. As you can see from the source code example below, we are trusting only users with the `user` role.  We are also using `SecurityContext` to get access to the currently authenticated `Principal`, and we return the user name, all of which is loaded from the database."
 msgstr "最後に、 `/api/users/me` エンドポイントを考えてみましょう。下のソースコードを見ればわかるように、 `user` の役割を持つユーザのみを信頼しています。現在認証されているプリンシパルへのアクセスを得るために `SecurityContext` を使用しており、ユーザーの名前を返します。この情報はデータベースから読み込まれます。"
 
 #. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:150
+#: upstream/_guides/security-getting-started.adoc:146
 #, no-wrap
 msgid ""
 "import javax.annotation.security.RolesAllowed;\n"
@@ -308,7 +353,7 @@ msgstr ""
 "import javax.ws.rs.core.SecurityContext;\n"
 
 #. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:153
+#: upstream/_guides/security-getting-started.adoc:149
 #, no-wrap
 msgid ""
 "@Path(\"/api/users\")\n"
@@ -318,7 +363,7 @@ msgstr ""
 "public class UserResource {\n"
 
 #. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:161
+#: upstream/_guides/security-getting-started.adoc:157
 #, no-wrap
 msgid ""
 "    @GET\n"
@@ -338,18 +383,21 @@ msgstr ""
 "}\n"
 
 #. type: Title ===
-#: upstream/_guides/security-getting-started.adoc:163
-#, no-wrap
-msgid "Defining our user entity"
+#: upstream/_guides/security-getting-started.adoc:159
+#, fuzzy, no-wrap
+#| msgid "Defining our user entity"
+msgid "Define the user entity"
 msgstr "ユーザーエンティティーの定義"
 
 #. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:166
-msgid "We can now describe how our security information is stored in our model by adding a few annotations to our `User` entity:"
+#: upstream/_guides/security-getting-started.adoc:162
+#, fuzzy
+#| msgid "We can now describe how our security information is stored in our model by adding a few annotations to our `User` entity:"
+msgid "You can now describe how you want security information to be stored in the model by adding annotations to the `user` entity, as outlined in the following code snippet:"
 msgstr "これで、 `User` エンティティーにいくつかのアノテーションを追加することで、セキュリティー情報がモデルにどのように保存されているかを説明することができます:"
 
 #. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:173
+#: upstream/_guides/security-getting-started.adoc:169
 #, no-wrap
 msgid ""
 "import javax.persistence.Entity;\n"
@@ -359,7 +407,7 @@ msgstr ""
 "import javax.persistence.Table;\n"
 
 #. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:180
+#: upstream/_guides/security-getting-started.adoc:176
 #, no-wrap
 msgid ""
 "import io.quarkus.hibernate.orm.panache.PanacheEntity;\n"
@@ -377,7 +425,7 @@ msgstr ""
 "import io.quarkus.security.jpa.Username;\n"
 
 #. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:191
+#: upstream/_guides/security-getting-started.adoc:187
 #, no-wrap
 msgid ""
 "@Entity\n"
@@ -403,11 +451,26 @@ msgstr ""
 "    public String role;\n"
 
 #. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:206
-#, no-wrap
+#: upstream/_guides/security-getting-started.adoc:202
+#, fuzzy, no-wrap
+#| msgid ""
+#| "    /**\n"
+#| "     * Adds a new user in the database\n"
+#| "     * @param username the username\n"
+#| "     * @param password the unencrypted password (it will be encrypted with bcrypt)\n"
+#| "     * @param role the comma-separated roles\n"
+#| "     */\n"
+#| "    public static void add(String username, String password, String role) { <5>\n"
+#| "        User user = new User();\n"
+#| "        user.username = username;\n"
+#| "        user.password = BcryptUtil.bcryptHash(password);\n"
+#| "        user.role = role;\n"
+#| "        user.persist();\n"
+#| "    }\n"
+#| "}\n"
 msgid ""
 "    /**\n"
-"     * Adds a new user in the database\n"
+"     * Adds a new user to the database\n"
 "     * @param username the username\n"
 "     * @param password the unencrypted password (it will be encrypted with bcrypt)\n"
 "     * @param role the comma-separated roles\n"
@@ -437,59 +500,84 @@ msgstr ""
 "}\n"
 
 #. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:210
-msgid "The `security-jpa` extension is only initialized if there is a single entity annotated with `@UserDefinition`."
+#: upstream/_guides/security-getting-started.adoc:206
+#, fuzzy
+#| msgid "The `security-jpa` extension is only initialized if there is a single entity annotated with `@UserDefinition`."
+msgid "The `security-jpa` extension initializes only if there is a single entity annotated with `@UserDefinition`."
 msgstr "`security-jpa` エクステンションは、 `@UserDefinition` でアノテーションされた単一のエンティティーがある場合にのみ初期化されます。"
 
 #. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:212
-msgid "This annotation must be present on a single entity. It can be a regular Hibernate ORM entity or a Hibernate ORM with Panache entity as in this example."
+#: upstream/_guides/security-getting-started.adoc:208
+#, fuzzy
+#| msgid "This annotation must be present on a single entity. It can be a regular Hibernate ORM entity or a Hibernate ORM with Panache entity as in this example."
+msgid "The `@UserDefinition` annotation must be present on a single entity and can be either a regular Hibernate ORM entity or a Hibernate ORM with Panache entity."
 msgstr "このアノテーションは、単一のエンティティーに存在しなければなりません。この例のように、通常のHibernate ORMエンティティーまたはHibernate ORM with Panacheエンティティーにすることができます。"
 
 #. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:213
-msgid "This indicates the field used for the username."
+#: upstream/_guides/security-getting-started.adoc:209
+#, fuzzy
+#| msgid "This indicates the field used for the username."
+msgid "Indicates the field used for the user name."
 msgstr "これは、ユーザー名に使用されるフィールドを示します。"
 
 #. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:214
-msgid "This indicates the field used for the password. This defaults to using bcrypt hashed passwords, but you can also configure it for clear text passwords or custom passwords."
+#: upstream/_guides/security-getting-started.adoc:210
+#, fuzzy
+#| msgid "This indicates the field used for the password. This defaults to using bcrypt hashed passwords, but you can also configure it for clear text passwords or custom passwords."
+msgid "Indicates the field used for the password, which defaults to using bcrypt hashed passwords but you can also configure it for plain text or custom passwords."
 msgstr "これは、パスワードに使用するフィールドを示します。これはデフォルトでは bcrypt ハッシュ化されたパスワードを使用するように設定されていますが、クリアテキストパスワードやカスタムパスワード用に設定することもできます。"
 
 #. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:215
-msgid "This indicates the comma-separated list of roles added to the target Principal representation attributes."
+#: upstream/_guides/security-getting-started.adoc:211
+#, fuzzy
+#| msgid "This indicates the comma-separated list of roles added to the target Principal representation attributes."
+msgid "This indicates the comma-separated list of roles added to the target principal representation attributes."
 msgstr "これは、対象のプリンシパル表現属性に追加されたロールのコンマ区切りリストを示します。"
 
 #. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:216
+#: upstream/_guides/security-getting-started.adoc:212
 msgid "This method allows us to add users while hashing the password with the proper bcrypt hash."
 msgstr "この方法では、パスワードを適切なbcryptハッシュでハッシュしながらユーザーを追加することができます。"
 
 #. type: Title ===
-#: upstream/_guides/security-getting-started.adoc:217
-#, no-wrap
-msgid "Configuring the Application"
+#: upstream/_guides/security-getting-started.adoc:213
+#, fuzzy, no-wrap
+#| msgid "Configuring the Application"
+msgid "Configure the application"
 msgstr "アプリケーションの設定"
 
 #. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:220
-msgid "First, xref:security-built-in-authentication.adoc#basic-auth[Basic HTTPAuthenticationMechanism] has to be enabled with `quarkus.http.auth.basic=true`. In fact, you do not even have to set `quarkus.http.auth.basic=true` to enable it in this demo as `Basic HTTPAuthenticationMechanism` is used as a fallback authentication mechanism when a secure access is required and no other authentication mechanisms are enabled."
-msgstr "まず、xref:security-built-in-authentication.adoc#basic-auth[ベーシック HTTP 認証メカニズム] を `quarkus.http.auth.basic=true` で有効化する必要があります。ただし、このデモでは、セキュアなアクセスが必要な場合に他の認証メカニズムが有効になっていなければ `Basic HTTPAuthenticationMechanism` が使用されるため、`quarkus.http.auth.basic=true` を設定する必要はありません。"
+#: upstream/_guides/security-getting-started.adoc:216
+msgid "Enable xref:security-built-in-authentication.adoc#basic-auth[Quarkus built-in basic HTTP authentication] by setting the `quarkus.http.auth.basic` property to `true`:"
+msgstr ""
 
 #. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:222
-msgid "Next, configure the datasource. The `security-jpa` extension requires at least one datasource to access to your database."
+#: upstream/_guides/security-getting-started.adoc:218
+#, fuzzy
+#| msgid "quarkus.http.auth.basic=true\n"
+msgid "`quarkus.http.auth.basic`=true`"
+msgstr "quarkus.http.auth.basic=true\n"
+
+#. type: delimited block =
+#: upstream/_guides/security-getting-started.adoc:223
+msgid "When secure access is required and no other authentication mechanisms are enabled, xref:security-built-in-authentication.adoc#basic-auth[Quarkus built-in basic HTTP authentication] is the fallback authentication mechanism.  Therefore, in this tutorial, you do not need to set the property `quarkus.http.auth.basic=true`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-getting-started.adoc:226
+#, fuzzy
+#| msgid "Next, configure the datasource. The `security-jpa` extension requires at least one datasource to access to your database."
+msgid "Configure at least one data source so that the `security-jpa` extension can access your database."
 msgstr "次に、データソースを設定します。`security-jpa` エクステンションは、データベースにアクセスするために少なくとも一つのデータソースを必要とします。"
 
 #. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:226
+#: upstream/_guides/security-getting-started.adoc:230
 #, no-wrap
 msgid "quarkus.http.auth.basic=true\n"
 msgstr "quarkus.http.auth.basic=true\n"
 
 #. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:231
+#: upstream/_guides/security-getting-started.adoc:235
 #, no-wrap
 msgid ""
 "quarkus.datasource.db-kind=postgresql\n"
@@ -503,19 +591,24 @@ msgstr ""
 "quarkus.datasource.jdbc.url=jdbc:postgresql:security_jpa\n"
 
 #. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:233
-#: upstream/_guides/security-getting-started.adoc:288
+#: upstream/_guides/security-getting-started.adoc:237
+#: upstream/_guides/security-getting-started.adoc:299
 #, no-wrap
 msgid "quarkus.hibernate-orm.database.generation=drop-and-create\n"
 msgstr "quarkus.hibernate-orm.database.generation=drop-and-create\n"
 
 #. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:237
-msgid "In our context, we are using PostgreSQL as identity store. The database schema is created by Hibernate ORM automatically on startup (change this in production), and we initialize the database with users and roles in the `Startup` class:"
-msgstr "私たちのコンテキストでは、IDストアとしてPostgreSQLを使用しています。データベーススキーマはHibernate ORMによって起動時に自動的に作成され(本番ではこれを変更します)、 `Startup` クラスのユーザーとロールでデータベースを初期化します。"
+#: upstream/_guides/security-getting-started.adoc:240
+msgid "To initialize the database with users and roles, implement the `Startup` class, as outlined in the following code snippet:"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_guides/security-getting-started.adoc:244
+msgid "In this tutorial, a PostgreSQL database is used for the identity store. Hibernate ORM automatically creates the database schema on startup (change this in production)."
+msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:245
+#: upstream/_guides/security-getting-started.adoc:253
 #, no-wrap
 msgid ""
 "import javax.enterprise.event.Observes;\n"
@@ -527,13 +620,13 @@ msgstr ""
 "import javax.transaction.Transactional;\n"
 
 #. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:247
+#: upstream/_guides/security-getting-started.adoc:255
 #, no-wrap
 msgid "import io.quarkus.runtime.StartupEvent;\n"
 msgstr "import io.quarkus.runtime.StartupEvent;\n"
 
 #. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:259
+#: upstream/_guides/security-getting-started.adoc:267
 #, no-wrap
 msgid ""
 "@Singleton\n"
@@ -559,39 +652,54 @@ msgstr ""
 "}\n"
 
 #. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:262
-msgid "The application is now protected and the identities are provided by our database."
+#: upstream/_guides/security-getting-started.adoc:270
+#, fuzzy
+#| msgid "The application is now protected and the identities are provided by our database."
+msgid "The application is now protected and the user identities are provided by the specified database."
 msgstr "アプリケーションは保護され、IDは私たちのデータベースから提供されるようになりました。"
 
 #. type: delimited block =
-#: upstream/_guides/security-getting-started.adoc:267
-msgid "We kindly remind you that you must not store clear-text passwords in production environments ;-).  As a result, the `security-jpa` defaults to using bcrypt-hashed passwords."
+#: upstream/_guides/security-getting-started.adoc:275
+#, fuzzy
+#| msgid "We kindly remind you that you must not store clear-text passwords in production environments ;-).  As a result, the `security-jpa` defaults to using bcrypt-hashed passwords."
+msgid "In a production environment, do not store plain text passwords.  As a result, the `security-jpa` defaults to using bcrypt-hashed passwords."
 msgstr "本番環境ではクリアテキストのパスワードを保存してはいけないことをご注意ください。その結果、`security-jpa` はデフォルトで bcrypt でハッシュ化されたパスワードを使用するようになりました。"
 
 #. type: Title ==
-#: upstream/_guides/security-getting-started.adoc:269
-#, no-wrap
-msgid "Testing the Application"
+#: upstream/_guides/security-getting-started.adoc:277
+#, fuzzy, no-wrap
+#| msgid "Testing the Application"
+msgid "Test your application"
 msgstr "アプリケーションのテスト"
 
 #. type: Title ===
-#: upstream/_guides/security-getting-started.adoc:271
-#, no-wrap
-msgid "With Dev Services for PostgreSQL"
+#: upstream/_guides/security-getting-started.adoc:279
+#, fuzzy, no-wrap
+#| msgid "With Dev Services for PostgreSQL"
+msgid "Use Dev Services for PostgreSQL to test your application"
 msgstr "Dev Services for PostgreSQL を使用する場合"
 
 #. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:276
-msgid "Lets add the integration tests before running your application in production mode."
+#: upstream/_guides/security-getting-started.adoc:284
+#, fuzzy
+#| msgid "Lets add the integration tests before running your application in production mode."
+msgid "Add the integration tests before you run your application in production mode."
 msgstr "アプリケーションを実稼働モードで動作させる前に、統合テストを追加してみましょう。"
 
 #. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:279
-msgid "We recommend using xref:https://quarkus.io/guides/dev-services#databases[Dev Services for PostgreSQL] for the integration testing of your application in JVM and native modes.  `Dev Services for PostgreSQL` will launch and configure a `PostgreSQL` test container if PostgreSQL configuration properties are enabled only in production (`prod`) mode:"
+#: upstream/_guides/security-getting-started.adoc:287
+#, fuzzy
+#| msgid "We recommend using xref:https://quarkus.io/guides/dev-services#databases[Dev Services for PostgreSQL] for the integration testing of your application in JVM and native modes.  `Dev Services for PostgreSQL` will launch and configure a `PostgreSQL` test container if PostgreSQL configuration properties are enabled only in production (`prod`) mode:"
+msgid "Use xref:https://quarkus.io/guides/dev-services#databases[Dev Services for PostgreSQL] for the integration testing of your application in JVM and native modes."
 msgstr "JVM とネイティブモードでのアプリケーションの統合テストには、xref:https://quarkus.io/guides/dev-services#databases[Dev Services for PostgreSQL] の使用をお勧めします。`Dev Services for PostgreSQL` は、PostgreSQL の設定プロパティーが実稼働 (`prod`) モードでのみ有効な場合に、`PostgreSQL` テストコンテナーを起動および設定します。"
 
+#. type: Plain text
+#: upstream/_guides/security-getting-started.adoc:290
+msgid "The following properties configuration demonstrates how you can enable PostgreSQL testing to run in production (`prod`) mode only.  In this scenario, `Dev Services for PostgreSQL` launches and configures a `PostgreSQL` test container."
+msgstr ""
+
 #. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:286
+#: upstream/_guides/security-getting-started.adoc:297
 #, no-wrap
 msgid ""
 "%prod.quarkus.datasource.db-kind=postgresql\n"
@@ -605,23 +713,25 @@ msgstr ""
 "%prod.quarkus.datasource.jdbc.url=jdbc:postgresql:elytron_security_jpa\n"
 
 #. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:291
-msgid "Note that adding a `%prod.` profile prefix the datasource properties will not make them visible to `Dev Services for PostgreSQL` but only to the application runnnig in production mode."
+#: upstream/_guides/security-getting-started.adoc:302
+#, fuzzy
+#| msgid "Note that adding a `%prod.` profile prefix the datasource properties will not make them visible to `Dev Services for PostgreSQL` but only to the application runnnig in production mode."
+msgid "If you add the `%prod.` profile prefix, data source properties are not visible to `Dev Services for PostgreSQL` and are only observed by an application running in production mode."
 msgstr "`%prod.` プロファイルプレフィックスを追加しても、データソースプロパティーはそれを `Dev Services for PostgreSQL` には表示せず、実稼働モードで実行されているアプリケーションにのみ表示される点に注意してください。"
 
 #. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:293
-msgid "Next you can write the integration test:"
-msgstr "次に、統合テストを記述できます。"
+#: upstream/_guides/security-getting-started.adoc:304
+msgid "To write the integration test, use the following code sample:"
+msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:297
+#: upstream/_guides/security-getting-started.adoc:308
 #, no-wrap
 msgid "package org.acme.elytron.security.jpa;\n"
 msgstr "package org.acme.elytron.security.jpa;\n"
 
 #. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:301
+#: upstream/_guides/security-getting-started.adoc:312
 #, no-wrap
 msgid ""
 "import static io.restassured.RestAssured.get;\n"
@@ -631,78 +741,78 @@ msgstr ""
 "import static io.restassured.RestAssured.get;\n"
 "import static io.restassured.RestAssured.given;\n"
 "import static org.hamcrest.core.Is.is;\n"
-
-#. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:304
-#, no-wrap
-msgid ""
-"import org.apache.http.HttpStatus;\n"
-"import org.junit.jupiter.api.Test;\n"
-msgstr ""
-"import org.apache.http.HttpStatus;\n"
-"import org.junit.jupiter.api.Test;\n"
-
-#. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:306
-#, no-wrap
-msgid "import io.quarkus.test.junit.QuarkusTest;\n"
-msgstr "import io.quarkus.test.junit.QuarkusTest;\n"
-
-#. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:309
-#, no-wrap
-msgid ""
-"@QuarkusTest\n"
-"public class JpaSecurityRealmTest {\n"
-msgstr ""
-"@QuarkusTest\n"
-"public class JpaSecurityRealmTest {\n"
 
 #. type: delimited block -
 #: upstream/_guides/security-getting-started.adoc:315
 #, no-wrap
 msgid ""
-"    @Test\n"
-"    void shouldAccessPublicWhenAnonymous() {\n"
-"        get(\"/api/public\")\n"
-"                .then()\n"
-"                .statusCode(HttpStatus.SC_OK);\n"
+"import org.apache.http.HttpStatus;\n"
+"import org.junit.jupiter.api.Test;\n"
 msgstr ""
-"    @Test\n"
-"    void shouldAccessPublicWhenAnonymous() {\n"
-"        get(\"/api/public\")\n"
-"                .then()\n"
-"                .statusCode(HttpStatus.SC_OK);\n"
+"import org.apache.http.HttpStatus;\n"
+"import org.junit.jupiter.api.Test;\n"
 
 #. type: delimited block -
 #: upstream/_guides/security-getting-started.adoc:317
-#: upstream/_guides/security-getting-started.adoc:325
-#: upstream/_guides/security-getting-started.adoc:336
 #, no-wrap
-msgid "    }\n"
-msgstr "    }\n"
+msgid "import io.quarkus.test.junit.QuarkusTest;\n"
+msgstr "import io.quarkus.test.junit.QuarkusTest;\n"
 
 #. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:323
+#: upstream/_guides/security-getting-started.adoc:320
+#, no-wrap
+msgid ""
+"@QuarkusTest\n"
+"public class JpaSecurityRealmTest {\n"
+msgstr ""
+"@QuarkusTest\n"
+"public class JpaSecurityRealmTest {\n"
+
+#. type: delimited block -
+#: upstream/_guides/security-getting-started.adoc:326
 #, no-wrap
 msgid ""
 "    @Test\n"
-"    void shouldNotAccessAdminWhenAnonymous() {\n"
-"        get(\"/api/admin\")\n"
+"    void shouldAccessPublicWhenAnonymous() {\n"
+"        get(\"/api/public\")\n"
 "                .then()\n"
-"                .statusCode(HttpStatus.SC_UNAUTHORIZED);\n"
+"                .statusCode(HttpStatus.SC_OK);\n"
 msgstr ""
 "    @Test\n"
-"    void shouldNotAccessAdminWhenAnonymous() {\n"
-"        get(\"/api/admin\")\n"
+"    void shouldAccessPublicWhenAnonymous() {\n"
+"        get(\"/api/public\")\n"
 "                .then()\n"
-"                .statusCode(HttpStatus.SC_UNAUTHORIZED);\n"
+"                .statusCode(HttpStatus.SC_OK);\n"
+
+#. type: delimited block -
+#: upstream/_guides/security-getting-started.adoc:328
+#: upstream/_guides/security-getting-started.adoc:336
+#: upstream/_guides/security-getting-started.adoc:347
+#, no-wrap
+msgid "    }\n"
+msgstr "    }\n"
 
 #. type: delimited block -
 #: upstream/_guides/security-getting-started.adoc:334
 #, no-wrap
 msgid ""
 "    @Test\n"
+"    void shouldNotAccessAdminWhenAnonymous() {\n"
+"        get(\"/api/admin\")\n"
+"                .then()\n"
+"                .statusCode(HttpStatus.SC_UNAUTHORIZED);\n"
+msgstr ""
+"    @Test\n"
+"    void shouldNotAccessAdminWhenAnonymous() {\n"
+"        get(\"/api/admin\")\n"
+"                .then()\n"
+"                .statusCode(HttpStatus.SC_UNAUTHORIZED);\n"
+
+#. type: delimited block -
+#: upstream/_guides/security-getting-started.adoc:345
+#, no-wrap
+msgid ""
+"    @Test\n"
 "    void shouldAccessAdminWhenAdminAuthenticated() {\n"
 "        given()\n"
 "                .auth().preemptive().basic(\"admin\", \"admin\")\n"
@@ -721,7 +831,7 @@ msgstr ""
 "                .statusCode(HttpStatus.SC_OK);\n"
 
 #. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:346
+#: upstream/_guides/security-getting-started.adoc:357
 #, no-wrap
 msgid ""
 "    @Test\n"
@@ -745,56 +855,62 @@ msgstr ""
 "    }\n"
 
 #. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:358
-#, no-wrap
-msgid ""
-"    @Test\n"
-"    void shouldAccessUserAndGetIdentityWhenUserAuthenticated() {\n"
-"        given()\n"
-"                .auth().preemptive().basic(\"user\", \"user\")\n"
-"                .when()\n"
-"                .get(\"/api/users/me\")\n"
-"                .then()\n"
-"                .statusCode(HttpStatus.SC_OK)\n"
-"                .body(is(\"user\"));\n"
-"    }\n"
-"}\n"
-msgstr ""
-"    @Test\n"
-"    void shouldAccessUserAndGetIdentityWhenUserAuthenticated() {\n"
-"        given()\n"
-"                .auth().preemptive().basic(\"user\", \"user\")\n"
-"                .when()\n"
-"                .get(\"/api/users/me\")\n"
-"                .then()\n"
-"                .statusCode(HttpStatus.SC_OK)\n"
-"                .body(is(\"user\"));\n"
-"    }\n"
-"}\n"
-
-#. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:361
-msgid "As you can see you do not have to launch the test container from the test code."
-msgstr "見てわかるとおり、テストコードからテストコンテナーを起動する必要はありません。"
-
-#. type: delimited block =
-#: upstream/_guides/security-getting-started.adoc:367
-msgid "If you start your application in `devmode` then `Dev Services for PostgreSQL` will launch a `PostgreSQL` devmode container for a start for you to focus on the application development.  While developing you can also start adding tests one by one and run them with the xref:continuous-testing.adoc[Continous Testing] feature - `Dev Services for PostgreSQL` will support these tests with a separate `PostgreSQL` test container which will not conflict with the devmode container."
-msgstr "アプリケーションを `devmode` で起動すると、`Dev Services for PostgreSQL` が `PostgreSQL` devmode コンテナーを起動するため、ユーザーはアプリケーションの開発に集中できます。xref:continuous-testing.adoc[継続的テスト] 機能を使用すると、開発中にテストを 1 つずつ追加して実行することも可能です。`Dev Services for PostgreSQL` は、別の `PostgreSQL` テストコンテナーでこれらのテストをサポートするため、devmode コンテナーと競合しません。"
-
-#. type: Title ===
 #: upstream/_guides/security-getting-started.adoc:369
 #, no-wrap
-msgid "With Curl or Browser"
-msgstr "Curl またはブラウザーを使用する場合"
+msgid ""
+"    @Test\n"
+"    void shouldAccessUserAndGetIdentityWhenUserAuthenticated() {\n"
+"        given()\n"
+"                .auth().preemptive().basic(\"user\", \"user\")\n"
+"                .when()\n"
+"                .get(\"/api/users/me\")\n"
+"                .then()\n"
+"                .statusCode(HttpStatus.SC_OK)\n"
+"                .body(is(\"user\"));\n"
+"    }\n"
+"}\n"
+msgstr ""
+"    @Test\n"
+"    void shouldAccessUserAndGetIdentityWhenUserAuthenticated() {\n"
+"        given()\n"
+"                .auth().preemptive().basic(\"user\", \"user\")\n"
+"                .when()\n"
+"                .get(\"/api/users/me\")\n"
+"                .then()\n"
+"                .statusCode(HttpStatus.SC_OK)\n"
+"                .body(is(\"user\"));\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_guides/security-getting-started.adoc:372
-msgid "First, start a PostgreSQL server:"
+#, fuzzy
+#| msgid "As you can see you do not have to launch the test container from the test code."
+msgid "As you can see in this code sample, you do not need to start the test container from the test code."
+msgstr "見てわかるとおり、テストコードからテストコンテナーを起動する必要はありません。"
+
+#. type: delimited block =
+#: upstream/_guides/security-getting-started.adoc:378
+#, fuzzy
+#| msgid "If you start your application in `devmode` then `Dev Services for PostgreSQL` will launch a `PostgreSQL` devmode container for a start for you to focus on the application development.  While developing you can also start adding tests one by one and run them with the xref:continuous-testing.adoc[Continous Testing] feature - `Dev Services for PostgreSQL` will support these tests with a separate `PostgreSQL` test container which will not conflict with the devmode container."
+msgid "If you start your application in dev mode, `Dev Services for PostgreSQL` launches a `PostgreSQL` `devmode` container so that you can start developing your application.  While developing your application, you can also start to add tests one by one and run them by using the xref:continuous-testing.adoc[Continous Testing] feature.  `Dev Services for PostgreSQL` supports testing while you develop by providing a separate `PostgreSQL` test container that does not conflict with the `devmode` container."
+msgstr "アプリケーションを `devmode` で起動すると、`Dev Services for PostgreSQL` が `PostgreSQL` devmode コンテナーを起動するため、ユーザーはアプリケーションの開発に集中できます。xref:continuous-testing.adoc[継続的テスト] 機能を使用すると、開発中にテストを 1 つずつ追加して実行することも可能です。`Dev Services for PostgreSQL` は、別の `PostgreSQL` テストコンテナーでこれらのテストをサポートするため、devmode コンテナーと競合しません。"
+
+#. type: Title ===
+#: upstream/_guides/security-getting-started.adoc:380
+#, no-wrap
+msgid "Use `curl` or a browser to test your application"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-getting-started.adoc:383
+#, fuzzy
+#| msgid "First, start a PostgreSQL server:"
+msgid "Use the following example to start the PostgreSQL server:"
 msgstr "まず、PostgreSQL サーバーを起動します:"
 
 #. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:378
+#: upstream/_guides/security-getting-started.adoc:388
 #, no-wrap
 msgid ""
 "docker run --rm=true --name security-getting-started -e POSTGRES_USER=quarkus \\\n"
@@ -805,63 +921,83 @@ msgstr ""
 "           -e POSTGRES_PASSWORD=quarkus -e POSTGRES_DB=elytron_security_jpa \\\n"
 "           -p 5432:5432 postgres:14.1\n"
 
+#. type: Title ===
+#: upstream/_guides/security-getting-started.adoc:389
+#, fuzzy, no-wrap
+#| msgid "Compile the application:"
+msgid "Compile and run the application"
+msgstr "アプリケーションをコンパイルします:"
+
 #. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:381
-msgid "Next, compile and run the application in either JVM or Native mode:"
-msgstr "次に、JVM または Native モードでアプリケーションをコンパイルし、実行します。"
+#: upstream/_guides/security-getting-started.adoc:392
+msgid "Compile and run your Quarkus application by using one of the following methods:"
+msgstr ""
 
 #. type: Title ====
-#: upstream/_guides/security-getting-started.adoc:382
+#: upstream/_guides/security-getting-started.adoc:393
 #, no-wrap
 msgid "JVM mode"
 msgstr "JVM モード"
 
 #. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:385
 #: upstream/_guides/security-getting-started.adoc:398
-msgid "Compile the application:"
+#, fuzzy
+#| msgid "Compile the application:"
+msgid "Compile the application: Run the application:"
 msgstr "アプリケーションをコンパイルします:"
 
-#. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:389
-msgid "Then run it:"
-msgstr "次に、それを実行します:"
-
 #. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:393
+#: upstream/_guides/security-getting-started.adoc:402
 #, no-wrap
 msgid "java -jar target/quarkus-app/quarkus-run.jar\n"
 msgstr "java -jar target/quarkus-app/quarkus-run.jar\n"
 
 #. type: Title ====
-#: upstream/_guides/security-getting-started.adoc:395
-#, no-wrap
-msgid "Native Mode"
+#: upstream/_guides/security-getting-started.adoc:404
+#, fuzzy, no-wrap
+#| msgid "Native Mode"
+msgid "Native mode"
 msgstr "Native モード"
 
 #. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:402
-msgid "and run it:"
-msgstr "それを実行します:"
+#: upstream/_guides/security-getting-started.adoc:407
+msgid "Compile the application:"
+msgstr "アプリケーションをコンパイルします:"
+
+#. type: Plain text
+#: upstream/_guides/security-getting-started.adoc:411
+#, fuzzy
+#| msgid "Writing the application"
+msgid "Run the application:"
+msgstr "アプリケーションの記述"
 
 #. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:406
+#: upstream/_guides/security-getting-started.adoc:414
 #, no-wrap
 msgid "./target/security-jpa-quickstart-runner\n"
 msgstr "./target/security-jpa-quickstart-runner\n"
 
-#. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:410
-msgid "Now you can test it with `curl` or your favourite browser.  We will use `curl` in this section but you can try to access the same endpoint URLs from the browser."
-msgstr "これで `curl` やお気に入りのブラウザーでテストできます。ここでは `curl` を使用しますが、ブラウザーから同じエンドポイント URL にアクセスすることもできます。"
+#. type: Title ===
+#: upstream/_guides/security-getting-started.adoc:416
+#, no-wrap
+msgid "Access and test the application security"
+msgstr ""
 
 #. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:412
-msgid "The very first thing to check is to ensure the anonymous access works."
-msgstr "まず最初に確認すべきは、匿名でのアクセスが可能かどうかということです。"
+#: upstream/_guides/security-getting-started.adoc:420
+msgid "When your application is running, you can access your application by using one of the following `curl` commands.  You can also access the same endpoint URLs by using a browser."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-getting-started.adoc:422
+#: upstream/_guides/security-getting-started.adoc:433
+#, fuzzy
+#| msgid "Now, let's try to hit a protected resource anonymously."
+msgid "Connect to a protected endpoint anonymously:"
+msgstr "では、保護されたリソースを匿名で攻撃してみましょう。"
 
 #. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:419
+#: upstream/_guides/security-getting-started.adoc:428
 #, no-wrap
 msgid ""
 "$ curl -i -X GET http://localhost:8080/api/public\n"
@@ -875,18 +1011,13 @@ msgstr ""
 "Content-Type: text/plain;charset=UTF-8\n"
 
 #. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:421
+#: upstream/_guides/security-getting-started.adoc:430
 #, no-wrap
 msgid "public%\n"
 msgstr "public%\n"
 
-#. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:424
-msgid "Now, let's try to hit a protected resource anonymously."
-msgstr "では、保護されたリソースを匿名で攻撃してみましょう。"
-
 #. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:432
+#: upstream/_guides/security-getting-started.adoc:440
 #, no-wrap
 msgid ""
 "$ curl -i -X GET http://localhost:8080/api/admin\n"
@@ -902,23 +1033,23 @@ msgstr ""
 "WWW-Authenticate: Basic\n"
 
 #. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:434
+#: upstream/_guides/security-getting-started.adoc:442
 #, no-wrap
 msgid "Not authorized%\n"
 msgstr "Not authorized%\n"
 
-#. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:437
-msgid "Note, if you are using the browser then you should see the browser displaying a Basic Authentication challenge form."
-msgstr "ブラウザーを使用している場合は、ブラウザーにベーシック認証のチャレンジフォームが表示されます。"
+#. type: delimited block =
+#: upstream/_guides/security-getting-started.adoc:447
+msgid "When you use a browser to anonymously connect to a protected resource, a basic authentication form displays prompting you to enter credentials."
+msgstr ""
 
 #. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:439
-msgid "So far so good, now let's try with an allowed user."
-msgstr "ここまでは順調ですが、今度は許可されたユーザーで試してみましょう。"
+#: upstream/_guides/security-getting-started.adoc:450
+msgid "Connect to a protected endpoint as an authorized user:"
+msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:446
+#: upstream/_guides/security-getting-started.adoc:457
 #, no-wrap
 msgid ""
 "$ curl -i -X GET -u admin:admin http://localhost:8080/api/admin\n"
@@ -932,23 +1063,31 @@ msgstr ""
 "Content-Type: text/plain;charset=UTF-8\n"
 
 #. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:448
+#: upstream/_guides/security-getting-started.adoc:459
 #, no-wrap
 msgid "admin%\n"
 msgstr "admin%\n"
 
+#. type: Title ===
+#: upstream/_guides/security-getting-started.adoc:461
+#, no-wrap
+msgid "Results"
+msgstr ""
+
 #. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:451
-msgid "By providing the `admin:admin` credentials, the extension authenticated the user and loaded their roles.  The `admin` user is authorized to access to the protected resources."
+#: upstream/_guides/security-getting-started.adoc:465
+#, fuzzy
+#| msgid "By providing the `admin:admin` credentials, the extension authenticated the user and loaded their roles.  The `admin` user is authorized to access to the protected resources."
+msgid "When you provide the credentials of an authorized user, for example, `admin:admin`, the JPA security extension authenticates and loads the roles of the user.  The `admin` user is authorized to access the protected resources."
 msgstr "`admin:admin` 資格情報を提供することで、エクステンションはユーザーを認証し、そのロールをロードしました。 `admin` ユーザーは、保護されたリソースへのアクセスを許可されています。"
 
 #. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:453
-msgid "The user `admin` should be forbidden to access a resource protected with `@RolesAllowed(\"user\")` because it doesn't have this role."
-msgstr "ユーザー `admin` は、この役割を持っていないので、 `@RolesAllowed(\"user\")` で保護されたリソースへのアクセスを禁止する必要があります。"
+#: upstream/_guides/security-getting-started.adoc:467
+msgid "If a resource is protected with `@RolesAllowed(\"user\")`, the user `admin` is not authorized to access the resource because it is not assigned to the \"user\" role, as outlined in the following shell example:"
+msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:460
+#: upstream/_guides/security-getting-started.adoc:474
 #, no-wrap
 msgid ""
 "$ curl -i -X GET -u admin:admin http://localhost:8080/api/users/me\n"
@@ -962,18 +1101,20 @@ msgstr ""
 "Content-Type: text/html;charset=UTF-8\n"
 
 #. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:462
+#: upstream/_guides/security-getting-started.adoc:476
 #, no-wrap
 msgid "Forbidden%\n"
 msgstr "Forbidden%\n"
 
 #. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:465
-msgid "Finally, using the user `user` works and the security context contains the principal details (username for instance)."
+#: upstream/_guides/security-getting-started.adoc:479
+#, fuzzy
+#| msgid "Finally, using the user `user` works and the security context contains the principal details (username for instance)."
+msgid "Finally, the user name `user` is authorized and the security context contains the principal details, for example, the user name."
 msgstr "最後に、ユーザー `user` を使用すると動作し、セキュリティーコンテキストには主要な詳細(例えばユーザー名)が含まれています。"
 
 #. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:472
+#: upstream/_guides/security-getting-started.adoc:486
 #, no-wrap
 msgid ""
 "$ curl -i -X GET -u user:user http://localhost:8080/api/users/me\n"
@@ -987,123 +1128,128 @@ msgstr ""
 "Content-Type: text/plain;charset=UTF-8\n"
 
 #. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:474
+#: upstream/_guides/security-getting-started.adoc:488
 #, no-wrap
 msgid "user%\n"
 msgstr "user%\n"
 
+#.  The following section needs to be moved as SMEs confirmed that it does not really fit in the new content here. In the next phase of refactoring, consider moving this section into a dedicated concept/reference topic.
 #. type: Title ==
-#: upstream/_guides/security-getting-started.adoc:476
+#: upstream/_guides/security-getting-started.adoc:494
 #, no-wrap
-msgid "Security JPA Reference Guide "
-msgstr "セキュリティー JPA リファレンスガイド"
+msgid "Quarkus Security JPA information"
+msgstr ""
 
 #. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:479
-msgid "Now that you have run and tested the demo, please have a look at the more specific information about preparing your JPA identity store."
+#: upstream/_guides/security-getting-started.adoc:497
+#, fuzzy
+#| msgid "Now that you have run and tested the demo, please have a look at the more specific information about preparing your JPA identity store."
+msgid "Now that you have successfully run and tested the security quick start project, you are ready to explore more security features of Quarkus Security and the JPA identity store."
 msgstr "これでデモの実行とテストが完了ました。次に、JPA アイデンティティーストアの準備を詳しく説明します。"
 
 #. type: Title ===
-#: upstream/_guides/security-getting-started.adoc:480
+#: upstream/_guides/security-getting-started.adoc:498
 #, no-wrap
 msgid "Supported model types"
 msgstr "サポートされているモデルの種類"
 
 #. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:483
+#: upstream/_guides/security-getting-started.adoc:501
 msgid "The `@UserDefinition` class must be a JPA entity (with Panache or not)."
 msgstr "`@UserDefinition` クラスは JPA エンティティーである必要があります(Panache を使用しているかどうかは問いません)。"
 
 #. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:484
+#: upstream/_guides/security-getting-started.adoc:502
 msgid "The `@Username` and `@Password` field types must be of type `String`."
 msgstr "`@Username` と `@Password` フィールドの型は `String` でなければなりません。"
 
 #. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:485
+#: upstream/_guides/security-getting-started.adoc:503
 msgid "The `@Roles` field must either be of type `String` or `Collection<String>` or alternately a `Collection<X>` where `X` is an entity class with one `String` field annotated with the `@RolesValue` annotation."
 msgstr "`@Roles` フィールドは `String`、`Collection<String>`、`Collection<X>` (`X` は `@RolesValue` アノテーションが付与された `String` フィールドを 1 つ持つエンティティークラス) のいずれかとします。"
 
 #. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:486
+#: upstream/_guides/security-getting-started.adoc:504
 msgid "Each `String` role element type will be parsed as a comma-separated list of roles."
 msgstr "各 `String` role 要素の型は、カンマで区切られたロールのリストとして解析されます。"
 
 #. type: Title ===
-#: upstream/_guides/security-getting-started.adoc:487
+#: upstream/_guides/security-getting-started.adoc:505
 #, no-wrap
 msgid "Storing roles in another entity"
 msgstr "別のエンティティーにロールを格納する"
 
 #. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:490
-msgid "You can also store roles in another entity:"
+#: upstream/_guides/security-getting-started.adoc:508
+#, fuzzy
+#| msgid "You can also store roles in another entity:"
+msgid "Use the following sample to store roles inside another entity:"
 msgstr "また、別のエンティティーにロールを格納することもできます。"
 
 #. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:499
-#, no-wrap
-msgid ""
-"@UserDefinition\n"
-"@Table(name = \"test_user\")\n"
-"@Entity\n"
-"public class User extends PanacheEntity {\n"
-"    @Username\n"
-"    public String name;\n"
-msgstr ""
-"@UserDefinition\n"
-"@Table(name = \"test_user\")\n"
-"@Entity\n"
-"public class User extends PanacheEntity {\n"
-"    @Username\n"
-"    public String name;\n"
-
-#. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:502
-#, no-wrap
-msgid ""
-"    @Password\n"
-"    public String pass;\n"
-msgstr ""
-"    @Password\n"
-"    public String pass;\n"
-
-#. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:507
-#, no-wrap
-msgid ""
-"    @ManyToMany\n"
-"    @Roles\n"
-"    public List<Role> roles = new ArrayList<>();\n"
-"}\n"
-msgstr ""
-"    @ManyToMany\n"
-"    @Roles\n"
-"    public List<Role> roles = new ArrayList<>();\n"
-"}\n"
-
-#. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:510
-#, no-wrap
-msgid ""
-"@Entity\n"
-"public class Role extends PanacheEntity {\n"
-msgstr ""
-"@Entity\n"
-"public class Role extends PanacheEntity {\n"
-
-#. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:513
-#, no-wrap
-msgid ""
-"    @ManyToMany(mappedBy = \"roles\")\n"
-"    public List<ExternalRolesUserEntity> users;\n"
-msgstr ""
-"    @ManyToMany(mappedBy = \"roles\")\n"
-"    public List<ExternalRolesUserEntity> users;\n"
-
-#. type: delimited block -
 #: upstream/_guides/security-getting-started.adoc:517
+#, no-wrap
+msgid ""
+"@UserDefinition\n"
+"@Table(name = \"test_user\")\n"
+"@Entity\n"
+"public class User extends PanacheEntity {\n"
+"    @Username\n"
+"    public String name;\n"
+msgstr ""
+"@UserDefinition\n"
+"@Table(name = \"test_user\")\n"
+"@Entity\n"
+"public class User extends PanacheEntity {\n"
+"    @Username\n"
+"    public String name;\n"
+
+#. type: delimited block -
+#: upstream/_guides/security-getting-started.adoc:520
+#, no-wrap
+msgid ""
+"    @Password\n"
+"    public String pass;\n"
+msgstr ""
+"    @Password\n"
+"    public String pass;\n"
+
+#. type: delimited block -
+#: upstream/_guides/security-getting-started.adoc:525
+#, no-wrap
+msgid ""
+"    @ManyToMany\n"
+"    @Roles\n"
+"    public List<Role> roles = new ArrayList<>();\n"
+"}\n"
+msgstr ""
+"    @ManyToMany\n"
+"    @Roles\n"
+"    public List<Role> roles = new ArrayList<>();\n"
+"}\n"
+
+#. type: delimited block -
+#: upstream/_guides/security-getting-started.adoc:528
+#, no-wrap
+msgid ""
+"@Entity\n"
+"public class Role extends PanacheEntity {\n"
+msgstr ""
+"@Entity\n"
+"public class Role extends PanacheEntity {\n"
+
+#. type: delimited block -
+#: upstream/_guides/security-getting-started.adoc:531
+#, no-wrap
+msgid ""
+"    @ManyToMany(mappedBy = \"roles\")\n"
+"    public List<ExternalRolesUserEntity> users;\n"
+msgstr ""
+"    @ManyToMany(mappedBy = \"roles\")\n"
+"    public List<ExternalRolesUserEntity> users;\n"
+
+#. type: delimited block -
+#: upstream/_guides/security-getting-started.adoc:535
 #, no-wrap
 msgid ""
 "    @RolesValue\n"
@@ -1115,33 +1261,41 @@ msgstr ""
 "}\n"
 
 #. type: Title ===
-#: upstream/_guides/security-getting-started.adoc:519
+#: upstream/_guides/security-getting-started.adoc:537
 #, no-wrap
 msgid "Password storage and hashing"
 msgstr "パスワードの保存とハッシュ化"
 
 #. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:523
-msgid "By default, we consider passwords to be stored hashed with https://en.wikipedia.org/wiki/Bcrypt[bcrypt] under the https://en.wikipedia.org/wiki/Crypt_(C)[Modular Crypt Format] (MCF)."
+#: upstream/_guides/security-getting-started.adoc:541
+#, fuzzy
+#| msgid "By default, we consider passwords to be stored hashed with https://en.wikipedia.org/wiki/Bcrypt[bcrypt] under the https://en.wikipedia.org/wiki/Crypt_(C)[Modular Crypt Format] (MCF)."
+msgid "By default, passwords are stored and hashed by using https://en.wikipedia.org/wiki/Bcrypt[bcrypt] under the https://en.wikipedia.org/wiki/Crypt_(C)[Modular Crypt Format] (MCF)."
 msgstr "デフォルトでは、パスワードは MCF ( link:https://en.wikipedia.org/wiki/Crypt_©[Modular Crypt Format]) の下で link:https://en.wikipedia.org/wiki/Bcrypt[bcrypt]でハッシュ化されて保存されると考えています。"
 
 #. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:527
-msgid "When you need to create such a hashed password we provide the convenient `String BcryptUtil.bcryptHash(String password)` function, which defaults to creating a random salt and hashing in 10 iterations (though you can specify the iterations and salt too)."
+#: upstream/_guides/security-getting-started.adoc:545
+#, fuzzy
+#| msgid "When you need to create such a hashed password we provide the convenient `String BcryptUtil.bcryptHash(String password)` function, which defaults to creating a random salt and hashing in 10 iterations (though you can specify the iterations and salt too)."
+msgid "When you need to create a hashed password we provide the convenient `String BcryptUtil.bcryptHash(String password)` function, which defaults to creating a random salt and hashing in 10 iterations.  You can also specify the number of iterations and the salt."
 msgstr "このようなハッシュ化されたパスワードを作成する必要がある場合は、便利な `String BcryptUtil.bcryptHash(String password)` 関数を用意しています。デフォルトでは、ランダムなソルトを作成して 10 回の繰り返しでハッシュ化します (繰り返しとソルトも指定できます)。"
 
 #. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:530
-msgid "with MCF you don't need dedicated columns to store the hashing algorithm, the iterations count or the salt because they're all stored in the hashed value."
+#: upstream/_guides/security-getting-started.adoc:547
+#, fuzzy
+#| msgid "with MCF you don't need dedicated columns to store the hashing algorithm, the iterations count or the salt because they're all stored in the hashed value."
+msgid "When you use MCF, you don't need dedicated columns to store the hashing algorithm, the iterations count, or the salt because they are all stored in the hashed value."
 msgstr "MCF を使うと、ハッシュアルゴリズムや反復回数、 ソルトを格納するための専用のカラムは必要ありません。"
 
 #. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:532
-msgid "You also have the possibility to store password using different hashing algorithm `@Password(value = PasswordType.CUSTOM, provider = CustomPasswordProvider.class)`:"
+#: upstream/_guides/security-getting-started.adoc:549
+#, fuzzy
+#| msgid "You also have the possibility to store password using different hashing algorithm `@Password(value = PasswordType.CUSTOM, provider = CustomPasswordProvider.class)`:"
+msgid "You can also store passwords by using a different hashing algorithm, for example, `@Password(value = PasswordType.CUSTOM, provider = CustomPasswordProvider.class)`, as outlined in the following code snippet:"
 msgstr "また、異なるハッシュアルゴリズム（ `@Password(value = PasswordType.CUSTOM, provider = CustomPasswordProvider.class)` ）を使用してパスワードを保存することもできます。"
 
 #. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:542
+#: upstream/_guides/security-getting-started.adoc:559
 #, no-wrap
 msgid ""
 "@UserDefinition\n"
@@ -1161,7 +1315,7 @@ msgstr ""
 "    public Long id;\n"
 
 #. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:546
+#: upstream/_guides/security-getting-started.adoc:563
 #, no-wrap
 msgid ""
 "    @Column(name = \"username\")\n"
@@ -1173,7 +1327,7 @@ msgstr ""
 "    public String name;\n"
 
 #. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:550
+#: upstream/_guides/security-getting-started.adoc:567
 #, no-wrap
 msgid ""
 "    @Column(name = \"password\")\n"
@@ -1185,7 +1339,7 @@ msgstr ""
 "    public String pass;\n"
 
 #. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:554
+#: upstream/_guides/security-getting-started.adoc:571
 #, no-wrap
 msgid ""
 "    @Roles\n"
@@ -1197,7 +1351,7 @@ msgstr ""
 "}\n"
 
 #. type: delimited block -
-#: upstream/_guides/security-getting-started.adoc:562
+#: upstream/_guides/security-getting-started.adoc:579
 #, no-wrap
 msgid ""
 "public class CustomPasswordProvider implements PasswordProvider {\n"
@@ -1217,58 +1371,148 @@ msgstr ""
 "}\n"
 
 #. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:566
-msgid "WARN: you can also store passwords in clear text with `@Password(PasswordType.CLEAR)` but we strongly recommend against it in production."
+#: upstream/_guides/security-getting-started.adoc:583
+#, fuzzy
+#| msgid "WARN: you can also store passwords in clear text with `@Password(PasswordType.CLEAR)` but we strongly recommend against it in production."
+msgid "In a test environment, you can also store passwords in plain text by using `@Password(PasswordType.CLEAR)`.  For applications running in production, do not store passwords in plain text."
 msgstr "警告: `@Password(PasswordType.CLEAR)` を使ってパスワードをクリアテキストで保存することもできますが、本番では絶対にしないことを強くお勧めします。"
 
 #. type: Title ==
-#: upstream/_guides/security-getting-started.adoc:567
-#, no-wrap
-msgid "What is Next"
+#: upstream/_guides/security-getting-started.adoc:584
+#, fuzzy, no-wrap
+#| msgid "What is Next"
+msgid "What's next"
 msgstr "次のステップ"
 
 #. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:570
-msgid "You have learned how to create and test a secure Quarkus application by using xref:security-built-in-authentication.adoc#basic-auth[Basic HTTPAuthenticationMechanism], `JPA IdentityProvider`."
+#: upstream/_guides/security-getting-started.adoc:588
+#, fuzzy
+#| msgid "You have learned how to create and test a secure Quarkus application by using xref:security-built-in-authentication.adoc#basic-auth[Basic HTTPAuthenticationMechanism], `JPA IdentityProvider`."
+msgid "Congratulations! You have learned how to create and test a secure Quarkus application by combining the xref:security-built-in-authentication.adoc#basic-auth[Quarkus built-in basic HTTP authentication] with the JPA identity provider."
 msgstr "ここでは、xref:security-built-in-authentication.adoc#basic-auth[ベーシック HTTP 認証メカニズム]、`JPA IdentityProvider` を使用して、セキュアな Quarkus アプリケーションを作成およびテストする方法を学びました。"
 
 #. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:572
-msgid "Next we recommend you to see how `OpenId Connect` can be used to provide a secure, single sign on access to your Quarkus endpoints. Please follow xref:security-openid-connect.adoc[Quarkus - Using OpenID Connect to Protect Service Applications using Bearer Token Authorization] and xref:security-openid-connect-web-authentication.adoc[Quarkus - Using OpenID Connect to Protect Web Applications using Authorization Code Flow] guides."
-msgstr "次のステップとして、`OpenId Connect` を使用して Quarkus エンドポイントにセキュアなシングルサインオンアクセスを提供する方法を確認することをお勧めします。xref:security-openid-connect.adoc[Quarkus - Using OpenID Connect を使用した、ベアラートークン認可によるサービスアプリケーションの保護] および xref:security-openid-connect-web-authentication.adoc[Quarkus - OpenID Connect を使用した、認可コードフローによる Web アプリケーションの保護] ガイドを確認してください。"
+#: upstream/_guides/security-getting-started.adoc:591
+msgid "After you have completed this tutorial, explore some of the more advanced security mechanisms in Quarkus.  Use the following information to learn how you can securely use `OpenID Connect` to provide secure single sign-on access to your Quarkus endpoints:"
+msgstr ""
 
 #. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:574
-msgid "For a complete reference to Quarkus Security please read a xref:security.adoc[Quarkus Security] document."
-msgstr "Quarkus セキュリティーの詳細については、xref:security.adoc[Quarkus セキュリティー] ドキュメントを参照してください。"
+#: upstream/_guides/security-getting-started.adoc:593
+#: upstream/_guides/security-getting-started.adoc:600
+#, fuzzy
+#| msgid "xref:security-openid-connect.adoc[Quarkus - Using OpenID Connect to Protect Service Applications using Bearer Token Authorization]"
+msgid "xref:security-openid-connect.adoc[Using OpenID Connect (OIDC) to Protect Service Applications using Bearer Token Authorization]"
+msgstr "xref:security-openid-connect.adoc[Quarkus - OpenID Connect (OIDC) を使用した、ベアラートークン認可によるサービスアプリケーションの保護]"
+
+#. type: Plain text
+#: upstream/_guides/security-getting-started.adoc:595
+#: upstream/_guides/security-getting-started.adoc:602
+#, fuzzy
+#| msgid "xref:security-openid-connect-web-authentication.adoc[Quarkus - Using OpenID Connect to Protect Web Applications using Authorization Code Flow]"
+msgid "xref:security-openid-connect-web-authentication.adoc[Using OpenID Connect (OIDC) to Protect Web Applications using Authorization Code Flow ]"
+msgstr "xref:security-openid-connect-web-authentication.adoc[Quarkus - OpenID Connect を使用した、認可コードフローによる Web アプリケーションの保護]"
 
 #. type: Title ==
-#: upstream/_guides/security-getting-started.adoc:575
+#: upstream/_guides/security-getting-started.adoc:596
 #, no-wrap
 msgid "References"
 msgstr "参照"
 
 #. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:578
-msgid "xref:security.adoc[Quarkus Security]"
+#: upstream/_guides/security-getting-started.adoc:599
+#, fuzzy
+#| msgid "xref:security.adoc[Quarkus Security]"
+msgid "xref:security.adoc[Security Architecture and Guides]"
 msgstr "xref:security.adoc[Quarkus セキュリティー]"
 
 #. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:579
-msgid "xref:security-openid-connect.adoc[Quarkus - Using OpenID Connect to Protect Service Applications using Bearer Token Authorization]"
-msgstr "xref:security-openid-connect.adoc[Quarkus - OpenID Connect (OIDC) を使用した、ベアラートークン認可によるサービスアプリケーションの保護]"
-
-#. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:580
-msgid "xref:security-openid-connect-web-authentication.adoc[Quarkus - Using OpenID Connect to Protect Web Applications using Authorization Code Flow]"
-msgstr "xref:security-openid-connect-web-authentication.adoc[Quarkus - OpenID Connect を使用した、認可コードフローによる Web アプリケーションの保護]"
-
-#. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:581
-msgid "xref:hibernate-orm-panache.adoc[Hibernate ORM with Panache]"
+#: upstream/_guides/security-getting-started.adoc:603
+#, fuzzy
+#| msgid "xref:hibernate-orm-panache.adoc[Hibernate ORM with Panache]"
+msgid "xref:hibernate-orm-panache.adoc[Simplified Hibernate ORM with Panache]"
 msgstr "xref:hibernate-orm-panache.adoc[Hibernate ORM with Panache]"
 
 #. type: Plain text
-#: upstream/_guides/security-getting-started.adoc:582
-msgid "xref:hibernate-orm.adoc[Hibernate ORM]"
+#: upstream/_guides/security-getting-started.adoc:603
+#, fuzzy
+#| msgid "xref:hibernate-orm.adoc[Hibernate ORM]"
+msgid "xref:hibernate-orm.adoc[Using Hibernate ORM and JPA]"
 msgstr "xref:hibernate-orm.adoc[Hibernate ORM]"
+
+#~ msgid "Getting Started with Quarkus Security"
+#~ msgstr "Quarkus セキュリティー入門"
+
+#~ msgid "This guide demonstartes how you can quickly create a secure Quarkus application by using xref:security-built-in-authentication.adoc#basic-auth[Basic AuthenticationMechanism] and `JPA IdentityProvider` to create `SecurityIdentity` which is authorized by the `Role Based Access Control` (RBAC) layer before the access to application is permitted."
+#~ msgstr "このガイドでは、xref:security-built-in-authentication.adoc#basic-auth[Basic AuthenticationMechanism] と `JPA IdentityProvider` を使用して、アプリケーションへのアクセスを許可する前に `Role Based Access Control` (RBAC) レイヤーで認可される `SecurityIdentity` を作成して、セキュアな Quarkus アプリケーションを迅速に作成する方法を説明します。"
+
+#~ msgid "Using `Basic AuthenticationMechanism` with `JPA IdentityProvider` is better than configuring the users and roles in `application.properties` therefore this guide recommends to combine `Basic AuthenticationMechanism` and `JPA IdentityProvider`. We will update this recommendation to use a reactive equivalent of the `JPA IdentityProvider` as soon as it is introduced."
+#~ msgstr "`Basic AuthenticationMechanism` と `JPA IdentityProvider` の組み合わせは、`application.properties` でユーザーやロールを設定するよりも優れているため、このガイドでは `Basic AuthenticationMechanism` と `JPA IdentityProvider` を組み合わせて使用することを推奨しています。`JPA IdentityProvider` に相当するリアクティブが導入され次第、推奨内容を更新する予定です。"
+
+#~ msgid "This guide will conclude with recommending how to learn more about Quarkus Security, and in particular about its `OpenId Connect Authentication Mechanism`."
+#~ msgstr "このガイドの最後では、Quarkus セキュリティー、特にその `OpenId Connect Authentication Mechanism` についてさらに学ぶ方法を推奨しています。"
+
+#~ msgid "Architecture"
+#~ msgstr "アーキテクチャ"
+
+#~ msgid "In this example, we build a very simple microservice which offers three endpoints:"
+#~ msgstr "この例では、3つのエンドポイントを提供する非常にシンプルなマイクロサービスを構築します:"
+
+#~ msgid "The `/api/public` endpoint can be accessed anonymously.  The `/api/admin` endpoint is protected with RBAC (Role-Based Access Control) where only users granted with the `admin` role can access. At this endpoint, we use the `@RolesAllowed` annotation to declaratively enforce the access constraint.  The `/api/users/me` endpoint is also protected with RBAC (Role-Based Access Control) where only users granted with the `user` role can access. As a response, it returns a JSON document with details about the user."
+#~ msgstr "`/api/public` エンドポイントは匿名でアクセスできます。 `/api/admin` エンドポイントは RBAC (Role-Based Access Control) で保護されており、 `admin` の役割を与えられたユーザーのみがアクセスできます。このエンドポイントでは、 `@RolesAllowed` アノテーションを使用して、アクセス制約を宣言的に強制します。 `/api/users/me` エンドポイントも RBAC (Role-Based Access Control) で保護されており、 `user` ロールで付与されたユーザーのみがアクセスできます。レスポンスとして、ユーザーに関する詳細を含むJSONドキュメントを返します。"
+
+#~ msgid "Solution"
+#~ msgstr "ソリューション"
+
+#~ msgid "We recommend that you follow the instructions in the next sections and create the application step by step.  However, you can go right to the completed example."
+#~ msgstr "次の章で紹介する手順に沿って、ステップを踏んでアプリを作成することをお勧めします。ただし、完成した例にそのまま進んでも構いません。"
+
+#~ msgid "This command generates a Maven project, importing the `security-jpa` extension which allows you to map your security source to JPA entities."
+#~ msgstr "このコマンドは、セキュリティー ソースを JPA エンティティーにマップできる `security-jpa` エクステンションをインポートして、Maven プロジェクトを生成します。"
+
+#~ msgid "Don't forget to add the database connector library of choice. Here we are using PostgreSQL as identity store."
+#~ msgstr "選択したデータベースコネクタライブラリを追加することを忘れないでください。ここでは、PostgreSQLをIDストアとして使用しています。"
+
+#~ msgid "First, xref:security-built-in-authentication.adoc#basic-auth[Basic HTTPAuthenticationMechanism] has to be enabled with `quarkus.http.auth.basic=true`. In fact, you do not even have to set `quarkus.http.auth.basic=true` to enable it in this demo as `Basic HTTPAuthenticationMechanism` is used as a fallback authentication mechanism when a secure access is required and no other authentication mechanisms are enabled."
+#~ msgstr "まず、xref:security-built-in-authentication.adoc#basic-auth[ベーシック HTTP 認証メカニズム] を `quarkus.http.auth.basic=true` で有効化する必要があります。ただし、このデモでは、セキュアなアクセスが必要な場合に他の認証メカニズムが有効になっていなければ `Basic HTTPAuthenticationMechanism` が使用されるため、`quarkus.http.auth.basic=true` を設定する必要はありません。"
+
+#~ msgid "In our context, we are using PostgreSQL as identity store. The database schema is created by Hibernate ORM automatically on startup (change this in production), and we initialize the database with users and roles in the `Startup` class:"
+#~ msgstr "私たちのコンテキストでは、IDストアとしてPostgreSQLを使用しています。データベーススキーマはHibernate ORMによって起動時に自動的に作成され(本番ではこれを変更します)、 `Startup` クラスのユーザーとロールでデータベースを初期化します。"
+
+#~ msgid "Next you can write the integration test:"
+#~ msgstr "次に、統合テストを記述できます。"
+
+#~ msgid "With Curl or Browser"
+#~ msgstr "Curl またはブラウザーを使用する場合"
+
+#~ msgid "Next, compile and run the application in either JVM or Native mode:"
+#~ msgstr "次に、JVM または Native モードでアプリケーションをコンパイルし、実行します。"
+
+#~ msgid "Then run it:"
+#~ msgstr "次に、それを実行します:"
+
+#~ msgid "and run it:"
+#~ msgstr "それを実行します:"
+
+#~ msgid "Now you can test it with `curl` or your favourite browser.  We will use `curl` in this section but you can try to access the same endpoint URLs from the browser."
+#~ msgstr "これで `curl` やお気に入りのブラウザーでテストできます。ここでは `curl` を使用しますが、ブラウザーから同じエンドポイント URL にアクセスすることもできます。"
+
+#~ msgid "The very first thing to check is to ensure the anonymous access works."
+#~ msgstr "まず最初に確認すべきは、匿名でのアクセスが可能かどうかということです。"
+
+#~ msgid "Note, if you are using the browser then you should see the browser displaying a Basic Authentication challenge form."
+#~ msgstr "ブラウザーを使用している場合は、ブラウザーにベーシック認証のチャレンジフォームが表示されます。"
+
+#~ msgid "So far so good, now let's try with an allowed user."
+#~ msgstr "ここまでは順調ですが、今度は許可されたユーザーで試してみましょう。"
+
+#~ msgid "The user `admin` should be forbidden to access a resource protected with `@RolesAllowed(\"user\")` because it doesn't have this role."
+#~ msgstr "ユーザー `admin` は、この役割を持っていないので、 `@RolesAllowed(\"user\")` で保護されたリソースへのアクセスを禁止する必要があります。"
+
+#~ msgid "Security JPA Reference Guide "
+#~ msgstr "セキュリティー JPA リファレンスガイド"
+
+#~ msgid "Next we recommend you to see how `OpenId Connect` can be used to provide a secure, single sign on access to your Quarkus endpoints. Please follow xref:security-openid-connect.adoc[Quarkus - Using OpenID Connect to Protect Service Applications using Bearer Token Authorization] and xref:security-openid-connect-web-authentication.adoc[Quarkus - Using OpenID Connect to Protect Web Applications using Authorization Code Flow] guides."
+#~ msgstr "次のステップとして、`OpenId Connect` を使用して Quarkus エンドポイントにセキュアなシングルサインオンアクセスを提供する方法を確認することをお勧めします。xref:security-openid-connect.adoc[Quarkus - Using OpenID Connect を使用した、ベアラートークン認可によるサービスアプリケーションの保護] および xref:security-openid-connect-web-authentication.adoc[Quarkus - OpenID Connect を使用した、認可コードフローによる Web アプリケーションの保護] ガイドを確認してください。"
+
+#~ msgid "For a complete reference to Quarkus Security please read a xref:security.adoc[Quarkus Security] document."
+#~ msgstr "Quarkus セキュリティーの詳細については、xref:security.adoc[Quarkus セキュリティー] ドキュメントを参照してください。"
