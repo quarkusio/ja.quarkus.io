@@ -95,7 +95,7 @@ msgstr "これにより、 `pom.xml` に以下が追加されます:"
 #: upstream/_guides/kafka.adoc:1729 upstream/_guides/kafka.adoc:1797
 #, no-wrap
 msgid "pom.xml"
-msgstr ""
+msgstr "pom.xml"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:54
@@ -106,19 +106,23 @@ msgid ""
 "    <artifactId>quarkus-smallrye-reactive-messaging-kafka</artifactId>\n"
 "</dependency>\n"
 msgstr ""
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-smallrye-reactive-messaging-kafka</artifactId>\n"
+"</dependency>\n"
 
 #. type: Block title
 #: upstream/_guides/kafka.adoc:57 upstream/_guides/kafka.adoc:1489
 #: upstream/_guides/kafka.adoc:1738 upstream/_guides/kafka.adoc:1807
 #, no-wrap
 msgid "build.gradle"
-msgstr ""
+msgstr "build.gradle"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:60
 #, no-wrap
 msgid "implementation(\"io.quarkus:quarkus-smallrye-reactive-messaging-kafka\")\n"
-msgstr ""
+msgstr "implementation(“io.quarkus:quarkus-smallrye-reactive-messaging-kafka”)\n"
 
 #. type: delimited block =
 #: upstream/_guides/kafka.adoc:65
@@ -219,7 +223,7 @@ msgstr "直前の最小設定によって、Quarkus アプリケーションは�
 #: upstream/_guides/kafka.adoc:2344
 #, no-wrap
 msgid "import org.eclipse.microprofile.reactive.messaging.Incoming;\n"
-msgstr ""
+msgstr "import org.eclipse.microprofile.reactive.messaging.Incoming;\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:113 upstream/_guides/kafka.adoc:1035
@@ -228,7 +232,7 @@ msgstr ""
 #: upstream/_guides/kafka.adoc:1386 upstream/_guides/kafka.adoc:2342
 #, no-wrap
 msgid "import javax.enterprise.context.ApplicationScoped;\n"
-msgstr ""
+msgstr "import javax.enterprise.context.ApplicationScoped;\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:116
@@ -237,6 +241,8 @@ msgid ""
 "@ApplicationScoped\n"
 "public class PriceConsumer {\n"
 msgstr ""
+"@ApplicationScoped\n"
+"public class PriceConsumer {\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:121
@@ -247,6 +253,10 @@ msgid ""
 "        // process your price.\n"
 "    }\n"
 msgstr ""
+"    @Incoming(\"prices\")\n"
+"    public void consume(double price) {\n"
+"        // process your price.\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:123 upstream/_guides/kafka.adoc:269
@@ -286,6 +296,15 @@ msgid ""
 "    return msg.ack();\n"
 "}\n"
 msgstr ""
+"@Incoming(\"prices\")\n"
+"public CompletionStage<Void> consume(Message<Double> msg) {\n"
+"    // access record metadata\n"
+"    var metadata = msg.getMetadata(IncomingKafkaRecordMetadata.class).orElseThrow();\n"
+"    // process the message payload.\n"
+"    double price = msg.getPayload();\n"
+"    // Acknowledge the incoming message (commit the offset)\n"
+"    return msg.ack();\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_guides/kafka.adoc:143
@@ -316,6 +335,14 @@ msgid ""
 "    // ...\n"
 "}\n"
 msgstr ""
+"@Incoming(\"prices\")\n"
+"public void consume(ConsumerRecord<String, Double> record) {\n"
+"    String key = record.key(); // Can be `null` if the incoming record has no key\n"
+"    String value = record.value(); // Can be `null` if the incoming record has no value\n"
+"    String topic = record.topic();\n"
+"    int partition = record.partition();\n"
+"    // ...\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_guides/kafka.adoc:161
@@ -338,6 +365,11 @@ msgid ""
 "    String value = record.value(); // Can be `null` if the incoming record has no value\n"
 "}\n"
 msgstr ""
+"@Incoming(\"prices\")\n"
+"public void consume(Record<String, Double> record) {\n"
+"    String key = record.key(); // Can be `null` if the incoming record has no key\n"
+"    String value = record.value(); // Can be `null` if the incoming record has no value\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_guides/kafka.adoc:173
@@ -362,6 +394,8 @@ msgid ""
 "import io.smallrye.mutiny.Multi;\n"
 "import io.smallrye.reactive.messaging.annotations.Channel;\n"
 msgstr ""
+"import io.smallrye.mutiny.Multi;\n"
+"import io.smallrye.reactive.messaging.annotations.Channel;\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:189
@@ -383,6 +417,8 @@ msgid ""
 "@Path(\"/prices\")\n"
 "public class PriceResource {\n"
 msgstr ""
+"@Path(\"/prices\")\n"
+"public class PriceResource {\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:196
@@ -392,6 +428,9 @@ msgid ""
 "    @Channel(\"prices\")\n"
 "    Multi<Double> prices;\n"
 msgstr ""
+"    @Inject\n"
+"    @Channel(\"prices\")\n"
+"    Multi<Double> prices;\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:204
@@ -425,25 +464,25 @@ msgstr "チャンネルとして注入できるのは、以下のタイプです
 #: upstream/_guides/kafka.adoc:221
 #, no-wrap
 msgid "@Inject @Channel(\"prices\") Multi<Double> streamOfPayloads;\n"
-msgstr ""
+msgstr "@Inject @Channel(\"prices\") Multi<Double> streamOfPayloads;\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:223
 #, no-wrap
 msgid "@Inject @Channel(\"prices\") Multi<Message<Double>> streamOfMessages;\n"
-msgstr ""
+msgstr "@Inject @Channel(\"prices\") Multi<Message<Double>> streamOfMessages;\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:225
 #, no-wrap
 msgid "@Inject @Channel(\"prices\") Publisher<Double> publisherOfPayloads;\n"
-msgstr ""
+msgstr "@Inject @Channel(\"prices\") Publisher<Double> publisherOfPayloads;\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:227
 #, no-wrap
 msgid "@Inject @Channel(\"prices\") Publisher<Message<Double>> publisherOfMessages;\n"
-msgstr ""
+msgstr "@Inject @Channel(\"prices\") Publisher<Message<Double>> publisherOfMessages;\n"
 
 #. type: Plain text
 #: upstream/_guides/kafka.adoc:232
@@ -478,6 +517,8 @@ msgid ""
 "import io.smallrye.reactive.messaging.annotations.Blocking;\n"
 "import org.eclipse.microprofile.reactive.messaging.Incoming;\n"
 msgstr ""
+"import io.smallrye.reactive.messaging.annotations.Blocking;\n"
+"import org.eclipse.microprofile.reactive.messaging.Incoming;\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:256 upstream/_guides/kafka.adoc:2262
@@ -486,6 +527,8 @@ msgid ""
 "import javax.enterprise.context.ApplicationScoped;\n"
 "import javax.transaction.Transactional;\n"
 msgstr ""
+"import javax.enterprise.context.ApplicationScoped;\n"
+"import javax.transaction.Transactional;\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:259
@@ -494,6 +537,8 @@ msgid ""
 "@ApplicationScoped\n"
 "public class PriceStorage {\n"
 msgstr ""
+"@ApplicationScoped\n"
+"public class PriceStorage {\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:267
@@ -507,6 +552,13 @@ msgid ""
 "        price.persist();\n"
 "    }\n"
 msgstr ""
+"    @Incoming(\"prices\")\n"
+"    @Transactional\n"
+"    public void store(int priceInUsd) {\n"
+"        Price price = new Price();\n"
+"        price.value = priceInUsd;\n"
+"        price.persist();\n"
+"    }\n"
 
 #. type: Plain text
 #: upstream/_guides/kafka.adoc:272
@@ -521,12 +573,12 @@ msgstr "`@Blocking` アノテーションは 2 つあります。"
 #. type: delimited block =
 #: upstream/_guides/kafka.adoc:278
 msgid "`io.smallrye.reactive.messaging.annotations.Blocking`"
-msgstr ""
+msgstr "`io.smallrye.reactive.messaging.annotations.Blocking`"
 
 #. type: delimited block =
 #: upstream/_guides/kafka.adoc:279
 msgid "`io.smallrye.common.annotation.Blocking`"
-msgstr ""
+msgstr "`io.smallrye.common.annotation.Blocking`"
 
 #. type: delimited block =
 #: upstream/_guides/kafka.adoc:284
@@ -770,6 +822,11 @@ msgid ""
 "   // ... retry if this method throws an exception\n"
 "}\n"
 msgstr ""
+"@Incoming(\"kafka\")\n"
+"@Retry(delay = 10, maxRetries = 5)\n"
+"public void consume(String v) {\n"
+"   // ... retry if this method throws an exception\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_guides/kafka.adoc:412
@@ -829,6 +886,10 @@ msgid ""
 "public class MyDeserializationFailureHandler\n"
 "    implements DeserializationFailureHandler<JsonObject> { // Specify the expected type\n"
 msgstr ""
+"@ApplicationScoped\n"
+"@Identifier(\"failure-retry\") // Set the name of the failure handler\n"
+"public class MyDeserializationFailureHandler\n"
+"    implements DeserializationFailureHandler<JsonObject> { // Specify the expected type\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:453
@@ -843,6 +904,14 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    @Override\n"
+"    public JsonObject decorateDeserialization(Uni<JsonObject> deserialization, String topic, boolean isKey,\n"
+"            String deserializer, byte[] data, Headers headers) {\n"
+"        return deserialization\n"
+"                    .onFailure().retry().atMost(3)\n"
+"                    .await().atMost(Duration.ofMillis(200));\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_guides/kafka.adoc:456
@@ -1005,7 +1074,7 @@ msgstr "以下の例では、最大 10 分前 (またはオフセット 0) か�
 #: upstream/_guides/kafka.adoc:544 upstream/_guides/kafka.adoc:594
 #, no-wrap
 msgid "package inbound;\n"
-msgstr ""
+msgstr "package inbound;\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:550
@@ -1017,6 +1086,11 @@ msgid ""
 "import org.apache.kafka.clients.consumer.OffsetAndTimestamp;\n"
 "import org.apache.kafka.clients.consumer.TopicPartition;\n"
 msgstr ""
+"import io.smallrye.common.annotation.Identifier;\n"
+"import io.smallrye.reactive.messaging.kafka.KafkaConsumerRebalanceListener;\n"
+"import org.apache.kafka.clients.consumer.Consumer;\n"
+"import org.apache.kafka.clients.consumer.OffsetAndTimestamp;\n"
+"import org.apache.kafka.clients.consumer.TopicPartition;\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:556
@@ -1028,6 +1102,11 @@ msgid ""
 "import java.util.Map;\n"
 "import java.util.logging.Logger;\n"
 msgstr ""
+"import javax.enterprise.context.ApplicationScoped;\n"
+"import java.util.Collection;\n"
+"import java.util.HashMap;\n"
+"import java.util.Map;\n"
+"import java.util.logging.Logger;\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:560
@@ -1037,12 +1116,15 @@ msgid ""
 "@Identifier(\"rebalanced-example.rebalancer\")\n"
 "public class KafkaRebalancedConsumerRebalanceListener implements KafkaConsumerRebalanceListener {\n"
 msgstr ""
+"@ApplicationScoped\n"
+"@Identifier(\"rebalanced-example.rebalancer\")\n"
+"public class KafkaRebalancedConsumerRebalanceListener implements KafkaConsumerRebalanceListener {\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:562
 #, no-wrap
 msgid "    private static final Logger LOGGER = Logger.getLogger(KafkaRebalancedConsumerRebalanceListener.class.getName());\n"
-msgstr ""
+msgstr "    private static final Logger LOGGER = Logger.getLogger(KafkaRebalancedConsumerRebalanceListener.class.getName());\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:574
@@ -1060,6 +1142,17 @@ msgid ""
 "        long now = System.currentTimeMillis();\n"
 "        long shouldStartAt = now - 600_000L; //10 minute ago\n"
 msgstr ""
+"    /**\n"
+"     * When receiving a list of partitions, will search for the earliest offset within 10 minutes\n"
+"     * and seek the consumer to it.\n"
+"     *\n"
+"     * @param consumer   underlying consumer\n"
+"     * @param partitions set of assigned topic partitions\n"
+"     */\n"
+"    @Override\n"
+"    public void onPartitionsAssigned(Consumer<?, ?> consumer, Collection<TopicPartition> partitions) {\n"
+"        long now = System.currentTimeMillis();\n"
+"        long shouldStartAt = now - 600_000L; //10 minute ago\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:587
@@ -1078,6 +1171,18 @@ msgid ""
 "        }\n"
 "    }\n"
 msgstr ""
+"        Map<TopicPartition, Long> request = new HashMap<>();\n"
+"        for (TopicPartition partition : partitions) {\n"
+"            LOGGER.info(\"Assigned \" + partition);\n"
+"            request.put(partition, shouldStartAt);\n"
+"        }\n"
+"        Map<TopicPartition, OffsetAndTimestamp> offsets = consumer.offsetsForTimes(request);\n"
+"        for (Map.Entry<TopicPartition, OffsetAndTimestamp> position : offsets.entrySet()) {\n"
+"            long target = position.getValue() == null ? 0L : position.getValue().offset();\n"
+"            LOGGER.info(\"Seeking position \" + target + \" for \" + position.getKey());\n"
+"            consumer.seek(position.getKey(), target);\n"
+"        }\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:598
@@ -1087,6 +1192,9 @@ msgid ""
 "import org.eclipse.microprofile.reactive.messaging.Acknowledgment;\n"
 "import org.eclipse.microprofile.reactive.messaging.Incoming;\n"
 msgstr ""
+"import io.smallrye.reactive.messaging.kafka.IncomingKafkaRecord;\n"
+"import org.eclipse.microprofile.reactive.messaging.Acknowledgment;\n"
+"import org.eclipse.microprofile.reactive.messaging.Incoming;\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:602
@@ -1096,6 +1204,9 @@ msgid ""
 "import java.util.concurrent.CompletableFuture;\n"
 "import java.util.concurrent.CompletionStage;\n"
 msgstr ""
+"import javax.enterprise.context.ApplicationScoped;\n"
+"import java.util.concurrent.CompletableFuture;\n"
+"import java.util.concurrent.CompletionStage;\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:605
@@ -1104,6 +1215,8 @@ msgid ""
 "@ApplicationScoped\n"
 "public class KafkaRebalancedConsumer {\n"
 msgstr ""
+"@ApplicationScoped\n"
+"public class KafkaRebalancedConsumer {\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:613
@@ -1117,6 +1230,13 @@ msgid ""
 "        return CompletableFuture.completedFuture(null);\n"
 "    }\n"
 msgstr ""
+"    @Incoming(\"rebalanced-example\")\n"
+"    @Acknowledgment(Acknowledgment.Strategy.NONE)\n"
+"    public CompletionStage<Void> consume(IncomingKafkaRecord<Integer, String> message) {\n"
+"        // We don't need to ACK messages because in this example,\n"
+"        // we set offset during consumer rebalance\n"
+"        return CompletableFuture.completedFuture(null);\n"
+"    }\n"
 
 #. type: Plain text
 #: upstream/_guides/kafka.adoc:619
@@ -1451,37 +1571,37 @@ msgstr "Reactive Stream `Publisher` (`Multi` が `Publisher` の実装) を返�
 #: upstream/_guides/kafka.adoc:790
 #, no-wrap
 msgid "@Outgoing(\"prices-out\") T generate(); // T excluding void\n"
-msgstr ""
+msgstr "@Outgoing(\"prices-out\") T generate(); // T excluding void\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:792
 #, no-wrap
 msgid "@Outgoing(\"prices-out\") Message<T> generate();\n"
-msgstr ""
+msgstr "@Outgoing(\"prices-out\") Message<T> generate();\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:794
 #, no-wrap
 msgid "@Outgoing(\"prices-out\") Uni<T> generate();\n"
-msgstr ""
+msgstr "@Outgoing(\"prices-out\") Uni<T> generate();\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:796
 #, no-wrap
 msgid "@Outgoing(\"prices-out\") Uni<Message<T>> generate();\n"
-msgstr ""
+msgstr "@Outgoing(\"prices-out\") Uni<Message<T>> generate();\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:798
 #, no-wrap
 msgid "@Outgoing(\"prices-out\") CompletionStage<T> generate();\n"
-msgstr ""
+msgstr "@Outgoing(\"prices-out\") CompletionStage<T> generate();\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:800
 #, no-wrap
 msgid "@Outgoing(\"prices-out\") CompletionStage<Message<T>> generate();\n"
-msgstr ""
+msgstr "@Outgoing(\"prices-out\") CompletionStage<Message<T>> generate();\n"
 
 #. type: Title ===
 #: upstream/_guides/kafka.adoc:802
@@ -1512,6 +1632,8 @@ msgid ""
 "import org.eclipse.microprofile.reactive.messaging.Channel;\n"
 "import org.eclipse.microprofile.reactive.messaging.Emitter;\n"
 msgstr ""
+"import org.eclipse.microprofile.reactive.messaging.Channel;\n"
+"import org.eclipse.microprofile.reactive.messaging.Emitter;\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:821 upstream/_guides/kafka.adoc:866
@@ -1524,6 +1646,11 @@ msgid ""
 "import javax.ws.rs.Consumes;\n"
 "import javax.ws.rs.core.MediaType;\n"
 msgstr ""
+"import javax.inject.Inject;\n"
+"import javax.ws.rs.POST;\n"
+"import javax.ws.rs.Path;\n"
+"import javax.ws.rs.Consumes;\n"
+"import javax.ws.rs.core.MediaType;\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:828
@@ -1533,6 +1660,9 @@ msgid ""
 "    @Channel(\"price-create\")\n"
 "    Emitter<Double> priceEmitter;\n"
 msgstr ""
+"    @Inject\n"
+"    @Channel(\"price-create\")\n"
+"    Emitter<Double> priceEmitter;\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:835
@@ -1545,6 +1675,12 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    @POST\n"
+"    @Consumes(MediaType.TEXT_PLAIN)\n"
+"    public void addPrice(Double price) {\n"
+"        CompletionStage<Void> ack = priceEmitter.send(price);\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_guides/kafka.adoc:838
@@ -1825,6 +1961,10 @@ msgid ""
 "public class MySerializationFailureHandler\n"
 "    implements SerializationFailureHandler<JsonObject> { // Specify the expected type\n"
 msgstr ""
+"@ApplicationScoped\n"
+"@Identifier(\"failure-fallback\") // Set the name of the failure handler\n"
+"public class MySerializationFailureHandler\n"
+"    implements SerializationFailureHandler<JsonObject> { // Specify the expected type\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:1004
@@ -1839,6 +1979,14 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    @Override\n"
+"    public byte[] decorateSerialization(Uni<byte[]> serialization, String topic, boolean isKey,\n"
+"        String serializer, Object data, Headers headers) {\n"
+"        return serialization\n"
+"                    .onFailure().retry().atMost(3)\n"
+"                    .await().indefinitely();\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_guides/kafka.adoc:1007
@@ -1886,7 +2034,7 @@ msgstr "インメモリーチャネルの場合、`@Broadcast` アノテーシ�
 #: upstream/_guides/kafka.adoc:1033
 #, no-wrap
 msgid "import java.util.Random;\n"
-msgstr ""
+msgstr "import java.util.Random;\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:1038 upstream/_guides/kafka.adoc:1149
@@ -1896,12 +2044,14 @@ msgid ""
 "import org.eclipse.microprofile.reactive.messaging.Incoming;\n"
 "import org.eclipse.microprofile.reactive.messaging.Outgoing;\n"
 msgstr ""
+"import org.eclipse.microprofile.reactive.messaging.Incoming;\n"
+"import org.eclipse.microprofile.reactive.messaging.Outgoing;\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:1040
 #, no-wrap
 msgid "import io.smallrye.reactive.messaging.annotations.Broadcast;\n"
-msgstr ""
+msgstr "import io.smallrye.reactive.messaging.annotations.Broadcast;\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:1043
@@ -1910,6 +2060,8 @@ msgid ""
 "@ApplicationScoped\n"
 "public class MultipleConsumer {\n"
 msgstr ""
+"@ApplicationScoped\n"
+"public class MultipleConsumer {\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:1051
@@ -1921,6 +2073,11 @@ msgid ""
 "        return random.nextDouble();\n"
 "    }\n"
 msgstr ""
+"    @Outgoing(\"in-memory-channel\")\n"
+"    @Broadcast\n"
+"    double generate() {\n"
+"        return random.nextDouble();\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:1056
@@ -1931,6 +2088,10 @@ msgid ""
 "        System.out.println(price);\n"
 "    }\n"
 msgstr ""
+"    @Incoming(\"in-memory-channel\")\n"
+"    void consumeAndLog(double price) {\n"
+"        System.out.println(price);\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:1063
@@ -1943,6 +2104,12 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    @Incoming(\"in-memory-channel\")\n"
+"    @Outgoing(\"prices2\")\n"
+"    double consumeAndSend(double price) {\n"
+"        return price;\n"
+"    }\n"
+"}\n"
 
 #. type: delimited block =
 #: upstream/_guides/kafka.adoc:1069
@@ -2224,6 +2391,9 @@ msgid ""
 "    @OnOverflow(value = OnOverflow.Strategy.BUFFER, bufferSize = 500) // <3>\n"
 "    KafkaTransactions<Integer> txProducer;\n"
 msgstr ""
+"    @Channel(\"prices-out\")\n"
+"    @OnOverflow(value = OnOverflow.Strategy.BUFFER, bufferSize = 500) // <3>\n"
+"    KafkaTransactions<Integer> txProducer;\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:1242
@@ -2239,6 +2409,15 @@ msgid ""
 "        });\n"
 "    }\n"
 msgstr ""
+"    @Incoming(\"prices-in\")\n"
+"    public Uni<Void> emitInTransaction(KafkaRecordBatch<String, Integer> batch) { // <1>\n"
+"        return txProducer.withTransactionAndAck(batch, emitter -> { // <2>\n"
+"            for (KafkaRecord<String, Integer> record : batch) {\n"
+"                emitter.send(KafkaRecord.of(record.getKey(), record.getPayload() + 1)); // <3>\n"
+"            }\n"
+"            return Uni.createFrom().voidItem();\n"
+"        });\n"
+"    }\n"
 
 #. type: Plain text
 #: upstream/_guides/kafka.adoc:1248
@@ -2315,12 +2494,15 @@ msgid ""
 "import javax.enterprise.event.Observes;\n"
 "import javax.inject.Inject;\n"
 msgstr ""
+"import javax.enterprise.context.ApplicationScoped;\n"
+"import javax.enterprise.event.Observes;\n"
+"import javax.inject.Inject;\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:1288
 #, no-wrap
 msgid "import org.apache.kafka.clients.producer.ProducerRecord;\n"
-msgstr ""
+msgstr "import org.apache.kafka.clients.producer.ProducerRecord;\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:1293
@@ -2331,6 +2513,10 @@ msgid ""
 "import io.smallrye.reactive.messaging.kafka.KafkaConsumer;\n"
 "import io.smallrye.reactive.messaging.kafka.KafkaProducer;\n"
 msgstr ""
+"import io.quarkus.runtime.StartupEvent;\n"
+"import io.smallrye.reactive.messaging.kafka.KafkaClientService;\n"
+"import io.smallrye.reactive.messaging.kafka.KafkaConsumer;\n"
+"import io.smallrye.reactive.messaging.kafka.KafkaProducer;\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:1296
@@ -2339,6 +2525,8 @@ msgid ""
 "@ApplicationScoped\n"
 "public class PriceSender {\n"
 msgstr ""
+"@ApplicationScoped\n"
+"public class PriceSender {\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:1299
@@ -2347,6 +2535,8 @@ msgid ""
 "    @Inject\n"
 "    KafkaClientService clientService;\n"
 msgstr ""
+"    @Inject\n"
+"    KafkaClientService clientService;\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:1306
@@ -2385,6 +2575,10 @@ msgid ""
 "import org.apache.kafka.clients.admin.AdminClientConfig;\n"
 "import org.apache.kafka.clients.admin.KafkaAdminClient;\n"
 msgstr ""
+"import io.smallrye.common.annotation.Identifier;\n"
+"import org.apache.kafka.clients.admin.AdminClient;\n"
+"import org.apache.kafka.clients.admin.AdminClientConfig;\n"
+"import org.apache.kafka.clients.admin.KafkaAdminClient;\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:1327
@@ -2396,6 +2590,11 @@ msgid ""
 "import java.util.HashMap;\n"
 "import java.util.Map;\n"
 msgstr ""
+"import javax.enterprise.context.ApplicationScoped;\n"
+"import javax.enterprise.inject.Produces;\n"
+"import javax.inject.Inject;\n"
+"import java.util.HashMap;\n"
+"import java.util.Map;\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:1330
@@ -2404,6 +2603,8 @@ msgid ""
 "@ApplicationScoped\n"
 "public class KafkaClients {\n"
 msgstr ""
+"@ApplicationScoped\n"
+"public class KafkaClients {\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:1334
@@ -2413,6 +2614,9 @@ msgid ""
 "    @Identifier(\"default-kafka-broker\")\n"
 "    Map<String, Object> config;\n"
 msgstr ""
+"    @Inject\n"
+"    @Identifier(\"default-kafka-broker\")\n"
+"    Map<String, Object> config;\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:1345
@@ -2429,6 +2633,16 @@ msgid ""
 "        return KafkaAdminClient.create(copy);\n"
 "    }\n"
 msgstr ""
+"    @Produces\n"
+"    AdminClient getAdmin() {\n"
+"        Map<String, Object> copy = new HashMap<>();\n"
+"        for (Map.Entry<String, Object> entry : config.entrySet()) {\n"
+"            if (AdminClientConfig.configNames().contains(entry.getKey())) {\n"
+"                copy.put(entry.getKey(), entry.getValue());\n"
+"            }\n"
+"        }\n"
+"        return KafkaAdminClient.create(copy);\n"
+"    }\n"
 
 #. type: Plain text
 #: upstream/_guides/kafka.adoc:1352
@@ -2455,7 +2669,7 @@ msgstr "以下のように `Fruit` のデータクラスがあると想像して
 #: upstream/_guides/kafka.adoc:1363
 #, no-wrap
 msgid "public class Fruit {\n"
-msgstr ""
+msgstr "public class Fruit {\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:1366
@@ -2464,6 +2678,8 @@ msgid ""
 "    public String name;\n"
 "    public int price;\n"
 msgstr ""
+"    public String name;\n"
+"    public int price;\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:1369
@@ -2472,6 +2688,8 @@ msgid ""
 "    public Fruit() {\n"
 "    }\n"
 msgstr ""
+"    public Fruit() {\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:1375
@@ -2483,6 +2701,11 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    public Fruit(String name, int price) {\n"
+"        this.name = name;\n"
+"        this.price = price;\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_guides/kafka.adoc:1378
@@ -2497,6 +2720,9 @@ msgid ""
 "import org.eclipse.microprofile.reactive.messaging.Incoming;\n"
 "import org.eclipse.microprofile.reactive.messaging.Outgoing;\n"
 msgstr ""
+"import io.smallrye.reactive.messaging.annotations.Broadcast;\n"
+"import org.eclipse.microprofile.reactive.messaging.Incoming;\n"
+"import org.eclipse.microprofile.reactive.messaging.Outgoing;\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:1393
@@ -2509,6 +2735,12 @@ msgid ""
 "@ApplicationScoped\n"
 "public class FruitProcessor {\n"
 msgstr ""
+"/**\n"
+"* A bean consuming data from the \"fruit-in\" channel and applying some price conversion.\n"
+"* The result is pushed to the \"fruit-out\" channel.\n"
+"*/\n"
+"@ApplicationScoped\n"
+"public class FruitProcessor {\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:1403
@@ -2522,6 +2754,13 @@ msgid ""
 "        return fruit;\n"
 "    }\n"
 msgstr ""
+"    @Incoming(\"fruit-in\")\n"
+"    @Outgoing(\"fruit-out\")\n"
+"    @Broadcast\n"
+"    public Fruit process(Fruit fruit) {\n"
+"        fruit.price = fruit.price * CONVERSION_RATE;\n"
+"        return fruit;\n"
+"    }\n"
 
 #. type: Plain text
 #: upstream/_guides/kafka.adoc:1408
@@ -2563,14 +2802,14 @@ msgstr "対応するデシリアライザークラスはサブクラス化する
 #: upstream/_guides/kafka.adoc:1431 upstream/_guides/kafka.adoc:1462
 #, no-wrap
 msgid "package com.acme.fruit.jackson;\n"
-msgstr ""
+msgstr "package com.acme.fruit.jackson;\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:1433 upstream/_guides/kafka.adoc:2291
 #: upstream/_guides/kafka.adoc:2382
 #, no-wrap
 msgid "import io.quarkus.kafka.client.serialization.ObjectMapperDeserializer;\n"
-msgstr ""
+msgstr "import io.quarkus.kafka.client.serialization.ObjectMapperDeserializer;\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:1439 upstream/_guides/kafka.adoc:2297
@@ -2583,6 +2822,11 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"public class FruitDeserializer extends ObjectMapperDeserializer<Fruit> {\n"
+"    public FruitDeserializer() {\n"
+"        super(Fruit.class);\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_guides/kafka.adoc:1442
@@ -3623,13 +3867,13 @@ msgstr "次に、`@QuarkusTestResource` を使用して、テストで Kafka Com
 #: upstream/_guides/kafka.adoc:1910
 #, no-wrap
 msgid "import static org.junit.jupiter.api.Assertions.assertEquals;\n"
-msgstr ""
+msgstr "import static org.junit.jupiter.api.Assertions.assertEquals;\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:1912
 #, no-wrap
 msgid "import java.util.UUID;\n"
-msgstr ""
+msgstr "import java.util.UUID;\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:1915
@@ -3638,6 +3882,8 @@ msgid ""
 "import org.apache.kafka.clients.producer.ProducerRecord;\n"
 "import org.junit.jupiter.api.Test;\n"
 msgstr ""
+"import org.apache.kafka.clients.producer.ProducerRecord;\n"
+"import org.junit.jupiter.api.Test;\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:1922
@@ -3650,6 +3896,12 @@ msgid ""
 "import io.smallrye.reactive.messaging.kafka.companion.ConsumerTask;\n"
 "import io.smallrye.reactive.messaging.kafka.companion.KafkaCompanion;\n"
 msgstr ""
+"import io.quarkus.test.common.QuarkusTestResource;\n"
+"import io.quarkus.test.junit.QuarkusTest;\n"
+"import io.quarkus.test.kafka.InjectKafkaCompanion;\n"
+"import io.quarkus.test.kafka.KafkaCompanionResource;\n"
+"import io.smallrye.reactive.messaging.kafka.companion.ConsumerTask;\n"
+"import io.smallrye.reactive.messaging.kafka.companion.KafkaCompanion;\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:1926
@@ -3667,6 +3919,8 @@ msgid ""
 "    @InjectKafkaCompanion // <1>\n"
 "    KafkaCompanion companion;\n"
 msgstr ""
+"    @InjectKafkaCompanion // <1>\n"
+"    KafkaCompanion companion;\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:1933
@@ -3676,12 +3930,15 @@ msgid ""
 "    void testProcessor() {\n"
 "        companion.produceStrings().usingGenerator(i -> new ProducerRecord<>(\"orders\", UUID.randomUUID().toString())); // <2>\n"
 msgstr ""
+"    @Test\n"
+"    void testProcessor() {\n"
+"        companion.produceStrings().usingGenerator(i -> new ProducerRecord<>(\"orders\", UUID.randomUUID().toString())); // <2>\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:1935
 #, no-wrap
 msgid "        // Expect that the tested application processes orders from 'orders' topic and write to 'orders-processed' topic\n"
-msgstr ""
+msgstr "        // Expect that the tested application processes orders from 'orders' topic and write to 'orders-processed' topic\n"
 
 #. type: delimited block -
 #: upstream/_guides/kafka.adoc:1941
@@ -3693,6 +3950,11 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"        ConsumerTask<String, String> orders = companion.consumeStrings().fromTopics(\"orders-processed\", 10); // <3>\n"
+"        orders.awaitCompletion(); // <4>\n"
+"        assertEquals(10, orders.count());\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_guides/kafka.adoc:1944
