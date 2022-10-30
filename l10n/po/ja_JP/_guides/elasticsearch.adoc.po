@@ -222,6 +222,8 @@ msgid ""
 "import javax.enterprise.context.ApplicationScoped;\n"
 "import javax.inject.Inject;\n"
 msgstr ""
+"import javax.enterprise.context.ApplicationScoped;\n"
+"import javax.inject.Inject;\n"
 
 #. type: delimited block -
 #: upstream/_guides/elasticsearch.adoc:123
@@ -389,7 +391,7 @@ msgstr ""
 #: upstream/_guides/elasticsearch.adoc:207
 #, no-wrap
 msgid "import org.jboss.resteasy.reactive.RestQuery;\n"
-msgstr ""
+msgstr "import org.jboss.resteasy.reactive.RestQuery;\n"
 
 #. type: delimited block -
 #: upstream/_guides/elasticsearch.adoc:210
@@ -398,6 +400,8 @@ msgid ""
 "@Path(\"/fruits\")\n"
 "public class FruitResource {\n"
 msgstr ""
+"@Path(\"/fruits\")\n"
+"public class FruitResource {\n"
 
 #. type: delimited block -
 #: upstream/_guides/elasticsearch.adoc:213
@@ -721,12 +725,24 @@ msgid ""
 "import org.elasticsearch.search.SearchHits;\n"
 "import org.elasticsearch.search.builder.SearchSourceBuilder;\n"
 msgstr ""
+"import org.elasticsearch.action.get.GetRequest;\n"
+"import org.elasticsearch.action.get.GetResponse;\n"
+"import org.elasticsearch.action.index.IndexRequest;\n"
+"import org.elasticsearch.action.search.SearchRequest;\n"
+"import org.elasticsearch.action.search.SearchResponse;\n"
+"import org.elasticsearch.client.RequestOptions;\n"
+"import org.elasticsearch.client.RestHighLevelClient;\n"
+"import org.elasticsearch.common.xcontent.XContentType;\n"
+"import org.elasticsearch.index.query.QueryBuilders;\n"
+"import org.elasticsearch.search.SearchHit;\n"
+"import org.elasticsearch.search.SearchHits;\n"
+"import org.elasticsearch.search.builder.SearchSourceBuilder;\n"
 
 #. type: delimited block -
 #: upstream/_guides/elasticsearch.adoc:419
 #, no-wrap
 msgid "import io.vertx.core.json.JsonObject;\n"
-msgstr ""
+msgstr "import io.vertx.core.json.JsonObject;\n"
 
 #. type: delimited block -
 #: upstream/_guides/elasticsearch.adoc:424
@@ -737,6 +753,10 @@ msgid ""
 "    @Inject\n"
 "    RestHighLevelClient restHighLevelClient; // <1>\n"
 msgstr ""
+"@ApplicationScoped\n"
+"public class FruitService {\n"
+"    @Inject\n"
+"    RestHighLevelClient restHighLevelClient; // <1>\n"
 
 #. type: delimited block -
 #: upstream/_guides/elasticsearch.adoc:431
@@ -749,6 +769,12 @@ msgid ""
 "        restHighLevelClient.index(request, RequestOptions.DEFAULT); // <4>\n"
 "    }\n"
 msgstr ""
+"    public void index(Fruit fruit) throws IOException {\n"
+"        IndexRequest request = new IndexRequest(\"fruits\"); // <2>\n"
+"        request.id(fruit.id);\n"
+"        request.source(JsonObject.mapFrom(fruit).toString(), XContentType.JSON); // <3>\n"
+"        restHighLevelClient.index(request, RequestOptions.DEFAULT); // <4>\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_guides/elasticsearch.adoc:442
@@ -765,6 +791,16 @@ msgid ""
 "        return null;\n"
 "    }\n"
 msgstr ""
+"    public Fruit get(String id) throws IOException {\n"
+"        GetRequest getRequest = new GetRequest(\"fruits\", id);\n"
+"        GetResponse getResponse = restHighLevelClient.get(getRequest, RequestOptions.DEFAULT);\n"
+"        if (getResponse.isExists()) {\n"
+"            String sourceAsString = getResponse.getSourceAsString();\n"
+"            JsonObject json = new JsonObject(sourceAsString); // <5>\n"
+"            return json.mapTo(Fruit.class);\n"
+"        }\n"
+"        return null;\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_guides/elasticsearch.adoc:456
@@ -776,6 +812,11 @@ msgid ""
 "        searchSourceBuilder.query(QueryBuilders.matchQuery(term, match));\n"
 "        searchRequest.source(searchSourceBuilder);\n"
 msgstr ""
+"    private List<Fruit> search(String term, String match) throws IOException {\n"
+"        SearchRequest searchRequest = new SearchRequest(\"fruits\");\n"
+"        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();\n"
+"        searchSourceBuilder.query(QueryBuilders.matchQuery(term, match));\n"
+"        searchRequest.source(searchSourceBuilder);\n"
 
 #. type: delimited block -
 #: upstream/_guides/elasticsearch.adoc:468
@@ -793,6 +834,17 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"        SearchResponse searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);\n"
+"        SearchHits hits = searchResponse.getHits();\n"
+"        List<Fruit> results = new ArrayList<>(hits.getHits().length);\n"
+"        for (SearchHit hit : hits.getHits()) {\n"
+"            String sourceAsString = hit.getSourceAsString();\n"
+"            JsonObject json = new JsonObject(sourceAsString);\n"
+"            results.add(json.mapTo(Fruit.class));\n"
+"        }\n"
+"        return results;\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_guides/elasticsearch.adoc:473

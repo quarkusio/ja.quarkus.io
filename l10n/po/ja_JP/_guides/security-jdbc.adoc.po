@@ -176,6 +176,11 @@ msgid ""
 "import javax.ws.rs.Produces;\n"
 "import javax.ws.rs.core.MediaType;\n"
 msgstr ""
+"import javax.annotation.security.PermitAll;\n"
+"import javax.ws.rs.GET;\n"
+"import javax.ws.rs.Path;\n"
+"import javax.ws.rs.Produces;\n"
+"import javax.ws.rs.core.MediaType;\n"
 
 #. type: delimited block -
 #: upstream/_guides/security-jdbc.adoc:94
@@ -184,6 +189,8 @@ msgid ""
 "@Path(\"/api/public\")\n"
 "public class PublicResource {\n"
 msgstr ""
+"@Path(\"/api/public\")\n"
+"public class PublicResource {\n"
 
 #. type: delimited block -
 #: upstream/_guides/security-jdbc.adoc:102
@@ -197,6 +204,13 @@ msgid ""
 "   }\n"
 "}\n"
 msgstr ""
+"    @GET\n"
+"    @PermitAll\n"
+"    @Produces(MediaType.TEXT_PLAIN)\n"
+"    public String publicResource() {\n"
+"        return \"public\";\n"
+"   }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_guides/security-jdbc.adoc:105
@@ -213,6 +227,11 @@ msgid ""
 "import javax.ws.rs.Produces;\n"
 "import javax.ws.rs.core.MediaType;\n"
 msgstr ""
+"import javax.annotation.security.RolesAllowed;\n"
+"import javax.ws.rs.GET;\n"
+"import javax.ws.rs.Path;\n"
+"import javax.ws.rs.Produces;\n"
+"import javax.ws.rs.core.MediaType;\n"
 
 #. type: delimited block -
 #: upstream/_guides/security-jdbc.adoc:119
@@ -221,6 +240,8 @@ msgid ""
 "@Path(\"/api/admin\")\n"
 "public class AdminResource {\n"
 msgstr ""
+"@Path(\"/api/admin\")\n"
+"public class AdminResource {\n"
 
 #. type: delimited block -
 #: upstream/_guides/security-jdbc.adoc:127
@@ -234,6 +255,13 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    @GET\n"
+"    @RolesAllowed(\"admin\")\n"
+"    @Produces(MediaType.TEXT_PLAIN)\n"
+"    public String adminResource() {\n"
+"         return \"admin\";\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_guides/security-jdbc.adoc:131
@@ -251,6 +279,12 @@ msgid ""
 "import javax.ws.rs.core.Context;\n"
 "import javax.ws.rs.core.SecurityContext;\n"
 msgstr ""
+"import javax.annotation.security.RolesAllowed;\n"
+"import javax.inject.Inject;\n"
+"import javax.ws.rs.GET;\n"
+"import javax.ws.rs.Path;\n"
+"import javax.ws.rs.core.Context;\n"
+"import javax.ws.rs.core.SecurityContext;\n"
 
 #. type: delimited block -
 #: upstream/_guides/security-jdbc.adoc:145
@@ -259,6 +293,8 @@ msgid ""
 "@Path(\"/api/users\")\n"
 "public class UserResource {\n"
 msgstr ""
+"@Path(\"/api/users\")\n"
+"public class UserResource {\n"
 
 #. type: delimited block -
 #: upstream/_guides/security-jdbc.adoc:153
@@ -272,6 +308,13 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    @GET\n"
+"    @RolesAllowed(\"user\")\n"
+"    @Path(\"/me\")\n"
+"    public String me(@Context SecurityContext securityContext) {\n"
+"        return securityContext.getUserPrincipal().getName();\n"
+"    }\n"
+"}\n"
 
 #. type: Title ===
 #: upstream/_guides/security-jdbc.adoc:155
@@ -386,12 +429,16 @@ msgid ""
 "Content-Length: 6\n"
 "Content-Type: text/plain;charset=UTF-8\n"
 msgstr ""
+"$ curl -i -X GET http://localhost:8080/api/public\n"
+"HTTP/1.1 200 OK\n"
+"Content-Length: 6\n"
+"Content-Type: text/plain;charset=UTF-8\n"
 
 #. type: delimited block -
 #: upstream/_guides/security-jdbc.adoc:224
 #, no-wrap
 msgid "public%\n"
-msgstr ""
+msgstr "public%\n"
 
 #. type: Plain text
 #: upstream/_guides/security-jdbc.adoc:227
@@ -412,7 +459,7 @@ msgstr ""
 #: upstream/_guides/security-jdbc.adoc:236
 #, no-wrap
 msgid "Not authorized%\n"
-msgstr ""
+msgstr "Not authorized%\n"
 
 #. type: Plain text
 #: upstream/_guides/security-jdbc.adoc:239
@@ -428,12 +475,16 @@ msgid ""
 "Content-Length: 5\n"
 "Content-Type: text/plain;charset=UTF-8\n"
 msgstr ""
+"$ curl -i -X GET -u admin:admin http://localhost:8080/api/admin\n"
+"HTTP/1.1 200 OK\n"
+"Content-Length: 5\n"
+"Content-Type: text/plain;charset=UTF-8\n"
 
 #. type: delimited block -
 #: upstream/_guides/security-jdbc.adoc:248
 #, no-wrap
 msgid "admin%\n"
-msgstr ""
+msgstr "admin%\n"
 
 #. type: Plain text
 #: upstream/_guides/security-jdbc.adoc:251
@@ -454,12 +505,16 @@ msgid ""
 "Content-Length: 34\n"
 "Content-Type: text/html;charset=UTF-8\n"
 msgstr ""
+"$ curl -i -X GET -u admin:admin http://localhost:8080/api/users/me\n"
+"HTTP/1.1 403 Forbidden\n"
+"Content-Length: 34\n"
+"Content-Type: text/html;charset=UTF-8\n"
 
 #. type: delimited block -
 #: upstream/_guides/security-jdbc.adoc:262
 #, no-wrap
 msgid "Forbidden%\n"
-msgstr ""
+msgstr "Forbidden%\n"
 
 #. type: Plain text
 #: upstream/_guides/security-jdbc.adoc:265
@@ -475,12 +530,16 @@ msgid ""
 "Content-Length: 4\n"
 "Content-Type: text/plain;charset=UTF-8\n"
 msgstr ""
+"$ curl -i -X GET -u user:user http://localhost:8080/api/users/me\n"
+"HTTP/1.1 200 OK\n"
+"Content-Length: 4\n"
+"Content-Type: text/plain;charset=UTF-8\n"
 
 #. type: delimited block -
 #: upstream/_guides/security-jdbc.adoc:274
 #, no-wrap
 msgid "user%\n"
-msgstr ""
+msgstr "user%\n"
 
 #. type: Title ==
 #: upstream/_guides/security-jdbc.adoc:276
