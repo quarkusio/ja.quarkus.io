@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2022-10-02 00:31+0000\n"
+"POT-Creation-Date: 2022-11-20 00:21+0000\n"
 "PO-Revision-Date: 2022-09-18 22:22+0900\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -211,25 +211,121 @@ msgstr "プロアクティブ認証が使用されている場合、 `SecurityId
 msgid "It's still possible to access the `SecurityIdentity` synchronously with `public SecurityIdentity getIdentity()` in the xref:resteasy-reactive.adoc[RESTEasy Reactive] from endpoints annotated with `@RolesAllowed`, `@Authenticated`, or with respective configuration authorization checks as authentication has already happened. The same is also valid for the xref:reactive-routes.adoc[Reactive routes] if a route response is synchronous."
 msgstr " `@RolesAllowed` , `@Authenticated` , またはそれぞれの設定の認証チェックでアノテーションされたエンドポイントから、 link:resteasy-reactive.html[RESTEasy Reactiveの] `public SecurityIdentity getIdentity()` と同期して `SecurityIdentity` にアクセスすることは、すでに認証が行われているため可能である。ルートレスポンスが同期的である場合、 link:reactive-routes.html[Reactiveルートについても] 同様である。"
 
+#. type: Plain text
+#: upstream/_guides/security-built-in-authentication.adoc:128
+msgid "xref:security-authorization.adoc#standard-security-annotations[Standard security annotations] on CDI beans are not supported on IO thread if a non-void secured method returns a value synchronously and proactive authentication is disabled, as they need to access the `SecurityIdentity`.  In the example below, we have defined `HelloResource` and `HelloService`. It's easy to see that any GET request to `/hello` will run on IO thread and throw `BlockingOperationNotAllowedException` exception.  There is more than one way to fix the example:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-built-in-authentication.adoc:130
+msgid "switch to a worker thread (annotate `hello` endpoint with `@Blocking`)"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-built-in-authentication.adoc:131
+msgid "change `sayHello` method return type (use reactive or asynchronous data type)"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_guides/security-built-in-authentication.adoc:132
+msgid "arguably the safest way is to move `@RolesAllowed` annotation to the endpoint, as accessing `SecurityIdentity` from endpoint methods is never the blocking operation"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-built-in-authentication.adoc:139
+#, no-wrap
+msgid ""
+"import javax.annotation.security.PermitAll;\n"
+"import javax.inject.Inject;\n"
+"import javax.ws.rs.GET;\n"
+"import javax.ws.rs.Path;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-built-in-authentication.adoc:141
+#, no-wrap
+msgid "import io.smallrye.mutiny.Uni;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-built-in-authentication.adoc:145
+#, no-wrap
+msgid ""
+"@Path(\"/hello\")\n"
+"@PermitAll\n"
+"public class HelloResource {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-built-in-authentication.adoc:148
+#, no-wrap
+msgid ""
+"    @Inject\n"
+"    HelloService helloService;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-built-in-authentication.adoc:153
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    public Uni<String> hello() {\n"
+"        return Uni.createFrom().item(helloService.sayHello());\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-built-in-authentication.adoc:155
+#: upstream/_guides/security-built-in-authentication.adoc:171
+#, no-wrap
+msgid "}\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-built-in-authentication.adoc:161
+#, no-wrap
+msgid ""
+"import javax.annotation.security.RolesAllowed;\n"
+"import javax.enterprise.context.ApplicationScoped;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-built-in-authentication.adoc:164
+#, no-wrap
+msgid ""
+"@ApplicationScoped\n"
+"public class HelloService {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_guides/security-built-in-authentication.adoc:169
+#, no-wrap
+msgid ""
+"    @RolesAllowed(\"admin\")\n"
+"    public String sayHello() {\n"
+"        return \"Hello\";\n"
+"    }\n"
+msgstr ""
+
 #. type: Title ===
-#: upstream/_guides/security-built-in-authentication.adoc:125
+#: upstream/_guides/security-built-in-authentication.adoc:174
 #, no-wrap
 msgid "How to customize authentication exception responses"
 msgstr "認証の例外応答をカスタマイズする方法"
 
 #. type: Plain text
-#: upstream/_guides/security-built-in-authentication.adoc:129
+#: upstream/_guides/security-built-in-authentication.adoc:178
 msgid "By default, the authentication security constraints are enforced before the JAX-RS chain starts.  Disabling the proactive authentication effectively shifts this process to the moment when the JAX-RS chain starts running thus making it possible to use JAX-RS `ExceptionMapper` to capture Quarkus Security authentication exceptions such as `io.quarkus.security.AuthenticationFailedException`, for example:"
 msgstr "デフォルトでは、認証セキュリティ制約は、JAX-RSチェーンが開始される前に実施されます。プロアクティブ認証を無効にすると、このプロセスがJAX-RSチェーンの実行開始時に効果的に移行されるため、JAX-RS `ExceptionMapper` を使用して、例えば `io.quarkus.security.AuthenticationFailedException` などのQuarkus Security認証の例外を取得することが可能になります。 :"
 
 #. type: delimited block -
-#: upstream/_guides/security-built-in-authentication.adoc:133
+#: upstream/_guides/security-built-in-authentication.adoc:182
 #, no-wrap
 msgid "package io.quarkus.it.keycloak;\n"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/security-built-in-authentication.adoc:139
+#: upstream/_guides/security-built-in-authentication.adoc:188
 #, no-wrap
 msgid ""
 "import javax.annotation.Priority;\n"
@@ -240,13 +336,13 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/security-built-in-authentication.adoc:141
+#: upstream/_guides/security-built-in-authentication.adoc:190
 #, no-wrap
 msgid "import io.quarkus.security.AuthenticationFailedException;\n"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/security-built-in-authentication.adoc:145
+#: upstream/_guides/security-built-in-authentication.adoc:194
 #, no-wrap
 msgid ""
 "@Provider\n"
@@ -255,7 +351,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/security-built-in-authentication.adoc:148
+#: upstream/_guides/security-built-in-authentication.adoc:197
 #, no-wrap
 msgid ""
 "    @Context\n"
@@ -263,7 +359,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_guides/security-built-in-authentication.adoc:154
+#: upstream/_guides/security-built-in-authentication.adoc:203
 #, no-wrap
 msgid ""
 "    @Override\n"
@@ -274,13 +370,13 @@ msgid ""
 msgstr ""
 
 #. type: Title ==
-#: upstream/_guides/security-built-in-authentication.adoc:156
+#: upstream/_guides/security-built-in-authentication.adoc:205
 #, no-wrap
 msgid "References"
 msgstr "参照"
 
 #. type: Plain text
-#: upstream/_guides/security-built-in-authentication.adoc:158
+#: upstream/_guides/security-built-in-authentication.adoc:207
 msgid "xref:security.adoc[Quarkus Security]"
 msgstr "xref:security.adoc[Quarkus Security]"
 
