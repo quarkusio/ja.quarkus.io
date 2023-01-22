@@ -1,0 +1,481 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2023-01-22 00:25+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. This guide is maintained in the main Quarkus repository
+#. and pull requests should be submitted there:
+#. https://github.com/quarkusio/quarkus/tree/main/docs/src/main/asciidoc
+#. type: Title =
+#: upstream/_versions/3.0/guides/security-ldap.adoc:6
+#, no-wrap
+msgid "Using Security with an LDAP Realm"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.0/guides/security-ldap.adoc:12
+msgid "This guide demonstrates how your Quarkus application can use an LDAP server to authenticate and authorize your user identities."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/3.0/guides/security-ldap.adoc:14
+#, no-wrap
+msgid "Prerequisites"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/3.0/guides/security-ldap.adoc:18
+#, no-wrap
+msgid "Architecture"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.0/guides/security-ldap.adoc:21
+msgid "In this example, we build a very simple microservice which offers three endpoints:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.0/guides/security-ldap.adoc:23
+msgid "`/api/public`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.0/guides/security-ldap.adoc:24
+msgid "`/api/users/me`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.0/guides/security-ldap.adoc:25
+msgid "`/api/admin`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.0/guides/security-ldap.adoc:29
+msgid "The `/api/public` endpoint can be accessed anonymously.  The `/api/admin` endpoint is protected with RBAC (Role-Based Access Control) where only users granted with the `adminRole` role can access. At this endpoint, we use the `@RolesAllowed` annotation to declaratively enforce the access constraint.  The `/api/users/me` endpoint is also protected with RBAC (Role-Based Access Control) where only users granted with the `standardRole` role can access. As a response, it returns a JSON document with details about the user."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.0/guides/security-ldap.adoc:32
+msgid "By default, Quarkus will restrict the use of JNDI within an application, as a precaution to try and mitigate any future vulnerabilities similar to Log4Shell. Because LDAP based auth requires JNDI this protection will be automatically disabled."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/3.0/guides/security-ldap.adoc:33
+#, no-wrap
+msgid "Solution"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.0/guides/security-ldap.adoc:37
+msgid "We recommend that you follow the instructions in the next sections and create the application step by step.  However, you can go right to the completed example."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.0/guides/security-ldap.adoc:39
+msgid "Clone the Git repository: `git clone {quickstarts-clone-url}`, or download an {quickstarts-archive-url}[archive]."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.0/guides/security-ldap.adoc:41
+msgid "The solution is located in the `security-ldap-quickstart` {quickstarts-tree-url}/security-ldap-quickstart[directory]."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/3.0/guides/security-ldap.adoc:42
+#, no-wrap
+msgid "Creating the Maven Project"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.0/guides/security-ldap.adoc:45
+msgid "First, we need a new project. Create a new project with the following command:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.0/guides/security-ldap.adoc:52
+msgid "This command generates a project, importing the `elytron-security-ldap` extension which is a `wildfly-elytron-realm-ldap` adapter for Quarkus applications."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.0/guides/security-ldap.adoc:55
+msgid "If you already have your Quarkus project configured, you can add the `elytron-security-ldap` extension to your project by running the following command in your project base directory:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.0/guides/security-ldap.adoc:60
+msgid "This will add the following to your build file:"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/3.0/guides/security-ldap.adoc:62
+#, no-wrap
+msgid "pom.xml"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.0/guides/security-ldap.adoc:68
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-elytron-security-ldap</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/3.0/guides/security-ldap.adoc:71
+#, no-wrap
+msgid "build.gradle"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.0/guides/security-ldap.adoc:74
+#, no-wrap
+msgid "implementation(\"io.quarkus:quarkus-elytron-security-ldap\")\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/3.0/guides/security-ldap.adoc:76
+#, no-wrap
+msgid "Writing the application"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.0/guides/security-ldap.adoc:79
+msgid "Let's start by implementing the `/api/public` endpoint. As you can see from the source code below, it is just a regular JAX-RS resource:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.0/guides/security-ldap.adoc:83
+#: upstream/_versions/3.0/guides/security-ldap.adoc:108
+#: upstream/_versions/3.0/guides/security-ldap.adoc:133
+#, no-wrap
+msgid "package org.acme.elytron.security.ldap;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.0/guides/security-ldap.adoc:89
+#, no-wrap
+msgid ""
+"import jakarta.annotation.security.PermitAll;\n"
+"import jakarta.ws.rs.GET;\n"
+"import jakarta.ws.rs.Path;\n"
+"import jakarta.ws.rs.Produces;\n"
+"import jakarta.ws.rs.core.MediaType;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.0/guides/security-ldap.adoc:92
+#, no-wrap
+msgid ""
+"@Path(\"/api/public\")\n"
+"public class PublicResource {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.0/guides/security-ldap.adoc:100
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @PermitAll\n"
+"    @Produces(MediaType.TEXT_PLAIN)\n"
+"    public String publicResource() {\n"
+"        return \"public\";\n"
+"   }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.0/guides/security-ldap.adoc:103
+msgid "The source code for the `/api/admin` endpoint is also very simple. The main difference here is that we are using a `@RolesAllowed` annotation to make sure that only users granted with the `adminRole` role can access the endpoint:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.0/guides/security-ldap.adoc:114
+#, no-wrap
+msgid ""
+"import jakarta.annotation.security.RolesAllowed;\n"
+"import jakarta.ws.rs.GET;\n"
+"import jakarta.ws.rs.Path;\n"
+"import jakarta.ws.rs.Produces;\n"
+"import jakarta.ws.rs.core.MediaType;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.0/guides/security-ldap.adoc:117
+#, no-wrap
+msgid ""
+"@Path(\"/api/admin\")\n"
+"public class AdminResource {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.0/guides/security-ldap.adoc:125
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @RolesAllowed(\"adminRole\")\n"
+"    @Produces(MediaType.TEXT_PLAIN)\n"
+"    public String adminResource() {\n"
+"         return \"admin\";\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.0/guides/security-ldap.adoc:129
+msgid "Finally, let's consider the `/api/users/me` endpoint. As you can see from the source code below, we are trusting only users with the `standardRole` role.  We are using `SecurityContext` to get access to the current authenticated Principal, and we return the user's name. This information is loaded from the LDAP server."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.0/guides/security-ldap.adoc:140
+#, no-wrap
+msgid ""
+"import jakarta.annotation.security.RolesAllowed;\n"
+"import jakarta.inject.Inject;\n"
+"import jakarta.ws.rs.GET;\n"
+"import jakarta.ws.rs.Path;\n"
+"import jakarta.ws.rs.core.Context;\n"
+"import jakarta.ws.rs.core.SecurityContext;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.0/guides/security-ldap.adoc:143
+#, no-wrap
+msgid ""
+"@Path(\"/api/users\")\n"
+"public class UserResource {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.0/guides/security-ldap.adoc:151
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @RolesAllowed(\"standardRole\")\n"
+"    @Path(\"/me\")\n"
+"    public String me(@Context SecurityContext securityContext) {\n"
+"        return securityContext.getUserPrincipal().getName();\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/3.0/guides/security-ldap.adoc:153
+#, no-wrap
+msgid "Configuring the Application"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.0/guides/security-ldap.adoc:158
+#, no-wrap
+msgid "quarkus.security.ldap.enabled=true\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.0/guides/security-ldap.adoc:162
+#, no-wrap
+msgid ""
+"quarkus.security.ldap.dir-context.principal=uid=admin,ou=system\n"
+"quarkus.security.ldap.dir-context.url=ldaps://ldap.server.local <1>\n"
+"quarkus.security.ldap.dir-context.password=secret\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.0/guides/security-ldap.adoc:165
+#, no-wrap
+msgid ""
+"quarkus.security.ldap.identity-mapping.rdn-identifier=uid\n"
+"quarkus.security.ldap.identity-mapping.search-base-dn=ou=Users,dc=quarkus,dc=io\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.0/guides/security-ldap.adoc:169
+#, no-wrap
+msgid ""
+"quarkus.security.ldap.identity-mapping.attribute-mappings.\"0\".from=cn\n"
+"quarkus.security.ldap.identity-mapping.attribute-mappings.\"0\".filter=(member=uid={0},ou=Users,dc=quarkus,dc=io) <2>\n"
+"quarkus.security.ldap.identity-mapping.attribute-mappings.\"0\".filter-base-dn=ou=Roles,dc=quarkus,dc=io\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.0/guides/security-ldap.adoc:171
+#, no-wrap
+msgid "%test.quarkus.security.ldap.dir-context.url=ldap://127.0.0.1:10389 <3>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.0/guides/security-ldap.adoc:173
+msgid "You need to provide the URL to an LDAP server. This example requires the LDAP server to have imported {quarkus-blob-url}/test-framework/ldap/src/main/resources/quarkus-io.ldif[this LDIF file]."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.0/guides/security-ldap.adoc:174
+msgid "`{0}` is substituted by the `uid`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.0/guides/security-ldap.adoc:175
+msgid "The URL used by our test resource. Tests may leverage `LdapServerTestResource` provided by Quarkus as {quickstarts-blob-url}/security-ldap-quickstart/src/test/java/org/acme/elytron/security/ldap/ElytronLdapExtensionTestResources.java[we do] in the test coverage of the example application."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.0/guides/security-ldap.adoc:177
+msgid "The `elytron-security-ldap` extension requires a dir-context and an identity-mapping with at least one attribute-mapping to authenticate the user and its identity."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/3.0/guides/security-ldap.adoc:178
+#, no-wrap
+msgid "Testing the Application"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.0/guides/security-ldap.adoc:182
+msgid "The application is now protected and the identities are provided by our LDAP server.  Let's start the application in dev mode:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.0/guides/security-ldap.adoc:186
+msgid "The very first thing to check is to ensure the anonymous access works."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.0/guides/security-ldap.adoc:193
+#, no-wrap
+msgid ""
+"$ curl -i -X GET http://localhost:8080/api/public\n"
+"HTTP/1.1 200 OK\n"
+"Content-Length: 6\n"
+"Content-Type: text/plain;charset=UTF-8\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.0/guides/security-ldap.adoc:195
+#, no-wrap
+msgid "public%\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.0/guides/security-ldap.adoc:198
+msgid "Now, let's try to hit a protected resource anonymously."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.0/guides/security-ldap.adoc:205
+#, no-wrap
+msgid ""
+"$ curl -i -X GET http://localhost:8080/api/admin\n"
+"HTTP/1.1 401 Unauthorized\n"
+"Content-Length: 14\n"
+"Content-Type: text/html;charset=UTF-8\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.0/guides/security-ldap.adoc:207
+#, no-wrap
+msgid "Not authorized%\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.0/guides/security-ldap.adoc:210
+msgid "So far so good, now let's try with an allowed user."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.0/guides/security-ldap.adoc:217
+#, no-wrap
+msgid ""
+"$ curl -i -X GET -u adminUser:adminUserPassword http://localhost:8080/api/admin\n"
+"HTTP/1.1 200 OK\n"
+"Content-Length: 5\n"
+"Content-Type: text/plain;charset=UTF-8\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.0/guides/security-ldap.adoc:219
+#, no-wrap
+msgid "admin%\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.0/guides/security-ldap.adoc:222
+msgid "By providing the `adminUser:adminUserPassword` credentials, the extension authenticated the user and loaded their roles.  The `adminUser` user is authorized to access to the protected resources."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.0/guides/security-ldap.adoc:224
+msgid "The user `adminUser` should be forbidden to access a resource protected with `@RolesAllowed(\"standardRole\")` because it doesn't have this role."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.0/guides/security-ldap.adoc:231
+#, no-wrap
+msgid ""
+"$ curl -i -X GET -u adminUser:adminUserPassword http://localhost:8080/api/users/me\n"
+"HTTP/1.1 403 Forbidden\n"
+"Content-Length: 34\n"
+"Content-Type: text/html;charset=UTF-8\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.0/guides/security-ldap.adoc:233
+#, no-wrap
+msgid "Forbidden%\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.0/guides/security-ldap.adoc:236
+msgid "Finally, using the user `standardUser` works and the security context contains the principal details (username for instance)."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.0/guides/security-ldap.adoc:243
+#, no-wrap
+msgid ""
+"$ curl -i -X GET -u standardUser:standardUserPassword http://localhost:8080/api/users/me\n"
+"HTTP/1.1 200 OK\n"
+"Content-Length: 4\n"
+"Content-Type: text/plain;charset=UTF-8\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.0/guides/security-ldap.adoc:245
+#, no-wrap
+msgid "user%\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/3.0/guides/security-ldap.adoc:248
+#, no-wrap
+msgid "Configuration Reference"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/3.0/guides/security-ldap.adoc:252
+#, no-wrap
+msgid "References"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.0/guides/security-ldap.adoc:255
+msgid "https://en.wikipedia.org/wiki/Lightweight_Directory_Access_Protocol[LDAP]"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.0/guides/security-ldap.adoc:255
+msgid "xref:security-overview-concept.adoc[Quarkus Security overview]"
+msgstr ""
