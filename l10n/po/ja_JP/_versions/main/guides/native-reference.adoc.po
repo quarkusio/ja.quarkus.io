@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2022-11-13 00:19+0000\n"
+"POT-Creation-Date: 2023-02-05 00:30+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1654,7 +1654,7 @@ msgstr "そして、Dockerコンテナを次のように実行します。"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/native-reference.adoc:949
-#: upstream/_versions/main/guides/native-reference.adoc:1663
+#: upstream/_versions/main/guides/native-reference.adoc:1694
 #, no-wrap
 msgid "perf record -F 1009 -g -a ./target/debugging-native-1.0.0-SNAPSHOT-runner\n"
 msgstr "perf record -F 1009 -g -a ./target/debugging-native-1.0.0-SNAPSHOT-runner\n"
@@ -2618,141 +2618,207 @@ msgstr "解析とコンパイルの段階でかかる時間は、アプリケー
 
 #. type: Title ===
 #: upstream/_versions/main/guides/native-reference.adoc:1517
+#, fuzzy, no-wrap
+#| msgid "I get an `OutOfMemoryError` (OOME) building native executables, what can I do?"
+msgid "I get a `AnalysisError\\$ParsingError` when building a native executable due to an `UnresolvedElementException`, what can I do?"
+msgstr "ネイティブ実行ファイルをビルドする際に OutOfMemoryError (OOME) が発生しました。どうすればよいですか?"
+
+#. type: Plain text
+#: upstream/_versions/main/guides/native-reference.adoc:1522
+msgid "When building a native executable Quarkus requires all classes being referenced by the code, no matter if they are build-time or run-time initialized, to be present in the classpath.  This way it ensures that there will be no crashes at runtime due to potential `NoClassDefFoundError` exceptions.  To achieve this it makes use of GraalVM's `--link-at-build-time` parameter:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/native-reference.adoc:1528
+#, no-wrap
+msgid ""
+"--link-at-build-time  require types to be fully defined at image build-time. If used\n"
+"                      without args, all classes in scope of the option are required to\n"
+"                      be fully defined.\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/native-reference.adoc:1532
+msgid "This, however, may result in an `AnalysisError\\$ParsingError` due to an `UnresolvedElementException` at build time.  This is often caused because the application references a class from an https://maven.apache.org/guides/introduction/introduction-to-optional-and-excludes-dependencies.html#optional-dependencies[optional dependency]."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/native-reference.adoc:1534
+msgid "If you have access to the source code responsible for the reference to the missing dependency and can alter it, you should consider one of the following:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/native-reference.adoc:1536
+msgid "Remove the reference if it's not actually necessary."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/native-reference.adoc:1537
+msgid "Move the affected code in a sub-module and make the dependency non-optional (as is the best practice)."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/native-reference.adoc:1538
+msgid "Make the dependency non-optional."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/native-reference.adoc:1540
+msgid "In the unfortunate case where the reference causing the issue is made by a 3rd party library, that you cannot modify, you should consider one of the following:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/native-reference.adoc:1542
+msgid "Use a class/method substitution to remove the said reference."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/native-reference.adoc:1543
+msgid "Add the optional dependency as a non-optional dependency of your project."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/native-reference.adoc:1547
+msgid "Note that although option (1) is the best choice performance wise, as it minimizes the applications footprint,it might not be trivial to implement.  To make matters worse, it's also not easy to maintain as it is tightly coupled to the 3rd party library implementation.  Option (2) is a straight forward alternative to work around the issue, but comes at the cost of including possibly never invoked code in the resulting native executable."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/main/guides/native-reference.adoc:1548
 #, no-wrap
 msgid "I get an `OutOfMemoryError` (OOME) building native executables, what can I do?"
 msgstr "ネイティブ実行ファイルをビルドする際に OutOfMemoryError (OOME) が発生しました。どうすればよいですか?"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/native-reference.adoc:1529
+#: upstream/_versions/main/guides/native-reference.adoc:1560
 msgid "Building native executables is not only time consuming, but it also takes a fair amount of memory.  For example, building a sample native Quarkus JPA application such as the Hibernate quickstart, may use 6GB to 8GB resident set size in memory.  A big chunk of this memory is Java heap, but extra memory is required for other aspects of the JVM that runs the native building process.  It is still possible to build such applications in environments that have total memory close to the limits, but to do that it is necessary to shrink the maximum heap size of the GraalVM native image process.  To do that, set a maximum heap size using the `quarkus.native.native-image-xmx` property.  For example, we can instruct GraalVM to use 5GB of maximum heap size by passing in `-Dquarkus.native.native-image-xmx=5g` in the command line."
 msgstr "ネイティブ実行可能ファイルのビルドは時間がかかるだけでなく、かなりの量のメモリーも必要とします。たとえば、Hibernate クイックスタートなどのサンプルのネイティブ Quarkus JPA アプリケーションをビルドすると、メモリー内に 6GB から 8GB の常駐セットサイズが使用される場合があります。このメモリーの大部分は Java ヒープですが、ネイティブビルドプロセスを実行する JVM の他の側面には追加のメモリーが必要です。合計メモリーが限界に近い環境でこのようなアプリケーションを構築することは可能ですが、そのためには GraalVM ネイティブイメージプロセスの最大ヒープサイズを縮小する必要があります。これを行うには、`quarkus.native.native-image-xmx` プロパティーを使用して最大ヒープサイズを設定します。たとえば、コマンドラインで `-Dquarkus.native.native-image-xmx=5g` を渡すことで、GraalVM に 5GB の最大ヒープサイズを使用するように指示できます。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/native-reference.adoc:1532
+#: upstream/_versions/main/guides/native-reference.adoc:1563
 msgid "Building native executables this way might have the side effect of requiring more time to complete.  This is due to garbage collection having to work harder for native image generation to have free space to do its job."
 msgstr "この方法でネイティブ実行可能ファイルをビルドすると、完了するまでに時間がかかるという副作用が生じる可能性があります。これは、ガベージコレクションが、ネイティブイメージの生成に必要な空き領域を確保するために、より多くの作業を行う必要があるためです。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/native-reference.adoc:1535
+#: upstream/_versions/main/guides/native-reference.adoc:1566
 msgid "Note that typical applications are likely bigger than quickstarts, so the memory requirements will also likely be higher."
 msgstr "一般的なアプリケーションはクイックスタートよりも大きい可能性が高いため、メモリー要件も高くなる可能性があることに注意してください。"
 
 #. type: Title ===
-#: upstream/_versions/main/guides/native-reference.adoc:1536
+#: upstream/_versions/main/guides/native-reference.adoc:1567
 #, no-wrap
 msgid "Why is runtime performance of a native executable inferior compared to JVM mode?"
 msgstr "JVMモードと比較して、ネイティブ実行可能ファイルのランタイムパフォーマンスが劣るのはなぜですか？"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/native-reference.adoc:1541
+#: upstream/_versions/main/guides/native-reference.adoc:1572
 #, fuzzy
 msgid "As with most things in life there are some trade-offs involved when choosing native compilation over JVM mode.  So depending on the application the runtime performance of a native application might be slower compared to JVM mode, though that’s not always the case."
 msgstr "多くの場合、JVMモードではなくネイティブコンパイルを選択すると、いくつかのトレードオフが発生します。そのため、アプリケーションによっては、ネイティブアプリケーションの実行時パフォーマンスがJVMモードに比べて遅くなることがありますが、絶対にそうであるとは限りません。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/native-reference.adoc:1547
+#: upstream/_versions/main/guides/native-reference.adoc:1578
 msgid "JVM execution of an application includes runtime optimization of the code that profits from profile information built up during execution.  That includes the opportunities to inline a lot more of the code, locate hot code on direct paths (i.e. ensure better instruction cache locality)  and cut out a lot of the code on cold paths (on the JVM a lot of code does not get compiled until something tries to execute it -- it is replaced with a trap that causes deoptimization and recompilation).  Removal of cold paths provides many more optimization opportunities than are available for ahead of time compilation because it significantly reduces the branch complexity and combinatorial logic of the smaller amount of hot code that is compiled."
 msgstr "JVMによるアプリケーションの実行には、実行中に蓄積されるプロファイル情報を利用したコードの実行時最適化が含まれます。これには、より多くのコードをインライン化したり、ホットコードをダイレクトパスに配置したり（つまり、より良い命令キャッシュのローカリティを確保する）、コールドパスにある多くのコードをカットしたりする機会が含まれます（JVMでは、多くのコードが何かが実行しようとするまでコンパイルされず、最適化解除や再コンパイルを引き起こすトラップに置き換えられます）。コールドパスを取り除くことで、コンパイルされる少量のホットコードの分岐の複雑さや組み合わせロジックが大幅に削減されるため、先行してコンパイルする場合よりも多くの最適化の機会が得られます。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/native-reference.adoc:1550
+#: upstream/_versions/main/guides/native-reference.adoc:1581
 msgid "By contrast, native executable compilation has to cater for all possible execution paths when it compiles code offline since it does not know which are the hot or cold paths and cannot use the trick of planting a trap and recompiling if it is hit. For the same reason it cannot load the dice to ensure that code cache conflicts are minimized by co-locating hot paths adjacent.  Native executable generation is able to remove some code because of the closed world hypothesis but that is often not enough to make up for all the benefits that profiling and runtime deopt & recompile provides to the JVM JIT compiler."
 msgstr "一方、ネイティブ実行可能ファイルのコンパイルでは、オフラインでコードをコンパイルする際に、すべての可能な実行経路に対応しなければなりません。なぜならば、ホットパスやコールドパスがわからないため、罠を仕掛けて、それに当たったら再コンパイルするというようなトリックが使えないからです。同じ理由で、ホットパスを隣接して配置することでコードキャッシュの衝突を最小限に抑えるようなサイコロを積むこともできません。ネイティブ実行可能ファイルの生成は、閉じた世界の仮説により、いくつかのコードを削除することができますが、それだけでは、プロファイリングや実行時最適化解除＆再コンパイルがJVM JITコンパイラに提供するすべての利点を補うことはできません。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/native-reference.adoc:1552
+#: upstream/_versions/main/guides/native-reference.adoc:1583
 msgid "Note, however, that there is a price you pay for that potentially higher JVM speed, and that price is in increased resource usage (both CPU and memory) and startup time because:"
 msgstr "ただし、JVMの速度が向上する可能性があるため、その代償として、リソース（CPUとメモリの両方）の使用量と起動時間が増加することに注意してください。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/native-reference.adoc:1554
+#: upstream/_versions/main/guides/native-reference.adoc:1585
 msgid "it takes some time before the JIT kicks in and fully optimizes the code."
 msgstr "JITが作動してコードを完全に最適化するまでに時間がかかります。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/native-reference.adoc:1555
+#: upstream/_versions/main/guides/native-reference.adoc:1586
 msgid "the JIT compiler consumes resources that could be utilized by the application."
 msgstr "JIT コンパイラは、アプリケーションが利用できるリソースを消費します。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/native-reference.adoc:1556
+#: upstream/_versions/main/guides/native-reference.adoc:1587
 msgid "the JVM has to retain a lot more metadata and compiler/profiler data to support the better optimizations that it can offer."
 msgstr "JVMは、より良い最適化をサポートするために、より多くのメタデータやコンパイラ/プロファイラのデータを保持しなければなりません。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/native-reference.adoc:1558
+#: upstream/_versions/main/guides/native-reference.adoc:1589
 msgid "The reason for 1) is that code needs to be run interpreted for some time and, possibly, to be compiled several times before all potential optimizations are realized to ensure that:"
 msgstr "1)の理由は、コードはしばらくの間、インタプリタ実行する必要があり、場合によっては、以下を担保する全ての潜在的な最適化が実現される前に、何度もコンパイルする必要があるからです。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/native-reference.adoc:1560
+#: upstream/_versions/main/guides/native-reference.adoc:1591
 msgid "it’s worth compiling that code path, i.e. it’s being executed enough times, and that"
 msgstr "そのコードパスをコンパイルする価値があります。つまり、十分な回数実行されています。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/native-reference.adoc:1561
+#: upstream/_versions/main/guides/native-reference.adoc:1592
 msgid "we have enough profiling data to perform meaningful optimizations."
 msgstr "意味のある最適化を行うのに十分なプロファイリングデータを持っていること"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/native-reference.adoc:1564
+#: upstream/_versions/main/guides/native-reference.adoc:1595
 msgid "An implication of 1) is that for small, short-lived applications a native executable may well be a better bet.  Although the compiled code is not as well optimized it is available straight away."
 msgstr "1)の意味するところは、小規模で短命なアプリケーションには、ネイティブ実行可能ファイルの方が適しているということです。コンパイルされたコードは最適化されていませんが、すぐに利用できます。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/native-reference.adoc:1567
+#: upstream/_versions/main/guides/native-reference.adoc:1598
 msgid "The reason for 2) is that the JVM is essentially running the compiler at runtime in parallel with the application itself.  In the case of native executables the compiler is run ahead of time removing the need to run the compiler in parallel with the application."
 msgstr "2)の理由は、JVMは基本的に実行時にアプリケーションと並行してコンパイラを実行しているからです。ネイティブ実行可能ファイルの場合、コンパイラは事前に実行されるため、アプリケーションと並行してコンパイラを実行する必要がありません。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/native-reference.adoc:1576
+#: upstream/_versions/main/guides/native-reference.adoc:1607
 msgid "There are several reasons for 3). The JVM does not have a closed world assumption.  So, it has to be able to recompile code if loading of new classes implies that it needs to revise optimistic assumptions made at compile time.  For example, if an interface has only one implementation it can make a call jump directly to that code.  However, in the case where a second implementation class is loaded the call site needs to be patched to test the type of the receiver instance and jump to the code that belongs to its class.  Supporting optimizations like this one requires keeping track of a lot more details of the class base than a native executable, including recording the full class and interface hierarchy, details of which methods override other methods, all method bytecode etc.  In a native executable most of the details of class structure and bytecode can be ignored at run time."
 msgstr "3)にはいくつかの理由があります。JVMは閉じた世界を想定していません。そのため、新しいクラスのロードにより、コンパイル時の楽観的な仮定を修正する必要がある場合には、コードを再コンパイルできなければなりません。例えば、あるインターフェイスの実装が1つだけの場合、そのコードに直接コールジャンプすることができます。しかし、2つ目の実装クラスがロードされた場合には、レシーバのインスタンスのタイプをテストして、そのクラスに属するコードにジャンプするようにコールサイトを修正する必要があります。このような最適化をサポートするには、ネイティブ実行可能ファイルよりもクラスベースの詳細を記録しておく必要があります。これには、完全なクラスとインターフェイスの階層、どのメソッドが他のメソッドをオーバーライドするかの詳細、すべてのメソッドのバイトコードなどが含まれます。ネイティブ実行可能ファイルでは、クラス構造やバイトコードの詳細のほとんどは実行時には無視できます。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/native-reference.adoc:1581
+#: upstream/_versions/main/guides/native-reference.adoc:1612
 msgid "The JVM also has to cope with changes to the class base or execution profiles that result in a thread going down a previously cold path.  At that point the JVM has to jump out of the compiled code into the interpreter and recompile the code to cater for a new execution profile that includes the previously cold path.  That requires keeping runtime info that allow a compiled stack frame to be replaced with one or more interpreter frames.  It also requires runtime extensible profile counters to be allocated and updated to track what has or has not been executed."
 msgstr "また、JVMはクラスベースや実行プロファイルの変更にも対応しなければならず、その結果、スレッドが以前のコールドパスを通ることになります。その時点で、JVMはコンパイルされたコードからインタープリタにジャンプし、以前のコールドパスを含む新しい実行プロファイルに対応するためにコードを再コンパイルしなければなりません。そのためには、コンパイルされたスタックフレームを1つまたは複数のインタープリタフレームに置き換えることができる実行時情報を保持する必要があります。また、実行されたもの、されなかったものを追跡するために、ランタイムの拡張可能なプロファイルカウンタを割り当て、更新する必要があります。"
 
 #. type: Title ===
-#: upstream/_versions/main/guides/native-reference.adoc:1582
+#: upstream/_versions/main/guides/native-reference.adoc:1613
 #, no-wrap
 msgid "Why are native executables “big”?"
 msgstr "なぜネイティブ実行可能ファイルは大きいのですか？"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/native-reference.adoc:1585
+#: upstream/_versions/main/guides/native-reference.adoc:1616
 msgid "This can be attributed to a number of different reasons:"
 msgstr "これには様々な理由があります。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/native-reference.adoc:1591
+#: upstream/_versions/main/guides/native-reference.adoc:1622
 msgid "Native executables include not only the application code but also, library code, and JDK code.  As a result a more fair comparison would be to compare the native executable’s size with the size of the application, plus the size of the libraries it uses, plus the size of the JDK.  Especially the JDK part is not negligible even in simple applications like HelloWorld.  To get a glance on what is being pulled in the image one can use `-H:+PrintUniverse` when building the native executable."
 msgstr "ネイティブ実行可能ファイルには、アプリケーションのコードだけでなく、ライブラリのコードやJDKのコードも含まれています。そのため、ネイティブ実行可能ファイルのサイズは、アプリケーションのサイズに加えて、使用するライブラリのサイズとJDKのサイズを加えたものと比較するのが、より公平な比較となります。特にJDKの部分は、HelloWorldのようなシンプルなアプリケーションでも無視できません。イメージの中で何が引き出されているかを把握するために、ネイティブ実行可能ファイルをビルドする際に `-H:+PrintUniverse` を使用することができます。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/native-reference.adoc:1597
+#: upstream/_versions/main/guides/native-reference.adoc:1628
 msgid "Some features are always included in a native executable even though they might never be actually used at run time.  An example of such a feature is garbage collection.  At compile time we can’t be sure whether an application will need to run garbage collection at run time, so garbage collection is always included in native executables increasing their size even if not necessary.  Native executable generation relies on static code analysis to identify which code paths are reachable, and static code analysis can be imprecise leading to more code getting into the image than what’s actually needed."
 msgstr "ネイティブ実行可能ファイルには、実行時に実際には使われないかもしれないのに、必ず含まれている機能があります。そのような機能の例として、ガベージコレクションがあります。コンパイル時には、アプリケーションが実行時にガベージコレクションを実行する必要があるかどうかはわかりません。そのため、ガベージコレクションは、必要がないにもかかわらず、常にネイティブ実行可能ファイルに含まれ、サイズが大きくなります。ネイティブ実行可能ファイルの生成は、どのコードパスが到達可能かを特定するために、静的なコード解析に依存していますが、静的なコード解析は不正確な場合があり、実際に必要なコードよりも多くのコードがイメージに入ってしまうことがあります。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/native-reference.adoc:1600
+#: upstream/_versions/main/guides/native-reference.adoc:1631
 msgid "There is a https://github.com/oracle/graal/issues/287[GraalVM upstream issue] with some interesting discussions about that topic."
 msgstr "この話題については、 link:https://github.com/oracle/graal/issues/287[GraalVMアップストリーム課題]で興味深い議論が行われています。"
 
 #. type: Title ===
-#: upstream/_versions/main/guides/native-reference.adoc:1601
+#: upstream/_versions/main/guides/native-reference.adoc:1632
 #, no-wrap
 msgid "What version of Mandrel was used to generate a binary?"
 msgstr "バイナリの生成に使用したMandrelのバージョンは？"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/native-reference.adoc:1604
+#: upstream/_versions/main/guides/native-reference.adoc:1635
 msgid "One can see which Mandrel version was used to generate a binary by inspecting the binary as follows:"
 msgstr "どのバージョンのMandrelを使ってバイナリを生成したかは、バイナリを以下のように検査すればわかります。"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/native-reference.adoc:1609
+#: upstream/_versions/main/guides/native-reference.adoc:1640
 #, no-wrap
 msgid ""
 "$ strings target/debugging-native-1.0.0-SNAPSHOT-runner | grep GraalVM\n"
@@ -2762,47 +2828,47 @@ msgstr ""
 "com.oracle.svm.core.VM=GraalVM 22.0.0.2-Final Java 11 Mandrel Distribution\n"
 
 #. type: Title ===
-#: upstream/_versions/main/guides/native-reference.adoc:1611
+#: upstream/_versions/main/guides/native-reference.adoc:1642
 #, no-wrap
 msgid "How do I enable GC logging in native executables?"
 msgstr "ネイティブ実行可能ファイルでGCロギングを有効にするにはどうすればいいですか？"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/native-reference.adoc:1614
+#: upstream/_versions/main/guides/native-reference.adoc:1645
 msgid "See <<gc-logging,Native Memory Management GC Logging section>> for details."
 msgstr ""
 
 #. type: Title ===
-#: upstream/_versions/main/guides/native-reference.adoc:1615
+#: upstream/_versions/main/guides/native-reference.adoc:1646
 #, no-wrap
 msgid "Can I get a heap dump of a native executable? e.g. if it runs out of memory"
 msgstr "ネイティブ実行可能ファイルのヒープダンプを取得することはできますか？ 例えば、メモリ不足になった場合などです。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/native-reference.adoc:1620
+#: upstream/_versions/main/guides/native-reference.adoc:1651
 #, fuzzy
 msgid "Starting with GraalVM 22.2.0 it is possible to create heap dumps upon request, e.g. `kill -SIGUSR1 <pid>`.  Support for dumping the heap dump upon an out of memory error will follow up."
 msgstr "GraalVM 22.2.0 からは、要求に応じてダンプをヒープすることが可能になります (例: `kill -SIGUSR1 <pid>`)。メモリー不足エラーの際のヒープダンプのダンプのサポートは、今後追加される予定です。"
 
 #. type: Title ===
-#: upstream/_versions/main/guides/native-reference.adoc:1621
+#: upstream/_versions/main/guides/native-reference.adoc:1652
 #, fuzzy, no-wrap
 msgid "Can I build and run this examples outside a container in Linux?"
 msgstr "このサンプルをコンテナの外でLinuxでビルドして実行することは可能ですか？"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/native-reference.adoc:1627
+#: upstream/_versions/main/guides/native-reference.adoc:1658
 #, fuzzy
 msgid "Yes you can.  In fact, debugging native executables on a Linux bare metal box offers the best possible experience.  In this kind of environments, root access is not needed except to install packages required to run some debug steps, or to enable `perf` to gather events at the kernel."
 msgstr "Quarkusのネイティブ実行可能ファイルのデバッグは、Linux環境で行うのが最適です。一部のデバッグ手順を実行するために必要なパッケージをインストールする場合や、 `perf` でカーネルのイベントを収集できるようにする場合を除き、ルートアクセスは必要ありません。macOSやWindows環境でのデバッグは、コンテナ環境でも機能します（ link:#macwindows[FAQエントリ]を参照）。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/native-reference.adoc:1629
+#: upstream/_versions/main/guides/native-reference.adoc:1660
 msgid "These are the packages you'll need on your Linux environment to run through the different debugging sections:"
 msgstr "これらのパッケージは、異なるデバッグセクションを実行するために、Linux環境で必要となるものです。"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/native-reference.adoc:1636
+#: upstream/_versions/main/guides/native-reference.adoc:1667
 #, no-wrap
 msgid ""
 "# dnf (rpm-based)\n"
@@ -2816,28 +2882,28 @@ msgstr ""
 "sudo apt install binutils gdb perf\n"
 
 #. type: Title ===
-#: upstream/_versions/main/guides/native-reference.adoc:1638
+#: upstream/_versions/main/guides/native-reference.adoc:1669
 #, no-wrap
 msgid "Generating flame graphs is slow, or produces errors, what can I do?"
 msgstr "フレームグラフの生成に時間がかかったり、エラーが発生したりするのですが、どうすればいいですか？"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/native-reference.adoc:1642
+#: upstream/_versions/main/guides/native-reference.adoc:1673
 msgid "There are multiple ways in which a native executable produced by Mandrel can be profiled.  All the methods require you to pass in the `-H:-DeleteLocalSymbols` option."
 msgstr "Mandrelが作成したネイティブ実行可能ファイルをプロファイリングする方法は複数あります。すべての方法で、 `-H:-DeleteLocalSymbols` オプションを渡す必要があります。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/native-reference.adoc:1646
+#: upstream/_versions/main/guides/native-reference.adoc:1677
 msgid "The method shown in this reference guide generates a binary with DWARF debug information, runs it via `perf record` and then uses `perf script` and flame graph tooling to generate the flamegraphs.  However, the `perf script` post-processing step done on this binary can appear to be slow or can show some DWARF errors."
 msgstr "このリファレンス・ガイドで紹介する方法は、DWARFのデバッグ情報を含むバイナリを生成し、 `perf record` を通して実行し、 `perf script` とフレーム・グラフ・ツールを使用してフレーム・グラフを生成します。しかし、このバイナリで行われる `perf script` の後処理ステップは、時間がかかったり、DWARF のエラーが表示されたりすることがあります。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/native-reference.adoc:1651
+#: upstream/_versions/main/guides/native-reference.adoc:1682
 msgid "An alternative method to generate flame graphs is to pass in `-H:+PreserveFramePointer` when generating the native executable instead of generating the DWARF debug information.  It instructs the binary to use an extra register for the frame pointer.  This enables `perf` to do stack walking to profile the runtime behaviour.  To generate the native executable using these flags, do the following:"
 msgstr "フレームグラフを生成する別の方法として、ネイティブ実行可能ファイルを生成する際に、DWARFのデバッグ情報を生成する代わりに、 `-H:+PreserveFramePointer` を渡す方法があります。これは、フレームポインタに追加のレジスタを使用するようにバイナリに指示します。これにより、 `perf` は、実行時の動作をプロファイリングするためにスタックウォーキングを行うことができます。これらのフラグを使用してネイティブ実行可能ファイルを生成するには、以下のようにします。"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/native-reference.adoc:1656
+#: upstream/_versions/main/guides/native-reference.adoc:1687
 #, no-wrap
 msgid ""
 "./mvnw package -DskipTests -Dnative\n"
@@ -2847,22 +2913,22 @@ msgstr ""
 "    -Dquarkus.native.additional-build-args=-H:+PreserveFramePointer,-H:-DeleteLocalSymbols\n"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/native-reference.adoc:1659
+#: upstream/_versions/main/guides/native-reference.adoc:1690
 msgid "To get runtime profiling information out of the native executable, simply do:"
 msgstr "実行時プロファイリング情報をネイティブ実行可能ファイルから取得するには、単純に次のようにします。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/native-reference.adoc:1667
+#: upstream/_versions/main/guides/native-reference.adoc:1698
 msgid "The recommended method for generating runtime profiling information is using the debug information rather than generating a binary that preserves the frame pointer.  This is because adding debug information to the native executable build process has no negative runtime performance whereas preserving the frame pointer does."
 msgstr "実行時プロファイリング情報を生成する方法としては、フレームポインタを保持したバイナリを生成するよりも、デバッグ情報を使用することを推奨します。これは、ネイティブ実行可能ファイルのビルドプロセスにデバッグ情報を追加しても、実行時のパフォーマンスには何の影響もないのに対し、フレームポインタの保持は影響があるためです。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/native-reference.adoc:1673
+#: upstream/_versions/main/guides/native-reference.adoc:1704
 msgid "DWARF debug info is generated in a separate file and can even be omitted in the default deployment and only be transferred and used on demand, for profiling or debugging purposes.  Furthermore, the presence of debug info enables `perf` to show us the relevant source code lines as well, hence it does not bloat the native executable itself.  To do that, simply call `perf report` with an extra parameter to show source code lines:"
 msgstr "DWARFのデバッグ情報は、別のファイルに生成され、デフォルトのデプロイメントでは省略することもでき、プロファイリングやデバッグの目的で必要なときだけ転送して使用することができます。さらに、デバッグ情報があることで、 `perf` は関連するソースコード行も表示することができ、ネイティブ実行可能ファイル自体を肥大化させることはありません。そのためには、 `perf report` にソースコード行を表示するパラメータを追加して呼び出すだけです。"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/native-reference.adoc:1683
+#: upstream/_versions/main/guides/native-reference.adoc:1714
 #, no-wrap
 msgid ""
 "perf report --stdio -F+srcline\n"
@@ -2882,34 +2948,34 @@ msgstr ""
 "83.69%     0.00%  ArraycopySnippets.java:95 ...\n"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/native-reference.adoc:1689
+#: upstream/_versions/main/guides/native-reference.adoc:1720
 #, fuzzy
 msgid "The performance penalty of preserving the frame pointer is due to using the extra register for stack walking, particularly in `x86_64` compared to `aarch64` where there are fewer registers available.  Using this extra register reduces the number of registers that are available for other work, which can lead to performance penalties."
 msgstr "フレームポインタを保持することによる性能上のペナルティは、スタックウォーキングのために余分なレジスタを使用することによるもので、特に `aarch64` と比較して `x86_64` では使用できるレジスタの数が少なくなります。この余分なレジスタを使用すると、他の作業に使用できるレジスタの数が減るため、性能上のペナルティが発生します。"
 
 #. type: Title ===
-#: upstream/_versions/main/guides/native-reference.adoc:1690
+#: upstream/_versions/main/guides/native-reference.adoc:1721
 #, no-wrap
 msgid "I think I’ve found a bug in native-image, how can I debug it with the IDE?"
 msgstr "native-imageのバグを見つけたようなのですが、IDEでどのようにデバッグすればいいのでしょうか？"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/native-reference.adoc:1694
+#: upstream/_versions/main/guides/native-reference.adoc:1725
 msgid "Although it is possible to remote debug processes within containers, it might be easier to step-by-step debug native-image by installing Mandrel locally and adding it to the path of the shell process."
 msgstr "コンテナ内のプロセスをリモートデバッグすることは可能ですが、Mandrelをローカルにインストールしてシェルプロセスのパスに追加することで、native-imageをステップバイステップでデバッグする方が簡単かもしれません。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/native-reference.adoc:1699
+#: upstream/_versions/main/guides/native-reference.adoc:1730
 msgid "Native executable generation is the result of two Java processes that are executed sequentially.  The first process is very short and its main job is to set things up for the second process.  The second process is the one that takes care of most of the work.  The steps to debug one process or the other vary slightly."
 msgstr "ネイティブ実行可能ファイルの生成は、2つのJavaプロセスが順次実行された結果です。最初のプロセスは非常に短く、主な仕事は2番目のプロセスのために物事を準備することです。2つ目のプロセスは、ほとんどの作業を行うものです。一方のプロセスをデバッグするための手順は、若干異なります。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/native-reference.adoc:1704
+#: upstream/_versions/main/guides/native-reference.adoc:1735
 msgid "Let’s discuss first how to debug the second process, which is the one you most likely to want to debug.  The starting point for the second process is the `com.oracle.svm.hosted.NativeImageGeneratorRunner` class.  To debug this process, simply add `--debug-attach=*:8000` as an additional build time argument:"
 msgstr "まず、最もデバッグしたいと思われる2番目のプロセスのデバッグ方法について説明します。2番目のプロセスのスタートポイントは、 `com.oracle.svm.hosted.NativeImageGeneratorRunner` クラスです。このプロセスをデバッグするには、ビルド時の引数として `--debug-attach=*:8000` を追加するだけです。"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/native-reference.adoc:1709
+#: upstream/_versions/main/guides/native-reference.adoc:1740
 #, no-wrap
 msgid ""
 "./mvnw package -DskipTests -Dnative \\\n"
@@ -2919,12 +2985,12 @@ msgstr ""
 "    -Dquarkus.native.additional-build-args=--debug-attach=*:8000\n"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/native-reference.adoc:1715
+#: upstream/_versions/main/guides/native-reference.adoc:1746
 msgid "The starting point for the first process is the `com.oracle.svm.driver.NativeImages` class.  In GraalVM CE distributions, this first process is a binary, so debugging it in the traditional way with a Java IDE is not possible.  However, Mandrel distributions (or locally built GraalVM CE instances) keep this as a normal Java process, so you can remote debug this process by adding the `--vm.agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:8000` as an additional build argument, e.g."
 msgstr "1番目のプロセスのスタートポイントとなるのは、 `com.oracle.svm.driver.NativeImages` クラスです。GraalVM CEのディストリビューションでは、この最初のプロセスはバイナリなので、従来のようにJava IDEを使ってデバッグすることはできません。しかし、Mandrelのディストリビューション（またはローカルにビルドされたGraalVM CEインスタンス）では、これを通常のJavaプロセスとして保持しているため、 `--vm.agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:8000` を追加のビルド引数として追加することで、このプロセスをリモートデバッグすることができます。"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/native-reference.adoc:1720
+#: upstream/_versions/main/guides/native-reference.adoc:1751
 #, no-wrap
 msgid ""
 "$ ./mvnw package -DskipTests -Dnative \\\n"
@@ -2934,44 +3000,44 @@ msgstr ""
 "    -Dquarkus.native.additional-build-args=--vm.agentlib:jdwp=transport=dt_socket\\\\,server=y\\\\,suspend=y\\\\,address=*:8000\n"
 
 #. type: Title ===
-#: upstream/_versions/main/guides/native-reference.adoc:1722
+#: upstream/_versions/main/guides/native-reference.adoc:1753
 #, no-wrap
 msgid "Can I use JFR/JMC to debug or profile native binaries?"
 msgstr "JFR/JMCを使って、ネイティブバイナリのデバッグやプロファイリングはできますか？"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/native-reference.adoc:1730
+#: upstream/_versions/main/guides/native-reference.adoc:1761
 #, fuzzy
 msgid "https://docs.oracle.com/javacomponents/jmc-5-4/jfr-runtime-guide/about.htm#JFRUH170[Java Flight Recorder (JFR)] and https://www.oracle.com/java/technologies/jdk-mission-control.html[JDK Mission Control (JMC)] can be used to profile native binaries since GraalVM CE 21.2.0.  However, JFR in GraalVM is currently significantly limited in capabilities compared to HotSpot.  The custom event API is fully supported, but many VM level features are unavailable.  They will be added in future releases. Current limitations are:"
 msgstr "link:https://docs.oracle.com/javacomponents/jmc-5-4/jfr-runtime-guide/about.htm#JFRUH170[Java Flight Recorder(JFR)]と link:https://www.oracle.com/java/technologies/jdk-mission-control.html[JDK Mission Control(JMC)]は、GraalVM CE 21.2.0以降、プロファイル・ネイティブ・バイナリのデバッグに使用することができます。 しかし、GraalVMのJFRは現在、HotSpotと比較して機能が大幅に制限されています。カスタムイベントAPIは完全にサポートされていますが、多くのVMレベルの機能は利用できません。これらは将来のリリースで追加される予定です。現在の制限事項は以下の通りです。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/native-reference.adoc:1732
+#: upstream/_versions/main/guides/native-reference.adoc:1763
 msgid "Minimal VM level events"
 msgstr "最小限のVMレベルのイベント"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/native-reference.adoc:1733
+#: upstream/_versions/main/guides/native-reference.adoc:1764
 msgid "No old object sampling"
 msgstr "oldオブジェクトのサンプリングはありません"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/native-reference.adoc:1734
+#: upstream/_versions/main/guides/native-reference.adoc:1765
 msgid "No stacktrace tracing"
 msgstr "スタックトレースのトレースがありません"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/native-reference.adoc:1735
+#: upstream/_versions/main/guides/native-reference.adoc:1766
 msgid "No Streaming API for JDK 17"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/native-reference.adoc:1738
+#: upstream/_versions/main/guides/native-reference.adoc:1769
 msgid "To use JFR add the application property: `-Dquarkus.native.enable-vm-inspection=true`.  E.g."
 msgstr "JFRを使用するには、アプリケーションのプロパティ `-Dquarkus.native.enable-vm-inspection=true` を追加します。例:"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/native-reference.adoc:1744
+#: upstream/_versions/main/guides/native-reference.adoc:1775
 #, fuzzy, no-wrap
 msgid ""
 "./mvnw package -DskipTests -Dnative -Dquarkus.native.container-build=true \\\n"
@@ -2983,12 +3049,12 @@ msgstr ""
 "    -Dquarkus.native.enable-vm-inspection=true\n"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/native-reference.adoc:1747
+#: upstream/_versions/main/guides/native-reference.adoc:1778
 msgid "Once the image is compiled, enable and start JFR via runtime flags: `-XX:+FlightRecorder` and `-XX:StartFlightRecording`. For example:"
 msgstr "イメージのコンパイルが完了したら、ランタイムフラグ `-XX:+FlightRecorder` と `-XX:StartFlightRecording` を使ってJFRを有効にし、起動します。例えば、以下のようになります。"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/native-reference.adoc:1753
+#: upstream/_versions/main/guides/native-reference.adoc:1784
 #, no-wrap
 msgid ""
 "./target/debugging-native-1.0.0-SNAPSHOT-runner \\\n"
@@ -3000,84 +3066,84 @@ msgstr ""
 "    -XX:StartFlightRecording=\"filename=recording.jfr\"\n"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/native-reference.adoc:1756
+#: upstream/_versions/main/guides/native-reference.adoc:1787
 #, fuzzy
 msgid "For more details on using JFR, see https://www.graalvm.org/{graalvm-version}/reference-manual/native-image/debugging-and-diagnostics/JFR/[here]."
 msgstr "JFRの利用方法については link:https://www.graalvm.org/reference-manual/native-image/JFR[こちら]をご覧ください。"
 
 #. type: Title ===
-#: upstream/_versions/main/guides/native-reference.adoc:1757
+#: upstream/_versions/main/guides/native-reference.adoc:1788
 #, no-wrap
 msgid "How can we troubleshoot performance problems only reproducible in production?"
 msgstr "本番環境でのみ再現可能なパフォーマンスの問題をどのようにトラブルシューティングできますか?"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/native-reference.adoc:1767
+#: upstream/_versions/main/guides/native-reference.adoc:1798
 msgid "In this situation, switching to JVM mode would be the best thing to try first.  If the performance issues continue after switching to JVM mode, you can use more established and mature tooling to figure out the root cause.  If the performance issue is limited to native mode only, you might not be able to use `perf`, so JFR is the only way to gather any information in this situation.  As JFR support for native expands, the ability to detect root causes of performance issues directly in production will improve."
 msgstr "この状況では、JVM モードに切り替えることが最初に試す最善の方法です。JVM モードに切り替えた後もパフォーマンスの問題が続く場合は、より確立された成熟したツールを使用して根本原因を突き止めることができます。パフォーマンスの問題がネイティブモードのみに限定されている場合、`perf` を使用できない可能性があるため、この状況で情報を収集するには JFR が唯一の方法です。ネイティブの JFR サポートが拡大するにつれて、パフォーマンスの問題の根本原因を本番環境で直接検出する機能が向上します。"
 
 #. type: Title ===
-#: upstream/_versions/main/guides/native-reference.adoc:1768
+#: upstream/_versions/main/guides/native-reference.adoc:1799
 #, no-wrap
 msgid "What information helps most debug issues that happen either at build-time or run-time?"
 msgstr "ビルド時または実行時に発生するほとんどの問題のデバッグに役立つ情報は何ですか?"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/native-reference.adoc:1772
+#: upstream/_versions/main/guides/native-reference.adoc:1803
 msgid "To fix classpath, class initialization or forbidden API errors at build time it's best to use <<native-reports,build time reports>> to understand the closed world universe.  A complete picture of the universe, along with the relationships between the different classes and methods will help uncover and fix most of the issues."
 msgstr "ビルド時にクラスパス、クラスの初期化、または禁止された API エラーを修正するには、<<native-reports,build time reports>> を使用して、閉ざされた世界を理解するのが最善です。さまざまなクラスとメソッド間の関係とともに、世界全体像を把握することで、ほぼすべての問題を発見して修正することができます。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/native-reference.adoc:1778
+#: upstream/_versions/main/guides/native-reference.adoc:1809
 msgid "To fix runtime native specific errors, it's best to have <<debug-info,debug info builds>> of the native executables around, so that `gdb` can be hooked up quickly to debug the issue.  If you also add local symbols to the debug info builds, you will obtain precise <<profiling,profiling information>> as well."
 msgstr "ランタイムのネイティブ特有のエラーを修正するには、ネイティブの実行ファイルの <<debug-info,debug info builds>> を用意しておくと、`gdb` を素早くフックして問題をデバッグすることができます。デバッグ情報ビルドにローカルシンボルも追加すると、正確な <<profiling,profiling information>> が得られます。"
 
 #. type: Title ===
-#: upstream/_versions/main/guides/native-reference.adoc:1779
+#: upstream/_versions/main/guides/native-reference.adoc:1810
 #, no-wrap
 msgid "Build stalled for minutes, barely using any CPU"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/native-reference.adoc:1782
+#: upstream/_versions/main/guides/native-reference.adoc:1813
 msgid "It might so happen that the build gets stalled and even ends up with:"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/native-reference.adoc:1786
+#: upstream/_versions/main/guides/native-reference.adoc:1817
 #, no-wrap
 msgid "Image generator watchdog detected no activity.\n"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/native-reference.adoc:1789
+#: upstream/_versions/main/guides/native-reference.adoc:1820
 msgid "One of the possible explanations could be a lack of entropy, e.g. on an entropy constrained VM, if such a source is needed as it is the case with Bouncycastle at build time."
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/native-reference.adoc:1791
+#: upstream/_versions/main/guides/native-reference.adoc:1822
 msgid "One can check the available entropy on a Linux system with:"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/native-reference.adoc:1795
+#: upstream/_versions/main/guides/native-reference.adoc:1826
 #, no-wrap
 msgid "$ cat /proc/sys/kernel/random/entropy_avail\n"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/native-reference.adoc:1797
+#: upstream/_versions/main/guides/native-reference.adoc:1828
 msgid "If the amount is not in hundreds, it could be a problem. A possible workaround is to compromise, acceptable for testing, and set:"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/native-reference.adoc:1800
+#: upstream/_versions/main/guides/native-reference.adoc:1831
 #, no-wrap
 msgid "export JAVA_OPTS=-Djava.security.egd=/dev/urandom\n"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/native-reference.adoc:1801
+#: upstream/_versions/main/guides/native-reference.adoc:1832
 msgid "The proper solution is to increase the entropy available for the system. That is specific for each OS vendor and virtualization solution though."
 msgstr ""
 
