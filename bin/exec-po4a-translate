@@ -1,111 +1,11 @@
-#!/usr/bin/env bash
-set -eu
+#!/usr/bin/env python3
 
-SCRIPT_DIR=$(cd $(dirname $0); pwd)
-L10N_HOME=$(cd $(dirname $SCRIPT_DIR); pwd)
-cd $L10N_HOME
+import os
+import sys
 
-source config/l10n-kit.conf
+sys.path.append(os.path.join(os.path.dirname(__file__), '../lib'))
 
-rm -rf $L10N_HOME/translated/$TARGET_LANG
-mkdir -p $L10N_HOME/translated
-cp -p -R $L10N_HOME/upstream $L10N_HOME/translated/$TARGET_LANG
+from doc_l10n_kit import PoManager
 
-for ITEM in `\find upstream -name "*.adoc"`; do
-    if [ -f $ITEM ] ; then
-        RELATIVE_FILE_PATH=`echo $ITEM | sed -e "s|^upstream\/||"`
-        RELATIVE_FILE_DIR=$(dirname $RELATIVE_FILE_PATH);
-
-        if [ -f "l10n/po/$TARGET_LANG/$RELATIVE_FILE_PATH.po" ] ; then
-            mkdir -p "$L10N_HOME/l10n/po/$TARGET_LANG/$RELATIVE_FILE_DIR"
-            PERLLIB=vendor/po4a/lib vendor/po4a/po4a-translate --master-charset UTF-8 --localized-charset UTF-8 -f asciidoc -o tablecells --keep 0 --master "upstream/$RELATIVE_FILE_PATH" --localized "translated/$TARGET_LANG/$RELATIVE_FILE_PATH" --po "l10n/po/$TARGET_LANG/$RELATIVE_FILE_PATH.po"
-        fi
-    fi
-done
-
-for ITEM in `\find upstream -name "*.md"`; do
-    if [ -f $ITEM ] ; then
-        RELATIVE_FILE_PATH=`echo $ITEM | sed -e "s|^upstream\/||"`
-        RELATIVE_FILE_DIR=$(dirname $RELATIVE_FILE_PATH);
-
-        if [ -f "l10n/po/$TARGET_LANG/$RELATIVE_FILE_PATH.po" ] ; then
-            mkdir -p "$L10N_HOME/l10n/po/$TARGET_LANG/$RELATIVE_FILE_DIR"
-            PERLLIB=vendor/po4a/lib vendor/po4a/po4a-translate --master-charset UTF-8 --localized-charset UTF-8 -f text -o markdown -o neverwrap --keep 0 --master "upstream/$RELATIVE_FILE_PATH" --localized "translated/$TARGET_LANG/$RELATIVE_FILE_PATH" --po "l10n/po/$TARGET_LANG/$RELATIVE_FILE_PATH.po"
-        fi
-    fi
-done
-
-YAML_FILES=(
-"_data/getstarted-guides.yaml"
-"_data/getstarted-nextsteps.yaml"
-"_data/getstarted-videos.yaml"
-"_data/guides-1-7.yaml"
-"_data/guides-1-11.yaml"
-"_data/guides-latest.yaml"
-"_data/languages.yaml"
-)
-
-for ITEM in ${YAML_FILES[@]} ; do
-    ABSOLUTE_FILE_PATH="$L10N_HOME/upstream/$ITEM"
-    if [ -f $ABSOLUTE_FILE_PATH ] ; then
-        RELATIVE_FILE_PATH=$ITEM
-        RELATIVE_FILE_DIR=$(dirname $RELATIVE_FILE_PATH);
-
-        if [ -f "l10n/po/$TARGET_LANG/$RELATIVE_FILE_PATH.po" ] ; then
-            mkdir -p "$L10N_HOME/l10n/po/$TARGET_LANG/$RELATIVE_FILE_DIR"
-            PERLLIB=vendor/po4a/lib vendor/po4a/po4a-translate --master-charset UTF-8 --localized-charset UTF-8 -f yaml --keep 0 --master "upstream/$RELATIVE_FILE_PATH"  --localized "translated/$TARGET_LANG/$RELATIVE_FILE_PATH" --po "l10n/po/$TARGET_LANG/$RELATIVE_FILE_PATH.po"
-        fi
-    fi
-done
-
-HTML_FILES=(
-"_includes/about.html"
-"_includes/awards-band.html"
-"_includes/catalog-detail-band.html"
-"_includes/catalog-index-band.html"
-"_includes/community-contrib-band.html"
-"_includes/container-first.html"
-"_includes/continuum.html"
-"_includes/developer-joy.html"
-"_includes/discussion.html"
-"_includes/events-discussions-band.html"
-"_includes/events-worldtour-band.html"
-"_includes/faq.html"
-"_includes/feedback-community-band.html"
-"_includes/get-started-band.html"
-"_includes/get-started-band-lightblue.html"
-"_includes/get-started-code-steps.html"
-"_includes/get-started-code-steps.html"
-"_includes/header-navigation.html"
-"_includes/header-navigation_full.html"
-"_includes/homepage-container_first-band.html"
-"_includes/homepage-developer_joy-band.html"
-"_includes/homepage-extensions-band.html"
-"_includes/homepage-features-band.html"
-"_includes/homepage-features-icon-band.html"
-"_includes/homepage-hero-band.html"
-"_includes/homepage-hero-band-ssjprime.html"
-"_includes/homepage-hero-Q2release-band.html"
-"_includes/homepage-imperative_and_reactive-band.html"
-"_includes/homepage-performance-band.html"
-"_includes/homepage-worldtour-band.html"
-"_includes/kubernetes-native.html"
-"_includes/standards.html"
-"_includes/support-help-band.html"
-"_includes/support-options-band.html"
-"_includes/worldtour-abstracts.html"
-"_includes/worldtour-code.html"
-)
-
-for ITEM in ${HTML_FILES[@]} ; do
-    ABSOLUTE_FILE_PATH="$L10N_HOME/upstream/$ITEM"
-    if [ -f $ABSOLUTE_FILE_PATH ] ; then
-        RELATIVE_FILE_PATH=$ITEM
-        RELATIVE_FILE_DIR=$(dirname $RELATIVE_FILE_PATH);
-
-        if [ -f "l10n/po/$TARGET_LANG/$RELATIVE_FILE_PATH.po" ] ; then
-            mkdir -p "$L10N_HOME/l10n/po/$TARGET_LANG/$RELATIVE_FILE_DIR"
-            PERLLIB=vendor/po4a/lib vendor/po4a/po4a-translate --master-charset UTF-8 --localized-charset UTF-8 -f xhtml --keep 0 --master "upstream/$RELATIVE_FILE_PATH"  --localized "translated/$TARGET_LANG/$RELATIVE_FILE_PATH" --po "l10n/po/$TARGET_LANG/$RELATIVE_FILE_PATH.po"
-        fi
-    fi
-done
+po_manager = PoManager()
+po_manager.translate_po()
