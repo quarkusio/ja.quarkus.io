@@ -1,29 +1,11 @@
-#!/usr/bin/env bash
-set -eu
+#!/usr/bin/env python3
 
-SCRIPT_DIR=$(cd $(dirname $0); pwd)
-L10N_HOME=$(cd $(dirname $SCRIPT_DIR); pwd)
-cd $L10N_HOME
+import os
+import sys
 
-export TARGET_LANG=`jq ".targetLang" config/l10n-kit.json -r`
-export TMX_FILE_PATH=`jq ".tmx.filePath" config/l10n-kit.json -r`
+sys.path.append(os.path.join(os.path.dirname(__file__), '../lib'))
 
-mkdir -p l10n/tmx
-TMP=`mktemp -d`
-touch $TMP/accumulation.po
+from doc_l10n_kit import TmxManager
 
-for ITEM in `\find l10n/po -name "*.po"`; do
-  if [ -f $ITEM ] ; then
-    echo $TMP/$ITEM
-    mkdir -p $(dirname $TMP/$ITEM)
-    pofilter --nonotes --nofuzzy --excludefilter=untranslated -i $ITEM -o $TMP/$ITEM
-    touch $TMP/$ITEM
-  fi
-done
-
-find $TMP/l10n/po -name "*.po" | xargs msgcat --force-po --to-code=utf-8 --no-wrap --use-first -o $TMP/accumulation.po -i $TMP/accumulation.po
-
-grep -v "^#~" $TMP/accumulation.po > $TMP/comment-filtered.po
-
-po2tmx -l $TARGET_LANG -i $TMP/comment-filtered.po -o $TMX_FILE_PATH
-bin/sort-tmx
+tmx_manager = TmxManager()
+tmx_manager.update()
