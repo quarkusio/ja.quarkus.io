@@ -13,7 +13,7 @@ class PoManager:
     __excluded_yaml_files = []
     __html_files = []
 
-    __max_workers = 1
+    __max_workers = None
 
     def __init__(self):
         __config_file_name = "{}/config/l10n-kit.json".format(self.__base_dir)
