@@ -50,24 +50,32 @@ class PoManager:
         items = glob.glob("upstream/**/*.adoc", recursive=True)
         relative_file_paths = [os.path.relpath(item, self.__base_dir + "/upstream") for item in items if os.path.isdir(item) == False]
         relative_file_paths = [ relative_file_path for relative_file_path in relative_file_paths]
-        concurrent.futures.ThreadPoolExecutor(thread_name_prefix="worker").map(self.__update_adoc_po_file, relative_file_paths)
+        executor = concurrent.futures.ThreadPoolExecutor(thread_name_prefix="worker")
+        executor.map(self.__update_adoc_po_file, relative_file_paths)
+        executor.shutdown(wait=True)
 
     def update_md_po_files(self):
         items = glob.glob("upstream/**/*.md", recursive=True)
         relative_file_paths = [os.path.relpath(item, self.__base_dir + "/upstream") for item in items if os.path.isdir(item) == False]
         relative_file_paths = [ relative_file_path for relative_file_path in relative_file_paths]
-        concurrent.futures.ThreadPoolExecutor(thread_name_prefix="worker").map(self.__update_md_po_file, relative_file_paths)
+        executor = concurrent.futures.ThreadPoolExecutor(thread_name_prefix="worker")
+        executor.map(self.__update_md_po_file, relative_file_paths)
+        executor.shutdown(wait=True)
 
     def update_yaml_po_files(self):
         items = glob.glob("upstream/**/*.yaml", recursive=True)
         relative_file_paths = [os.path.relpath(item, self.__base_dir + "/upstream") for item in items if os.path.isdir(item) == False]
         relative_file_paths = [relative_file_path for relative_file_path in relative_file_paths if ((relative_file_path in self.__excluded_yaml_files) == False)]
-        concurrent.futures.ThreadPoolExecutor(thread_name_prefix="worker").map(self.__update_yaml_po_file, relative_file_paths)
+        executor = concurrent.futures.ThreadPoolExecutor(thread_name_prefix="worker")
+        executor.map(self.__update_yaml_po_file, relative_file_paths)
+        executor.shutdown(wait=True)
 
     def update_html_po_files(self):
         relative_file_paths = self.__html_files
         relative_file_paths = [ relative_file_path for relative_file_path in relative_file_paths ]
-        concurrent.futures.ThreadPoolExecutor(thread_name_prefix="worker").map(self.__update_html_po_file, relative_file_paths)
+        executor = concurrent.futures.ThreadPoolExecutor(thread_name_prefix="worker")
+        executor.map(self.__update_html_po_file, relative_file_paths)
+        executor.shutdown(wait=True)
 
     def mk_output_dir(self):
         upstream = "{}/upstream".format(self.__base_dir)
@@ -80,24 +88,32 @@ class PoManager:
         items = glob.glob("upstream/**/*.adoc", recursive=True)
         relative_file_paths = [os.path.relpath(item, self.__base_dir + "/upstream") for item in items if os.path.isdir(item) == False]
         relative_file_paths = [ relative_file_path for relative_file_path in relative_file_paths]
-        concurrent.futures.ThreadPoolExecutor(thread_name_prefix="worker").map(self.__translate_adoc_po_file, relative_file_paths)
+        executor = concurrent.futures.ThreadPoolExecutor(thread_name_prefix="worker")
+        executor.map(self.__translate_adoc_po_file, relative_file_paths)
+        executor.shutdown(wait=True)
 
     def translate_md_po_files(self):
         items = glob.glob("upstream/**/*.md", recursive=True)
         relative_file_paths = [os.path.relpath(item, self.__base_dir + "/upstream") for item in items if os.path.isdir(item) == False]
         relative_file_paths = [ relative_file_path for relative_file_path in relative_file_paths]
-        concurrent.futures.ThreadPoolExecutor(thread_name_prefix="worker").map(self.__translate_md_po_files, relative_file_paths)
+        executor = concurrent.futures.ThreadPoolExecutor(thread_name_prefix="worker")
+        executor.map(self.__translate_md_po_files, relative_file_paths)
+        executor.shutdown(wait=True)
 
     def translate_yaml_po_files(self):
         items = glob.glob("upstream/**/*.yaml", recursive=True)
         relative_file_paths = [os.path.relpath(item, self.__base_dir + "/upstream") for item in items if os.path.isdir(item) == False]
         relative_file_paths = [relative_file_path for relative_file_path in relative_file_paths if ((relative_file_path in self.__excluded_yaml_files) == False)]
-        concurrent.futures.ThreadPoolExecutor(thread_name_prefix="worker").map(self.__translate_yaml_po_file, relative_file_paths)
+        executor = concurrent.futures.ThreadPoolExecutor(thread_name_prefix="worker")
+        executor.map(self.__translate_yaml_po_file, relative_file_paths)
+        executor.shutdown(wait=True)
 
     def translate_html_po_files(self):
         relative_file_paths = self.__html_files
         relative_file_paths = [ relative_file_path for relative_file_path in relative_file_paths]
-        concurrent.futures.ThreadPoolExecutor(thread_name_prefix="worker").map(self.__translate_html_po_files, relative_file_paths)
+        executor = concurrent.futures.ThreadPoolExecutor(thread_name_prefix="worker")
+        executor.map(self.__translate_html_po_files, relative_file_paths)
+        executor.shutdown(wait=True)
 
 
     def __update_adoc_po_file(self, relative_file_path):
