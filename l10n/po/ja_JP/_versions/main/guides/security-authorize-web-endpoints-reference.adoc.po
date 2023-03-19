@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2023-03-12 08:12+0000\n"
+"POT-Creation-Date: 2023-03-19 08:12+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -796,33 +796,548 @@ msgstr ""
 msgid "This `/subject/secured` endpoint requires an authenticated user that has been granted the role `User` in production but allows any authenticated user in development mode."
 msgstr ""
 
-#. type: Title ==
+#. type: Title ===
 #: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:389
+#, no-wrap
+msgid "Permission annotation"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:393
+msgid "Quarkus also provides the `io.quarkus.security.PermissionsAllowed` annotation that will permit any authenticated user with given permission to access the resource.  The annotation is extension of the common security annotations and has no relation to configuration permissions defined with the configuration property `quarkus.http.auth.permission`."
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:394
+#, no-wrap
+msgid "Example of endpoints secured with the `@PermissionsAllowed` annotation"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:404
+#, no-wrap
+msgid ""
+"import io.quarkus.arc.Arc;\n"
+"import io.vertx.ext.web.RoutingContext;\n"
+"import jakarta.ws.rs.GET;\n"
+"import jakarta.ws.rs.POST;\n"
+"import jakarta.ws.rs.Path;\n"
+"import jakarta.ws.rs.QueryParam;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:406
+#, fuzzy, no-wrap
+#| msgid "import java.security.Principal;\n"
+msgid "import io.quarkus.security.PermissionsAllowed;\n"
+msgstr "import java.security.Principal;\n"
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:410
+#, no-wrap
+msgid ""
+"import java.security.Permission;\n"
+"import java.util.Collection;\n"
+"import java.util.Collections;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:413
+#, no-wrap
+msgid ""
+"@Path(\"/crud\")\n"
+"public class CRUDResource {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:420
+#, no-wrap
+msgid ""
+"    @PermissionsAllowed(\"create\") <1>\n"
+"    @PermissionsAllowed(\"update\")\n"
+"    @POST\n"
+"    public String createOrUpdate() {\n"
+"        return \"modified\";\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:426
+#, no-wrap
+msgid ""
+"    @PermissionsAllowed(value = {\"create\", \"update\"}, inclusive=true) <2>\n"
+"    @POST\n"
+"    public String createOrUpdate(Long id) {\n"
+"        return id + \" modified\";\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:433
+#, no-wrap
+msgid ""
+"    @PermissionsAllowed({\"see:detail\", \"see:all\", \"read\"}) <3>\n"
+"    @GET\n"
+"    @Path(\"/id/{id}\")\n"
+"    public String getItem(String id) {\n"
+"        return \"item-detail-\" + id;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:440
+#, no-wrap
+msgid ""
+"    @PermissionsAllowed(value = \"list\", permission = CustomPermission.class) <4>\n"
+"    @GET\n"
+"    public Collection<String> list(@QueryParam(\"query-options\") String queryOptions) {\n"
+"        // your business logic comes here\n"
+"        return Collections.emptySet();\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:442
+#, no-wrap
+msgid "    public static class CustomPermission extends Permission {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:446
+#, no-wrap
+msgid ""
+"        public CustomPermission(String name) {\n"
+"            super(name);\n"
+"        }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:454
+#, no-wrap
+msgid ""
+"        @Override\n"
+"        public boolean implies(Permission permission) {\n"
+"            var event = Arc.container().instance(RoutingContext.class).get(); <5>\n"
+"            var publicContent = \"public-content\".equals(event.request().params().get(\"query-options\"));\n"
+"            var hasPermission = getName().equals(permission.getName());\n"
+"            return hasPermission && publicContent;\n"
+"        }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:458
+#, no-wrap
+msgid ""
+"        ...\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:460
+msgid "Resource method `createOrUpdate` is only accessible by user with both `create` and `update` permissions."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:462
+msgid "By default, at least one of the permissions specified through one annotation instance is required.  You can require all of them by setting `inclusive=true`. Both resource methods `createOrUpdate` have equal authorization requirements."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:463
+msgid "Access is granted to `getItem` if `SecurityIdentity` has either `read` permission or `see` permission and one of actions (`all`, `detail`)."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:465
+msgid "You can use any `java.security.Permission` implementation of your choice.  By default, string-based permission is performed by the `io.quarkus.security.StringPermission`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:466
+msgid "Permissions are not beans, therefore only way to obtain bean instances is programmatically via the `Arc.container()`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:470
+msgid "If you plan to use the `@PermissionsAllowed` on the IO thread, review the information in xref:security-proactive-authentication-concept.adoc[Proactive Authentication].  NOTE: The `@PermissionsAllowed` is not repeatable on class-level due to limitations of Quarkus interceptors.  Please find well-argued explanation in the xref:cdi-reference.adoc#repeatable-interceptor-bindings[Repeatable interceptor bindings] section of the CDI reference."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:474
+msgid "You can also create a custom `java.security.Permission` with additional constructor parameters.  These additional parameters will be matched with arguments of the method annotated with the `@PermissionsAllowed` annotation.  Later, Quarkus will instantiate your custom Permission with actual arguments, with which the method annotated with the `@PermissionsAllowed` has been invoked."
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:475
+#, no-wrap
+msgid "Example of a custom `java.security.Permission` that accepts additional arguments"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:482
+#, no-wrap
+msgid ""
+"import java.security.Permission;\n"
+"import java.util.Arrays;\n"
+"import java.util.Set;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:484
+#, no-wrap
+msgid "public class LibraryPermission extends Permission {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:487
+#, no-wrap
+msgid ""
+"    private final Set<String> actions;\n"
+"    private final Library library;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:493
+#, no-wrap
+msgid ""
+"    public LibraryPermission(String libraryName, String[] actions, Library library) { <1>\n"
+"        super(libraryName);\n"
+"        this.actions = Set.copyOf(Arrays.asList(actions));\n"
+"        this.library = library;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:505
+#, no-wrap
+msgid ""
+"    @Override\n"
+"    public boolean implies(Permission requiredPermission) {\n"
+"        if (requiredPermission instanceof LibraryPermission) {\n"
+"            LibraryPermission that = (LibraryPermission) requiredPermission;\n"
+"            boolean librariesMatch = getName().equals(that.getName());\n"
+"            boolean requiredLibraryIsSublibrary = library.isParentLibraryOf(that.library);\n"
+"            boolean hasOneOfRequiredActions = that.actions.stream().anyMatch(actions::contains);\n"
+"            return (librariesMatch || requiredLibraryIsSublibrary) && hasOneOfRequiredActions;\n"
+"        }\n"
+"        return false;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:507
+#, no-wrap
+msgid "    ...\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:509
+#, no-wrap
+msgid "    public static abstract class Library {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:511
+#, no-wrap
+msgid "        protected String description;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:513
+#, no-wrap
+msgid "        abstract boolean isParentLibraryOf(Library library);\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:515
+#, no-wrap
+msgid "    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:517
+#, no-wrap
+msgid "    public static class MediaLibrary extends Library {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:523
+#, no-wrap
+msgid ""
+"        @Override\n"
+"        boolean isParentLibraryOf(Library library) {\n"
+"            return library instanceof MediaLibrary;\n"
+"        }\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:528
+#, no-wrap
+msgid ""
+"    public static class TvLibrary extends MediaLibrary {\n"
+"        ...\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:531
+msgid "There must be exactly one constructor of a custom `Permission` class, also first parameter is always considered a permission name (must be `String`).  Optionally, Quarkus may pass Permission actions to the constructor. Just declare the second parameter as `String[]`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:534
+msgid "The `LibraryPermission` permit access to a library if `SecurityIdentity` is allowed to perform one of required actions (like `read`, `write`, `list`) on the very same library, or the parent one. Let's see how it is used:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:539
+#, no-wrap
+msgid ""
+"import io.quarkus.security.PermissionsAllowed;\n"
+"import jakarta.enterprise.context.ApplicationScoped;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:542
+#, no-wrap
+msgid ""
+"@ApplicationScoped\n"
+"public class LibraryService {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:548
+#, no-wrap
+msgid ""
+"    @PermissionsAllowed(value = \"tv:write\", permission = LibraryPermission.class) <1>\n"
+"    public Library updateLibrary(String newDesc, Library update) {\n"
+"        update.description = newDesc;\n"
+"        return update;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:555
+#, no-wrap
+msgid ""
+"    @PermissionsAllowed(value = \"tv:write\", permission = LibraryPermission.class, params = \"library\") <2>\n"
+"    @PermissionsAllowed(value = {\"tv:read\", \"tv:list\"}, permission = LibraryPermission.class)\n"
+"    public Library migrateLibrary(Library migrate, Library library) {\n"
+"        // migrate libraries\n"
+"        return library;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:557
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:594
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:647
+#, no-wrap
+msgid "}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:560
+msgid "Formal parameter `update` is identified as the first `Library` parameter and passed to the `LibraryPermission`.  However this option comes with a price, as the `LibraryPermission` must be instantiated every single time `updateLibrary` method is invoked."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:562
+msgid "Here, the first `Library` parameter is `migrate`, therefore we marked `library` parameter explicitly via `PermissionsAllowed#params`.  Please note that both Permission constructor and annotated method must have parameter `library`, otherwise validation will fail."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:568
+msgid "If you would like to pass method parameters to a custom `Permission` constructor from RESTEasy Reactive endpoints, make sure you have `@PermissionsAllowed` annotation set not on the JAX-RS resource method itself, but on the injected CDI bean to which this method will delegate to. Setting `@PermissionsAllowed` on the JAX-RS resource method will not work because RESTEasy Reactive performs the security checks before the deserialization.  These limitations are demonstrated in the example below."
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:569
+#, no-wrap
+msgid "Example of endpoint limitations when it comes to passing annotated method arguments to the Permission constructor"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:575
+#, no-wrap
+msgid ""
+"@Path(\"/library\")\n"
+"public class LibraryResource {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:578
+#, no-wrap
+msgid ""
+"    @Inject\n"
+"    LibraryService libraryService;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:585
+#, no-wrap
+msgid ""
+"    @PermissionsAllowed(value = \"tv:write\", permission = LibraryPermission.class)\n"
+"    @PUT\n"
+"    @Path(\"/id/{id}\")\n"
+"    public Library updateLibrary(@PathParam(\"id\") Integer id, Library library) { <1>\n"
+"        ...\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:592
+#, no-wrap
+msgid ""
+"    @PUT\n"
+"    @Path(\"/service-way/id/{id}\")\n"
+"    public Library updateLibrarySvc(@PathParam(\"id\") Integer id, Library library) {\n"
+"        String newDescription = \"new description \" + id;\n"
+"        return libraryService.updateLibrary(newDescription, library); <2>\n"
+"    }\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:598
+msgid "In the RESTEasy Reactive, the endpoint argument `library` won't ever be passed to the `LibraryPermission`, because it is not available.  Instead, Quarkus will pass `null` for the argument `library`.  That gives you option to reuse your custom Permission when the method argument (like `library`) is optional."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:599
+msgid "Argument `library` will be passed to the `LibraryPermission` constructor as the `LibraryService#updateLibrary` method is not an endpoint."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:601
+msgid "Currently, there is only one way to add permissions, and that is xref:security-customization.adoc#security-identity-customization[Security Identity Customization]."
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:602
+#, no-wrap
+msgid "Example of Adding the `LibraryPermission` to the `SecurityIdentity`"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:608
+#, fuzzy, no-wrap
+#| msgid "import java.security.Principal;\n"
+msgid ""
+"import java.security.Permission;\n"
+"import java.util.function.Function;\n"
+msgstr "import java.security.Principal;\n"
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:610
+#, no-wrap
+msgid "import jakarta.enterprise.context.ApplicationScoped;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:616
+#, no-wrap
+msgid ""
+"import io.quarkus.security.identity.AuthenticationRequestContext;\n"
+"import io.quarkus.security.identity.SecurityIdentity;\n"
+"import io.quarkus.security.identity.SecurityIdentityAugmentor;\n"
+"import io.quarkus.security.runtime.QuarkusSecurityIdentity;\n"
+"import io.smallrye.mutiny.Uni;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:619
+#, no-wrap
+msgid ""
+"@ApplicationScoped\n"
+"public class PermissionsIdentityAugmentor implements SecurityIdentityAugmentor {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:627
+#, no-wrap
+msgid ""
+"    @Override\n"
+"    public Uni<SecurityIdentity> augment(SecurityIdentity identity, AuthenticationRequestContext context) {\n"
+"        if (isNotAdmin(identity)) {\n"
+"            return Uni.createFrom().item(identity);\n"
+"        }\n"
+"        return Uni.createFrom().item(build(identity));\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:631
+#, no-wrap
+msgid ""
+"    private boolean isNotAdmin(SecurityIdentity identity) {\n"
+"        return identity.isAnonymous() || !\"admin\".equals(identity.getPrincipal().getName());\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:645
+#, no-wrap
+msgid ""
+"    SecurityIdentity build(SecurityIdentity identity) {\n"
+"        Permission possessedPermission = new LibraryPermission(\"media-library\",\n"
+"                new String[] { \"read\", \"write\", \"list\"}, new MediaLibrary()); <1>\n"
+"        return QuarkusSecurityIdentity.builder(identity)\n"
+"                .addPermissionChecker(new Function<Permission, Uni<Boolean>>() { <2>\n"
+"                    @Override\n"
+"                    public Uni<Boolean> apply(Permission requiredPermission) {\n"
+"                        boolean accessGranted = possessedPermission.implies(requiredPermission);\n"
+"                        return Uni.createFrom().item(accessGranted);\n"
+"                    }\n"
+"                })\n"
+"                .build();\n"
+"    }\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:650
+msgid "Created permission `media-library` is allowed to perform actions `read`, `write` and `list`.  Considering `MediaLibrary` is the `TvLibrary` class parent, we know that administrator is also going to be allowed to modify television library."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:651
+msgid "You can add a permission checker via `io.quarkus.security.runtime.QuarkusSecurityIdentity.Builder#addPermissionChecker`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:653
+msgid "Annotation permissions do not work with the custom xref:security-customization.adoc#jaxrs-security-context[JAX-RS SecurityContext], for there are no permissions in `jakarta.ws.rs.core.SecurityContext`."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:654
 #, no-wrap
 msgid "References"
 msgstr "参照"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:392
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:657
 msgid "xref:security-overview-concept.adoc[Quarkus Security overview]"
 msgstr "xref:security-overview-concept.adoc[Quarkus Security 概要]"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:393
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:658
 msgid "xref:security-architecture-concept.adoc[Quarkus Security architecture]"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:394
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:659
 msgid "xref:security-authentication-mechanisms-concept.adoc#other-supported-authentication-mechanisms[Authentication mechanisms in Quarkus]"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:395
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:660
 msgid "xref:security-basic-authentication-concept.adoc[Basic authentication]"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:395
+#: upstream/_versions/main/guides/security-authorize-web-endpoints-reference.adoc:660
 msgid "xref:security-basic-authentication-tutorial.adoc[Secure a Quarkus application with Basic authentication and Jakarta Persistence]"
 msgstr ""
