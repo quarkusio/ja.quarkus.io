@@ -155,7 +155,7 @@ class PoManager:
         os.makedirs("{}/l10n/po/{}/{}".format(self.__base_dir, self.__target_lang, relative_file_dir), exist_ok=True)
         upstream_file_path = "upstream/{}".format(relative_file_path)
         if os.path.exists(upstream_file_path):
-            subprocess.run("PERLLIB=vendor/po4a/lib vendor/po4a/po4a-updatepo --master-charset UTF-8 -f yaml --master upstream/{} --po l10n/po/{}/{}.po".format(relative_file_path, self.__target_lang, relative_file_path), shell=True, check=True)
+            subprocess.run("PERLLIB=vendor/po4a/lib vendor/po4a/po4a-updatepo --master-charset UTF-8 -f yaml --master {} --po l10n/po/{}/{}.po".format(upstream_file_path, self.__target_lang, relative_file_path), shell=True, check=True)
             subprocess.run("msgcat --to-code=utf-8 --no-wrap -o l10n/po/{}/{}.po l10n/po/{}/{}.po".format(self.__target_lang, relative_file_path, self.__target_lang, relative_file_path), shell=True, check=True)
         else:
             print("Skip: {} since upstream file is missing".format(relative_file_path))
@@ -183,8 +183,17 @@ class PoManager:
 
     def __translate_yaml_po_file(self, relative_file_path):
         print("Processing: {}".format(relative_file_path))
-        subprocess.run("PERLLIB=vendor/po4a/lib vendor/po4a/po4a-translate --master-charset UTF-8 --localized-charset UTF-8 -f yaml --keep 0 --master upstream/{} --localized translated/{}/{} --po l10n/po/{}/{}.po".format(relative_file_path, self.__target_lang, relative_file_path, self.__target_lang, relative_file_path), shell=True, check=True)
+        upstream_file_path = "upstream/{}".format(relative_file_path)
+        if os.path.exists(upstream_file_path):
+            subprocess.run("PERLLIB=vendor/po4a/lib vendor/po4a/po4a-translate --master-charset UTF-8 --localized-charset UTF-8 -f yaml --keep 0 --master upstream/{} --localized translated/{}/{} --po l10n/po/{}/{}.po".format(relative_file_path, self.__target_lang, relative_file_path, self.__target_lang, relative_file_path), shell=True, check=True)
+        else:
+            print("Skip: {} since upstream file is missing".format(relative_file_path))
+
 
     def __translate_html_po_files(self, relative_file_path):
         print("Processing: {}".format(relative_file_path))
-        subprocess.run("PERLLIB=vendor/po4a/lib vendor/po4a/po4a-translate --master-charset UTF-8 --localized-charset UTF-8 -f xhtml --keep 0 --master upstream/{} --localized translated/{}/{} --po l10n/po/{}/{}.po".format(relative_file_path, self.__target_lang, relative_file_path, self.__target_lang, relative_file_path), shell=True, check=True)
+        upstream_file_path = "upstream/{}".format(relative_file_path)
+        if os.path.exists(upstream_file_path):
+            subprocess.run("PERLLIB=vendor/po4a/lib vendor/po4a/po4a-translate --master-charset UTF-8 --localized-charset UTF-8 -f xhtml --keep 0 --master {} --localized translated/{}/{} --po l10n/po/{}/{}.po".format(upstream_file_path, self.__target_lang, relative_file_path, self.__target_lang, relative_file_path), shell=True, check=True)
+        else:
+            print("Skip: {} since upstream file is missing".format(relative_file_path))
