@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2023-03-12 08:11+0000\n"
+"POT-Creation-Date: 2023-04-03 13:54+0900\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -101,7 +101,7 @@ msgstr "これにより、 `pom.xml` に以下が追加されます。"
 
 #. type: Block title
 #: upstream/_versions/main/guides/rest-client-reactive.adoc:52
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1201
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1234
 #, no-wrap
 msgid "pom.xml"
 msgstr "pom.xml"
@@ -122,7 +122,7 @@ msgstr ""
 
 #. type: Block title
 #: upstream/_versions/main/guides/rest-client-reactive.adoc:61
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1211
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1244
 #, no-wrap
 msgid "build.gradle"
 msgstr "build.gradle"
@@ -225,7 +225,7 @@ msgstr "REST Client Reactive の使用は、適切な JAX-RS および MicroProf
 #: upstream/_versions/main/guides/rest-client-reactive.adoc:100
 #: upstream/_versions/main/guides/rest-client-reactive.adoc:234
 #: upstream/_versions/main/guides/rest-client-reactive.adoc:629
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1184
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1217
 #, no-wrap
 msgid "import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;\n"
 msgstr "import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;\n"
@@ -307,7 +307,9 @@ msgstr "JSON のデフォルトに頼らない場合は、エンドポイント�
 
 #. type: delimited block =
 #: upstream/_versions/main/guides/rest-client-reactive.adoc:136
-msgid "The `getById` method above is a blocking call. It should not be invoked on the event loop.  The <<async-support>> section describes how to make non-blocking calls."
+#, fuzzy
+#| msgid "The `getById` method above is a blocking call. It should not be invoked on the event loop.  The <<async-support>> section describes how to make non-blocking calls."
+msgid "The `getById` method above is a blocking call. It should not be invoked on the event loop.  The xref:async-support[Async Support] section describes how to make non-blocking calls."
 msgstr "上記の `getById` メソッドはブロッキング呼び出しです。イベントループで呼び出さないでください。<<async-support>> セクションでは、非ブロッキング呼び出しを行う方法について説明します。"
 
 #. type: Title ===
@@ -1564,8 +1566,8 @@ msgstr "`@ClientHeaderParam` は、クライアントインターフェイスと
 
 #. type: Plain text
 #: upstream/_versions/main/guides/rest-client-reactive.adoc:824
-msgid "... and a name of a method that should compute the value of the header. It can either be a static method or a default method in this interface"
-msgstr "そして、ヘッダーの値を計算するメソッドの名前を指定します。このインターフェイスでは、静的メソッドまたはデフォルトメソッドのいずれかです。"
+msgid "... and a name of a method that should compute the value of the header. It can either be a static method or a default method in this interface. The method can take either no parameters, a single String parameter or a single `io.quarkus.rest.client.reactive.ComputedParamContext` parameter (which is very useful for code that needs to compute headers based on method parameters and naturally complements `@io.quarkus.rest.client.reactive.NotBody`)."
+msgstr ""
 
 #. type: Plain text
 #: upstream/_versions/main/guides/rest-client-reactive.adoc:825
@@ -2069,44 +2071,122 @@ msgstr "REST Client Reactive は、マルチパートリターンタイプとし
 msgid "The files you download are not automatically removed and can take up a lot of disk space. Consider removing the files when you are done working with them."
 msgstr "ダウンロードしたファイルは自動的に削除されず、多くのディスク領域を占有する可能性があります。作業が終わったら、ファイルを削除することを検討してください。"
 
-#. type: Title ==
+#. type: Title ===
 #: upstream/_versions/main/guides/rest-client-reactive.adoc:1093
+#, no-wrap
+msgid "Multipart mixed / OData usage"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1097
+msgid "It is not uncommon that an application has to interact with enterprise systems (like CRM systems) using a special protocol called https://www.odata.org/documentation/odata-version-3-0/batch-processing/[OData].  This protocol essentially uses a custom HTTP `Content-Type` which needs some glue code to work with the REST Client (creating the body is entirely up to the application - the REST Client can't do much to help)."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1099
+msgid "An example looks like the following:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1105
+#, fuzzy, no-wrap
+#| msgid ""
+#| "@Path(\"/extensions\")\n"
+#| "@RegisterRestClient\n"
+#| "public interface ExtensionsService {\n"
+msgid ""
+"@Path(\"/crm\")\n"
+"@RegisterRestClient\n"
+"public interface CRMService {\n"
+msgstr ""
+"@Path(\"/extensions\")\n"
+"@RegisterRestClient\n"
+"public interface ExtensionsService {\n"
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1109
+#, no-wrap
+msgid ""
+"    @POST\n"
+"    @ClientHeaderParam(name = \"Content-Type\", value = \"{calculateContentType}\")  // <1>\n"
+"    String performBatch(@HeaderParam(\"Authorization\") String accessToken, @NotBody String batchId, String body); // <2>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1114
+#, no-wrap
+msgid ""
+"    default String calculateContentType(ComputedParamContext context) {\n"
+"        return \"multipart/mixed;boundary=batch_\" + context.methodParameters().get(1).value(); // <3>\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1117
+#, fuzzy
+#| msgid "Let's assume you have the following client:"
+msgid "The code uses the following pieces:"
+msgstr "次のクライアントがあると仮定します。"
+
+#. type: Plain text
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1119
+msgid "`@ClientHeaderParam(name = \"Content-Type\", value = \"{calculateContentType}\")` which ensures that the `Content-Type` header is created by calling the interface's `calculateContentType` default method."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1120
+msgid "The aforementioned parameter needs to be annotated with `@NotBody` because it is only used to aid the construction of HTTP headers."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1121
+msgid "`context.methodParameters().get(1).value()` which allows the `calculateContentType` method to obtain the proper method parameter passed to the REST Client method."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1124
+msgid "As previously mentioned, the body parameter needs to be properly crafted by the application code to conform to the service's requirements."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1126
 #, fuzzy, no-wrap
 msgid "Proxy support"
 msgstr "非同期サポート"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1096
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1129
 msgid "REST Client Reactive supports sending requests through a proxy.  It honors the JVM settings for it but also allows to specify both:"
 msgstr "REST Client Reactive は、プロキシーを介したリクエストの送信をサポートしています。JVM 設定を尊重しますが、次の両方を指定することもできます。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1098
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1131
 msgid "global client proxy settings, with `quarkus.rest-client.proxy-address`, `quarkus.rest-client.proxy-user`, `quarkus.rest-client.proxy-password`, `quarkus.rest-client.non-proxy-hosts`"
 msgstr "グローバルクライアントプロキシー設定、 `quarkus.rest-client.proxy-address`、`quarkus.rest-client.proxy-user`、`quarkus.rest-client.proxy-password`、`quarkus.rest-client.non-proxy-hosts`"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1100
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1133
 msgid "per-client proxy settings, with `quarkus.rest-client.<my-client>.proxy-address`, etc. These are applied only to clients injected with CDI, that is the ones created with `@RegisterRestClient`"
 msgstr "`quarkus.rest-client.<my-client>.proxy-address` などのクライアントごとのプロキシー設定です。これらは、CDI で挿入されたクライアント、つまり `@RegisterRestClient` で作成されたクライアントに対してのみ適用されます。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1102
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1135
 msgid "If `proxy-address` is set on the client level, the client uses its specific proxy settings. No proxy settings are propagated from the global configuration or JVM properties."
 msgstr "`proxy-address` がクライアントレベルで設定されている場合、クライアントは特定のプロキシー設定を使用します。プロキシー設定は、グローバル設定または JVM プロパティーから伝播されません。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1105
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1138
 msgid "If `proxy-address` is not set for the client but is set on the global level, the client uses the global settings.  Otherwise, the client uses the JVM settings."
 msgstr "クライアントに `proxy-address` が設定されていないが、グローバルレベルで設定されている場合、クライアントはグローバル設定を使用します。それ以外の場合、クライアントは JVM 設定を使用します。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1108
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1141
 msgid "An example configuration for setting proxy:"
 msgstr "プロキシーを設定するための設定例:"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1116
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1149
 #, no-wrap
 msgid ""
 "# global proxy configuration is used for all clients\n"
@@ -2122,7 +2202,7 @@ msgstr ""
 "quarkus.rest-client.non-proxy-hosts=example.com\n"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1122
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1155
 #, no-wrap
 msgid ""
 "# per-client configuration overrides the global settings for a specific client\n"
@@ -2138,86 +2218,86 @@ msgstr ""
 "quarkus.rest-client.my-client.url=...\n"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1125
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1158
 msgid "MicroProfile REST Client specification does not allow setting proxy credentials. In order to specify proxy user and proxy password programmatically, you need to cast your `RestClientBuilder` to `RestClientBuilderImpl`."
 msgstr "MicroProfile REST クライアント仕様では、プロキシー資格情報の設定は許可されていません。プログラムでプロキシーユーザーとプロキシーパスワードを指定するには、`RestClientBuilder` を `RestClientBuilderImpl` にキャストする必要があります。"
 
 #. type: Title ==
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1126
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1159
 #, no-wrap
 msgid "Package and run the application"
 msgstr "アプリケーションをパッケージ化して実行する"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1129
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1162
 #, fuzzy
 msgid "Run the application with:"
 msgstr "アプリケーションをパッケージ化して実行する"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1133
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1166
 msgid "Open your browser to http://localhost:8080/extension/id/io.quarkus:quarkus-rest-client-reactive."
 msgstr "ブラウザで http://localhost:8080/extension/id/io.quarkus:quarkus-rest-client-reactive を開きます。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1135
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1168
 msgid "You should see a JSON object containing some basic information about this extension."
 msgstr "このエクステンションに関する基本的な情報を含む JSON オブジェクトが表示されるはずです。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1137
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1170
 msgid "As usual, the application can be packaged using:"
 msgstr "いつものように、アプリケーションは以下の方法でパッケージ化されます。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1141
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1174
 msgid "And executed with `java -jar target/quarkus-app/quarkus-run.jar`."
 msgstr "そして、`java -jar target/quarkus-app/quarkus-run.jar` で実行されます。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1143
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1176
 msgid "You can also generate the native executable with:"
 msgstr "次のようにネイティブ実行可能ファイルを生成することもできます。"
 
 #. type: Title ==
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1146
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1179
 #, no-wrap
 msgid "Logging traffic"
 msgstr "トラフィックの記録"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1149
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1182
 msgid "REST Client Reactive can log the requests it sends and the responses it receives.  To enable logging, add the `quarkus.rest-client.logging.scope` property to your `application.properties` and set it to:"
 msgstr "REST Client Reactive は、送信するリクエストと受信する応答をログに記録できます。ロギングを有効にするには、`quarkus.rest-client.logging.scope` プロパティーを `quarkus.rest-client.logging.scope` に追加し、次のように設定します。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1151
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1184
 msgid "`request-response` to log the request and response contents, or"
 msgstr "リクエストと応答の内容をログに記録する `request-response` 、または"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1152
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1185
 msgid "`all` to also enable low level logging of the underlying libraries."
 msgstr "`all` は、基礎となるライブラリーの低レベルのロギングも有効にします。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1154
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1187
 msgid "As HTTP messages can have large bodies, we limit the amount of body characters logged. The default limit is `100`, you can change it by specifying `quarkus.rest-client.logging.body-limit`."
 msgstr "HTTP メッセージには大きな本文が含まれる可能性があるため、ログに記録される本文の文字数を制限します。デフォルトの制限は `100` ですが、`quarkus.rest-client.logging.body-limit` を指定することで変更できます。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1156
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1189
 msgid "REST Client Reactive is logging the traffic with level DEBUG and does not alter logger properties. You may need to adjust your logger configuration to use this feature."
 msgstr "REST Client Reactive は、レベル DEBUG でトラフィックをログに記録しており、ロガーのプロパティーを変更しません。この機能を使用するには、ロガー設定を調整する必要がある場合があります。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1158
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1191
 #, fuzzy
 msgid "An example logging configuration:"
 msgstr "コンフィグレーションの作成"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1163
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1196
 #, no-wrap
 msgid ""
 "quarkus.rest-client.logging.scope=request-response\n"
@@ -2227,48 +2307,48 @@ msgstr ""
 "quarkus.rest-client.logging.body-limit=50\n"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1165
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1198
 #, no-wrap
 msgid "quarkus.log.category.\"org.jboss.resteasy.reactive.client.logging\".level=DEBUG\n"
 msgstr "quarkus.log.category.\"org.jboss.resteasy.reactive.client.logging\".level=DEBUG\n"
 
 #. type: Title ==
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1167
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1200
 #, no-wrap
 msgid "Mocking the client for tests"
 msgstr "テストのためのクライアントのモッキング"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1170
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1203
 msgid "If you use a client injected with the `@RestClient` annotation, you can easily mock it for tests.  You can do it with Mockito's `@InjectMock` or with `QuarkusMock`."
 msgstr "`@RestClient` アノテーションが挿入されたクライアントを使用する場合は、テスト用に簡単にモックすることができます。Mockito の `@InjectMock`　または `QuarkusMock` でそれを行うことができます。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1172
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1205
 msgid "This section shows how to replace your client with a mock. If you would like to get a more in-depth understanding of how mocking works in Quarkus, see the blog post on https://quarkus.io/blog/mocking/[Mocking CDI beans]."
 msgstr "このセクションでは、クライアントをモックに置き換える方法を示します。Quarkus でモッキングがどのように機能するかをより深く理解したい場合は、 https://quarkus.io/blog/mocking/[Mocking CDI beans] のブログ投稿を参照してください。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1174
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1207
 #, fuzzy
 msgid "Mocking does not work when using `@QuarkusIntegrationTest`."
 msgstr "`@NativeImageTest` または `@QuarkusIntegrationTest` を使用すると、モッキングは機能しません。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1176
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1209
 msgid "Let's assume you have the following client:"
 msgstr "次のクライアントがあると仮定します。"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1179
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1221
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1256
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1212
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1254
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1289
 #, no-wrap
 msgid "package io.quarkus.it.rest.client.main;\n"
 msgstr "package io.quarkus.it.rest.client.main;\n"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1182
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1215
 #, fuzzy, no-wrap
 msgid ""
 "import jakarta.ws.rs.GET;\n"
@@ -2278,7 +2358,7 @@ msgstr ""
 "import javax.ws.rs.Path;\n"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1192
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1225
 #, no-wrap
 msgid ""
 "@Path(\"/\")\n"
@@ -2296,24 +2376,24 @@ msgstr ""
 "}\n"
 
 #. type: Title ===
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1195
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1228
 #, no-wrap
 msgid "Mocking with InjectMock"
 msgstr "InjectMock でモックする"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1197
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1230
 msgid "The simplest approach to mock a client for tests is to use Mockito and `@InjectMock`."
 msgstr "テスト用にクライアントをモックする最も簡単な方法は、Mockito と `@InjectMock` を使用することです。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1199
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1232
 #, fuzzy
 msgid "First, add the following dependency to your application:"
 msgstr "これにより、 `pom.xml` に以下が追加されます。"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1208
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1241
 #, no-wrap
 msgid ""
 "<dependency>\n"
@@ -2329,25 +2409,25 @@ msgstr ""
 "</dependency>\n"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1214
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1247
 #, no-wrap
 msgid "testImplementation(\"io.quarkus:quarkus-junit5-mockito\")\n"
 msgstr "testImplementation(\"io.quarkus:quarkus-junit5-mockito\")\n"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1217
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1250
 msgid "Then, in your test you can simply use `@InjectMock` to create and inject a mock:"
 msgstr "次に、テストで `@InjectMock` を使用して、モックを作成して挿入できます。"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1223
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1256
 #, no-wrap
 msgid "import static org.mockito.Mockito.when;\n"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1227
 #: upstream/_versions/main/guides/rest-client-reactive.adoc:1260
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1293
 #, no-wrap
 msgid ""
 "import org.eclipse.microprofile.rest.client.inject.RestClient;\n"
@@ -2359,7 +2439,7 @@ msgstr ""
 "import org.junit.jupiter.api.Test;\n"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1230
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1263
 #, no-wrap
 msgid ""
 "import io.quarkus.test.junit.QuarkusTest;\n"
@@ -2369,7 +2449,7 @@ msgstr ""
 "import io.quarkus.test.junit.mockito.InjectMock;\n"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1233
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1266
 #, no-wrap
 msgid ""
 "@QuarkusTest\n"
@@ -2379,7 +2459,7 @@ msgstr ""
 "public class InjectMockTest {\n"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1237
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1270
 #, fuzzy, no-wrap
 msgid ""
 "    @InjectMock\n"
@@ -2390,7 +2470,7 @@ msgstr ""
 "    Client mock;\n"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1242
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1275
 #, no-wrap
 msgid ""
 "    @BeforeEach\n"
@@ -2404,7 +2484,7 @@ msgstr ""
 "    }\n"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1248
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1281
 #, no-wrap
 msgid ""
 "    @Test\n"
@@ -2420,18 +2500,18 @@ msgstr ""
 "}\n"
 
 #. type: Title ===
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1250
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1283
 #, no-wrap
 msgid "Mocking with QuarkusMock"
 msgstr "QuarkusMock でモックする"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1252
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1285
 msgid "If Mockito doesn't meet your needs, you can create a mock programmatically using `QuarkusMock`, e.g.:"
 msgstr "Mockito がニーズを満たさない場合は、`QuarkusMock` を使用してプログラムでモックを作成できます。例:"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1263
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1296
 #, no-wrap
 msgid ""
 "import io.quarkus.test.junit.QuarkusMock;\n"
@@ -2441,7 +2521,7 @@ msgstr ""
 "import io.quarkus.test.junit.QuarkusTest;\n"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1266
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1299
 #, no-wrap
 msgid ""
 "@QuarkusTest\n"
@@ -2451,7 +2531,7 @@ msgstr ""
 "public class QuarkusMockTest {\n"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1282
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1315
 #, no-wrap
 msgid ""
 "    @BeforeEach\n"
@@ -2487,67 +2567,70 @@ msgstr ""
 "}\n"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1285
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1318
 msgid "here we use a manually created implementation of the client interface to replace the actual Client"
 msgstr "ここでは、手動で作成したクライアントインターフェイスの実装を使用して、実際のクライアントを置き換えます"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1286
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1319
 msgid "note that `RestClient.LITERAL` has to be passed as the last argument of the `installMockForType` method"
 msgstr "`RestClient.LITERAL` は `installMockForType` メソッドの最後の引数として渡される必要があることに注意してください"
 
 #. type: Title ==
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1288
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1321
 #, no-wrap
 msgid "Using a Mock HTTP Server for tests"
 msgstr "テストにモックHTTPサーバーを使用する"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1291
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1324
 msgid "In some cases you may want to mock the remote endpoint - the HTTP server - instead of mocking the client itself.  This may be especially useful for native tests, or for programmatically created clients."
 msgstr "場合によっては、クライアント自体をモックするのではなく、リモートエンドポイント (HTTP サーバー) をモックしたい場合があります。これは、ネイティブテスト、またはプログラムで作成されたクライアントに特に役立つ場合があります。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1295
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1328
 msgid "You can easily mock an HTTP Server with Wiremock.  The xref:rest-client.adoc#using-a-mock-http-server-for-tests[Wiremock section of the Quarkus - Using the REST Client] describes how to set it up in detail."
 msgstr "Wiremock を使用して HTTP サーバーを簡単にモックできます。xref:rest-client.adoc#using-a-mock-http-server-for-tests[Wiremock section of the Quarkus - Using the REST Client] では、セットアップ方法について詳しく説明しています。"
 
 #. type: Title ==
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1296
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1329
 #, no-wrap
 msgid "Known limitations"
 msgstr "既知の制限"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1299
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1332
 msgid "While the REST Client Reactive extension aims to be a drop-in replacement for the REST Client extension, there are some differences and limitations:"
 msgstr "REST Client Reactive エクステンションは、REST Client エクステンションをそのまま置き換えることを目的としていますが、いくつかの相違点と制限があります。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1302
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1335
 msgid "the default scope of the client for the new extension is `@ApplicationScoped` while the `quarkus-rest-client` defaults to `@Dependent` To change this behavior, set the `quarkus.rest-client-reactive.scope` property to the fully qualified scope name."
 msgstr "新しいエクステンションのクライアントのデフォルトスコープは `@ApplicationScoped` ですが、`quarkus-rest-client` のデフォルトは `@Dependent` です。この動作を変更するには、`quarkus.rest-client-reactive.scope` プロパティーを完全修飾形式のスコープ名に設定します。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1303
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1336
 msgid "it is not possible to set `HostnameVerifier` or `SSLContext`"
 msgstr "`HostnameVerifier` または `SSLContext` を設定することができない"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1304
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1337
 msgid "a few things that don't make sense for a non-blocking implementations, such as setting the `ExecutorService`, don't work"
 msgstr "`ExecutorService` の設定など、非ブロッキング実装には意味をなさないいくつかのことが機能しません"
 
 #. type: Title ==
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1307
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1340
 #, no-wrap
 msgid "Further reading"
 msgstr "さらに詳しく"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/rest-client-reactive.adoc:1309
+#: upstream/_versions/main/guides/rest-client-reactive.adoc:1342
 msgid "link:https://download.eclipse.org/microprofile/microprofile-rest-client-2.0/microprofile-rest-client-spec-2.0.html[MicroProfile Rest Client specification]"
 msgstr "link:https://download.eclipse.org/microprofile/microprofile-rest-client-2.0/microprofile-rest-client-spec-2.0.html[MicroProfile Rest Client specification]"
+
+#~ msgid "... and a name of a method that should compute the value of the header. It can either be a static method or a default method in this interface"
+#~ msgstr "そして、ヘッダーの値を計算するメソッドの名前を指定します。このインターフェイスでは、静的メソッドまたはデフォルトメソッドのいずれかです。"
 
 #~ msgid ""
 #~ "import static org.assertj.core.api.Assertions.assertThat;\n"
