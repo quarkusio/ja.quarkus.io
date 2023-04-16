@@ -164,13 +164,13 @@ msgstr "REST エンドポイント V1"
 #: upstream/_guides/security-jwt.adoc:626
 #, no-wrap
 msgid "package org.acme.security.jwt;\n"
-msgstr ""
+msgstr "package org.acme.security.jwt;\n"
 
 #. type: delimited block -
 #: upstream/_guides/security-jwt.adoc:83
 #, no-wrap
 msgid "import java.security.Principal;\n"
-msgstr ""
+msgstr "import java.security.Principal;\n"
 
 #. type: delimited block -
 #: upstream/_guides/security-jwt.adoc:94
@@ -187,12 +187,22 @@ msgid ""
 "import javax.ws.rs.core.MediaType;\n"
 "import javax.ws.rs.core.SecurityContext;\n"
 msgstr ""
+"import javax.annotation.security.PermitAll;\n"
+"import javax.enterprise.context.RequestScoped;\n"
+"import javax.inject.Inject;\n"
+"import javax.ws.rs.GET;\n"
+"import javax.ws.rs.InternalServerErrorException;\n"
+"import javax.ws.rs.Path;\n"
+"import javax.ws.rs.Produces;\n"
+"import javax.ws.rs.core.Context;\n"
+"import javax.ws.rs.core.MediaType;\n"
+"import javax.ws.rs.core.SecurityContext;\n"
 
 #. type: delimited block -
 #: upstream/_guides/security-jwt.adoc:96 upstream/_guides/security-jwt.adoc:202
 #, no-wrap
 msgid "import org.eclipse.microprofile.jwt.JsonWebToken;\n"
-msgstr ""
+msgstr "import org.eclipse.microprofile.jwt.JsonWebToken;\n"
 
 #. type: delimited block -
 #: upstream/_guides/security-jwt.adoc:99
@@ -201,6 +211,8 @@ msgid ""
 "@Path(\"/secured\")\n"
 "public class TokenSecuredResource {\n"
 msgstr ""
+"@Path(\"/secured\")\n"
+"public class TokenSecuredResource {\n"
 
 #. type: delimited block -
 #: upstream/_guides/security-jwt.adoc:102
@@ -210,6 +222,8 @@ msgid ""
 "    @Inject\n"
 "    JsonWebToken jwt; // <1>\n"
 msgstr ""
+"    @Inject\n"
+"    JsonWebToken jwt; // <1>\n"
 
 #. type: delimited block -
 #: upstream/_guides/security-jwt.adoc:110
@@ -223,6 +237,13 @@ msgid ""
 "        return getResponseString(ctx); // <3>\n"
 "    }\n"
 msgstr ""
+"    @GET()\n"
+"    @Path(\"permit-all\")\n"
+"    @PermitAll // <2>\n"
+"    @Produces(MediaType.TEXT_PLAIN)\n"
+"    public String hello(@Context SecurityContext ctx) {\n"
+"        return getResponseString(ctx); // <3>\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_guides/security-jwt.adoc:126
@@ -244,6 +265,21 @@ msgid ""
 "            name, ctx.isSecure(), ctx.getAuthenticationScheme(), hasJwt()); // <7>\n"
 "    }\n"
 msgstr ""
+"    private String getResponseString(SecurityContext ctx) {\n"
+"        String name;\n"
+"        if (ctx.getUserPrincipal() == null) { // <4>\n"
+"            name = \"anonymous\";\n"
+"        } else if (!ctx.getUserPrincipal().getName().equals(jwt.getName())) { // <5>\n"
+"            throw new InternalServerErrorException(\"Principal and JsonWebToken names do not match\");\n"
+"        } else {\n"
+"            name = ctx.getUserPrincipal().getName(); // <6>\n"
+"        }\n"
+"        return String.format(\"hello + %s,\"\n"
+"            + \" isHttps: %s,\"\n"
+"            + \" authScheme: %s,\"\n"
+"            + \" hasJWT: %s\",\n"
+"            name, ctx.isSecure(), ctx.getAuthenticationScheme(), hasJwt()); // <7>\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_guides/security-jwt.adoc:131
@@ -256,6 +292,10 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    private boolean hasJwt() {\n"
+"        return jwt.getClaimNames() != null;\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_guides/security-jwt.adoc:133
@@ -329,6 +369,16 @@ msgid ""
 "2020-07-15 16:09:50,885 INFO  [io.quarkus] (Quarkus Main Thread) Profile dev activated. Live Coding activated.\n"
 "2020-07-15 16:09:50,885 INFO  [io.quarkus] (Quarkus Main Thread) Installed features: [cdi, mutiny, resteasy-reactive, resteasy-reactive-jackson, security, smallrye-context-propagation, smallrye-jwt, vertx, vertx-web]\n"
 msgstr ""
+"[INFO] Scanning for projects...\n"
+"[INFO]\n"
+"[INFO] ----------------------< org.acme:security-jwt-quickstart >-----------------------\n"
+"[INFO] Building security-jwt-quickstart 1.0.0-SNAPSHOT\n"
+"[INFO] --------------------------------[ jar ]---------------------------------\n"
+"...\n"
+"Listening for transport dt_socket at address: 5005\n"
+"2020-07-15 16:09:50,883 INFO  [io.quarkus] (Quarkus Main Thread) security-jwt-quickstart 1.0.0-SNAPSHOT on JVM (powered by Quarkus 999-SNAPSHOT) started in 1.073s. Listening on: http://0.0.0.0:8080\n"
+"2020-07-15 16:09:50,885 INFO  [io.quarkus] (Quarkus Main Thread) Profile dev activated. Live Coding activated.\n"
+"2020-07-15 16:09:50,885 INFO  [io.quarkus] (Quarkus Main Thread) Installed features: [cdi, mutiny, resteasy-reactive, resteasy-reactive-jackson, security, smallrye-context-propagation, smallrye-jwt, vertx, vertx-web]\n"
 
 #. type: Plain text
 #: upstream/_guides/security-jwt.adoc:164
@@ -348,6 +398,8 @@ msgid ""
 "$ curl http://127.0.0.1:8080/secured/permit-all; echo\n"
 "hello + anonymous, isHttps: false, authScheme: null, hasJWT: false\n"
 msgstr ""
+"$ curl http://127.0.0.1:8080/secured/permit-all; echo\n"
+"hello + anonymous, isHttps: false, authScheme: null, hasJWT: false\n"
 
 #. type: Plain text
 #: upstream/_guides/security-jwt.adoc:174
@@ -407,6 +459,17 @@ msgid ""
 "import javax.ws.rs.core.MediaType;\n"
 "import javax.ws.rs.core.SecurityContext;\n"
 msgstr ""
+"import javax.annotation.security.PermitAll;\n"
+"import javax.annotation.security.RolesAllowed;\n"
+"import javax.enterprise.context.RequestScoped;\n"
+"import javax.inject.Inject;\n"
+"import javax.ws.rs.GET;\n"
+"import javax.ws.rs.InternalServerErrorException;\n"
+"import javax.ws.rs.Path;\n"
+"import javax.ws.rs.Produces;\n"
+"import javax.ws.rs.core.Context;\n"
+"import javax.ws.rs.core.MediaType;\n"
+"import javax.ws.rs.core.SecurityContext;\n"
 
 #. type: delimited block -
 #: upstream/_guides/security-jwt.adoc:206
@@ -418,6 +481,9 @@ msgid ""
 "@RequestScoped\n"
 "public class TokenSecuredResource {\n"
 msgstr ""
+"@Path(\"/secured\")\n"
+"@RequestScoped\n"
+"public class TokenSecuredResource {\n"
 
 #. type: delimited block -
 #: upstream/_guides/security-jwt.adoc:217
@@ -432,6 +498,13 @@ msgid ""
 "        return getResponseString(ctx);\n"
 "    }\n"
 msgstr ""
+"    @GET\n"
+"    @Path(\"permit-all\")\n"
+"    @PermitAll\n"
+"    @Produces(MediaType.TEXT_PLAIN)\n"
+"    public String hello(@Context SecurityContext ctx) {\n"
+"        return getResponseString(ctx);\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_guides/security-jwt.adoc:225
@@ -445,6 +518,13 @@ msgid ""
 "        return getResponseString(ctx) + \", birthdate: \" + jwt.getClaim(\"birthdate\").toString(); // <4>\n"
 "    }\n"
 msgstr ""
+"    @GET\n"
+"    @Path(\"roles-allowed\") // <2>\n"
+"    @RolesAllowed({ \"User\", \"Admin\" }) // <3>\n"
+"    @Produces(MediaType.TEXT_PLAIN)\n"
+"    public String helloRolesAllowed(@Context SecurityContext ctx) {\n"
+"        return getResponseString(ctx) + \", birthdate: \" + jwt.getClaim(\"birthdate\").toString(); // <4>\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_guides/security-jwt.adoc:241
@@ -467,6 +547,21 @@ msgid ""
 "            name, ctx.isSecure(), ctx.getAuthenticationScheme(), hasJwt());\n"
 "    }\n"
 msgstr ""
+"    private String getResponseString(SecurityContext ctx) {\n"
+"        String name;\n"
+"        if (ctx.getUserPrincipal() == null) {\n"
+"            name = \"anonymous\";\n"
+"        } else if (!ctx.getUserPrincipal().getName().equals(jwt.getName())) {\n"
+"            throw new InternalServerErrorException(\"Principal and JsonWebToken names do not match\");\n"
+"        } else {\n"
+"            name = ctx.getUserPrincipal().getName();\n"
+"        }\n"
+"        return String.format(\"hello + %s,\"\n"
+"            + \" isHttps: %s,\"\n"
+"            + \" authScheme: %s,\"\n"
+"            + \" hasJWT: %s\",\n"
+"            name, ctx.isSecure(), ctx.getAuthenticationScheme(), hasJwt());\n"
+"    }\n"
 
 #. type: Plain text
 #: upstream/_guides/security-jwt.adoc:248
@@ -662,18 +757,20 @@ msgid ""
 "import java.util.Arrays;\n"
 "import java.util.HashSet;\n"
 msgstr ""
+"import java.util.Arrays;\n"
+"import java.util.HashSet;\n"
 
 #. type: delimited block -
 #: upstream/_guides/security-jwt.adoc:333
 #, no-wrap
 msgid "import org.eclipse.microprofile.jwt.Claims;\n"
-msgstr ""
+msgstr "import org.eclipse.microprofile.jwt.Claims;\n"
 
 #. type: delimited block -
 #: upstream/_guides/security-jwt.adoc:335
 #, no-wrap
 msgid "import io.smallrye.jwt.build.Jwt;\n"
-msgstr ""
+msgstr "import io.smallrye.jwt.build.Jwt;\n"
 
 #. type: delimited block -
 #: upstream/_guides/security-jwt.adoc:350
@@ -694,6 +791,20 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"public class GenerateToken {\n"
+"    /**\n"
+"     * Generate JWT token\n"
+"     */\n"
+"    public static void main(String[] args) {\n"
+"        String token =\n"
+"           Jwt.issuer(\"https://example.com/issuer\") // <1>\n"
+"             .upn(\"jdoe@quarkus.io\") // <2>\n"
+"             .groups(new HashSet<>(Arrays.asList(\"User\", \"Admin\"))) // <3>\n"
+"             .claim(Claims.birthdate.name(), \"2001-07-13\") // <4>\n"
+"           .sign();\n"
+"        System.out.println(token);\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_guides/security-jwt.adoc:354
@@ -935,6 +1046,9 @@ msgid ""
 "import org.eclipse.microprofile.jwt.Claims;\n"
 "import org.eclipse.microprofile.jwt.JsonWebToken;\n"
 msgstr ""
+"import org.eclipse.microprofile.jwt.Claim;\n"
+"import org.eclipse.microprofile.jwt.Claims;\n"
+"import org.eclipse.microprofile.jwt.JsonWebToken;\n"
 
 #. type: delimited block -
 #: upstream/_guides/security-jwt.adoc:499
@@ -946,6 +1060,11 @@ msgid ""
 "    @Claim(standard = Claims.birthdate)\n"
 "    String birthdate; // <2>\n"
 msgstr ""
+"    @Inject\n"
+"    JsonWebToken jwt; // <1>\n"
+"    @Inject\n"
+"    @Claim(standard = Claims.birthdate)\n"
+"    String birthdate; // <2>\n"
 
 #. type: delimited block -
 #: upstream/_guides/security-jwt.adoc:515
@@ -959,6 +1078,13 @@ msgid ""
 "        return getResponseString(ctx) + \", birthdate: \" + jwt.getClaim(\"birthdate\").toString();\n"
 "    }\n"
 msgstr ""
+"    @GET\n"
+"    @Path(\"roles-allowed\")\n"
+"    @RolesAllowed({ \"User\", \"Admin\" })\n"
+"    @Produces(MediaType.TEXT_PLAIN)\n"
+"    public String helloRolesAllowed(@Context SecurityContext ctx) {\n"
+"        return getResponseString(ctx) + \", birthdate: \" + jwt.getClaim(\"birthdate\").toString();\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_guides/security-jwt.adoc:523
@@ -972,6 +1098,13 @@ msgid ""
 "        return getResponseString(ctx) + \", birthdate: \" + birthdate; // <3>\n"
 "    }\n"
 msgstr ""
+"    @GET\n"
+"    @Path(\"roles-allowed-admin\")\n"
+"    @RolesAllowed(\"Admin\")\n"
+"    @Produces(MediaType.TEXT_PLAIN)\n"
+"    public String helloRolesAllowedAdmin(@Context SecurityContext ctx) {\n"
+"        return getResponseString(ctx) + \", birthdate: \" + birthdate; // <3>\n"
+"    }\n"
 
 #. type: Plain text
 #: upstream/_guides/security-jwt.adoc:546
@@ -1431,6 +1564,18 @@ msgid ""
 "import io.smallrye.jwt.auth.principal.JWTCallerPrincipalFactory;\n"
 "import io.smallrye.jwt.auth.principal.ParseException;\n"
 msgstr ""
+"import java.nio.charset.StandardCharsets;\n"
+"import java.util.Base64;\n"
+"import javax.annotation.Priority;\n"
+"import javax.enterprise.context.ApplicationScoped;\n"
+"import javax.enterprise.inject.Alternative;\n"
+"import org.jose4j.jwt.JwtClaims;\n"
+"import org.jose4j.jwt.consumer.InvalidJwtException;\n"
+"import io.smallrye.jwt.auth.principal.DefaultJWTCallerPrincipal;\n"
+"import io.smallrye.jwt.auth.principal.JWTAuthContextInfo;\n"
+"import io.smallrye.jwt.auth.principal.JWTCallerPrincipal;\n"
+"import io.smallrye.jwt.auth.principal.JWTCallerPrincipalFactory;\n"
+"import io.smallrye.jwt.auth.principal.ParseException;\n"
 
 #. type: delimited block -
 #: upstream/_guides/security-jwt.adoc:774
@@ -1441,6 +1586,10 @@ msgid ""
 "@Priority(1)\n"
 "public class TestJWTCallerPrincipalFactory extends JWTCallerPrincipalFactory {\n"
 msgstr ""
+"@ApplicationScoped\n"
+"@Alternative\n"
+"@Priority(1)\n"
+"public class TestJWTCallerPrincipalFactory extends JWTCallerPrincipalFactory {\n"
 
 #. type: delimited block -
 #: upstream/_guides/security-jwt.adoc:786
@@ -1458,6 +1607,17 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    @Override\n"
+"    public JWTCallerPrincipal parse(String token, JWTAuthContextInfo authContextInfo) throws ParseException {\n"
+"        try {\n"
+"            // Token has already been verified, parse the token claims only\n"
+"            String json = new String(Base64.getUrlDecoder().decode(token.split(\"\\\\.\")[1]), StandardCharsets.UTF_8);\n"
+"            return new DefaultJWTCallerPrincipal(JwtClaims.parse(json));\n"
+"        } catch (InvalidJwtException ex) {\n"
+"            throw new ParseException(ex.getMessage());\n"
+"        }\n"
+"    }\n"
+"}\n"
 
 #. type: Title ===
 #: upstream/_guides/security-jwt.adoc:788
@@ -1635,6 +1795,14 @@ msgid ""
 "import io.quarkus.test.security.jwt.JwtSecurity;\n"
 "import io.restassured.RestAssured;\n"
 msgstr ""
+"import static org.hamcrest.Matchers.is;\n"
+"import org.junit.jupiter.api.Test;\n"
+"import io.quarkus.test.common.http.TestHTTPEndpoint;\n"
+"import io.quarkus.test.junit.QuarkusTest;\n"
+"import io.quarkus.test.security.TestSecurity;\n"
+"import io.quarkus.test.security.jwt.Claim;\n"
+"import io.quarkus.test.security.jwt.JwtSecurity;\n"
+"import io.restassured.RestAssured;\n"
 
 #. type: delimited block -
 #: upstream/_guides/security-jwt.adoc:887
@@ -1644,6 +1812,9 @@ msgid ""
 "@TestHTTPEndpoint(ProtectedResource.class)\n"
 "public class TestSecurityAuthTest {\n"
 msgstr ""
+"@QuarkusTest\n"
+"@TestHTTPEndpoint(ProtectedResource.class)\n"
+"public class TestSecurityAuthTest {\n"
 
 #. type: delimited block -
 #: upstream/_guides/security-jwt.adoc:894
@@ -1656,6 +1827,12 @@ msgid ""
 "                .body(is(\"userJwt:viewer\"));\n"
 "    }\n"
 msgstr ""
+"    @Test\n"
+"    @TestSecurity(user = \"userJwt\", roles = \"viewer\")\n"
+"    public void testJwt() {\n"
+"        RestAssured.when().get(\"test-security-jwt\").then()\n"
+"                .body(is(\"userJwt:viewer\"));\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_guides/security-jwt.adoc:904
@@ -1671,12 +1848,21 @@ msgid ""
 "                .body(is(\"userJwt:viewer:user@gmail.com\"));\n"
 "    }\n"
 msgstr ""
+"    @Test\n"
+"    @TestSecurity(user = \"userJwt\", roles = \"viewer\")\n"
+"    @JwtSecurity(claims = {\n"
+"            @Claim(key = \"email\", value = \"user@gmail.com\")\n"
+"    })\n"
+"    public void testJwtWithClaims() {\n"
+"        RestAssured.when().get(\"test-security-jwt-claims\").then()\n"
+"                .body(is(\"userJwt:viewer:user@gmail.com\"));\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_guides/security-jwt.adoc:906
 #, no-wrap
 msgid "}\n"
-msgstr ""
+msgstr "}\n"
 
 #. type: Plain text
 #: upstream/_guides/security-jwt.adoc:909
@@ -1691,6 +1877,9 @@ msgid ""
 "@Authenticated\n"
 "public class ProtectedResource {\n"
 msgstr ""
+"@Path(\"/web-app\")\n"
+"@Authenticated\n"
+"public class ProtectedResource {\n"
 
 #. type: delimited block -
 #: upstream/_guides/security-jwt.adoc:918
@@ -1699,6 +1888,8 @@ msgid ""
 "    @Inject\n"
 "    JsonWebToken accessToken;\n"
 msgstr ""
+"    @Inject\n"
+"    JsonWebToken accessToken;\n"
 
 #. type: delimited block -
 #: upstream/_guides/security-jwt.adoc:924
@@ -1710,6 +1901,11 @@ msgid ""
 "        return accessToken.getName() + \":\" + accessToken.getGroups().iterator().next();\n"
 "    }\n"
 msgstr ""
+"    @GET\n"
+"    @Path(\"test-security-jwt\")\n"
+"    public String testSecurityOidc() {\n"
+"        return accessToken.getName() + \":\" + accessToken.getGroups().iterator().next();\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_guides/security-jwt.adoc:932
@@ -1723,6 +1919,13 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    @GET\n"
+"    @Path(\"test-security-jwt-claims\")\n"
+"    public String testSecurityOidcUserInfoMetadata() {\n"
+"        return accessToken.getName() + \":\" + accessToken.getGroups().iterator().next()\n"
+"                + \":\" + accessToken.getClaim(\"email\");\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_guides/security-jwt.adoc:936
@@ -1778,6 +1981,8 @@ msgid ""
 "quarkus.log.category.\"io.quarkus.smallrye.jwt.runtime.auth.MpJwtValidator\".level=TRACE\n"
 "quarkus.log.category.\"io.quarkus.smallrye.jwt.runtime.auth.MpJwtValidator\".min-level=TRACE\n"
 msgstr ""
+"quarkus.log.category.\"io.quarkus.smallrye.jwt.runtime.auth.MpJwtValidator\".level=TRACE\n"
+"quarkus.log.category.\"io.quarkus.smallrye.jwt.runtime.auth.MpJwtValidator\".min-level=TRACE\n"
 
 #. type: Title ===
 #: upstream/_guides/security-jwt.adoc:969
@@ -1820,12 +2025,16 @@ msgid ""
 "    <artifactId>smallrye-jwt</artifactId>\n"
 "</dependency>\n"
 msgstr ""
+"<dependency>\n"
+"    <groupId>io.smallrye</groupId>\n"
+"    <artifactId>smallrye-jwt</artifactId>\n"
+"</dependency>\n"
 
 #. type: delimited block -
 #: upstream/_guides/security-jwt.adoc:995
 #, no-wrap
 msgid "implementation(\"io.smallrye:smallrye-jwt\")\n"
-msgstr ""
+msgstr "implementation(\"io.smallrye:smallrye-jwt\")\n"
 
 #. type: Plain text
 #: upstream/_guides/security-jwt.adoc:998
@@ -1839,6 +2048,8 @@ msgid ""
 "quarkus.index-dependency.smallrye-jwt.group-id=io.smallrye\n"
 "quarkus.index-dependency.smallrye-jwt.artifact-id=smallrye-jwt\n"
 msgstr ""
+"quarkus.index-dependency.smallrye-jwt.group-id=io.smallrye\n"
+"quarkus.index-dependency.smallrye-jwt.artifact-id=smallrye-jwt\n"
 
 #. type: Title ==
 #: upstream/_guides/security-jwt.adoc:1006
@@ -1883,7 +2094,7 @@ msgstr "説明"
 #: upstream/_guides/security-jwt.adoc:1017
 #, no-wrap
 msgid "mp.jwt.verify.publickey"
-msgstr ""
+msgstr "mp.jwt.verify.publickey"
 
 #. type: Table
 #: upstream/_guides/security-jwt.adoc:1017
@@ -1909,7 +2120,7 @@ msgstr ""
 #: upstream/_guides/security-jwt.adoc:1063
 #, no-wrap
 msgid "non"
-msgstr ""
+msgstr "non"
 
 #. type: Table
 #: upstream/_guides/security-jwt.adoc:1018
@@ -1921,7 +2132,7 @@ msgstr "`mp.jwt.verify.publickey` 設定プロパティーを使用すると、�
 #: upstream/_guides/security-jwt.adoc:1018
 #, no-wrap
 msgid "mp.jwt.verify.publickey.location"
-msgstr ""
+msgstr "mp.jwt.verify.publickey.location"
 
 #. type: Table
 #: upstream/_guides/security-jwt.adoc:1019
@@ -1933,7 +2144,7 @@ msgstr "Config プロパティーを使用すると、公開鍵の外部また�
 #: upstream/_guides/security-jwt.adoc:1019
 #, no-wrap
 msgid "mp.jwt.verify.publickey.algorith"
-msgstr ""
+msgstr "mp.jwt.verify.publickey.algorith"
 
 #. type: Table
 #: upstream/_guides/security-jwt.adoc:1019
@@ -1951,7 +2162,7 @@ msgstr "署名アルゴリズム。 `ES256` に設定して、楕円曲線署名
 #: upstream/_guides/security-jwt.adoc:1020
 #, no-wrap
 msgid "mp.jwt.decrypt.key.location"
-msgstr ""
+msgstr "mp.jwt.decrypt.key.location"
 
 #. type: Table
 #: upstream/_guides/security-jwt.adoc:1021
@@ -1963,7 +2174,7 @@ msgstr "Config プロパティーを使用すると、秘密復号化鍵の外�
 #: upstream/_guides/security-jwt.adoc:1021
 #, no-wrap
 msgid "mp.jwt.verify.issuer"
-msgstr ""
+msgstr "mp.jwt.verify.issuer"
 
 #. type: Table
 #: upstream/_guides/security-jwt.adoc:1022
@@ -1975,7 +2186,7 @@ msgstr "Config プロパティーは、サーバーが有効として受け入�
 #: upstream/_guides/security-jwt.adoc:1022
 #, no-wrap
 msgid "mp.jwt.verify.audience"
-msgstr ""
+msgstr "mp.jwt.verify.audience"
 
 #. type: Table
 #: upstream/_guides/security-jwt.adoc:1023
@@ -1987,14 +2198,14 @@ msgstr "トークン `aud` クレームに含まれる可能性のあるオー�
 #: upstream/_guides/security-jwt.adoc:1023
 #, no-wrap
 msgid "mp.jwt.token.header"
-msgstr ""
+msgstr "mp.jwt.token.header"
 
 #. type: Table
 #: upstream/_guides/security-jwt.adoc:1023
 #: upstream/_guides/security-jwt.adoc:1039
 #, no-wrap
 msgid "`Authorization`"
-msgstr ""
+msgstr "`Authorization`"
 
 #. type: Table
 #: upstream/_guides/security-jwt.adoc:1024
@@ -2006,7 +2217,7 @@ msgstr "`Cookie` などの別のヘッダーを使用してトークンを渡す
 #: upstream/_guides/security-jwt.adoc:1024
 #, no-wrap
 msgid "mp.jwt.token.cooki"
-msgstr ""
+msgstr "mp.jwt.token.cooki"
 
 #. type: Table
 #: upstream/_guides/security-jwt.adoc:1025
@@ -2029,7 +2240,7 @@ msgstr "SmallRye JWTには、トークン処理をカスタマイズするため
 #: upstream/_guides/security-jwt.adoc:1034
 #, no-wrap
 msgid "smallrye.jwt.verify.key.location"
-msgstr ""
+msgstr "smallrye.jwt.verify.key.location"
 
 #. type: Table
 #: upstream/_guides/security-jwt.adoc:1034
@@ -2047,7 +2258,7 @@ msgstr "公開鍵と秘密鍵の両方を指すことができる検証鍵の場
 #: upstream/_guides/security-jwt.adoc:1035
 #, no-wrap
 msgid "smallrye.jwt.verify.algorith"
-msgstr ""
+msgstr "smallrye.jwt.verify.algorith"
 
 #. type: Table
 #: upstream/_guides/security-jwt.adoc:1036
@@ -2059,7 +2270,7 @@ msgstr "署名アルゴリズム。このプロパティーは、`HS256` など�
 #: upstream/_guides/security-jwt.adoc:1036
 #, no-wrap
 msgid "smallrye.jwt.verify.key-format"
-msgstr ""
+msgstr "smallrye.jwt.verify.key-format"
 
 #. type: Table
 #: upstream/_guides/security-jwt.adoc:1036
@@ -2321,7 +2532,7 @@ msgstr "有効期限の猶予 (秒単位)。デフォルトでは、現在の時
 #: upstream/_guides/security-jwt.adoc:1054
 #, no-wrap
 msgid "smallrye.jwt.verify.au"
-msgstr ""
+msgstr "smallrye.jwt.verify.au"
 
 #. type: Table
 #: upstream/_guides/security-jwt.adoc:1055
@@ -2333,7 +2544,7 @@ msgstr "トークン `aud` クレームに含まれる可能性のあるオー�
 #: upstream/_guides/security-jwt.adoc:1055
 #, no-wrap
 msgid "smallrye.jwt.required.claim"
-msgstr ""
+msgstr "smallrye.jwt.required.claim"
 
 #. type: Table
 #: upstream/_guides/security-jwt.adoc:1056
@@ -2345,7 +2556,7 @@ msgstr "トークンに含める必要のあるクレームのコンマ区切り
 #: upstream/_guides/security-jwt.adoc:1056
 #, no-wrap
 msgid "smallrye.jwt.decrypt.key.location"
-msgstr ""
+msgstr "smallrye.jwt.decrypt.key.location"
 
 #. type: Table
 #: upstream/_guides/security-jwt.adoc:1057
@@ -2357,7 +2568,7 @@ msgstr "Config プロパティーを使用すると、秘密復号化鍵の外�
 #: upstream/_guides/security-jwt.adoc:1057
 #, no-wrap
 msgid "smallrye.jwt.decrypt.algorith"
-msgstr ""
+msgstr "smallrye.jwt.decrypt.algorith"
 
 #. type: Table
 #: upstream/_guides/security-jwt.adoc:1057
@@ -2387,7 +2598,7 @@ msgstr "文字列として提供される復号化キー。"
 #: upstream/_guides/security-jwt.adoc:1059
 #, no-wrap
 msgid "smallrye.jwt.token.decryption.ki"
-msgstr ""
+msgstr "smallrye.jwt.token.decryption.ki"
 
 #. type: Table
 #: upstream/_guides/security-jwt.adoc:1060
@@ -2465,13 +2676,13 @@ msgstr "HTTP プロキシーポート。"
 #: upstream/_guides/security-jwt.adoc:1065
 #, no-wrap
 msgid "smallrye.jwt.keystore.typ"
-msgstr ""
+msgstr "smallrye.jwt.keystore.typ"
 
 #. type: Table
 #: upstream/_guides/security-jwt.adoc:1065
 #, no-wrap
 msgid "`JKS`"
-msgstr ""
+msgstr "`JKS`"
 
 #. type: Table
 #: upstream/_guides/security-jwt.adoc:1066
@@ -2483,7 +2694,7 @@ msgstr "`mp.jwt.verify.publickey.location` または `mp.jwt.decrypt.key.locatio
 #: upstream/_guides/security-jwt.adoc:1066
 #, no-wrap
 msgid "smallrye.jwt.keystore.provider"
-msgstr ""
+msgstr "smallrye.jwt.keystore.provider"
 
 #. type: Table
 #: upstream/_guides/security-jwt.adoc:1067
@@ -2495,7 +2706,7 @@ msgstr "`mp.jwt.verify.publickey.location` または `mp.jwt.decrypt.key.locatio
 #: upstream/_guides/security-jwt.adoc:1067
 #, no-wrap
 msgid "smallrye.jwt.keystore.passwor"
-msgstr ""
+msgstr "smallrye.jwt.keystore.passwor"
 
 #. type: Table
 #: upstream/_guides/security-jwt.adoc:1068
