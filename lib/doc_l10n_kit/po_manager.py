@@ -139,14 +139,14 @@ class PoManager:
         print("Processing: {}".format(relative_file_path))
         relative_file_dir = os.path.dirname(relative_file_path)
         os.makedirs("{}/l10n/po/{}/{}".format(self.__base_dir, self.__target_lang, relative_file_dir), exist_ok=True)
-        subprocess.run("PERLLIB=vendor/po4a/lib vendor/po4a/po4a-updatepo --master-charset UTF-8 -f asciidoc -o tablecells --master upstream/{} --po l10n/po/{}/{}.po".format(relative_file_path, self.__target_lang, relative_file_path), shell=True, check=True)
+        subprocess.run("PERLLIB=vendor/po4a/lib vendor/po4a/po4a-updatepo --msgmerge-opt --no-fuzzy-matching --master-charset UTF-8 -f asciidoc -o tablecells --master upstream/{} --po l10n/po/{}/{}.po".format(relative_file_path, self.__target_lang, relative_file_path), shell=True, check=True)
         subprocess.run("msgcat --to-code=utf-8 --no-wrap -o l10n/po/{}/{}.po l10n/po/{}/{}.po".format(self.__target_lang, relative_file_path, self.__target_lang, relative_file_path), shell=True, check=True)
 
     def __update_md_po_file(self, relative_file_path):
         print("Processing: {}".format(relative_file_path))
         relative_file_dir = os.path.dirname(relative_file_path)
         os.makedirs("{}/l10n/po/{}/{}".format(self.__base_dir, self.__target_lang, relative_file_dir), exist_ok=True)
-        subprocess.run("PERLLIB=vendor/po4a/lib vendor/po4a/po4a-updatepo --master-charset UTF-8 -f text -o markdown -o neverwrap --master upstream/{} --po l10n/po/{}/{}.po".format(relative_file_path, self.__target_lang, relative_file_path), shell=True, check=True)
+        subprocess.run("PERLLIB=vendor/po4a/lib vendor/po4a/po4a-updatepo --msgmerge-opt --no-fuzzy-matching --master-charset UTF-8 -f text -o markdown -o neverwrap --master upstream/{} --po l10n/po/{}/{}.po".format(relative_file_path, self.__target_lang, relative_file_path), shell=True, check=True)
         subprocess.run("msgcat --to-code=utf-8 --no-wrap -o l10n/po/{}/{}.po l10n/po/{}/{}.po".format(self.__target_lang, relative_file_path, self.__target_lang, relative_file_path), shell=True, check=True)
 
     def __update_yaml_po_file(self, relative_file_path):
@@ -155,7 +155,7 @@ class PoManager:
         os.makedirs("{}/l10n/po/{}/{}".format(self.__base_dir, self.__target_lang, relative_file_dir), exist_ok=True)
         upstream_file_path = "upstream/{}".format(relative_file_path)
         if os.path.exists(upstream_file_path):
-            subprocess.run("PERLLIB=vendor/po4a/lib vendor/po4a/po4a-updatepo --master-charset UTF-8 -f yaml --master {} --po l10n/po/{}/{}.po".format(upstream_file_path, self.__target_lang, relative_file_path), shell=True, check=True)
+            subprocess.run("PERLLIB=vendor/po4a/lib vendor/po4a/po4a-updatepo --msgmerge-opt --no-fuzzy-matching --master-charset UTF-8 -f yaml --master {} --po l10n/po/{}/{}.po".format(upstream_file_path, self.__target_lang, relative_file_path), shell=True, check=True)
             subprocess.run("msgcat --to-code=utf-8 --no-wrap -o l10n/po/{}/{}.po l10n/po/{}/{}.po".format(self.__target_lang, relative_file_path, self.__target_lang, relative_file_path), shell=True, check=True)
         else:
             print("Skip: {} since upstream file is missing".format(relative_file_path))
@@ -167,7 +167,7 @@ class PoManager:
         os.makedirs("{}/l10n/po/{}/{}".format(self.__base_dir, self.__target_lang, relative_file_dir), exist_ok=True)
         upstream_file_path = "upstream/{}".format(relative_file_path)
         if os.path.exists(upstream_file_path):
-            subprocess.run("PERLLIB=vendor/po4a/lib vendor/po4a/po4a-updatepo --master-charset UTF-8 -f xhtml --master {} --po l10n/po/{}/{}.po".format(upstream_file_path, self.__target_lang, relative_file_path), shell=True, check=True)
+            subprocess.run("PERLLIB=vendor/po4a/lib vendor/po4a/po4a-updatepo --msgmerge-opt --no-fuzzy-matching --master-charset UTF-8 -f xhtml --master {} --po l10n/po/{}/{}.po".format(upstream_file_path, self.__target_lang, relative_file_path), shell=True, check=True)
             subprocess.run("msgcat --to-code=utf-8 --no-wrap -o l10n/po/{}/{}.po l10n/po/{}/{}.po".format(self.__target_lang, relative_file_path, self.__target_lang, relative_file_path), shell=True, check=True)
         else:
             print("Skip: {} since upstream file is missing".format(relative_file_path))
