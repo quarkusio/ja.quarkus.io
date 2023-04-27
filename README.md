@@ -1,4 +1,5 @@
-ja.quarkus.io
+j
+a.quarkus.io
 
 Japanese Localization project for [https://github.com/quarkusio/quarkusio.github.io](https://github.com/quarkusio/quarkusio.github.io) (The repository for [quarkus.io website](https://quarkus.io))
 
