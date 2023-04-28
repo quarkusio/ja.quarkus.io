@@ -1,5 +1,4 @@
-j
-a.quarkus.io
+# ja.quarkus.io
 
 Japanese Localization project for [https://github.com/quarkusio/quarkusio.github.io](https://github.com/quarkusio/quarkusio.github.io) (The repository for [quarkus.io website](https://quarkus.io))
 
@@ -7,10 +6,11 @@ Localized site: [https://ja.quarkus.io/](https://ja.quarkus.io)
 
 ## Localization architecture
 
-Original [quarkusio.github.io](https://github.com/quarkusio/quarkusio.github.io) is built with Jekyll, 
+Original site[quarkusio.github.io](https://github.com/quarkusio/quarkusio.github.io) is built with Jekyll, 
 and most of its contents are written in asciidoctor (.adoc) files.
-ja-quarkusio extracts texts to po files with [po4a](https://po4a.org/) utility, translates, 
-write back to asciidoctor files, and build a localized site.
+ja.quarkus.io extracts texts from the original site to .po files with [po4a](https://po4a.org/) utility.
+Once translators translates the extracted messages in the .po files,
+ja.quarkus.io writes back to .adoc files, and builds a localized site.
 Most workflow including pre-translation by DeepL API are automated by GitHub Actions. 
 Translators can focus on post-editing to improve fluency.
 If you are interested in contributing localization, please edit .po files, and submit a pull request.
@@ -21,7 +21,7 @@ If you are interested in contributing localization, please edit .po files, and s
 
 #### sync workflow
 
-ja-quarkusio GitHub repository has a GitHub Actions workflow which checks upstream repository(submodule) update, 
+ja.quarkus.io GitHub repository has a GitHub Actions workflow which checks upstream repository(submodule) update, 
 extracts texts from upstream .adoc files to [.adoc.po files](l10n/po), pre-translate with a translation memory 
 and the DeepL API.
 
@@ -45,8 +45,7 @@ When the pull-request is merged into `master`, it is automatically deployed to t
 If you would like to build a site locally, run:
 
 ```
-bin/apply-translation
-bin/exec-jekyll
+bin/build
 ```
 
 The site is build in `doc` directory.
@@ -80,5 +79,5 @@ For translators, we have a [translation guide(ja)](./translation-guide.ja.md).
 
 ## License
 
-ja-quarkusio is Open Source Project released under the
+ja.quarkus.io is Open Source Project released under the
 [Apache 2.0 license](http://www.apache.org/licenses/LICENSE-2.0.html).
