@@ -1,0 +1,986 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2023-05-07 08:08+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. This guide is maintained in the main Quarkus repository
+#. and pull requests should be submitted there:
+#. https://github.com/quarkusio/quarkus/tree/main/docs/src/main/asciidoc
+#. type: Title =
+#: upstream/_versions/2.16/guides/config-mappings.adoc:6
+#, no-wrap
+msgid "Mapping configuration to objects"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/config-mappings.adoc:16
+msgid "With config mappings it is possible to group multiple configuration properties in a single interface that share the same prefix."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.16/guides/config-mappings.adoc:18
+#, no-wrap
+msgid "`@ConfigMapping`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/config-mappings.adoc:22
+msgid "A config mapping requires an interface with minimal metadata configuration and annotated with the `@io.smallrye.config.ConfigMapping` annotation."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:28
+#, no-wrap
+msgid ""
+"@ConfigMapping(prefix = \"server\")\n"
+"interface Server {\n"
+"    String host();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:31
+#: upstream/_versions/2.16/guides/config-mappings.adoc:64
+#: upstream/_versions/2.16/guides/config-mappings.adoc:148
+#: upstream/_versions/2.16/guides/config-mappings.adoc:177
+#, no-wrap
+msgid ""
+"    int port();\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/config-mappings.adoc:36
+msgid "The `Server` interface is able to map configuration properties with the name `server.host` into the `Server.host()` method and `server.port` into `Server.port()` method. The configuration property name to look up is built from the prefix, and the method name with `.` (dot) as the separator."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/config-mappings.adoc:39
+msgid "If a mapping fails to match a configuration property a `NoSuchElementException` is thrown, unless the mapped element is an `Optional`."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.16/guides/config-mappings.adoc:40
+#, no-wrap
+msgid "Registration"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/config-mappings.adoc:44
+msgid "When a Quarkus application starts, a config mapping can be registered twice. One time for _STATIC INIT_ and a second time for _RUNTIME INIT_:"
+msgstr ""
+
+#. type: Title ====
+#: upstream/_versions/2.16/guides/config-mappings.adoc:45
+#, no-wrap
+msgid "STATIC INIT"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/config-mappings.adoc:52
+msgid "Quarkus starts some of its services during static initialization, and `Config` is usually one of the first things that is created. In certain situations it may not be possible to correctly initialize a config mapping. For instance, if the mapping requires values from a custom `ConfigSource`. For this reason, any config mapping requires the annotation `@io.quarkus.runtime.configuration.StaticInitSafe` to mark the mapping as safe to be used at this stage. Learn more about xref:config-extending-support.adoc#custom-config-source[registration] of a custom `ConfigSource`."
+msgstr ""
+
+#. type: Title =====
+#: upstream/_versions/2.16/guides/config-mappings.adoc:53
+#, no-wrap
+msgid "Example"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:61
+#, no-wrap
+msgid ""
+"@StaticInitSafe\n"
+"@ConfigMapping(prefix = \"server\")\n"
+"interface Server {\n"
+"    String host();\n"
+msgstr ""
+
+#. type: Title ====
+#: upstream/_versions/2.16/guides/config-mappings.adoc:66
+#, no-wrap
+msgid "RUNTIME INIT"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/config-mappings.adoc:70
+msgid "The _RUNTIME INIT_ stage happens after _STATIC INIT_. There are no restrictions at this stage, and any config mapping is added to the `Config` instance as expected."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.16/guides/config-mappings.adoc:71
+#, no-wrap
+msgid "Retrieval"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/config-mappings.adoc:74
+msgid "A config mapping interface can be injected into any CDI aware bean:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:80
+#, no-wrap
+msgid ""
+"class BusinessBean {\n"
+"    @Inject\n"
+"    Server server;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:85
+#, no-wrap
+msgid ""
+"    public void businessMethod() {\n"
+"        String host = server.host();\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/config-mappings.adoc:89
+msgid "In non-CDI contexts, use the API `io.smallrye.config.SmallRyeConfig#getConfigMapping` to retrieve the config mapping instance:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:94
+#, no-wrap
+msgid ""
+"SmallRyeConfig config = ConfigProvider.getConfig().unwrap(SmallRyeConfig.class);\n"
+"Server server = config.getConfigMapping(Server.class);\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.16/guides/config-mappings.adoc:96
+#, no-wrap
+msgid "Nested groups"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/config-mappings.adoc:99
+msgid "A nested mapping provides a way to subgroup other config properties:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:105
+#: upstream/_versions/2.16/guides/config-mappings.adoc:399
+#, no-wrap
+msgid ""
+"@ConfigMapping(prefix = \"server\")\n"
+"public interface Server {\n"
+"    String host();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:107
+#: upstream/_versions/2.16/guides/config-mappings.adoc:401
+#, no-wrap
+msgid "    int port();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:109
+#, no-wrap
+msgid "    Log log();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:112
+#, no-wrap
+msgid ""
+"    interface Log {\n"
+"        boolean enabled();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:114
+#, no-wrap
+msgid "        String suffix();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:118
+#, no-wrap
+msgid ""
+"        boolean rotate();\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.16/guides/config-mappings.adoc:120
+#: upstream/_versions/2.16/guides/config-mappings.adoc:150
+#: upstream/_versions/2.16/guides/config-mappings.adoc:183
+#: upstream/_versions/2.16/guides/config-mappings.adoc:209
+#: upstream/_versions/2.16/guides/config-mappings.adoc:228
+#: upstream/_versions/2.16/guides/config-mappings.adoc:287
+#: upstream/_versions/2.16/guides/config-mappings.adoc:341
+#: upstream/_versions/2.16/guides/config-mappings.adoc:375
+#: upstream/_versions/2.16/guides/config-mappings.adoc:406
+#, no-wrap
+msgid "application.properties"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:128
+#, no-wrap
+msgid ""
+"server.host=localhost\n"
+"server.port=8080\n"
+"server.log.enabled=true\n"
+"server.log.suffix=.log\n"
+"server.log.rotate=false\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/config-mappings.adoc:131
+msgid "The method name of a mapping group acts as sub-namespace to the configurations properties."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.16/guides/config-mappings.adoc:132
+#, no-wrap
+msgid "Overriding property names"
+msgstr ""
+
+#. type: Title ====
+#: upstream/_versions/2.16/guides/config-mappings.adoc:134
+#, no-wrap
+msgid "`@WithName`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/config-mappings.adoc:138
+msgid "If a method name, or a property name do not match with each other, the `@WithName` annotation can override the method name mapping and use the name supplied in the annotation:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:145
+#, no-wrap
+msgid ""
+"@ConfigMapping(prefix = \"server\")\n"
+"interface Server {\n"
+"    @WithName(\"name\")\n"
+"    String host();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:155
+#, no-wrap
+msgid ""
+"server.name=localhost\n"
+"server.port=8080\n"
+msgstr ""
+
+#. type: Title ====
+#: upstream/_versions/2.16/guides/config-mappings.adoc:157
+#, no-wrap
+msgid "`@WithParentName`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/config-mappings.adoc:161
+msgid "The `@WithParentName` annotation allows to configurations mapping to inherit its container name, simplifying the configuration property name required to match the mapping:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:167
+#, no-wrap
+msgid ""
+"interface Server {\n"
+"    @WithParentName\n"
+"    ServerHostAndPort hostAndPort();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:171
+#, no-wrap
+msgid ""
+"    @WithParentName\n"
+"    ServerInfo info();\n"
+"}\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:174
+#, no-wrap
+msgid ""
+"interface ServerHostAndPort {\n"
+"    String host();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:181
+#, no-wrap
+msgid ""
+"interface ServerInfo {\n"
+"    String name();\n"
+"}\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:189
+#, no-wrap
+msgid ""
+"server.host=localhost\n"
+"server.port=8080\n"
+"server.name=konoha\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/config-mappings.adoc:194
+msgid "Without the `@WithParentName` the method `name()` requires the configuration property `server.info.name`. Because we use `@WithParentName`, the `info()` mapping will inherit the parent name from `Server` and `name()` maps to `server.name` instead."
+msgstr ""
+
+#. type: Title ====
+#: upstream/_versions/2.16/guides/config-mappings.adoc:195
+#, no-wrap
+msgid "NamingStrategy"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/config-mappings.adoc:198
+msgid "Method names in camelCase map to kebab-case property names:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:204
+#, no-wrap
+msgid ""
+"@ConfigMapping(prefix = \"server\")\n"
+"interface Server {\n"
+"    String theHost();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:207
+#: upstream/_versions/2.16/guides/config-mappings.adoc:226
+#, no-wrap
+msgid ""
+"    int thePort();\n"
+"}\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:214
+#, no-wrap
+msgid ""
+"server.the-host=localhost\n"
+"server.the-port=8080\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/config-mappings.adoc:217
+msgid "The mapping strategy can be adjusted by setting `namingStrategy` value in the `@ConfigMapping` annotation:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:223
+#, no-wrap
+msgid ""
+"@ConfigMapping(prefix = \"server\", namingStrategy = ConfigMapping.NamingStrategy.VERBATIM)\n"
+"public interface ServerVerbatimNamingStrategy {\n"
+"    String theHost();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:233
+#, no-wrap
+msgid ""
+"server.theHost=localhost\n"
+"server.thePort=8080\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/config-mappings.adoc:236
+msgid "The `@ConfigMapping` annotation support the following naming strategies:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/config-mappings.adoc:238
+msgid "`KEBAB_CASE` (default) - The method name is derived by replacing case changes with a dash to map the configuration property."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/config-mappings.adoc:239
+msgid "`VERBATIM` - The method name is used as is to map the configuration property."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/config-mappings.adoc:240
+msgid "`SNAKE_CASE` - The method name is derived by replacing case changes with an underscore to map the configuration property."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.16/guides/config-mappings.adoc:241
+#, no-wrap
+msgid "Conversions"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/config-mappings.adoc:244
+msgid "A config mapping class support automatic conversions of all types available for conversion in `Config`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:251
+#, no-wrap
+msgid ""
+"@ConfigMapping\n"
+"public interface SomeTypes {\n"
+"    @WithName(\"int\")\n"
+"    int intPrimitive();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:254
+#, no-wrap
+msgid ""
+"    @WithName(\"int\")\n"
+"    Integer intWrapper();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:257
+#, no-wrap
+msgid ""
+"    @WithName(\"long\")\n"
+"    long longPrimitive();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:260
+#, no-wrap
+msgid ""
+"    @WithName(\"long\")\n"
+"    Long longWrapper();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:263
+#, no-wrap
+msgid ""
+"    @WithName(\"float\")\n"
+"    float floatPrimitive();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:266
+#, no-wrap
+msgid ""
+"    @WithName(\"float\")\n"
+"    Float floatWrapper();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:269
+#, no-wrap
+msgid ""
+"    @WithName(\"double\")\n"
+"    double doublePrimitive();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:272
+#, no-wrap
+msgid ""
+"    @WithName(\"double\")\n"
+"    Double doubleWrapper();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:275
+#, no-wrap
+msgid ""
+"    @WithName(\"char\")\n"
+"    char charPrimitive();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:278
+#, no-wrap
+msgid ""
+"    @WithName(\"char\")\n"
+"    Character charWrapper();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:281
+#, no-wrap
+msgid ""
+"    @WithName(\"boolean\")\n"
+"    boolean booleanPrimitive();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:285
+#, no-wrap
+msgid ""
+"    @WithName(\"boolean\")\n"
+"    Boolean booleanWrapper();\n"
+"}\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:296
+#, no-wrap
+msgid ""
+"int=9\n"
+"long=9999999999\n"
+"float=99.9\n"
+"double=99.99\n"
+"char=c\n"
+"boolean=true\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/config-mappings.adoc:299
+msgid "This is also valid for `Optional` and friends:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:305
+#, no-wrap
+msgid ""
+"@ConfigMapping\n"
+"public interface Optionals {\n"
+"    Optional<Server> server();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:307
+#, no-wrap
+msgid "    Optional<String> optional();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:310
+#, no-wrap
+msgid ""
+"    @WithName(\"optional.int\")\n"
+"    OptionalInt optionalInt();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:313
+#, no-wrap
+msgid ""
+"    interface Server {\n"
+"        String host();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:317
+#, no-wrap
+msgid ""
+"        int port();\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/config-mappings.adoc:320
+msgid "In this case, the mapping won't fail if there is no configuration property to match the mapping."
+msgstr ""
+
+#. type: Title ====
+#: upstream/_versions/2.16/guides/config-mappings.adoc:321
+#, no-wrap
+msgid "`@WithConverter`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/config-mappings.adoc:324
+msgid "The `@WithConverter` annotation provides a way to set a `Converter` to use in a specific mapping:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:332
+#, no-wrap
+msgid ""
+"@ConfigMapping\n"
+"public interface Converters {\n"
+"    @WithConverter(FooBarConverter.class)\n"
+"    String foo();\n"
+"}\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:339
+#, no-wrap
+msgid ""
+"public static class FooBarConverter implements Converter<String> {\n"
+"    @Override\n"
+"    public String convert(final String value) {\n"
+"        return \"bar\";\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:345
+#, no-wrap
+msgid "foo=foo\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/config-mappings.adoc:348
+msgid "A call to `Converters.foo()` results in the value `bar`."
+msgstr ""
+
+#. type: Title ====
+#: upstream/_versions/2.16/guides/config-mappings.adoc:349
+#, no-wrap
+msgid "Collections"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/config-mappings.adoc:352
+msgid "A config mapping is also able to map collections types `List` and `Set`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:358
+#, no-wrap
+msgid ""
+"@ConfigMapping(prefix = \"server\")\n"
+"public interface ServerCollections {\n"
+"    Set<Environment> environments();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:361
+#, no-wrap
+msgid ""
+"    interface Environment {\n"
+"        String name();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:363
+#, no-wrap
+msgid "        List<App> apps();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:366
+#, no-wrap
+msgid ""
+"        interface App {\n"
+"            String name();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:368
+#, no-wrap
+msgid "            List<String> services();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:373
+#, no-wrap
+msgid ""
+"            Optional<List<String>> databases();\n"
+"        }\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:384
+#, no-wrap
+msgid ""
+"server.environments[0].name=dev\n"
+"server.environments[0].apps[0].name=rest\n"
+"server.environments[0].apps[0].services=bookstore,registration\n"
+"server.environments[0].apps[0].databases=pg,h2\n"
+"server.environments[0].apps[1].name=batch\n"
+"server.environments[0].apps[1].services=stock,warehouse\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/config-mappings.adoc:389
+msgid "The `List` or `Set` mappings can use xref:config-reference.adoc#indexed-properties[indexed properties] to map configuration values in mapping groups. For collection with simple element types like `String`, their configuration value is a comma separated string."
+msgstr ""
+
+#. type: Title ====
+#: upstream/_versions/2.16/guides/config-mappings.adoc:390
+#, no-wrap
+msgid "Maps"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/config-mappings.adoc:393
+msgid "A config mapping is also able to map a `Map`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:404
+#, no-wrap
+msgid ""
+"    Map<String, String> form();\n"
+"}\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:414
+#, no-wrap
+msgid ""
+"server.host=localhost\n"
+"server.port=8080\n"
+"server.form.login-page=login.html\n"
+"server.form.error-page=error.html\n"
+"server.form.landing-page=index.html\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/config-mappings.adoc:418
+msgid "The configuration property needs to specify an additional name to act as the key. In this case the `form()` `Map` will contain three elements with the keys `login-page`, `error-page` and `landing-page`."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.16/guides/config-mappings.adoc:419
+#, no-wrap
+msgid "Defaults"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/config-mappings.adoc:423
+msgid "The `@WithDefault` annotation allows to set a default property into a mapping (and prevent and error if the configuration value is not available in any `ConfigSource`):"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:429
+#, no-wrap
+msgid ""
+"public interface Defaults {\n"
+"    @WithDefault(\"foo\")\n"
+"    String foo();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:433
+#, no-wrap
+msgid ""
+"    @WithDefault(\"bar\")\n"
+"    String bar();\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/config-mappings.adoc:437
+msgid "No configuration properties required. The `Defaults.foo()` will return the value `foo` and `Defaults.bar()` will return the value `bar`."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.16/guides/config-mappings.adoc:438
+#, no-wrap
+msgid "Validation"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/config-mappings.adoc:442
+msgid "A config mapping may combine annotations from https://beanvalidation.org[Bean Validation] to validate configuration values:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:449
+#, no-wrap
+msgid ""
+"@ConfigMapping(prefix = \"server\")\n"
+"interface Server {\n"
+"    @Size(min = 2, max = 20)\n"
+"    String host();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:453
+#, no-wrap
+msgid ""
+"    @Max(10000)\n"
+"    int port();\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/config-mappings.adoc:457
+msgid "For validation to work, the `quarkus-hibernate-validator` extension is required, and it is performed automatically."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.16/guides/config-mappings.adoc:458
+#, no-wrap
+msgid "Mocking"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/config-mappings.adoc:462
+msgid "A mapping interface implementation is not a proxy, so it cannot be mocked directly with `@InjectMock` like other CDI beans. One trick is to make it proxyable with a producer method:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:468
+#, no-wrap
+msgid ""
+"public class ServerMockProducer {\n"
+"    @Inject\n"
+"    Config config;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:476
+#, no-wrap
+msgid ""
+"    @Produces\n"
+"    @ApplicationScoped\n"
+"    @io.quarkus.test.Mock\n"
+"    Server server() {\n"
+"        return config.unwrap(SmallRyeConfig.class).getConfigMapping(Server.class);\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/config-mappings.adoc:479
+msgid "The `Server` can be injected as a mock into a Quarkus test class with `@InjectMock`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:486
+#, no-wrap
+msgid ""
+"@QuarkusTest\n"
+"class ServerMockTest {\n"
+"    @InjectMock\n"
+"    Server server;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:493
+#, no-wrap
+msgid ""
+"    @Test\n"
+"    void localhost() {\n"
+"        Mockito.when(server.host()).thenReturn(\"localhost\");\n"
+"        assertEquals(\"localhost\", server.host());\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/config-mappings.adoc:496
+msgid "The mock is just an empty shell without any actual configuration values."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/config-mappings.adoc:499
+msgid "If the goal is to only mock certain configuration values and retain the original configuration, the mocking instance requires a spy:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:506
+#, no-wrap
+msgid ""
+"@ConfigMapping(prefix = \"app\")\n"
+"public interface AppConfig {\n"
+"    @WithDefault(\"app\")\n"
+"    String name();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:508
+#, no-wrap
+msgid "    Info info();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:516
+#, no-wrap
+msgid ""
+"    interface Info {\n"
+"        @WithDefault(\"alias\")\n"
+"        String alias();\n"
+"        @WithDefault(\"10\")\n"
+"        Integer count();\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:520
+#, no-wrap
+msgid ""
+"public static class AppConfigProducer {\n"
+"    @Inject\n"
+"    Config config;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:532
+#, no-wrap
+msgid ""
+"    @Produces\n"
+"    @ApplicationScoped\n"
+"    @io.quarkus.test.Mock\n"
+"    AppConfig appConfig() {\n"
+"        AppConfig appConfig = config.unwrap(SmallRyeConfig.class).getConfigMapping(AppConfig.class);\n"
+"        AppConfig appConfigSpy = Mockito.spy(appConfig);\n"
+"        AppConfig.Info infoSpy = Mockito.spy(appConfig.info());\n"
+"        Mockito.when(appConfigSpy.info()).thenReturn(infoSpy);\n"
+"        return appConfigSpy;\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/config-mappings.adoc:535
+msgid "The `AppConfig` can be injected as a mock into a Quarkus test class with `@Inject`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:542
+#, no-wrap
+msgid ""
+"@QuarkusTest\n"
+"class AppConfigTest {\n"
+"    @Inject\n"
+"    AppConfig appConfig;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:547
+#, no-wrap
+msgid ""
+"    @Test\n"
+"    void localhost() {\n"
+"        Mockito.when(appConfig.name()).thenReturn(\"mocked-app\");\n"
+"        assertEquals(\"mocked-app\", server.host());\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/config-mappings.adoc:552
+#, no-wrap
+msgid ""
+"        Mockito.when(appConfig.info().alias()).thenReturn(\"mocked-alias\");\n"
+"        assertEquals(\"mocked-alias\", server.info().alias());\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/config-mappings.adoc:554
+msgid "Nested elements need to be spied individually by Mockito."
+msgstr ""

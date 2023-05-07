@@ -1,0 +1,1658 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2023-05-07 08:08+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. This guide is maintained in the main Quarkus repository
+#. and pull requests should be submitted there:
+#. https://github.com/quarkusio/quarkus/tree/main/docs/src/main/asciidoc
+#. type: Title =
+#: upstream/_versions/2.16/guides/logging.adoc:6
+#, no-wrap
+msgid "Configuring Logging"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:12
+msgid "This guide explains logging and how to configure it."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:16
+msgid "Internally, Quarkus uses JBoss Log Manager and the JBoss Logging facade.  You can use the JBoss Logging facade inside your code as it's already provided, or any of the supported Logging API listed in the next chapter as Quarkus will send them to JBoss Log Manager."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:18
+msgid "All the logging configuration will then be done inside your `application.properties`."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.16/guides/logging.adoc:19
+#, no-wrap
+msgid "Supported Logging APIs"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:22
+msgid "Applications and components may use any of the following APIs for logging, and the logs will be merged:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:24
+msgid "JDK `java.util.logging` (also called JUL)"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:25
+msgid "https://github.com/jboss-logging/jboss-logging[JBoss Logging]"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:26
+msgid "https://www.slf4j.org/[SLF4J]"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:27
+msgid "https://commons.apache.org/proper/commons-logging/[Apache Commons Logging]"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:29
+msgid "Internally Quarkus uses JBoss Logging; you can also use it inside your application so that no other dependencies should be added for your logs."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/logging.adoc:33
+#: upstream/_versions/2.16/guides/logging.adoc:88
+#, no-wrap
+msgid "import org.jboss.logging.Logger;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/logging.adoc:38
+#, no-wrap
+msgid ""
+"import javax.ws.rs.GET;\n"
+"import javax.ws.rs.Path;\n"
+"import javax.ws.rs.Produces;\n"
+"import javax.ws.rs.core.MediaType;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/logging.adoc:41
+#, no-wrap
+msgid ""
+"@Path(\"/hello\")\n"
+"public class ExampleResource {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/logging.adoc:43
+#, no-wrap
+msgid "    private static final Logger LOG = Logger.getLogger(ExampleResource.class);\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/logging.adoc:51
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @Produces(MediaType.TEXT_PLAIN)\n"
+"    public String hello() {\n"
+"        LOG.info(\"Hello\");\n"
+"        return \"hello\";\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:54
+msgid "If you use JBoss Logging but one of your libraries uses a different logging API, you may need to configure a <<logging-adapters,Logging Adapter>>."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.16/guides/logging.adoc:55
+#, no-wrap
+msgid "Logging with Panache"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:58
+msgid "Instead of declaring a `Logger` field, you can use the simplified logging API:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/logging.adoc:62
+#, no-wrap
+msgid "package com.example;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/logging.adoc:64
+#, no-wrap
+msgid "import io.quarkus.logging.Log; // <1>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/logging.adoc:70
+#, no-wrap
+msgid ""
+"class MyService { // <2>\n"
+"    public void doSomething() {\n"
+"        Log.info(\"Simple!\"); // <3>\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:72
+msgid "The `io.quarkus.logging.Log` class mirrors the JBoss Logging API, except all methods are `static`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:76
+msgid "Note that the class doesn't declare a logger field.  This is because during application build, a `private static final org.jboss.logging.Logger` field is created automatically, in each class that uses the `Log` API.  The fully qualified name of the class that calls the `Log` methods is used as a logger name.  In this example, the logger name would be `com.example.MyService`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:77
+msgid "Finally, during application build, all calls to `Log` methods are rewritten to regular JBoss Logging calls on the logger field."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:80
+msgid "Only use the `Log` API in application classes, not in external dependencies.  `Log` method calls that are not processed by Quarkus at build time will throw an exception."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.16/guides/logging.adoc:81
+#, no-wrap
+msgid "Injecting a Logger"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:84
+msgid "You can also inject a configured `org.jboss.logging.Logger` instance in your beans and resource classes."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/logging.adoc:91
+#, no-wrap
+msgid ""
+"@ApplicationScoped\n"
+"class SimpleBean {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/logging.adoc:94
+#, no-wrap
+msgid ""
+"   @Inject\n"
+"   Logger log; <1>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/logging.adoc:97
+#, no-wrap
+msgid ""
+"   @LoggerName(\"foo\")\n"
+"   Logger fooLog; <2>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/logging.adoc:103
+#, no-wrap
+msgid ""
+"   public void ping() {\n"
+"     log.info(\"Simple!\");\n"
+"     fooLog.info(\"Goes to _foo_ logger!\");\n"
+"   }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:105
+msgid "The FQCN of the declaring class is used as a logger name, i.e. `org.jboss.logging.Logger.getLogger(SimpleBean.class)` will be used."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:106
+msgid "In this case, the name _foo_ is used as a logger name, i.e. `org.jboss.logging.Logger.getLogger(\"foo\")` will be used."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:108
+msgid "The logger instances are cached internally. Therefore, a logger injected e.g. into a `@RequestScoped` bean is shared for all bean instances to avoid possible performance penalty associated with logger instantiation."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.16/guides/logging.adoc:109
+#, no-wrap
+msgid "What about Apache Log4j ?"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:113
+msgid "link:https://logging.apache.org/log4j/2.x/[Log4j] is a logging implementation: it contains a logging backend and a logging facade.  Quarkus uses the JBoss Log Manager backend, so you will need to include the `log4j2-jboss-logmanager` library to route Log4j logs to JBoss Log Manager."
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.16/guides/logging.adoc:115
+#: upstream/_versions/2.16/guides/logging.adoc:270
+#: upstream/_versions/2.16/guides/logging.adoc:517
+#: upstream/_versions/2.16/guides/logging.adoc:534
+#: upstream/_versions/2.16/guides/logging.adoc:551
+#: upstream/_versions/2.16/guides/logging.adoc:568
+#, no-wrap
+msgid "pom.xml"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/logging.adoc:121
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"    <groupId>org.jboss.logmanager</groupId>\n"
+"    <artifactId>log4j2-jboss-logmanager</artifactId> <1>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:123
+#: upstream/_versions/2.16/guides/logging.adoc:130
+msgid "This is the library needed for Log4j version 2; if you use the legacy Log4j version 1 you need to use `log4j-jboss-logmanager` instead."
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.16/guides/logging.adoc:125
+#: upstream/_versions/2.16/guides/logging.adoc:279
+#: upstream/_versions/2.16/guides/logging.adoc:526
+#: upstream/_versions/2.16/guides/logging.adoc:543
+#: upstream/_versions/2.16/guides/logging.adoc:560
+#: upstream/_versions/2.16/guides/logging.adoc:577
+#, no-wrap
+msgid "build.gradle"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/logging.adoc:128
+#, no-wrap
+msgid "implementation(\"org.jboss.logmanager:log4j2-jboss-logmanager\") <1>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:132
+msgid "You can then use the Log4j API inside your application."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:134
+msgid "Do not include any Log4j dependencies. The `log4j2-jboss-logmanager` library includes what's needed to use Log4j as a logging facade."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.16/guides/logging.adoc:135
+#, no-wrap
+msgid "Logging levels"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:138
+msgid "These are the log levels used by Quarkus:"
+msgstr ""
+
+#. type: Labeled list
+#: upstream/_versions/2.16/guides/logging.adoc:140
+#, no-wrap
+msgid "OFF"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:141
+msgid "Special level to turn off logging."
+msgstr ""
+
+#. type: Labeled list
+#: upstream/_versions/2.16/guides/logging.adoc:141
+#, no-wrap
+msgid "FATAL"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:142
+msgid "A critical service failure/complete inability to service requests of any kind."
+msgstr ""
+
+#. type: Labeled list
+#: upstream/_versions/2.16/guides/logging.adoc:142
+#, no-wrap
+msgid "ERROR"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:143
+msgid "A significant disruption in a request or the inability to service a request."
+msgstr ""
+
+#. type: Labeled list
+#: upstream/_versions/2.16/guides/logging.adoc:143
+#, no-wrap
+msgid "WARN"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:144
+msgid "A non-critical service error or problem that may not require immediate correction."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:144
+#: upstream/_versions/2.16/guides/logging.adoc:211
+#, no-wrap
+msgid "INFO"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:145
+msgid "Service lifecycle events or important related very-low-frequency information."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:145
+#: upstream/_versions/2.16/guides/logging.adoc:196
+#: upstream/_versions/2.16/guides/logging.adoc:212
+#, no-wrap
+msgid "DEBUG"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:146
+msgid "Messages that convey extra information regarding lifecycle or non-request-bound events which may be helpful for debugging."
+msgstr ""
+
+#. type: Labeled list
+#: upstream/_versions/2.16/guides/logging.adoc:146
+#, no-wrap
+msgid "TRACE"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:147
+msgid "Messages that convey extra per-request debugging information that may be very high frequency."
+msgstr ""
+
+#. type: Labeled list
+#: upstream/_versions/2.16/guides/logging.adoc:147
+#, no-wrap
+msgid "ALL"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:148
+msgid "Special level for all messages including custom levels."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:150
+msgid "In addition, the following levels may be configured for applications and libraries using link:https://docs.oracle.com/javase/8/docs/api/java/util/logging/Level.html[`java.util.logging`]:"
+msgstr ""
+
+#. type: Labeled list
+#: upstream/_versions/2.16/guides/logging.adoc:152
+#, no-wrap
+msgid "SEVERE"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:153
+msgid "Same as **ERROR**."
+msgstr ""
+
+#. type: Labeled list
+#: upstream/_versions/2.16/guides/logging.adoc:153
+#, no-wrap
+msgid "WARNING"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:154
+msgid "Same as **WARN**."
+msgstr ""
+
+#. type: Labeled list
+#: upstream/_versions/2.16/guides/logging.adoc:154
+#, no-wrap
+msgid "CONFIG"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:155
+msgid "Service configuration information."
+msgstr ""
+
+#. type: Labeled list
+#: upstream/_versions/2.16/guides/logging.adoc:155
+#, no-wrap
+msgid "FINE"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:156
+msgid "Same as **DEBUG**."
+msgstr ""
+
+#. type: Labeled list
+#: upstream/_versions/2.16/guides/logging.adoc:156
+#, no-wrap
+msgid "FINER"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:157
+msgid "Same as **TRACE**."
+msgstr ""
+
+#. type: Labeled list
+#: upstream/_versions/2.16/guides/logging.adoc:157
+#, no-wrap
+msgid "FINEST"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:158
+msgid "Event more debugging information than `TRACE`, maybe with even higher frequency."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.16/guides/logging.adoc:159
+#, no-wrap
+msgid "Runtime configuration"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:163
+msgid "Run time logging is configured in the `application.properties` file, for example, to set the default log level to `INFO` logging and include Hibernate `DEBUG` logs:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/logging.adoc:168
+#, no-wrap
+msgid ""
+"quarkus.log.level=INFO\n"
+"quarkus.log.category.\"org.hibernate\".level=DEBUG\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:173
+msgid "Setting a log level below `DEBUG` requires the minimum log level to be adjusted, either globally via the `quarkus.log.min-level` property or per-category as shown in the example above, as well as adjusting the log level itself."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:178
+msgid "Minimum logging level sets a floor level that Quarkus will be needed to potentially generate, opening the door to optimization opportunities.  As an example, in native execution the minimum level enables lower level checks (e.g. `isTraceEnabled`) to be folded to `false`, resulting in dead code elimination for code that will never to be executed."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:180
+msgid "All possible properties are listed in <<loggingConfigurationReference, the logging configuration reference>>."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:183
+msgid "If you are adding these properties via command line make sure `\"` is escaped.  For example `-Dquarkus.log.category.\\\"org.hibernate\\\".level=TRACE`."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.16/guides/logging.adoc:184
+#, no-wrap
+msgid "Logging categories"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:191
+msgid "Logging is done on a per-category basis.  Each category can be independently configured.  A configuration which applies to a category will also apply to all sub-categories of that category, unless there is a more specific matching sub-category configuration.  For every category the same settings that are configured on ( console / file / syslog ) apply.  These can also be overridden by attaching a one or more named handlers to a category. See example in <<category-named-handlers-example>>"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:194
+#: upstream/_versions/2.16/guides/logging.adoc:210
+#, no-wrap
+msgid "Property Nam"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:194
+#: upstream/_versions/2.16/guides/logging.adoc:210
+#, no-wrap
+msgid "Default"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:195
+#: upstream/_versions/2.16/guides/logging.adoc:211
+#: upstream/_versions/2.16/guides/logging.adoc:230
+#, no-wrap
+msgid "Description"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:195
+#, no-wrap
+msgid "quarkus.log.category.\"<category-name>\".leve"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:195
+#, no-wrap
+msgid "INFO footnote:[Some extensions may define customized default log levels for certain categories, in order to reduce log noise by default.  Setting the log level in configuration will override any extension-defined log levels.]"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:196
+#, no-wrap
+msgid "The level to use to configure the category named `<category-name>`.  The quotes are necessary."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:196
+#, no-wrap
+msgid "quarkus.log.category.\"<category-name>\".min-leve"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:197
+#, no-wrap
+msgid "The minimum logging level to use to configure the category named `<category-name>`.  The quotes are necessary."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:197
+#, no-wrap
+msgid "quarkus.log.category.\"<category-name>\".use-parent-handler"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:197
+#, no-wrap
+msgid "tru"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:198
+#, no-wrap
+msgid "Specify whether this logger should send its output to its parent logger."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:198
+#, no-wrap
+msgid "quarkus.log.category.\"<category-name>\".handlers=[<handler>]"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:198
+#, no-wrap
+msgid "empty footnote:[By default, the configured category gets the same handlers attached as the one on the root logger.]"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:199
+#, no-wrap
+msgid "The names of the handlers that you want to attach to a specific category."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:203
+msgid "The quotes shown in the property name are required as categories normally contain '.' which must be escaped. An example is shown in <<category-example>>."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.16/guides/logging.adoc:204
+#, no-wrap
+msgid "Root logger configuration"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:207
+msgid "The root logger category is handled separately, and is configured via the following properties:"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:211
+#, no-wrap
+msgid "quarkus.log.leve"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:212
+#, no-wrap
+msgid "The default log level for every log category."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:212
+#, no-wrap
+msgid "quarkus.log.min-leve"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:213
+#, no-wrap
+msgid "The default minimum log level for every log category."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:216
+msgid "If no level configuration exists for a given logger category, the enclosing (parent) category is examined. If no categories are configured which enclose the category in question, then the root logger configuration is used."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.16/guides/logging.adoc:217
+#, no-wrap
+msgid "Logging Format"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:220
+msgid "By default, Quarkus uses a pattern-based logging formatter that generates human-readable text logs."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:223
+msgid "You can configure the format for each log handler via a dedicated property.  For the console handler, the property is `quarkus.log.console.format`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:225
+msgid "The logging format string supports the following symbols:"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:228
+#, no-wrap
+msgid "Symbo"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:228
+#, no-wrap
+msgid "Summary"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:230
+#, no-wrap
+msgid "%%"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:230
+#, no-wrap
+msgid "`%`"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:231
+#, no-wrap
+msgid "Renders a simple `%` character."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:231
+#, no-wrap
+msgid "%c"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:231
+#, no-wrap
+msgid "Category"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:232
+#, no-wrap
+msgid "Renders the category name."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:232
+#, no-wrap
+msgid "%C"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:232
+#, no-wrap
+msgid "Source clas"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:233
+#, no-wrap
+msgid "Renders the source class name.footnote:calc[Format sequences which examine caller information may affect performance]"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:233
+#, no-wrap
+msgid "%d{xxx}"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:233
+#, no-wrap
+msgid "Dat"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:234
+#, no-wrap
+msgid "Renders a date with the given date format string, which uses the syntax defined by `java.text.SimpleDateFormat`."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:234
+#: upstream/_versions/2.16/guides/logging.adoc:236
+#: upstream/_versions/2.16/guides/logging.adoc:239
+#: upstream/_versions/2.16/guides/logging.adoc:241
+#: upstream/_versions/2.16/guides/logging.adoc:247
+#, no-wrap
+msgid "%"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:234
+#, no-wrap
+msgid "Exception"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:235
+#, no-wrap
+msgid "Renders the thrown exception, if any."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:235
+#, no-wrap
+msgid "%F"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:235
+#, no-wrap
+msgid "Source fil"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:236
+#, no-wrap
+msgid "Renders the source file name.footnote:calc[]"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:236
+#, no-wrap
+msgid "Host nam"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:237
+#, no-wrap
+msgid "Renders the system simple host name."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:237
+#, no-wrap
+msgid "%H"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:237
+#, no-wrap
+msgid "Qualified host nam"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:238
+#, no-wrap
+msgid "Renders the system's fully qualified host name, which may be the same as the simple host name, depending on OS configuration."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:238
+#, no-wrap
+msgid "%i"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:238
+#, no-wrap
+msgid "Process ID"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:239
+#, no-wrap
+msgid "Render the current process PID."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:239
+#, no-wrap
+msgid "Source location"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:240
+#, no-wrap
+msgid "Renders the source location information, which includes source file name, line number, class name, and method name.footnote:calc[]"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:240
+#, no-wrap
+msgid "%L"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:240
+#, no-wrap
+msgid "Source lin"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:241
+#, no-wrap
+msgid "Renders the source line number.footnote:calc[]"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:241
+#, no-wrap
+msgid "Full Messag"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:242
+#, no-wrap
+msgid "Renders the log message plus exception (if any)."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:242
+#, no-wrap
+msgid "%M"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:242
+#, no-wrap
+msgid "Source metho"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:243
+#, no-wrap
+msgid "Renders the source method name.footnote:calc[]"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:243
+#, no-wrap
+msgid "%n"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:243
+#, no-wrap
+msgid "Newlin"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:244
+#, no-wrap
+msgid "Renders the platform-specific line separator string."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:244
+#, no-wrap
+msgid "%N"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:244
+#, no-wrap
+msgid "Process nam"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:245
+#, no-wrap
+msgid "Render the name of the current process."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:245
+#, no-wrap
+msgid "%p"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:245
+#, no-wrap
+msgid "Leve"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:246
+#, no-wrap
+msgid "Render the log level of the message."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:246
+#, no-wrap
+msgid "%r"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:246
+#, no-wrap
+msgid "Relative tim"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:247
+#, no-wrap
+msgid "Render the time in milliseconds since the start of the application log."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:247
+#, no-wrap
+msgid "Simple messag"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:248
+#, no-wrap
+msgid "Renders just the log message, with no exception trace."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:248
+#, no-wrap
+msgid "%t"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:248
+#, no-wrap
+msgid "Thread nam"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:249
+#, no-wrap
+msgid "Render the thread name."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:249
+#, no-wrap
+msgid "%t{id}"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:249
+#, no-wrap
+msgid "Thread ID"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:250
+#, no-wrap
+msgid "Render the thread ID."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:250
+#, no-wrap
+msgid "%z{<zone name>}"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:250
+#, no-wrap
+msgid "Time zon"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:251
+#, no-wrap
+msgid "Set the time zone of the output to `<zone name>`."
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:251
+#, no-wrap
+msgid "%X{<MDC property name>}"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:251
+#, no-wrap
+msgid "Mapped Diagnostics Context Valu"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:252
+#, no-wrap
+msgid "Renders the value from Mapped Diagnostics Context"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:252
+#, no-wrap
+msgid "%X"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:252
+#, no-wrap
+msgid "Mapped Diagnostics Context Value"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:253
+#, no-wrap
+msgid "Renders all the values from Mapped Diagnostics Context in format {property.key=property.value}"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:253
+#, no-wrap
+msgid "%x"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:253
+#, no-wrap
+msgid "Nested Diagnostics context value"
+msgstr ""
+
+#. type: Table
+#: upstream/_versions/2.16/guides/logging.adoc:254
+#, no-wrap
+msgid "Renders all the values from Nested Diagnostics Context in format {value1.value2}"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.16/guides/logging.adoc:257
+#, no-wrap
+msgid "Alternative Console Logging Formats"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:262
+msgid "It is possible to change the output format of the console log. This can be useful in environments where the output of the Quarkus application is captured by a service which can, for example, process and store the log information for later analysis."
+msgstr ""
+
+#. type: Title ====
+#: upstream/_versions/2.16/guides/logging.adoc:264
+#, no-wrap
+msgid "JSON Logging Format"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:268
+msgid "In order to configure the JSON logging format, the `quarkus-logging-json` extension may be employed.  Add this extension to your build file as the following snippet illustrates:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/logging.adoc:276
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-logging-json</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/logging.adoc:282
+#, no-wrap
+msgid "implementation(\"io.quarkus:quarkus-logging-json\")\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:287
+msgid "The presence of this extension will, by default, replace the output format configuration from the console configuration.  This means that the format string and the color settings (if any) will be ignored.  The other console configuration items (including those controlling asynchronous logging and the log level) will continue to be applied."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:289
+msgid "For some, it will make sense to use logging that is humanly readable (unstructured) in dev mode and JSON logging (structured) in production mode. This can be achieved using different profiles, as shown in the following configuration."
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.16/guides/logging.adoc:290
+#, no-wrap
+msgid "Disable JSON logging in application.properties for dev and test mode"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/logging.adoc:295
+#, no-wrap
+msgid ""
+"%dev.quarkus.log.console.json=false\n"
+"%test.quarkus.log.console.json=false\n"
+msgstr ""
+
+#. type: Title =====
+#: upstream/_versions/2.16/guides/logging.adoc:297
+#, no-wrap
+msgid "Configuration"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:300
+msgid "The JSON logging extension can be configured in various ways.  The following properties are supported:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:304
+msgid "Enabling pretty printing might cause certain processors and JSON parsers to fail."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:307
+msgid "Printing the details can be expensive as the values are retrieved from the caller. The details include the source class name, source file name, source method name and source line number."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.16/guides/logging.adoc:308
+#, no-wrap
+msgid "Log Handlers"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:312
+msgid "A log handler is a logging component responsible for the emission of log events to a recipient.  Quarkus comes with three different log handlers: **console**, **file** and **syslog**."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.16/guides/logging.adoc:313
+#, no-wrap
+msgid "Console log handler"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:316
+msgid "The console log handler is enabled by default.  It outputs all log events to the console of your application (typically to the system's `stdout`)."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:318
+msgid "For details of its configuration options, see link:#quarkus-log-logging-log-config_quarkus.log.console-console-logging[the Console Logging configuration reference]."
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.16/guides/logging.adoc:320
+#, no-wrap
+msgid "Logging filters"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.16/guides/logging.adoc:324
+msgid "Log handlers (like the console log handler) can have a link:https://docs.oracle.com/en/java/javase/11/docs/api/java.logging/java/util/logging/Filter.html[filter] associated with them, whose purpose is to determine whether a record should actually be logged or not."
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.16/guides/logging.adoc:326
+msgid "These filters are registered by placing the `@io.quarkus.logging.LoggingFilter` annotation on a (`final`) class that implements `java.util.logging.Filter` and setting the `name` property."
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.16/guides/logging.adoc:328
+msgid "Finally, the filter is attached using the `filter` configuration property of the appropriate handler."
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.16/guides/logging.adoc:332
+msgid "Let's say for example that we wanted to filter out logging records that contained a part of text from the console logs.  The text itself is part of the application configuration and is not hardcoded.  We could write a filter like so:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/logging.adoc:338
+#, no-wrap
+msgid ""
+"import io.quarkus.logging.LoggingFilter;\n"
+"import java.util.logging.Filter;\n"
+"import java.util.logging.LogRecord;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/logging.adoc:341
+#, no-wrap
+msgid ""
+"@LoggingFilter(name = \"my-filter\")\n"
+"public final class TestFilter implements Filter {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/logging.adoc:343
+#, no-wrap
+msgid "    private final String part;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/logging.adoc:347
+#, no-wrap
+msgid ""
+"    public TestFilter(@ConfigProperty(name = \"my-filter.part\") String part) {\n"
+"        this.part = part;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/logging.adoc:353
+#, no-wrap
+msgid ""
+"    @Override\n"
+"    public boolean isLoggable(LogRecord record) {\n"
+"        return !record.getMessage().contains(part);\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:356
+msgid "and configure it in the usual Quarkus way (for example using `application.properties`) like so:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/logging.adoc:360
+#, no-wrap
+msgid "my-filter.part=TEST\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:364
+msgid "And we would register this filter to the console handler like so:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/logging.adoc:368
+#, no-wrap
+msgid "quarkus.log.console.filter=my-filter\n"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.16/guides/logging.adoc:371
+#, no-wrap
+msgid "File log handler"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.16/guides/logging.adoc:375
+msgid "The file log handler is disabled by default. It outputs all log events to a file on the application's host.  It supports log file rotation."
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.16/guides/logging.adoc:377
+msgid "For details of its configuration options, see link:#quarkus-log-logging-log-config_quarkus.log.file-file-logging[the File Logging configuration reference]."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/2.16/guides/logging.adoc:378
+#, no-wrap
+msgid "Syslog log handler"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.16/guides/logging.adoc:381
+msgid "link:https://en.wikipedia.org/wiki/Syslog[Syslog] is a protocol for sending log messages on Unix-like systems using a protocol defined by link:https://tools.ietf.org/html/rfc5424[RFC 5424]."
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.16/guides/logging.adoc:384
+msgid "The syslog handler sends all log events to a syslog server (by default, the syslog server that is local to the application).  It is disabled by default."
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/2.16/guides/logging.adoc:386
+msgid "For details of its configuration options, see link:#quarkus-log-logging-log-config_quarkus.log.syslog-syslog-logging[the Syslog Logging configuration reference]."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:391
+msgid "Although the root logger's handlers are usually configured directly via `quarkus.log.console`, `quarkus.log.file` and `quarkus.log.syslog`, it can nonetheless have additional named handlers attached to it using the `quarkus.log.handlers` property."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.16/guides/logging.adoc:393
+#, no-wrap
+msgid "Examples"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.16/guides/logging.adoc:395
+#, no-wrap
+msgid "Console DEBUG Logging except for Quarkus logs (INFO), No color, Shortened Time, Shortened Category Prefixes"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/logging.adoc:401
+#, no-wrap
+msgid ""
+"quarkus.log.console.format=%d{HH:mm:ss} %-5p [%c{2.}] (%t) %s%e%n\n"
+"quarkus.log.console.level=DEBUG\n"
+"quarkus.log.console.color=false\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/logging.adoc:403
+#, no-wrap
+msgid "quarkus.log.category.\"io.quarkus\".level=INFO\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:407
+msgid "If you are adding these properties via command line make sure `\"` is escaped.  For example `-Dquarkus.log.category.\\\"io.quarkus\\\".level=DEBUG`."
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.16/guides/logging.adoc:409
+#, no-wrap
+msgid "File TRACE Logging Configuration"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/logging.adoc:421
+#, no-wrap
+msgid ""
+"quarkus.log.file.enable=true\n"
+"# Send output to a trace.log file under the /tmp directory\n"
+"quarkus.log.file.path=/tmp/trace.log\n"
+"quarkus.log.file.level=TRACE\n"
+"quarkus.log.file.format=%d{HH:mm:ss} %-5p [%c{2.}] (%t) %s%e%n\n"
+"# Set 2 categories (io.quarkus.smallrye.jwt, io.undertow.request.security) to TRACE level\n"
+"quarkus.log.min-level=TRACE\n"
+"quarkus.log.category.\"io.quarkus.smallrye.jwt\".level=TRACE\n"
+"quarkus.log.category.\"io.undertow.request.security\".level=TRACE\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:424
+msgid "As we don't change the root logger, console log will only contain `INFO` or higher order logs."
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.16/guides/logging.adoc:426
+#, no-wrap
+msgid "Named handlers attached to a category"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/logging.adoc:440
+#, no-wrap
+msgid ""
+"# Send output to a trace.log file under the /tmp directory\n"
+"quarkus.log.file.path=/tmp/trace.log\n"
+"quarkus.log.console.format=%d{HH:mm:ss} %-5p [%c{2.}] (%t) %s%e%n\n"
+"# Configure a named handler that logs to console\n"
+"quarkus.log.handler.console.\"STRUCTURED_LOGGING\".format=%e%n\n"
+"# Configure a named handler that logs to file\n"
+"quarkus.log.handler.file.\"STRUCTURED_LOGGING_FILE\".enable=true\n"
+"quarkus.log.handler.file.\"STRUCTURED_LOGGING_FILE\".format=%e%n\n"
+"# Configure the category and link the two named handlers to it\n"
+"quarkus.log.category.\"io.quarkus.category\".level=INFO\n"
+"quarkus.log.category.\"io.quarkus.category\".handlers=STRUCTURED_LOGGING,STRUCTURED_LOGGING_FILE\n"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.16/guides/logging.adoc:443
+#, no-wrap
+msgid "Named handlers attached to the root logger"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/logging.adoc:451
+#, no-wrap
+msgid ""
+"# configure a named file handler that sends the output to 'quarkus.log'\n"
+"quarkus.log.handler.file.CONSOLE_MIRROR.enable=true\n"
+"quarkus.log.handler.file.CONSOLE_MIRROR.path=quarkus.log\n"
+"# attach the handler to the root logger\n"
+"quarkus.log.handlers=CONSOLE_MIRROR\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.16/guides/logging.adoc:453
+#, no-wrap
+msgid "Centralized Log Management"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:456
+msgid "If you want to send your logs to a centralized tool like Graylog, Logstash or Fluentd, you can follow the xref:centralized-log-management.adoc[Centralized log management guide]."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.16/guides/logging.adoc:457
+#, no-wrap
+msgid "How to Configure Logging for `@QuarkusTest`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:461
+msgid "If you want to configure logging for your `@QuarkusTest`, don't forget to set up the `maven-surefire-plugin` accordingly.  In particular, you need to set the appropriate `LogManager` using the `java.util.logging.manager` system property."
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/2.16/guides/logging.adoc:462
+#, no-wrap
+msgid "Example Configuration"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/logging.adoc:480
+#, no-wrap
+msgid ""
+"<build>\n"
+"  <plugins>\n"
+"    <plugin>\n"
+"      <artifactId>maven-surefire-plugin</artifactId>\n"
+"      <version>${surefire-plugin.version}</version>\n"
+"      <configuration>\n"
+"        <systemPropertyVariables>\n"
+"          <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager> <1>\n"
+"          <quarkus.log.level>DEBUG</quarkus.log.level>  <2>\n"
+"          <maven.home>${maven.home}</maven.home>\n"
+"        </systemPropertyVariables>\n"
+"      </configuration>\n"
+"    </plugin>\n"
+"  </plugins>\n"
+"</build>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:482
+msgid "Make sure the `org.jboss.logmanager.LogManager` is used."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:483
+msgid "Enable debug logging for all logging categories."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:485
+msgid "If you are using Gradle, add this to your `build.gradle`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/logging.adoc:491
+#, no-wrap
+msgid ""
+"test {\n"
+"\tsystemProperty \"java.util.logging.manager\", \"org.jboss.logmanager.LogManager\"\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:494
+msgid "See also: <<getting-started-testing.adoc#test-from-ide,Running `@QuarkusTest` from an IDE>>"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.16/guides/logging.adoc:496
+#, no-wrap
+msgid "Logging Adapters"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:499
+msgid "Quarkus relies on the JBoss Logging library for all the logging requirements."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:501
+msgid "If you are using libraries that have dependencies on other logging libraries such as Apache Commons Logging, Log4j or SLF4J, you need to exclude them from the dependencies and use one of the adapters provided by JBoss Logging."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:503
+msgid "This is especially important when building native executables as you could encounter issues similar to the following when compiling the native executable:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/logging.adoc:507
+#, no-wrap
+msgid "Caused by java.lang.ClassNotFoundException: org.apache.commons.logging.impl.LogFactoryImpl\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:511
+msgid "This is due to the logging implementation not being included in the native executable.  Using the JBoss Logging adapters will solve this problem."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:513
+msgid "These adapters are available for most of the common Open Source logging components."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:515
+msgid "Apache Commons Logging:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/logging.adoc:523
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"    <groupId>org.jboss.logging</groupId>\n"
+"    <artifactId>commons-logging-jboss-logging</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/logging.adoc:529
+#, no-wrap
+msgid "implementation(\"org.jboss.logging:commons-logging-jboss-logging\")\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:532
+msgid "Log4j:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/logging.adoc:540
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"    <groupId>org.jboss.logmanager</groupId>\n"
+"    <artifactId>log4j-jboss-logmanager</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/logging.adoc:546
+#, no-wrap
+msgid "implementation(\"org.jboss.logmanager:log4j-jboss-logmanager\")\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:549
+msgid "Log4j 2:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/logging.adoc:557
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"    <groupId>org.jboss.logmanager</groupId>\n"
+"    <artifactId>log4j2-jboss-logmanager</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/logging.adoc:563
+#, no-wrap
+msgid "implementation(\"org.jboss.logmanager:log4j2-jboss-logmanager\")\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:566
+msgid "And SLF4J:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/logging.adoc:574
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"    <groupId>org.jboss.slf4j</groupId>\n"
+"    <artifactId>slf4j-jboss-logmanager</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/2.16/guides/logging.adoc:580
+#, no-wrap
+msgid "implementation(\"org.jboss.slf4j:slf4j-jboss-logmanager\")\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/2.16/guides/logging.adoc:583
+msgid "This is not needed for libraries that are dependencies of a Quarkus extension as the extension will take care of this for you."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/2.16/guides/logging.adoc:585
+#, no-wrap
+msgid "Logging configuration reference"
+msgstr ""
