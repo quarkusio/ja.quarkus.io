@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2023-05-28 08:13+0000\n"
+"POT-Creation-Date: 2023-06-11 08:09+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -2567,6 +2567,288 @@ msgstr "`QuarkusTestResourceLifecycleManager` 実装は、`ContextAware` を実�
 #: upstream/_versions/main/guides/getting-started-testing.adoc:1508
 msgid "For `@QuarkusIntegrationTest` tests that result in launcher the application as a container, `io.quarkus.test.common.DevServicesContext` also provides access to the id of the container network on which the application container was launched (via the `containerNetworkId` method).  This can be used by `QuarkusTestResourceLifecycleManager` that need to launch additional containers that the application will communicate with."
 msgstr "アプリケーションをコンテナーとしてランチャーにする `@QuarkusIntegrationTest` テストの場合、`io.quarkus.test.common.DevServicesContext` は、アプリケーションコンテナーが起動されたコンテナーネットワークの ID へのアクセスも提供します (`containerNetworkId` メソッドを使用)。これは、アプリケーションが通信する追加のコンテナーを起動する必要がある `QuarkusTestResourceLifecycleManager` で使用できます。"
+
+#. type: Title ==
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1510
+#, no-wrap
+msgid "Testing Components"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1513
+msgid "This feature is experimental and the API may change in the future."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1517
+msgid "In Quarkus, the component model is built on top CDI.  Therefore, Quarkus provides the `QuarkusComponentTestExtension`, a JUnit extension to ease the testing of components and mocking of their dependencies.  This extension is available in the `quarkus-junit5-component` dependency."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1519
+msgid "Let's have a component `Foo`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1523
+#, no-wrap
+msgid "package org.acme;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1526
+#, no-wrap
+msgid ""
+"import jakarta.enterprise.context.ApplicationScoped;\n"
+"import jakarta.inject.Inject;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1529
+#, no-wrap
+msgid ""
+"@ApplicationScoped <1>\n"
+"public class Foo {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1532
+#, no-wrap
+msgid ""
+"    @Inject\n"
+"    Charlie charlie; <2>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1535
+#, no-wrap
+msgid ""
+"    @ConfigProperty(name = \"bar\") \n"
+"    boolean bar; <3>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1540
+#, no-wrap
+msgid ""
+"    public String ping() {\n"
+"        return bar ? charlie.ping() : \"nok\";\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1542
+msgid "`Foo` is an `@ApplicationScoped` CDI bean."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1543
+msgid "`Foo` depends on `Charlie` which declares a method `ping()`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1544
+msgid "`Foo` depends on the config property `bar`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1546
+msgid "Then a component test could look like:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1550
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1587
+#, no-wrap
+msgid "import static org.junit.jupiter.api.Assertions.assertEquals;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1557
+#, no-wrap
+msgid ""
+"import jakarta.inject.Inject;\n"
+"import io.quarkus.test.component.TestConfigProperty;\n"
+"import io.quarkus.test.component.TestMock;\n"
+"import io.quarkus.test.component.QuarkusComponentTest;\n"
+"import org.junit.jupiter.api.Test;\n"
+"import org.mockito.Mockito;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1561
+#, no-wrap
+msgid ""
+"@QuarkusComponentTest <1>\n"
+"@TestConfigProperty(key = \"bar\", value = \"true\") <2>\n"
+"public class FooTest {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1564
+#, no-wrap
+msgid ""
+"    @Inject\n"
+"    Foo foo; <3>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1567
+#, no-wrap
+msgid ""
+"    @ConfigureMock\n"
+"    Charlie charlieMock; <4>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1574
+#, no-wrap
+msgid ""
+"    @Test\n"
+"    public void testPing() {\n"
+"        Mockito.when(charlieMock.ping()).thenReturn(\"OK\"); <5>\n"
+"        assertEquals(\"OK\", foo.ping());\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1576
+msgid "The `QuarkusComponentTest` annotation registers the JUnit extension."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1577
+msgid "Set a configuration property for the test."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1578
+msgid "The test injects the component under the test. The types of all fields annotated with `@Inject` are considered the component types under test. You can also specify additional component classes via `@QuarkusComponentTest#value()`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1579
+msgid "The test also injects `Charlie`, a dependency for which a synthetic `@Singleton` bean is registered automatically. The injected reference is an \"unconfigured\" Mockito mock."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1580
+msgid "We can leverage the Mockito API in a test method to configure the behavior."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1583
+msgid "If you need the full control over the `QuarkusComponentTestExtension` configuration then you can use the `@RegisterExtension` annotation and configure the extension programatically.  The test above could be rewritten like:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1593
+#, no-wrap
+msgid ""
+"import jakarta.inject.Inject;\n"
+"import io.quarkus.test.component.TestMock;\n"
+"import io.quarkus.test.component.QuarkusComponentTestExtension;\n"
+"import org.junit.jupiter.api.Test;\n"
+"import org.mockito.Mockito;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1595
+#, no-wrap
+msgid "public class FooTest {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1598
+#, no-wrap
+msgid ""
+"    @RegisterExtension <1>\n"
+"    static final QuarkusComponentTestExtension extension = new QuarkusComponentTestExtension().configProperty(\"bar\",\"true\");\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1601
+#, no-wrap
+msgid ""
+"    @Inject\n"
+"    Foo foo;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1604
+#, no-wrap
+msgid ""
+"    @ConfigureMock\n"
+"    Charlie charlieMock;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1611
+#, no-wrap
+msgid ""
+"    @Test\n"
+"    public void testPing() {\n"
+"        Mockito.when(charlieMock.ping()).thenReturn(\"OK\");\n"
+"        assertEquals(\"OK\", foo.ping());\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1613
+msgid "The `QuarkusComponentTestExtension` is configured in a static field."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1614
+#, no-wrap
+msgid "Lifecycle"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1621
+msgid "So what exactly does the `QuarkusComponentTest` do? It starts the CDI container and registers a dedicated xref:config-reference.adoc[configuration object] during the `before all` test phase.  The container is stopped and the config is released during the `after all` test phase.  The fields annotated with `@Inject` and `@ConfigureMock` are injected after a test instance is created and unset before a test instance is destroyed.  Finally, the CDI request context is activated and terminated per each test method."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1623
+msgid "By default, a new test instance is created for each test method. Therefore, a new CDI container is started for each test method. However, if the test class is annotated with `@org.junit.jupiter.api.TestInstance` and the test instance lifecycle is set to `org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS` then the CDI container will be shared across all test method executions of a given test class."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1624
+#, no-wrap
+msgid "Auto Mocking Unsatisfied Dependencies"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1631
+msgid "Unlike in regular CDI environments the test does not fail if a component injects an unsatisfied dependency.  Instead, a synthetic bean is registered automatically for each combination of required type and qualifiers of an injection point that resolves to an unsatisfied dependency.  The bean has the `@Singleton` scope so it's shared across all injection points with the same required type and qualifiers.  The injected reference is an _unconfigured_ Mockito mock.  You can inject the mock in your test and leverage the Mockito API to configure the behavior."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1632
+#, no-wrap
+msgid "Custom Mocks For Unsatisfied Dependencies"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1636
+msgid "Sometimes you need the full control over the bean attributes and maybe even configure the default mock behavior.  You can use the mock configurator API via the `QuarkusComponentTestExtension#mock()` method."
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1637
+#, no-wrap
+msgid "Configuration"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/getting-started-testing.adoc:1641
+msgid "A dedicated `SmallRyeConfig` is registered during the `before all` test phase.  Moreover, it's possible to set the configuration properties via the `QuarkusComponentTestExtension#configProperty(String, String)` method or the `@TestConfigProperty` annotation.  If you only need to use the default values for missing config properties, then the `QuarkusComponentTestExtension#useDefaultConfigProperties()` or `@QuarkusComponentTest#useDefaultConfigProperties()` might come in useful."
+msgstr ""
 
 #~ msgid "`@InjectMock` results in a mock being and is available in test methods of the test class (other test classes are *not* affected by this)"
 #~ msgstr "`@InjectMock` により、モックがテストクラスのテストメソッドに存在することになり、利用可能になります (他のテストクラスはこの影響を受け *ません* )。"
