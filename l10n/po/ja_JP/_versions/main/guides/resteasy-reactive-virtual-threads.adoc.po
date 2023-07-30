@@ -1,0 +1,579 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2023-07-30 08:15+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. This guide is maintained in the main Quarkus repository
+#. and pull requests should be submitted there:
+#. https://github.com/quarkusio/quarkus/tree/main/docs/src/main/asciidoc
+#. type: Title =
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:7
+#, no-wrap
+msgid "Use virtual threads in REST applications"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:15
+msgid "In this guide, we see how you can use virtual threads in a REST application.  Because virtual threads are all about I/O, we will also use the REST client."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:16
+#, no-wrap
+msgid "Prerequisites"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:20
+#, no-wrap
+msgid "Architecture"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:24
+msgid "The application built into this guide is quite simple.  It calls a weather service for two cities (Valence, France, and Athens, Greece) and decides the best place based on the current temperature."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:26
+#, no-wrap
+msgid "Create the Maven project"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:29
+msgid "First, we need a new project. Create a new project with the following command:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:36
+msgid "This command generates a new project importing the RESTEasy Reactive, Reactive REST client, and https://github.com/FasterXML/jackson[Jackson] extensions, and in particular, adds the following dependencies:"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:38
+#, no-wrap
+msgid "pom.xml"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:48
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"  <groupId>io.quarkus</groupId>\n"
+"  <artifactId>quarkus-resteasy-reactive-jackson</artifactId>\n"
+"</dependency>\n"
+"<dependency>\n"
+"  <groupId>io.quarkus</groupId>\n"
+"  <artifactId>quarkus-rest-client-reactive-jackson</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:51
+#, no-wrap
+msgid "build.gradle"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:55
+#, no-wrap
+msgid ""
+"implementation(\"io.quarkus:quarkus-resteasy-reactive-jackson\")\n"
+"implementation(\"quarkus-rest-client-reactive-jackson\")\n"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:62
+msgid "You might wonder why we use _reactive_ extensions.  Virtual threads have limitations, and we can only integrate them properly when using the reactive extensions.  No worries: your code will be written 100% in a synchronous / imperative style."
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:64
+msgid "Check the xref:./virtual-threads.adoc#why-not[virtual thread reference guide] for details."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:66
+#, no-wrap
+msgid "Prepare the `pom.xml` file"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:69
+msgid "We need to customize the `pom.xml` file to use virtual threads."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:71
+msgid "Locate the line with `<maven.compiler.release>17</maven.compiler.release>`, and replace it with:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:75
+#, no-wrap
+msgid "    <maven.compiler.release>20</maven.compiler.release>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:78
+msgid "In the maven-compiler-plugin configuration, add the `--enable-preview` arg (only if you use Java 19 or Java 20)"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:91
+#, no-wrap
+msgid ""
+"<plugin>\n"
+"  <artifactId>maven-compiler-plugin</artifactId>\n"
+"  <version>${compiler-plugin.version}</version>\n"
+"  <configuration>\n"
+"    <compilerArgs>\n"
+"      <arg>-parameters</arg>\n"
+"      <arg>--enable-preview</arg> <!-- Added line -->\n"
+"    </compilerArgs>\n"
+"  </configuration>\n"
+"</plugin>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:94
+msgid "In the maven-surefire-plugin and maven-failsafe-plugin configurations, add the following `argLine` parameter:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:128
+#, no-wrap
+msgid ""
+"<plugin>\n"
+"  <artifactId>maven-surefire-plugin</artifactId>\n"
+"  <version>${surefire-plugin.version}</version>\n"
+"  <configuration>\n"
+"    <systemPropertyVariables>\n"
+"      <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>\n"
+"      <maven.home>${maven.home}</maven.home>\n"
+"    </systemPropertyVariables>\n"
+"    <argLine>--enable-preview -Djdk.tracePinnedThreads</argLine> <!-- Added line -->\n"
+"  </configuration>\n"
+"</plugin>\n"
+"<plugin>\n"
+"  <artifactId>maven-failsafe-plugin</artifactId>\n"
+"  <version>${surefire-plugin.version}</version>\n"
+"  <executions>\n"
+"    <execution>\n"
+"      <goals>\n"
+"        <goal>integration-test</goal>\n"
+"        <goal>verify</goal>\n"
+"      </goals>\n"
+"      <configuration>\n"
+"        <systemPropertyVariables>\n"
+"          <native.image.path>${project.build.directory}/${project.build.finalName}-runner</native.image.path>\n"
+"          <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>\n"
+"          <maven.home>${maven.home}</maven.home>\n"
+"        </systemPropertyVariables>\n"
+"        <argLine>--enable-preview -Djdk.tracePinnedThreads</argLine> <!-- Added line -->\n"
+"      </configuration>\n"
+"    </execution>\n"
+"  </executions>\n"
+"</plugin>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:132
+msgid "The `-Djdk.tracePinnedThreads` will detect pinned carrier threads while running tests (See xref:./virtual-threads.adoc#pinning[the virtual thread reference guide for details])."
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:134
+#, no-wrap
+msgid "--enable-preview and Java 21"
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:137
+msgid "The `--enable-preview` flag is only required if you use Java 19 or 20."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:139
+#, no-wrap
+msgid "Create the weather client"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:144
+msgid "This section is not about virtual threads.  Because we need to do some I/O to demonstrate virtual threads usage, we need a client doing I/O operations.  In addition, the reactive REST client is virtual thread friendly: it does not pin and handle propagation correctly."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:146
+msgid "Create the `src/main/java/org/acme/WeatherService.java` class with the following content:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:150
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:185
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:280
+#, no-wrap
+msgid "package org.acme;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:156
+#, no-wrap
+msgid ""
+"import com.fasterxml.jackson.annotation.JsonProperty;\n"
+"import io.quarkus.rest.client.reactive.ClientQueryParam;\n"
+"import jakarta.ws.rs.GET;\n"
+"import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;\n"
+"import org.jboss.resteasy.reactive.RestQuery;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:159
+#, no-wrap
+msgid ""
+"@RegisterRestClient(baseUri = \"https://api.open-meteo.com/v1/forecast\")\n"
+"public interface WeatherService {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:163
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @ClientQueryParam(name = \"current_weather\", value = \"true\")\n"
+"    WeatherResponse getWeather(@RestQuery double latitude, @RestQuery double longitude);\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:168
+#, no-wrap
+msgid ""
+"    record WeatherResponse(@JsonProperty(\"current_weather\") Weather weather) {\n"
+"        // represents the response\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:173
+#, no-wrap
+msgid ""
+"    record Weather(double temperature, double windspeed) {\n"
+"        // represents the inner object\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:177
+msgid "This class models the HTTP interaction with the weather service.  Read more about the rest client in the dedicated xref:./rest-client-reactive.adoc[guide]."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:178
+#, no-wrap
+msgid "Create the HTTP endpoint"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:181
+msgid "Now, create the `src/main/java/org/acme/TheBestPlaceToBeResource.java` class with the following content:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:190
+#, no-wrap
+msgid ""
+"import io.smallrye.common.annotation.RunOnVirtualThread;\n"
+"import jakarta.ws.rs.GET;\n"
+"import jakarta.ws.rs.Path;\n"
+"import org.eclipse.microprofile.rest.client.inject.RestClient;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:193
+#, no-wrap
+msgid ""
+"@Path(\"/\")\n"
+"public class TheBestPlaceToBeResource {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:196
+#, no-wrap
+msgid ""
+"    static final double VALENCE_LATITUDE = 44.9;\n"
+"    static final double VALENCE_LONGITUDE = 4.9;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:199
+#, no-wrap
+msgid ""
+"    static final double ATHENS_LATITUDE = 37.9;\n"
+"    static final double ATHENS_LONGITUDE = 23.7;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:201
+#, no-wrap
+msgid "    @RestClient WeatherService service;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:207
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @RunOnVirtualThread <1>\n"
+"    public String getTheBestPlaceToBe() {\n"
+"        var valence = service.getWeather(VALENCE_LATITUDE, VALENCE_LONGITUDE).weather().temperature();\n"
+"        var athens = service.getWeather(ATHENS_LATITUDE, ATHENS_LONGITUDE).weather().temperature();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:218
+#, no-wrap
+msgid ""
+"        // Advanced decision tree\n"
+"        if (valence > athens && valence <= 35) {\n"
+"            return \"Valence! (\" + Thread.currentThread() + \")\";\n"
+"        } else if (athens > 35) {\n"
+"            return \"Valence! (\" + Thread.currentThread() + \")\";\n"
+"        } else {\n"
+"            return \"Athens (\" + Thread.currentThread() + \")\";\n"
+"        }\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:220
+msgid "Instructs Quarkus to invoke this method on a virtual thread"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:221
+#, no-wrap
+msgid "Run the application in dev mode"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:224
+msgid "Make sure that you use OpenJDK and JVM versions supporting virtual thread and launch the _dev mode_ with `./mvnw quarkus:dev`:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:231
+#, no-wrap
+msgid ""
+"> java --version\n"
+"openjdk 20.0.1 2023-04-18 <1>\n"
+"OpenJDK Runtime Environment Temurin-20.0.1+9 (build 20.0.1+9)\n"
+"OpenJDK 64-Bit Server VM Temurin-20.0.1+9 (build 20.0.1+9, mixed mode)\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:233
+#, no-wrap
+msgid "> ./mvnw quarkus:dev <2>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:235
+msgid "Must be 19+"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:236
+msgid "Launch the dev mode"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:239
+msgid "Then, in a browser, open http://localhost:8080.  You should get something like:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:243
+#, no-wrap
+msgid "Valence! (VirtualThread[#144]/runnable@ForkJoinPool-1-worker-6)\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:246
+msgid "As you can see, the endpoint runs on a virtual thread."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:248
+msgid "It's essential to understand what happened behind the scene:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:250
+msgid "Quarkus creates the virtual thread to invoke your endpoint (because of the `@RunOnVirtualThread` annotation)."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:251
+msgid "When the code invokes the rest client, the virtual thread is blocked, BUT the carrier thread is not blocked (that's the virtual thread _magic touch_)."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:252
+msgid "Once the first invocation of the rest client completes, the virtual thread is rescheduled and continues its execution."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:253
+msgid "The second rest client invocation happens, and the virtual thread is blocked again (but not the carrier thread)."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:254
+msgid "Finally, when the second invocation of the rest client completes, the virtual thread is rescheduled and continues its execution."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:255
+msgid "The method returns the result. The virtual thread terminates."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:256
+msgid "The result is captured by Quarkus and written in the HTTP response"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:257
+#, no-wrap
+msgid "Verify pinning using tests"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:260
+msgid "In the `pom.xml,` we added an `argLine` argument to the surefire and failsafe plugins:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:264
+#, no-wrap
+msgid "<argLine>--enable-preview -Djdk.tracePinnedThreads</argLine>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:268
+msgid "The `-Djdk.tracePinnedThreads` dumps the stack trace if a virtual thread cannot be _unmounted_ smoothly (meaning that it blocks the carrier thread).  That's what we call _pinning_ (more info in xref:./virtual-threads.adoc#pinning[the virtual thread reference guide])."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:274
+msgid "We recommend enabling this flag in tests.  Thus, you can check that your application behaves correctly when using virtual threads.  Just check your log after having run the test.  If you see a stack trace... better check what's wrong.  If your code (or one of your dependencies) pins, it might be better to use regular worker thread instead."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:276
+msgid "Create the `src/test/java/org/acme/TheBestPlaceToBeResourceTest.java` class with the following content:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:284
+#, no-wrap
+msgid ""
+"import io.quarkus.test.junit.QuarkusTest;\n"
+"import io.restassured.RestAssured;\n"
+"import org.junit.jupiter.api.Test;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:287
+#, no-wrap
+msgid ""
+"@QuarkusTest\n"
+"class TheBestPlaceToBeResourceTest {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:294
+#, no-wrap
+msgid ""
+"    @Test\n"
+"    void verify() {\n"
+"        RestAssured.get(\"/\")\n"
+"                .then()\n"
+"                .statusCode(200);\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:296
+#, no-wrap
+msgid "}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:300
+msgid "It is a straightforward test, but at least it will detect if our application is pinning.  Run the test with either:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:302
+msgid "`r` in dev mode (using continuous testing)"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:303
+msgid "`./mvnw test`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:306
+msgid "As you will see, it does not pin - no stack trace.  It is because the reactive REST client is implemented in a virtual-thread-friendly way."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:308
+msgid "The same approach can be used with integration tests."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:309
+#, no-wrap
+msgid "Conclusion"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:313
+msgid "This guide shows how you can use virtual threads with RESTEasy Reactive and the reactive REST client.  Learn more about virtual threads support on:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:315
+msgid "xref:./messaging-virtual-threads.adoc[@RunOnVirtualThread in messaging applications] (this guide covers Apache Kafka)"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:316
+msgid "xref:./grpc-virtual-threads.adoc[@RunOnVirtualThread in gRPC services]"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/resteasy-reactive-virtual-threads.adoc:316
+msgid "xref:./virtual-threads.adoc[the virtual thread reference guide] (include native compilation and containerization)"
+msgstr ""

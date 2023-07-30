@@ -1,0 +1,444 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2023-07-30 08:15+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. type: Title =
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:1
+#, no-wrap
+msgid "Quarkus Virtual Thread support with Reactive Messaging"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:9
+msgid "This guide explains how to benefit from Java virtual threads when writing message processing applications in Quarkus."
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:15
+msgid "This guide focuses on using virtual threads with Reactive Messaging extensions.  Please refer to xref:virtual-threads.adoc[Writing simpler reactive REST services with Quarkus Virtual Thread support] to read more about Java virtual threads in general and the Quarkus Virtual Thread support for REST services."
+msgstr ""
+
+#. type: delimited block =
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:18
+msgid "For reference guides of specific Reactive Messaging extensions see xref:kafka.adoc[Apache Kafka Reference Guide], xref:amqp-reference.adoc[Reactive Messaging AMQP 1.0 Connector], xref:rabbitmq-reference.adoc[Reactive Messaging RabbitMQ Connector] or xref:pulsar.adoc[Apache Pulsar Reference Guide]."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:25
+msgid "By default, Reactive Messaging invokes message processing methods on an event-loop thread.  See the xref:quarkus-reactive-architecture.adoc[Quarkus Reactive Architecture documentation] for further details on this topic.  But, you sometimes need to combine Reactive Messaging with blocking processing such as calling external services or database operations.  For this, you can use the link:{rm_blocking_annotation}[@Blocking] annotation indicating that the processing is _blocking_ and should be run on a worker thread.  You can read more on the blocking processing in link:{rm_blocking_docs}[SmallRye Reactive Messaging documentation]."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:28
+msgid "The idea behind Quarkus Virtual Thread support for Reactive Messaging is to offload the message processing on virtual threads, instead of running it on an event-loop thread or a worker thread."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:32
+msgid "To enable virtual thread support on a message consumer method, simply add the link:{runonvthread}[@RunOnVirtualThread] annotation to the method.  If the JDK is compatible (Java 19 or later versions) then each incoming message will be offloaded to a new virtual thread.  It will then be possible to perform blocking operations without blocking the platform thread upon which the virtual thread is mounted."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:33
+#, no-wrap
+msgid "Example using the Reactive Messaging Kafka extension"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:37
+msgid "Let's see an example of how to process Kafka records on virtual threads.  First, make sure to have a reactive messaging extension dependency to your build file:"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:39
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:56
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:74
+#, no-wrap
+msgid "pom.xml"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:45
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"  <groupId>io.quarkus</groupId>\n"
+"  <artifactId>quarkus-smallrye-reactive-messaging-kafka</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:48
+#, no-wrap
+msgid "build.gradle"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:51
+#, no-wrap
+msgid "implementation(\"io.quarkus:quarkus-smallrye-reactive-messaging-kafka\")\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:54
+msgid "You also need to make sure that you are using Java 19 or later, this can be enforced in your `pom.xml` file with the following:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:62
+#, no-wrap
+msgid ""
+"<properties>\n"
+"    <maven.compiler.source>20</maven.compiler.source>\n"
+"    <maven.compiler.target>20</maven.compiler.target>\n"
+"</properties>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:65
+msgid "Virtual threads are still a preview feature, so you need to start your application with the `--enable-preview` flag:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:69
+#, no-wrap
+msgid "java --enable-preview -jar target/quarkus-app/quarkus-run.jar\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:72
+msgid "or to use the Quarkus Dev mode, insert the following to the `quarkus-maven-plugin` configuration:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:88
+#, no-wrap
+msgid ""
+"<maven.compiler.release>20</maven.compiler.release>\n"
+"<!-- ... -->\n"
+"<plugin>\n"
+"    <artifactId>maven-compiler-plugin</artifactId>\n"
+"    <version>${compiler-plugin.version}</version>\n"
+"    <configuration>\n"
+"      <compilerArgs>\n"
+"        <arg>-parameters</arg>\n"
+"        <arg>--enable-preview</arg>\n"
+"      </compilerArgs>\n"
+"    </configuration>\n"
+"</plugin>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:92
+msgid "Then you can start using the annotation `@RunOnVirtualThread` on your consumer methods also annotated with `@Incoming`.  In the following example we'll use the xref:rest-client-reactive.adoc[RESTEasy Reactive REST Client] to make a blocking call to a REST endpoint:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:98
+#, no-wrap
+msgid ""
+"import org.eclipse.microprofile.reactive.messaging.Incoming;\n"
+"import org.eclipse.microprofile.reactive.messaging.Outgoing;\n"
+"import org.eclipse.microprofile.rest.client.inject.RestClient;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:100
+#, no-wrap
+msgid "import io.smallrye.common.annotation.RunOnVirtualThread;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:102
+#, no-wrap
+msgid "import jakarta.enterprise.context.ApplicationScoped;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:105
+#, no-wrap
+msgid ""
+"@ApplicationScoped\n"
+"public class PriceConsumer {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:108
+#, no-wrap
+msgid ""
+"    @RestClient // <2>\n"
+"    PriceAlertService alertService;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:117
+#, no-wrap
+msgid ""
+"    @Incoming(\"prices\")\n"
+"    @RunOnVirtualThread // <1>\n"
+"    public void consume(double price) {\n"
+"        if (price > 90.0) {\n"
+"            alertService.alert(price); // <3>\n"
+"        }\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:125
+#, no-wrap
+msgid ""
+"    @Outgoing(\"prices-out\") // <4>\n"
+"    public Multi<Double> randomPriceGenerator() {\n"
+"        return Multi.createFrom().<Random, Double>generator(Random::new, (r, e) -> {\n"
+"            e.emit(r.nextDouble(100));\n"
+"            return r;\n"
+"        });\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:128
+#, no-wrap
+msgid "}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:131
+msgid "`@RunOnVirtualThread` annotation on the `@Incoming` method ensures that the method will be called on a virtual thread."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:132
+msgid "the REST client stub is injected with the `@RestClient` annotation."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:133
+msgid "`alert` method blocks the virtual thread until the REST call returns."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:134
+msgid "This `@Outgoing` method generates random prices and writes them a Kafka topic to be consumed back by the application."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:138
+msgid "Note that by default Reactive Messaging message processing happens sequentially, preserving the order of messages.  In the same way, `@Blocking(ordered = false)` annotation changes this behaviour, using `@RunOnVirtualThread` enforces concurrent message processing without preserving the order."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:139
+#, no-wrap
+msgid "Use the @RunOnVirtualThread annotation"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:141
+#, no-wrap
+msgid "Methods signatures eligible to @RunOnVirtualThread"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:145
+msgid "Only method can be annotated with `@Blocking` can use `@RunOnVirtualThreads`.  The eligible method signatures are:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:147
+msgid "`@Outgoing(\"channel-out\") O generator()`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:148
+msgid "`@Outgoing(\"channel-out\")  Message<O> generator()`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:149
+msgid "`@Incoming(\"channel-in\") @Outgoing(\"channel-out\") O process(I in)`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:150
+msgid "`@Incoming(\"channel-in\") @Outgoing(\"channel-out\") Message<O> process(I in)`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:151
+msgid "`@Incoming(\"channel-in\") void consume(I in)`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:152
+msgid "`@Incoming(\"channel-in\") Uni<Void> consume(I in)`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:153
+msgid "`@Incoming(\"channel-in\") Uni<Void> consume(Message<I> msg)`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:154
+msgid "`@Incoming(\"channel-in\") CompletionStage<Void> consume(I in)`"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:155
+msgid "`@Incoming(\"channel-in\") CompletionStage<Void> consume(Message<I> msg)`"
+msgstr ""
+
+#. type: Title ===
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:156
+#, no-wrap
+msgid "Use of @RunOnVirtualThread annotation on methods and classes"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:159
+msgid "You can use the `@RunOnVirtualThread` annotation:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:161
+msgid "directly on a reactive messaging method - this method will be considered _blocking_ and executed on a virtual thread"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:162
+msgid "on the class containing reactive messaging methods - the methods from this class annotation with `@Blocking` will be executed on virtual thread, except if the annotation defines a pool name configured to use regular worker threads"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:164
+msgid "For example, you can use `@RunOnVirtualThread` directly on the method:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:169
+#, no-wrap
+msgid ""
+"@ApplicationScoped\n"
+"public class MyBean {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:177
+#, no-wrap
+msgid ""
+"    @Incoming(\"in\")\n"
+"    @Outgoing(\"out\")\n"
+"    @RunOnVirtualThread\n"
+"    public String process(String s) {\n"
+"        // Called on a new virtual thread for every incoming message\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:180
+msgid "Alternatively, you can use `@RunOnVirtualThread` on the class itself:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:186
+#, no-wrap
+msgid ""
+"@ApplicationScoped\n"
+"@RunOnVirtualThread\n"
+"public class MyBean {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:192
+#, no-wrap
+msgid ""
+"    @Incoming(\"in1\")\n"
+"    @Outgoing(\"out1\")\n"
+"    public String process(String s) {\n"
+"        // Called on the event loop - no @Blocking annotation\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:199
+#, no-wrap
+msgid ""
+"    @Incoming(\"in2\")\n"
+"    @Outgoing(\"out2\")\n"
+"    @Blocking\n"
+"    public String process(String s) {\n"
+"        // Call on a new virtual thread for every incoming message\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:207
+#, no-wrap
+msgid ""
+"    @Incoming(\"in3\")\n"
+"    @Outgoing(\"out3\")\n"
+"    @Blocking(\"my-worker-pool\")\n"
+"    public String process(String s) {\n"
+"        // Called on a regular worker thread from the pool named \"my-worker-pool\"\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:209
+#, no-wrap
+msgid "Control the maximum concurrency"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:213
+msgid "In order to leverage the lightweight nature of virtual threads, the default maximum concurrency for methods annotated with `@RunOnVirtualThread` is 1024.  As opposed to platform threads, virtual threads are not pooled and created per message. Therefore the maximum concurrency applies separately to all `@RunOnVirtualThread` methods."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:215
+msgid "There are two ways to customize the concurrency level:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:217
+msgid "The `@RunOnVirtualThread` annotation can be used together with the link:{rm_blocking_annotation}[@Blocking] annotation to specify a worker name."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:226
+#, no-wrap
+msgid ""
+"@Incoming(\"prices\")\n"
+"@RunOnVirtualThread\n"
+"@Blocking(\"my-worker\")\n"
+"public void consume(double price) {\n"
+"    //...\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:229
+msgid "Then, for example, to set the maximum concurrency of this method down to 30, set using the config property `smallrye.messaging.worker.my-worker.max-concurrency=30`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/messaging-virtual-threads.adoc:231
+msgid "For every `@RunOnVirtualThread` method that is not configured with a worker name, you can use the config property `smallrye.messaging.worker.<virtual-thread>.max-concurrency`."
+msgstr ""
