@@ -5,4 +5,3 @@ permalink: /blog/
 pagination: 
   enabled: true
 ---
-
