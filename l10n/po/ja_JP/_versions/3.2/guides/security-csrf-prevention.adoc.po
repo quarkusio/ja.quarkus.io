@@ -1,0 +1,525 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2023-09-03 08:14+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. This guide is maintained in the main Quarkus repository
+#. and pull requests should be submitted there:
+#. https://github.com/quarkusio/quarkus/tree/main/docs/src/main/asciidoc
+#. type: Title =
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:6
+#, no-wrap
+msgid "Cross-Site Request Forgery Prevention"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:11
+msgid "https://owasp.org/www-community/attacks/csrf[Cross-Site Request Forgery (CSRF)] is an attack that forces an end user to execute unwanted actions on a web application in which they are currently authenticated."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:13
+msgid "Quarkus Security provides a CSRF prevention feature which implements a https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html#double-submit-cookie[Double Submit Cookie technique]. This techninque requires that the CSRF token is never directly exposed to scripts executed on the client-side. In this extension, the CSRF token is:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:15
+msgid "sent as `HTTPOnly` cookie to the client, and"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:16
+msgid "directly embedded in a hidden form input of server-side rendered forms, which are transmitted to and used by the client."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:18
+msgid "The extension consists of a xref:resteasy-reactive.adoc[RESTEasy Reactive] server filter which creates and verifies CSRF tokens in `application/x-www-form-urlencoded` and `multipart/form-data` forms and a Qute HTML form parameter provider which supports the xref:qute-reference.adoc#injecting-beans-directly-in-templates[injection of CSRF tokens in Qute templates]."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:19
+#, no-wrap
+msgid "Creating the Project"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:23
+msgid "First, we need a new project.  Create a new project with the following command:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:29
+msgid "This command generates a project which imports the `csrf-reactive` extension."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:32
+msgid "If you already have your Quarkus project configured, you can add the `csrf-reactive` extension to your project by running the following command in your project base directory:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:37
+msgid "This will add the following to your build file:"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:39
+#, no-wrap
+msgid "pom.xml"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:45
+#, no-wrap
+msgid ""
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-csrf-reactive</artifactId>\n"
+"</dependency>\n"
+msgstr ""
+
+#. type: Block title
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:48
+#, no-wrap
+msgid "build.gradle"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:51
+#, no-wrap
+msgid "implementation(\"io.quarkus:quarkus-csrf-reactive\")\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:54
+msgid "Next, let's add a `csrfToken.html` Qute template producing an HTML form in the `src/main/resources/templates` folder:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:65
+#, no-wrap
+msgid ""
+"<!DOCTYPE html>\n"
+"<html>\n"
+"<head>\n"
+"<meta charset=\"UTF-8\">\n"
+"<title>User Name Input</title> \n"
+"</head>\n"
+"<body>\n"
+"    <h1>User Name Input</h1>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:68
+#, no-wrap
+msgid ""
+"    <form action=\"/service/csrfTokenForm\" method=\"post\">\n"
+"    \t<input type=\"hidden\" name=\"{inject:csrf.parameterName}\" value=\"{inject:csrf.token}\" />  <1>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:74
+#, no-wrap
+msgid ""
+"    \t<p>Your Name: <input type=\"text\" name=\"name\" /></p>\n"
+"    \t<p><input type=\"submit\" name=\"submit\"/></p>\n"
+"    </form>\n"
+"</body>\n"
+"</html>\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:76
+msgid "This expression is used to inject a CSRF token into a hidden form field. This token will be verified by the CSRF filter against a CSRF cookie."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:78
+msgid "Now let's create a resource class which returns an HTML form and handles form POST requests:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:82
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:147
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:234
+#, no-wrap
+msgid "package io.quarkus.it.csrf;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:91
+#, no-wrap
+msgid ""
+"import jakarta.inject.Inject;\n"
+"import jakarta.ws.rs.Consumes;\n"
+"import jakarta.ws.rs.FormParam;\n"
+"import jakarta.ws.rs.GET;\n"
+"import jakarta.ws.rs.POST;\n"
+"import jakarta.ws.rs.Path;\n"
+"import jakarta.ws.rs.Produces;\n"
+"import jakarta.ws.rs.core.MediaType;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:94
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:160
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:249
+#, no-wrap
+msgid ""
+"import io.quarkus.qute.Template;\n"
+"import io.quarkus.qute.TemplateInstance;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:97
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:163
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:252
+#, no-wrap
+msgid ""
+"@Path(\"/service\")\n"
+"public class UserNameResource {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:100
+#, no-wrap
+msgid ""
+"    @Inject\n"
+"    Template csrfToken; <1>\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:107
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @Path(\"/csrfTokenForm\")\n"
+"    @Produces(MediaType.TEXT_HTML)\n"
+"    public TemplateInstance getCsrfTokenForm() {\n"
+"        return csrfToken.instance(); <2>\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:116
+#, no-wrap
+msgid ""
+"    @POST\n"
+"    @Path(\"/csrfTokenForm\")\n"
+"    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)\n"
+"    @Produces(MediaType.TEXT_PLAIN)\n"
+"    public String postCsrfTokenForm(@FormParam(\"name\") String userName) {\n"
+"        return userName; <3>\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:118
+msgid "Inject the `csrfToken.html` as a `Template`."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:119
+msgid "Return the HTML form with a hidden form field containing a CSRF token created by the CSRF filter."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:120
+msgid "Handle the POST form request, this method can only be invoked if the CSRF filter has successfully verified the token."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:122
+msgid "The form POST request will fail with HTTP status `400` if the filter finds the hidden CSRF form field is missing, the CSRF cookie is missing, or if the CSRF form field and CSRF cookie values do not match."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:124
+msgid "At this stage no additional configuration is needed - by default the CSRF form field and cookie name will be set to `csrf-token`, and the filter will verify the token. But you can change these names if you would like:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:129
+#, no-wrap
+msgid ""
+"quarkus.csrf-reactive.form-field-name=csrftoken\n"
+"quarkus.csrf-reactive.cookie-name=csrftoken\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:131
+#, no-wrap
+msgid "Sign CSRF token"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:134
+msgid "You can get `HMAC` signatures created for the generated CSRF tokens and have these `HMAC` values stored as CSRF token cookies if you would like to avoid the risk of the attackers recreating the CSRF cookie token. All you need to do is to configure a token signature secret which must be at least 32 characters long:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:138
+#, no-wrap
+msgid "quarkus.csrf-reactive.token-signature-key=AyM1SysPpbyDfgZld3umj1qzKObwVMkoqQ-EstJQLr_T-1qS0gZH75aKtMN3Yj0iPS4hcgUuTwjAzZr1Z9CAow\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:140
+#, no-wrap
+msgid "Restrict CSRF token verification"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:143
+msgid "Your Jakarta REST endpoint may accept not only HTTP POST requests with `application/x-www-form-urlencoded` or `multipart/form-data` payloads but also payloads with other media types, either on the same or different URL paths, and therefore you would like to avoid verifying the CSRF token in such cases, for example:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:157
+#, no-wrap
+msgid ""
+"import jakarta.inject.Inject;\n"
+"import jakarta.ws.rs.BadRequestException;\n"
+"import jakarta.ws.rs.Consumes;\n"
+"import jakarta.ws.rs.FormParam;\n"
+"import jakarta.ws.rs.GET;\n"
+"import jakarta.ws.rs.POST;\n"
+"import jakarta.ws.rs.Path;\n"
+"import jakarta.ws.rs.Produces;\n"
+"import jakarta.ws.rs.core.MediaType;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:166
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:255
+#, no-wrap
+msgid ""
+"    @Inject\n"
+"    Template csrfToken;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:173
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @Path(\"/user\")\n"
+"    @Produces(MediaType.TEXT_HTML)\n"
+"    public TemplateInstance getCsrfTokenForm() {\n"
+"        return csrfToken.instance();\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:182
+#, no-wrap
+msgid ""
+"    <1>\n"
+"    @POST\n"
+"    @Path(\"/user\")\n"
+"    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)\n"
+"    @Produces(MediaType.TEXT_PLAIN)\n"
+"    public String postCsrfTokenForm(@FormParam(\"name\") String userName) {\n"
+"        return userName;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:191
+#, no-wrap
+msgid ""
+"    <2>\n"
+"    @POST\n"
+"    @Path(\"/user\")\n"
+"    @Consumes(MediaType.APPLICATION_JSON)\n"
+"    @Produces(MediaType.TEXT_PLAIN)\n"
+"    public String postJson(User user) {\n"
+"        return user.name;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:200
+#, no-wrap
+msgid ""
+"    <3>\n"
+"    @POST\n"
+"    @Path(\"/users\")\n"
+"    @Consumes(MediaType.APPLICATION_JSON)\n"
+"    @Produces(MediaType.TEXT_PLAIN)\n"
+"    public String postJson(User user) {\n"
+"        return user.name;\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:211
+#, no-wrap
+msgid ""
+"    public static class User {\n"
+"        private String name;\n"
+"        public String getName() {\n"
+"            return this.name;\n"
+"        }\n"
+"        public void setName(String name) {\n"
+"            this.name = name;\n"
+"        }\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:213
+msgid "POST form request to `/user`, CSRF token verification is enforced by the CSRF filter"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:214
+msgid "POST json request to `/user`, CSRF token verification is not needed"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:215
+msgid "POST json request to `/users`, CSRF token verification is not needed"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:217
+msgid "As you can see a CSRF token verification will be required at the `/service/user` path accepting the `application/x-www-form-urlencoded` payload, but `User` JSON representation posted to both `/service/user` and `/service/users` method will have no CSRF token and therefore the token verification has to be skipped in these cases by restricting it to the specific `/service/user` request path but also allowing not only `application/x-www-form-urlencoded` on this path:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:222
+#, no-wrap
+msgid ""
+"# Verify CSRF token only for the `/service/user` path, ignore other paths such as `/service/users`\n"
+"quarkus.csrf-reactive.create-token-path=/service/user\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:225
+#, no-wrap
+msgid ""
+"# If `/service/user` path accepts not only `application/x-www-form-urlencoded` payloads but also other ones such as JSON then allow them\n"
+"quarkus.csrf-reactive.require-form-url-encoded=false\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:227
+#, no-wrap
+msgid "Verify CSRF token in the application code"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:230
+msgid "If you prefer to compare the CSRF form field and cookie values in the application code then you can do it as follows:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:246
+#, no-wrap
+msgid ""
+"import jakarta.inject.Inject;\n"
+"import jakarta.ws.rs.BadRequestException;\n"
+"import jakarta.ws.rs.Consumes;\n"
+"import jakarta.ws.rs.CookieParam;\n"
+"import jakarta.ws.rs.FormParam;\n"
+"import jakarta.ws.rs.GET;\n"
+"import jakarta.ws.rs.POST;\n"
+"import jakarta.ws.rs.Path;\n"
+"import jakarta.ws.rs.Produces;\n"
+"import jakarta.ws.rs.core.Cookie;\n"
+"import jakarta.ws.rs.core.MediaType;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:262
+#, no-wrap
+msgid ""
+"    @GET\n"
+"    @Path(\"/csrfTokenForm\")\n"
+"    @Produces(MediaType.TEXT_HTML)\n"
+"    public TemplateInstance getCsrfTokenForm() {\n"
+"        return csrfToken.instance();\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:274
+#, no-wrap
+msgid ""
+"    @POST\n"
+"    @Path(\"/csrfTokenForm\")\n"
+"    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)\n"
+"    @Produces(MediaType.TEXT_PLAIN)\n"
+"    public String postCsrfTokenForm(@CookieParam(\"csrf-token\") Cookie csrfCookie, @FormParam(\"csrf-token\") String formCsrfToken, @FormParam(\"name\") String userName) {\n"
+"        if (!csrfCookie.getValue().equals(formCsrfToken)) { <1>\n"
+"            throw new BadRequestException();\n"
+"        }\n"
+"        return userName;\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:276
+msgid "Compare the CSRF form field and cookie values and fail with HTTP status `400` if they don't match."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:278
+msgid "Also disable the token verification in the filter:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:282
+#, no-wrap
+msgid "quarkus.csrf-reactive.verify-token=false\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:285
+#, no-wrap
+msgid "Configuration Reference"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:289
+#, no-wrap
+msgid "References"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:292
+msgid "https://owasp.org/www-community/attacks/csrf[OWASP Cross-Site Request Forgery]"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:293
+msgid "xref:resteasy-reactive.adoc[RESTEasy Reactive]"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:294
+msgid "xref:qute-reference.adoc[Qute Reference]"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/3.2/guides/security-csrf-prevention.adoc:294
+msgid "xref:security-overview.adoc[Quarkus Security overview]"
+msgstr ""
