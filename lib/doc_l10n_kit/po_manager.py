@@ -49,14 +49,7 @@ class PoManager:
         subprocess.run("msgcat --to-code=utf-8 --lang={} --no-wrap -o {} {}".format(self.__target_lang, file_path, file_path), shell=True, check=True)
 
     def update_adoc_po_files(self):
-        items = glob.glob("upstream/**/*.adoc", recursive=True)
-        relative_file_paths = [os.path.relpath(item, self.__base_dir + "/upstream") for item in items if os.path.isdir(item) == False]
-        relative_file_paths = [ relative_file_path for relative_file_path in relative_file_paths]
-        executor = concurrent.futures.ThreadPoolExecutor(thread_name_prefix="worker", max_workers=self.__max_workers)
-        futures = executor.map(self.__update_adoc_po_file, relative_file_paths)
-        executor.shutdown(wait=True)
-        for _ in futures:
-            pass
+        subprocess.run("java -jar vendor/doc-l10n-kit-runner.jar asciidoc extract --asciidoc=./upstream/ --po=./l10n/po/{}/".format(self.__target_lang), shell=True, check=True)
 
     def update_md_po_files(self):
         items = glob.glob("upstream/**/*.md", recursive=True)
@@ -96,14 +89,8 @@ class PoManager:
         shutil.copytree(upstream, output_dir)
 
     def translate_adoc_po_files(self):
-        items = glob.glob("upstream/**/*.adoc", recursive=True)
-        relative_file_paths = [os.path.relpath(item, self.__base_dir + "/upstream") for item in items if os.path.isdir(item) == False]
-        relative_file_paths = [ relative_file_path for relative_file_path in relative_file_paths]
-        executor = concurrent.futures.ThreadPoolExecutor(thread_name_prefix="worker", max_workers=self.__max_workers)
-        futures = executor.map(self.__translate_adoc_po_file, relative_file_paths)
-        executor.shutdown(wait=True)
-        for _ in futures:
-            pass
+        subprocess.run("java -jar vendor/doc-l10n-kit-runner.jar asciidoc translate --po=./l10n/po/{}/ --sourceAsciidoc=./upstream/ --targetAsciidoc=./translated/{}/".format(self.__target_lang, self.__target_lang), shell=True, check=True)
+
     def translate_md_po_files(self):
         items = glob.glob("upstream/**/*.md", recursive=True)
         relative_file_paths = [os.path.relpath(item, self.__base_dir + "/upstream") for item in items if os.path.isdir(item) == False]
@@ -135,13 +122,6 @@ class PoManager:
             pass
 
 
-    def __update_adoc_po_file(self, relative_file_path):
-        print("Processing: {}".format(relative_file_path))
-        relative_file_dir = os.path.dirname(relative_file_path)
-        os.makedirs("{}/l10n/po/{}/{}".format(self.__base_dir, self.__target_lang, relative_file_dir), exist_ok=True)
-        subprocess.run("PERLLIB=vendor/po4a/lib vendor/po4a/po4a-updatepo --msgmerge-opt --no-fuzzy-matching --master-charset UTF-8 -f asciidoc -o tablecells --master upstream/{} --po l10n/po/{}/{}.po".format(relative_file_path, self.__target_lang, relative_file_path), shell=True, check=True)
-        subprocess.run("msgcat --to-code=utf-8 --no-wrap -o l10n/po/{}/{}.po l10n/po/{}/{}.po".format(self.__target_lang, relative_file_path, self.__target_lang, relative_file_path), shell=True, check=True)
-
     def __update_md_po_file(self, relative_file_path):
         print("Processing: {}".format(relative_file_path))
         relative_file_dir = os.path.dirname(relative_file_path)
@@ -172,10 +152,6 @@ class PoManager:
         else:
             print("Skip: {} since upstream file is missing".format(relative_file_path))
 
-
-    def __translate_adoc_po_file(self, relative_file_path):
-        print("Processing: {}".format(relative_file_path))
-        subprocess.run("PERLLIB=vendor/po4a/lib vendor/po4a/po4a-translate --master-charset UTF-8 --localized-charset UTF-8 -f asciidoc -o tablecells --keep 0 --master upstream/{} --localized translated/{}/{} --po l10n/po/{}/{}.po".format(relative_file_path, self.__target_lang, relative_file_path, self.__target_lang, relative_file_path), shell=True, check=True)
 
     def __translate_md_po_files(self, relative_file_path):
         print("Processing: {}".format(relative_file_path))
