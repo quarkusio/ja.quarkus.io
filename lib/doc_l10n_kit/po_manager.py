@@ -40,7 +40,6 @@ class PoManager:
     def normalize(self):
         file_paths = glob.glob("l10n/po/**/*.po".format(self.__target_lang), recursive=True)
         file_paths = [ file_path for file_path in file_paths if os.path.isdir(file_path) == False ]
-        print(file_paths)
         concurrent.futures.ThreadPoolExecutor(thread_name_prefix="worker", max_workers=self.__max_workers).map(self.__normalize, file_paths)
 
     def __normalize(self, file_path):
@@ -49,7 +48,7 @@ class PoManager:
         subprocess.run("msgcat --to-code=utf-8 --lang={} --no-wrap -o {} {}".format(self.__target_lang, file_path, file_path), shell=True, check=True)
 
     def update_adoc_po_files(self):
-        subprocess.run("java -jar vendor/doc-l10n-kit-runner.jar asciidoc extract --asciidoc=./upstream/ --po=./l10n/po/{}/".format(self.__target_lang), shell=True, check=True)
+        subprocess.run("java -jar vendor/doc-l10n-kit-runner.jar asciidoc extract --asciidoc=./upstream/ --excludePattern='glob:**/_generated-config/**.adoc' --excludePattern='glob:**/_generated-doc/**.adoc' --po=./l10n/po/{}/".format(self.__target_lang), shell=True, check=True)
 
     def update_md_po_files(self):
         items = glob.glob("upstream/**/*.md", recursive=True)
