@@ -29,6 +29,7 @@ class PoManager:
         self.update_md_po_files()
         self.update_yaml_po_files()
         self.update_html_po_files()
+        self.normalize()
 
     def translate_po(self):
         self.mk_output_dir()
@@ -48,7 +49,7 @@ class PoManager:
         subprocess.run("msgcat --to-code=utf-8 --lang={} --no-wrap -o {} {}".format(self.__target_lang, file_path, file_path), shell=True, check=True)
 
     def update_adoc_po_files(self):
-        subprocess.run("java -jar vendor/doc-l10n-kit-runner.jar asciidoc extract --asciidoc=./upstream/ --excludePattern='glob:**/_generated-config/**.adoc' --excludePattern='glob:**/_generated-doc/**.adoc' --po=./l10n/po/{}/".format(self.__target_lang), shell=True, check=True)
+        subprocess.run("java -jar vendor/doc-l10n-kit-runner.jar asciidoc extract --asciidoc=upstream/ --excludePattern='glob:**/_generated-config/**.adoc' --excludePattern='glob:**/_generated-doc/**.adoc' --po=./l10n/po/{}/".format(self.__target_lang), shell=True, check=True)
 
     def update_md_po_files(self):
         items = glob.glob("upstream/**/*.md", recursive=True)
@@ -88,7 +89,7 @@ class PoManager:
         shutil.copytree(upstream, output_dir)
 
     def translate_adoc_po_files(self):
-        subprocess.run("java -jar vendor/doc-l10n-kit-runner.jar asciidoc translate --po=./l10n/po/{}/ --sourceAsciidoc=./upstream/ --targetAsciidoc=./translated/{}/".format(self.__target_lang, self.__target_lang), shell=True, check=True)
+        subprocess.run("java -jar vendor/doc-l10n-kit-runner.jar asciidoc translate --po=l10n/po/{}/ --sourceAsciidoc=upstream/ --targetAsciidoc=translated/{}/".format(self.__target_lang, self.__target_lang), shell=True, check=True)
 
     def translate_md_po_files(self):
         items = glob.glob("upstream/**/*.md", recursive=True)
