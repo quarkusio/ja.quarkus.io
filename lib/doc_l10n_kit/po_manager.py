@@ -33,7 +33,8 @@ class PoManager:
 
     def translate_po(self):
         self.mk_output_dir()
-        self.translate_adoc_po_files()
+        # memo: .adoc files are no longer translated with po4a.
+        # It is translated with `doc-l10n-kit/asciidoctor-l10n` asciidoctor extension
         self.translate_md_po_files()
         self.translate_yaml_po_files()
         self.translate_html_po_files()
@@ -87,9 +88,6 @@ class PoManager:
         shutil.rmtree(output_dir, ignore_errors=True)
         os.makedirs("{}/translated".format(self.__base_dir), exist_ok=True)
         shutil.copytree(upstream, output_dir)
-
-    def translate_adoc_po_files(self):
-        subprocess.run("java -jar vendor/doc-l10n-kit-runner.jar asciidoc translate --po=l10n/po/{}/ --sourceAsciidoc=upstream/ --targetAsciidoc=translated/{}/".format(self.__target_lang, self.__target_lang), shell=True, check=True)
 
     def translate_md_po_files(self):
         items = glob.glob("upstream/**/*.md", recursive=True)
