@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2023-09-03 08:14+0000\n"
+"POT-Creation-Date: 2023-09-24 08:10+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -427,7 +427,7 @@ msgstr "このセクションでは、RESTEasy Reactiveアプリケーション�
 #. type: Block title
 #: upstream/_versions/main/guides/vertx-reference.adoc:149
 #: upstream/_versions/main/guides/vertx-reference.adoc:935
-#: upstream/_versions/main/guides/vertx-reference.adoc:1071
+#: upstream/_versions/main/guides/vertx-reference.adoc:1117
 #, no-wrap
 msgid "pom.xml"
 msgstr "pom.xml"
@@ -445,7 +445,7 @@ msgstr ""
 #. type: Block title
 #: upstream/_versions/main/guides/vertx-reference.adoc:158
 #: upstream/_versions/main/guides/vertx-reference.adoc:951
-#: upstream/_versions/main/guides/vertx-reference.adoc:1086
+#: upstream/_versions/main/guides/vertx-reference.adoc:1132
 #, no-wrap
 msgid "build.gradle"
 msgstr "build.gradle"
@@ -1843,8 +1843,8 @@ msgstr "また、Vert.xでネイティブトランスポートを使用するよ
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/vertx-reference.adoc:964
-#: upstream/_versions/main/guides/vertx-reference.adoc:1027
-#: upstream/_versions/main/guides/vertx-reference.adoc:1098
+#: upstream/_versions/main/guides/vertx-reference.adoc:1073
+#: upstream/_versions/main/guides/vertx-reference.adoc:1144
 #, no-wrap
 msgid "quarkus.vertx.prefer-native-transport=true\n"
 msgstr ""
@@ -1944,29 +1944,129 @@ msgstr "MacOS Sierra以上では、以下のソケットオプションを有効
 
 #. type: Title ==
 #: upstream/_versions/main/guides/vertx-reference.adoc:1011
+#, no-wrap
+msgid "Use a Vert.x context-aware scheduler"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/vertx-reference.adoc:1015
+msgid "Some Mutiny operators need to schedule work on an executor thread pool.  A good example is `.onItem().delayIt().by(Duration.ofMillis(10)` as it needs such an executor to delay emissions."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/vertx-reference.adoc:1017
+msgid "The default executor is returned by `io.smallrye.mutiny.infrastructure.Infrastructure` and it is already configured and managed by Quarkus."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/vertx-reference.adoc:1019
+msgid "That being said, there are cases where you need to make sure that an operation is run on a Vert.x (duplicated) context and not just on any random thread."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/vertx-reference.adoc:1022
+msgid "The `io.smallrye.mutiny.vertx.core.ContextAwareScheduler` interface offers an API to obtain context-aware schedulers.  Such a scheduler is configured with:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/vertx-reference.adoc:1024
+msgid "a delegate `ScheduledExecutorService` of your choice (hint: you can reuse `Infrastructure.getDefaultWorkerPool()`), and"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/vertx-reference.adoc:1025
+msgid "a context fetching strategy among:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/vertx-reference.adoc:1026
+msgid "an explicit `Context`, or"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/vertx-reference.adoc:1027
+msgid "calling `Vertx::getOrCreateContext()` either on the current thread or later when the scheduling request happens, or"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/vertx-reference.adoc:1028
+msgid "calling `Vertx::currentContext()`, which fails if the current thread is not a Vert.x thread."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/vertx-reference.adoc:1030
+msgid "Here is a sample where `ContextAwareScheduler` is used:"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/vertx-reference.adoc:1034
+#, no-wrap
+msgid "class MyVerticle extends AbstractVerticle {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/vertx-reference.adoc:1038
+#, no-wrap
+msgid ""
+"    @Override\n"
+"    public Uni<Void> asyncStart() {\n"
+"        vertx.getOrCreateContext().put(\"foo\", \"bar\");\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/vertx-reference.adoc:1042
+#, no-wrap
+msgid ""
+"        var delegate = Infrastructure.getDefaultWorkerPool();\n"
+"        var scheduler = ContextAwareScheduler.delegatingTo(delegate)\n"
+"            .withCurrentContext();\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/vertx-reference.adoc:1052
+#, no-wrap
+msgid ""
+"        return Uni.createFrom().voidItem()\n"
+"                .onItem().delayIt().onExecutor(scheduler).by(Duration.ofMillis(10))\n"
+"                .onItem().invoke(() -> {\n"
+"                    // Prints \"bar\"\n"
+"                    var ctx = vertx.getOrCreateContext();\n"
+"                    System.out.println(ctx.get(\"foo\"));\n"
+"                });\n"
+"    }\n"
+"}\n"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/vertx-reference.adoc:1056
+msgid "In this example a scheduler is created by capturing the context of the Vert.x event-loop that calls `asyncStart()`.  The `delayIt` operator uses that scheduler, and we can check that the context that we get in `invoke` is a Vert.x duplicated context where the data for key `\"foo\"` has been propagated."
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/vertx-reference.adoc:1057
 #, fuzzy, no-wrap
 msgid "Use a Unix domain socket"
 msgstr "Unixドメインソケットを使用する"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/vertx-reference.adoc:1017
+#: upstream/_versions/main/guides/vertx-reference.adoc:1063
 msgid "Listening on a Unix domain socket allows us to dispense with the overhead of TCP if the connection to the quarkus service is established from the same host.  This can happen if access to the service goes through a proxy which is often the case if you're setting up a service mesh with a proxy like Envoy."
 msgstr "Unixドメインソケットでリスニングすることにより、quarkusサービスへの接続が同じホストから確立されている場合、TCPのオーバーヘッドを省略することができます。これは、サービスへのアクセスにEnvoyのようなプロキシを使ってサービスメッシュを設定している場合によく見られます。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/vertx-reference.adoc:1019
+#: upstream/_versions/main/guides/vertx-reference.adoc:1065
 #, fuzzy
 msgid "This will only work on platforms that support xref:native-transport[Use native transports]."
 msgstr "これは xref:native-transport[Useネイティブ・トランスポートを] サポートするプラットフォームでのみ機能する。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/vertx-reference.adoc:1021
+#: upstream/_versions/main/guides/vertx-reference.adoc:1067
 #, fuzzy
 msgid "Enable the appropriate xref:native-transport[Use native transports] and set the following environment property:"
 msgstr "適切な xref:native-transport[Use native transportsを] 有効にし、以下の環境プロパティを設定する："
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/vertx-reference.adoc:1025
+#: upstream/_versions/main/guides/vertx-reference.adoc:1071
 #, no-wrap
 msgid ""
 "quarkus.http.domain-socket=/var/run/io.quarkus.app.socket\n"
@@ -1974,88 +2074,88 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/vertx-reference.adoc:1031
+#: upstream/_versions/main/guides/vertx-reference.adoc:1077
 msgid "By itself this will not disable the tcp socket which by default will open on `0.0.0.0:8080`. It can be explicitly disabled:"
 msgstr "これだけでは、デフォルトで `0.0.0.0:8080` で開かれる tcp ソケットを無効にすることはできません。これは次のように明示的に無効にすることができます。"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/vertx-reference.adoc:1034
+#: upstream/_versions/main/guides/vertx-reference.adoc:1080
 #, no-wrap
 msgid "quarkus.http.host-enabled=false\n"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/vertx-reference.adoc:1038
+#: upstream/_versions/main/guides/vertx-reference.adoc:1084
 msgid "These properties can be set through Java's `-D` command line parameter or on `application.properties`."
 msgstr "これらのプロパティは、Javaの `-D` コマンドライン・パラメータまたは `application.properties` で設定できます。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/vertx-reference.adoc:1041
+#: upstream/_versions/main/guides/vertx-reference.adoc:1087
 #, fuzzy
 msgid "Do not forget to add the native transport dependency.  See xref:native-transport[Use native transports] for details."
 msgstr "ネイティブ・トランスポートの依存関係を追加することを忘れないでください。詳細は xref:native-transport[Use native transportsを] 参照。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/vertx-reference.adoc:1043
+#: upstream/_versions/main/guides/vertx-reference.adoc:1089
 msgid "Make sure your application has the right permissions to write to the socket."
 msgstr "アプリケーションがソケットに書き込むための適切なアクセス許可を持っていることを確認してください。"
 
 #. type: Title ==
-#: upstream/_versions/main/guides/vertx-reference.adoc:1045
+#: upstream/_versions/main/guides/vertx-reference.adoc:1091
 #, fuzzy, no-wrap
 msgid "Use io_uring"
 msgstr "io_uringを使用"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/vertx-reference.adoc:1048
+#: upstream/_versions/main/guides/vertx-reference.adoc:1094
 #, fuzzy
 msgid "`io_uring` is not supported in native executables."
 msgstr "`io_uring` はネイティブ実行ファイルではサポートされていない。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/vertx-reference.adoc:1050
+#: upstream/_versions/main/guides/vertx-reference.adoc:1096
 #, fuzzy
 msgid "`io_uring` support is experimental"
 msgstr "`io_uring` サポートは実験的"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/vertx-reference.adoc:1055
+#: upstream/_versions/main/guides/vertx-reference.adoc:1101
 #, fuzzy
 msgid "`io_uring` is a Linux kernel interface that allows you to send and receive data asynchronously.  It provides unified semantics for both file and network I/O.  It was originally designed to target block devices and files but has since gained the ability to work with things like network sockets.  It has the potential to provide modest performance benefits to network I/O on its own and greater benefits for mixed file and network I/O application workloads."
 msgstr "`io_uring` は、非同期にデータを送受信できるLinuxカーネル・インターフェースである。ファイルI/OとネットワークI/Oの両方に統一されたセマンティクスを提供する。もともとはブロック・デバイスとファイルをターゲットに設計されたが、その後、ネットワーク・ソケットのようなものとも連携できるようになった。ネットワークI/O単体ではそこそこの性能を発揮し、ファイルI/OとネットワークI/Oが混在するアプリケーションではより大きな効果を発揮する可能性がある。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/vertx-reference.adoc:1057
+#: upstream/_versions/main/guides/vertx-reference.adoc:1103
 #, fuzzy
 msgid "To learn more about `io_uring`, we recommend the following links:"
 msgstr "`io_uring` についてもっと知るには、以下のリンクをお勧めする："
 
 #. type: Plain text
-#: upstream/_versions/main/guides/vertx-reference.adoc:1061
+#: upstream/_versions/main/guides/vertx-reference.adoc:1107
 #, fuzzy
 msgid "https://developers.redhat.com/articles/2023/04/12/why-you-should-use-iouring-network-io[Why you should use io_uring for network I/O]: The main benefit of io_uring for network I/O is a modern asynchronous API that is straightforward to use and provides unified semantics for file and network I/O.  A potential performance benefit of io_uring for network I/O is reducing the number of syscalls.  This could provide the biggest benefit for high volumes of small operations where the overhead of system calls can be significant."
 msgstr "link:https://developers.redhat.com/articles/2023/04/12/why-you-should-use-iouring-network-io[ネットワークI/Oに] io_uringを link:https://developers.redhat.com/articles/2023/04/12/why-you-should-use-iouring-network-io[使うべき理由] ：ネットワークI/Oにio_uringを使用する主な利点は、使いやすく、ファイルI/OとネットワークI/Oの統一されたセマンティクスを提供する最新の非同期APIです。ネットワークI/Oのためのio_uringの潜在的なパフォーマンス上の利点は、システムコールの数を減らすことである。これは、システム・コールのオー バーヘッドが大きくなりがちな、小さな操作を大量に実行する場合に最大のメリットをもたらす可能性がある。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/vertx-reference.adoc:1063
+#: upstream/_versions/main/guides/vertx-reference.adoc:1109
 #, fuzzy
 msgid "https://dzone.com/articles/the-backend-revolution-or-why-io-uring-is-so-impor[The Backend Revolution and Why io_uring Is So Important]: The io_uring API uses two ring buffers for communication between application and kernel (hence the API name) and designed in a way that enables natural batching of requests and responses.  Besides, it provides a way to submit multiple requests in one system call, which can reduce overhead."
 msgstr "link:https://dzone.com/articles/the-backend-revolution-or-why-io-uring-is-so-impor[バックエンド革命と] io_uringが link:https://dzone.com/articles/the-backend-revolution-or-why-io-uring-is-so-impor[重要な理由] ： io_uring APIは、アプリケーションとカーネル間の通信に2つのリングバッファを使用し（これがAPI名の由来である）、リクエストとレスポンスの自然なバッチ処理を可能にするように設計されている。さらに、1つのシステムコールで複数のリクエストを送信する方法を提供し、オーバーヘッドを削減することができる。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/vertx-reference.adoc:1065
+#: upstream/_versions/main/guides/vertx-reference.adoc:1111
 #, fuzzy
 msgid "https://stackoverflow.com/questions/61767702/what-exactly-is-io-uring[What exactly is io_uring?]: io_uring is a Linux kernel interface to efficiently allow you to send and receive data asynchronously.  It was originally designed to target block devices and files but has since gained the ability to work with things like network sockets."
 msgstr "io_ link:https://stackoverflow.com/questions/61767702/what-exactly-is-io-uring[uringとは] 何か： io_uringは、非同期で効率的にデータを送受信するためのLinuxカーネル・インターフェースである。もともとはブロックデバイスやファイルを対象に設計されましたが、ネットワークソケットのようなものも扱えるようになりました。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/vertx-reference.adoc:1069
+#: upstream/_versions/main/guides/vertx-reference.adoc:1115
 #, fuzzy
 msgid "To use `io_uring`, you need to add two dependencies to your project and enable native transport.  First add the following dependencies to your project:"
 msgstr "`io_uring` を使用するには、プロジェクトに2つの依存関係を追加し、ネイティブ・トランスポートを有効にする必要があります。まず、以下の依存関係をプロジェクトに追加します："
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/vertx-reference.adoc:1083
+#: upstream/_versions/main/guides/vertx-reference.adoc:1129
 #, no-wrap
 msgid ""
 "<dependency>\n"
@@ -2071,7 +2171,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/vertx-reference.adoc:1091
+#: upstream/_versions/main/guides/vertx-reference.adoc:1137
 #, no-wrap
 msgid ""
 "// Update the io_uring version by picking the latest from https://github.com/netty/netty-incubator-transport-io_uring/tags\n"
@@ -2080,25 +2180,25 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/vertx-reference.adoc:1094
+#: upstream/_versions/main/guides/vertx-reference.adoc:1140
 #, fuzzy
 msgid "Then, in the `application.properties`, add:"
 msgstr "そして、 `application.properties` 、追加する："
 
 #. type: Block title
-#: upstream/_versions/main/guides/vertx-reference.adoc:1101
+#: upstream/_versions/main/guides/vertx-reference.adoc:1147
 #, fuzzy, no-wrap
 msgid "Can I use io_uring on my Linux machine?"
 msgstr "Linuxマシンでio_uringは使えますか？"
 
 #. type: delimited block =
-#: upstream/_versions/main/guides/vertx-reference.adoc:1104
+#: upstream/_versions/main/guides/vertx-reference.adoc:1150
 #, fuzzy
 msgid "To check if you can use `io_uring` on your Linux machine, execute the following command:"
 msgstr "Linuxマシンで `io_uring` 、使用できるかどうかを確認するには、以下のコマンドを実行する："
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/vertx-reference.adoc:1121
+#: upstream/_versions/main/guides/vertx-reference.adoc:1167
 #, no-wrap
 msgid ""
 "> grep io_uring_setup /proc/kallsyms\n"
@@ -2119,70 +2219,70 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/vertx-reference.adoc:1123
+#: upstream/_versions/main/guides/vertx-reference.adoc:1169
 #, fuzzy
 msgid "If it prints something like above, you can use `io_uring`."
 msgstr "もし上記のように表示されたら、 `io_uring` ."
 
 #. type: Block title
-#: upstream/_versions/main/guides/vertx-reference.adoc:1126
+#: upstream/_versions/main/guides/vertx-reference.adoc:1172
 #, fuzzy, no-wrap
 msgid "Troubleshooting"
 msgstr "トラブルシューティング"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/vertx-reference.adoc:1131
+#: upstream/_versions/main/guides/vertx-reference.adoc:1177
 #, fuzzy
 msgid "`io_uring` support is still experimental.  Check the https://github.com/netty/netty-incubator-transport-io_uring#faq[Netty io_uring FAQ] if you see some odd behavior.  Also, the https://github.com/netty/netty-incubator-transport-io_uring/issues/152[netty io_uring was slower than epoll] issue describes a few configuration mistakes."
 msgstr "`io_uring` のサポートはまだ実験的です。奇妙な動作があれば link:https://github.com/netty/netty-incubator-transport-io_uring#faq[Netty io_uring FAQ] をチェックしてください。また、 link:https://github.com/netty/netty-incubator-transport-io_uring/issues/152[netty io] _uringが link:https://github.com/netty/netty-incubator-transport-io_uring/issues/152[epollより遅い] 問題には、いくつかの設定ミスがあります。"
 
 #. type: delimited block =
-#: upstream/_versions/main/guides/vertx-reference.adoc:1134
+#: upstream/_versions/main/guides/vertx-reference.adoc:1180
 #, fuzzy
 msgid "Domain sockets are not yet supported with io_uring."
 msgstr "ドメイン・ソケットはio_uringではまだサポートされていない。"
 
 #. type: delimited block =
-#: upstream/_versions/main/guides/vertx-reference.adoc:1136
+#: upstream/_versions/main/guides/vertx-reference.adoc:1182
 #, fuzzy
 msgid "The Vert.x asynchronous file system API does not use io_uring yet."
 msgstr "Vert.xの非同期ファイルシステムAPIは、まだio_uringを使用していません。"
 
 #. type: Title ==
-#: upstream/_versions/main/guides/vertx-reference.adoc:1138
+#: upstream/_versions/main/guides/vertx-reference.adoc:1184
 #, fuzzy, no-wrap
 msgid "Deploy on read-only environments"
 msgstr "読み取り専用環境への展開"
 
 #. type: delimited block =
-#: upstream/_versions/main/guides/vertx-reference.adoc:1141
+#: upstream/_versions/main/guides/vertx-reference.adoc:1187
 msgid "In environments with read only file systems you may receive errors of the form:"
 msgstr "ファイルシステムが読み取り専用の環境では、次のようなエラーが発生することがあります。"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/vertx-reference.adoc:1145
+#: upstream/_versions/main/guides/vertx-reference.adoc:1191
 #, no-wrap
 msgid "java.lang.IllegalStateException: Failed to create cache dir\n"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/vertx-reference.adoc:1148
+#: upstream/_versions/main/guides/vertx-reference.adoc:1194
 msgid "Assuming `/tmp/` is writable this can be fixed by setting the `vertx.cacheDirBase` property to point to a directory in `/tmp/` for instance in OpenShift by creating an environment variable `JAVA_OPTS` with the value `-Dvertx.cacheDirBase=/tmp/vertx`."
 msgstr "`/tmp/` が書き込み可能である場合、これは `vertx.cacheDirBase` プロパティが `/tmp/` のディレクトリを指すように設定することで修正できます。例えば、OpenShift では環境変数 `JAVA_OPTS` を作成して `-Dvertx.cacheDirBase=/tmp/vertx` という値を設定します。"
 
 #. type: Title ==
-#: upstream/_versions/main/guides/vertx-reference.adoc:1150
+#: upstream/_versions/main/guides/vertx-reference.adoc:1196
 #, fuzzy, no-wrap
 msgid "Customize the Vert.x configuration"
 msgstr "Vert.xコンフィギュレーションのカスタマイズ"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/vertx-reference.adoc:1155
+#: upstream/_versions/main/guides/vertx-reference.adoc:1201
 msgid "The configuration of the managed Vert.x instance can be provided using the `application.properties` file, but also using _special beans_.  CDI beans exposing the `io.quarkus.vertx.VertxOptionsCustomizer` interface can be used to customize the Vert.x configuration.  For example, the following customizer change the `tmp` base directory:"
 msgstr "マネージド Vert.x インスタンスの設定は、`application.properties` ファイルを使用して提供できますが、_special bean_ を使用することもできます。 `io.quarkus.vertx.VertxOptionsCustomizer` インターフェイスを公開する CDI Bean を使用して、Vert.x 設定をカスタマイズできます。 たとえば、次のカスタマイザは `tmp` ベース ディレクトリを変更します。"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/vertx-reference.adoc:1160
+#: upstream/_versions/main/guides/vertx-reference.adoc:1206
 #, no-wrap
 msgid ""
 "@ApplicationScoped\n"
@@ -2190,7 +2290,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/vertx-reference.adoc:1166
+#: upstream/_versions/main/guides/vertx-reference.adoc:1212
 #, no-wrap
 msgid ""
 "    @Override\n"
@@ -2201,7 +2301,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/vertx-reference.adoc:1169
+#: upstream/_versions/main/guides/vertx-reference.adoc:1215
 msgid "The _customizer_ beans received the `VertxOptions` (coming from the application configuration), and can modify them."
 msgstr "_customizer_ Beanは、(アプリケーションの設定に由来する) `VertxOptions` を受け取り、それを修正することができます。"
 
