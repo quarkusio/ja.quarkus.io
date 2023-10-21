@@ -1,50 +1,102 @@
-# SOME DESCRIPTIVE TITLE
-# Copyright (C) YEAR Free Software Foundation, Inc.
-# This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
-#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2023-10-01 08:11+0000\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: ja_JP\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Generator: jekyll-l10n\n"
 
-#. type: YAML Front Matter: author
-#: upstream/_posts/2023-09-23-virtual-threads-2.adoc:1
-#, no-wrap
-msgid "cescoffier"
-msgstr "cescoffier"
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2023-09-23-virtual-threads-2.adoc
+msgid ""
+"+++\n"
+"<iframe style=\"margin-left: auto; margin-right: auto; display: block;\" width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/sJ49s7ctpf8?si=XfBB10eabMzGQCKz\" title=\"Writing CRUD applications using virtual threads\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" allowfullscreen></iframe>\n"
+"+++"
+msgstr ""
 
-#. type: YAML Front Matter: date
-#: upstream/_posts/2023-09-23-virtual-threads-2.adoc:1
-#, fuzzy, no-wrap
-msgid "2023-09-25"
-msgstr "2023-09-25"
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2023-09-23-virtual-threads-2.adoc
+msgid ""
+"The application is a simple implementation of the https://todobackend.com/[Todo Backend].\n"
+"The complete code of this post is available https://github.com/quarkusio/virtual-threads-demos/tree/main/crud-example[here]."
+msgstr ""
 
-#. type: YAML Front Matter: layout
-#: upstream/_posts/2023-09-23-virtual-threads-2.adoc:1
-#, no-wrap
-msgid "post"
-msgstr "post"
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2023-09-23-virtual-threads-2.adoc
+msgid ""
+"The code is similar to a regular implementation of a CRUD service with Quarkus, except for https://github.com/quarkusio/virtual-threads-demos/blob/main/crud-example/src/main/java/org/acme/crud/TodoResource.java#L22[one line].\n"
+"We added the `@RunOnVirtualThread` annotation on the resource class (line 17).\n"
+"It instructs Quarkus to invoke these methods on virtual threads instead of regular platform threads (learn more about the difference in the https://quarkus.io/blog/virtual-thread-1/[previous blog post]), including `@Transactional` methods."
+msgstr ""
 
-#. type: YAML Front Matter: synopsis
-#: upstream/_posts/2023-09-23-virtual-threads-2.adoc:1
-#, fuzzy, no-wrap
-msgid "Describe how you can implement a CRUD / RESTFul application using virtual threads and Quarkus."
-msgstr "仮想スレッドとQuarkusを使用して、CRUD/RESTFulアプリケーションを実装する方法を説明します。"
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2023-09-23-virtual-threads-2.adoc
+msgid "The threading model"
+msgstr ""
 
-#. type: YAML Front Matter: tags
-#: upstream/_posts/2023-09-23-virtual-threads-2.adoc:1
-#, fuzzy, no-wrap
-msgid "virtual-threads reactive crud database"
-msgstr "仮想スレッド・リアクティブ・クルード・データベース"
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2023-09-23-virtual-threads-2.adoc
+msgid ""
+"As we have seen in the code, the development model is synchronous.\n"
+"The interactions with the database uses blocking APIs: you wait for the replies.\n"
+"That's where virtual thread introduces their magic.\n"
+"Instead of blocking a platform thread, it only blocks the virtual threads:"
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2023-09-23-virtual-threads-2.adoc
+msgid ""
+"Thus, when another request comes, the carrier thread can handle it.\n"
+"It radically reduces the number of platform threads required when there are many concurrent requests.\n"
+"As a result, the number of worker threads, generally used when using a synchronous and blocking development model, is not the bottleneck anymore."
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2023-09-23-virtual-threads-2.adoc
+msgid ""
+"However, that's not because you use virtual threads that your application has no more concurrency limit.\n"
+"There is a new bottleneck: the **database connection pool**.\n"
+"When you interact with the database, you ask for a connection to the connection pool (Agroal in our case).\n"
+"The number of connections is not infinite (20 by default).\n"
+"Once all the connections are used, you must wait until another processing completes and releases its connection.\n"
+"You can still handle many requests concurrently, but they will wait for database connections to be available, reducing the response time."
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2023-09-23-virtual-threads-2.adoc
+msgid "A note about pinning"
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2023-09-23-virtual-threads-2.adoc
+msgid ""
+"As the https://quarkus.io/blog/virtual-thread-1/[previous blog post] described, pinning happens when the virtual thread cannot be unmounted from the carrier thread.\n"
+"In this case, blocking the virtual thread also blocks the carrier thread:"
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2023-09-23-virtual-threads-2.adoc
+msgid ""
+"Fortunately, in this application, there is no pinning.\n"
+"The PostgreSQL driver is one of the only JDBC drivers that does not pin.\n"
+"If you plan to use another database, check first.\n"
+"We will be discussing how to detect pinning in the next post.\n"
+"Quarkus, Narayana and Hibernate have been patched to avoid the pinning."
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2023-09-23-virtual-threads-2.adoc
+msgid ""
+"Pinning is one of many problems that can arise.\n"
+"The application will suffer from the default object pooling mechanism used by Jackson.\n"
+"Fortunately, we contributed an SPI to https://github.com/FasterXML/jackson-core/pull/1064[Jackson] that will allow us to remove this allocation hog."
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2023-09-23-virtual-threads-2.adoc
+msgid "Conclusion"
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2023-09-23-virtual-threads-2.adoc
+msgid ""
+"This post explains implementing a CRUD application using virtual threads in Quarkus.\n"
+"You can now use an imperative development model without compromising the application's concurrency.\n"
+"It's as simple as using RESTEasy Reactive and adding one annotation: `@RunOnVirtualThread` on your resource."
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2023-09-23-virtual-threads-2.adoc
+msgid ""
+"We tailored Quarkus and upstream projects (such as Hibernate, Narayana, SmallRye Mutiny, etc.) to become virtual-thread-friendly.\n"
+"As we will see in other posts, most Quarkus extensions are ready to be used with virtual threads."
+msgstr ""
 
 #. type: YAML Front Matter: title
 #: upstream/_posts/2023-09-23-virtual-threads-2.adoc:1
@@ -52,17 +104,17 @@ msgstr "仮想スレッド・リアクティブ・クルード・データベー
 msgid "Writing CRUD applications using virtual threads"
 msgstr "仮想スレッドを使用したCRUDアプリケーションの記述"
 
+#. type: YAML Front Matter: synopsis
+#: upstream/_posts/2023-09-23-virtual-threads-2.adoc:1
+#, fuzzy, no-wrap
+msgid "Describe how you can implement a CRUD / RESTFul application using virtual threads and Quarkus."
+msgstr "仮想スレッドとQuarkusを使用して、CRUD/RESTFulアプリケーションを実装する方法を説明します。"
+
 #. type: Plain text
 #: upstream/_posts/2023-09-23-virtual-threads-2.adoc:12
 #, fuzzy
 msgid "Last week, we published a video demonstrating the creation of a CRUD application using virtual threads in Quarkus. It's as simple as adding the `@RunOnVirtualThread` annotation on your HTTP resource (or your controller class if you use the Spring compatibility layer)."
 msgstr "先週、Quarkusで仮想スレッドを使ったCRUDアプリケーションの作成を実演するビデオを公開しました。HTTPリソース（Spring互換レイヤーを使用している場合はコントローラクラス）に `@RunOnVirtualThread` アノテーションを追加するだけです。"
-
-#. type: Plain text
-#: upstream/_posts/2023-09-23-virtual-threads-2.adoc:16
-#, fuzzy
-msgid "+++ <iframe style=\"margin-left: auto; margin-right: auto; display: block;\" width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/sJ49s7ctpf8?si=XfBB10eabMzGQCKz\" title=\"Writing CRUD applications using virtual threads\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" allowfullscreen></iframe> +++"
-msgstr "+++ <iframe style=\"margin-left: auto; margin-right: auto; display: block;\" width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/sJ49s7ctpf8?si=XfBB10eabMzGQCKz\" title=\"Writing CRUD applications using virtual threads\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" allowfullscreen></iframe> +++"
 
 #. type: Plain text
 #: upstream/_posts/2023-09-23-virtual-threads-2.adoc:18
@@ -77,163 +129,10 @@ msgid "The code"
 msgstr "コード"
 
 #. type: Plain text
-#: upstream/_posts/2023-09-23-virtual-threads-2.adoc:22
-#, fuzzy
-msgid "The application is a simple implementation of the https://todobackend.com/[Todo Backend].  The complete code of this post is available https://github.com/quarkusio/virtual-threads-demos/tree/main/crud-example[here]."
-msgstr "このアプリケーションは、 link:https://todobackend.com/[Todo Backendの] シンプルな実装です。この投稿のコード一式は、 link:https://github.com/quarkusio/virtual-threads-demos/tree/main/crud-example[こちらから] 入手できます。"
-
-#. type: Plain text
 #: upstream/_posts/2023-09-23-virtual-threads-2.adoc:24
 #, fuzzy
 msgid "The important part is the https://github.com/quarkusio/virtual-threads-demos/blob/main/crud-example/src/main/java/org/acme/crud/TodoResource.java[TodoResource.java]:"
 msgstr "重要なのは link:https://github.com/quarkusio/virtual-threads-demos/blob/main/crud-example/src/main/java/org/acme/crud/TodoResource.java[TodoResource.java] である："
-
-#. type: delimited block -
-#: upstream/_posts/2023-09-23-virtual-threads-2.adoc:28
-#, no-wrap
-msgid "package org.acme.crud;\n"
-msgstr ""
-
-#. type: delimited block -
-#: upstream/_posts/2023-09-23-virtual-threads-2.adoc:31
-#, no-wrap
-msgid ""
-"import io.quarkus.logging.Log;\n"
-"import io.quarkus.panache.common.Sort;\n"
-msgstr ""
-
-#. type: delimited block -
-#: upstream/_posts/2023-09-23-virtual-threads-2.adoc:40
-#, no-wrap
-msgid ""
-"import io.smallrye.common.annotation.NonBlocking;\n"
-"import io.smallrye.common.annotation.RunOnVirtualThread;\n"
-"import jakarta.transaction.Transactional;\n"
-"import jakarta.validation.Valid;\n"
-"import jakarta.ws.rs.*;\n"
-"import jakarta.ws.rs.core.Response;\n"
-"import jakarta.ws.rs.core.Response.Status;\n"
-"import java.util.List;\n"
-msgstr ""
-
-#. type: delimited block -
-#: upstream/_posts/2023-09-23-virtual-threads-2.adoc:45
-#, no-wrap
-msgid ""
-"@Path(\"/api\")\n"
-"@RunOnVirtualThread\n"
-"public class TodoResource {\n"
-msgstr ""
-
-#. type: delimited block -
-#: upstream/_posts/2023-09-23-virtual-threads-2.adoc:52
-#, no-wrap
-msgid ""
-"    /**\n"
-"     * Just print on which thread the method is invoked.    \n"
-"     */\n"
-"    private void log() {\n"
-"        Log.infof(\"Called on %s\", Thread.currentThread());\n"
-"    }\n"
-msgstr ""
-
-#. type: delimited block -
-#: upstream/_posts/2023-09-23-virtual-threads-2.adoc:58
-#, no-wrap
-msgid ""
-"    @GET\n"
-"    public List<Todo> getAll() {\n"
-"        log();\n"
-"        return Todo.listAll(Sort.by(\"order\"));\n"
-"    }\n"
-msgstr ""
-
-#. type: delimited block -
-#: upstream/_posts/2023-09-23-virtual-threads-2.adoc:70
-#, no-wrap
-msgid ""
-"    @GET\n"
-"    @Path(\"/{id}\")\n"
-"    public Todo getOne(@PathParam(\"id\") Long id) {\n"
-"        log();\n"
-"        Todo entity = Todo.findById(id);\n"
-"        if (entity == null) {\n"
-"            throw new WebApplicationException(\"Todo with id of \" + id + \" does not exist.\", \n"
-"                Status.NOT_FOUND);\n"
-"        }\n"
-"        return entity;\n"
-"    }\n"
-msgstr ""
-
-#. type: delimited block -
-#: upstream/_posts/2023-09-23-virtual-threads-2.adoc:78
-#, no-wrap
-msgid ""
-"    @POST\n"
-"    @Transactional\n"
-"    public Response create(@Valid Todo item) {\n"
-"        log();\n"
-"        item.persist();\n"
-"        return Response.status(Status.CREATED).entity(item).build();\n"
-"    }\n"
-msgstr ""
-
-#. type: delimited block -
-#: upstream/_posts/2023-09-23-virtual-threads-2.adoc:92
-#, no-wrap
-msgid ""
-"    @PATCH\n"
-"    @Path(\"/{id}\")\n"
-"    @Transactional\n"
-"    public Response update(@Valid Todo todo, @PathParam(\"id\") Long id) {\n"
-"        log();\n"
-"        Todo entity = Todo.findById(id);\n"
-"        entity.id = id;\n"
-"        entity.completed = todo.completed;\n"
-"        entity.order = todo.order;\n"
-"        entity.title = todo.title;\n"
-"        entity.url = todo.url;\n"
-"        return Response.ok(entity).build();\n"
-"    }\n"
-msgstr ""
-
-#. type: delimited block -
-#: upstream/_posts/2023-09-23-virtual-threads-2.adoc:100
-#, no-wrap
-msgid ""
-"    @DELETE\n"
-"    @Transactional\n"
-"    public Response deleteCompleted() {\n"
-"        log();\n"
-"        Todo.deleteCompleted();\n"
-"        return Response.noContent().build();\n"
-"    }\n"
-msgstr ""
-
-#. type: delimited block -
-#: upstream/_posts/2023-09-23-virtual-threads-2.adoc:114
-#, no-wrap
-msgid ""
-"    @DELETE\n"
-"    @Transactional\n"
-"    @Path(\"/{id}\")\n"
-"    public Response deleteOne(@PathParam(\"id\") Long id) {\n"
-"        log();\n"
-"        Todo entity = Todo.findById(id);\n"
-"        if (entity == null) {\n"
-"            throw new WebApplicationException(\"Todo with id of \" + id + \" does not exist.\", \n"
-"                Status.NOT_FOUND);\n"
-"        }\n"
-"        entity.delete();\n"
-"        return Response.noContent().build();\n"
-"    }\n"
-msgstr ""
-
-#. type: delimited block -
-#: upstream/_posts/2023-09-23-virtual-threads-2.adoc:116
-#, no-wrap
-msgid "}\n"
-msgstr ""
 
 #. type: Plain text
 #: upstream/_posts/2023-09-23-virtual-threads-2.adoc:119
@@ -276,101 +175,6 @@ msgstr "Narayanaトランザクション・マネージャー - トランザク�
 #, fuzzy
 msgid "The PostgreSQL driver - as we use a PostgreSQL database"
 msgstr "PostgreSQLドライバ - PostgreSQLデータベースを使用しているため"
-
-#. type: Plain text
-#: upstream/_posts/2023-09-23-virtual-threads-2.adoc:130
-#, fuzzy
-msgid "The code is similar to a regular implementation of a CRUD service with Quarkus, except for https://github.com/quarkusio/virtual-threads-demos/blob/main/crud-example/src/main/java/org/acme/crud/TodoResource.java#L22[one line].  We added the `@RunOnVirtualThread` annotation on the resource class (line 17).  It instructs Quarkus to invoke these methods on virtual threads instead of regular platform threads (learn more about the difference in the https://quarkus.io/blog/virtual-thread-1/[previous blog post]), including `@Transactional` methods."
-msgstr "コードは、 link:https://github.com/quarkusio/virtual-threads-demos/blob/main/crud-example/src/main/java/org/acme/crud/TodoResource.java#L22[1行を除いて] 、Quarkusによる通常のCRUDサービスの実装と同様です。リソースクラスに `@RunOnVirtualThread` アノテーションを追加しました（17行目）。これは、通常のプラットフォームスレッドではなく、仮想スレッドでこれらのメソッドを呼び出すようQuarkusに指示するものです（この違いについては、 link:https://quarkus.io/blog/virtual-thread-1/[前回のブログ記事で] 詳しく説明しています）。 `@Transactional` 。"
-
-#. type: Plain text
-#: upstream/_posts/2023-09-23-virtual-threads-2.adoc:132
-#, fuzzy
-msgid "### The threading model"
-msgstr "スレッディング・モデル"
-
-#. type: Plain text
-#: upstream/_posts/2023-09-23-virtual-threads-2.adoc:137
-#, fuzzy
-msgid "As we have seen in the code, the development model is synchronous.  The interactions with the database uses blocking APIs: you wait for the replies.  That's where virtual thread introduces their magic.  Instead of blocking a platform thread, it only blocks the virtual threads:"
-msgstr "コードで見てきたように、開発モデルは同期型である。データベースとのやり取りはブロッキングAPIを使っている。そこで仮想スレッドが魔法を使う。プラットフォーム・スレッドをブロックする代わりに、仮想スレッドだけをブロックするのだ："
-
-#. type: Positional ($1) AttributeList argument for macro 'image'
-#: upstream/_posts/2023-09-23-virtual-threads-2.adoc:138
-#, fuzzy, no-wrap
-msgid "Threading model of the application"
-msgstr "アプリケーションのスレッドモデル"
-
-#. type: Target for macro image
-#: upstream/_posts/2023-09-23-virtual-threads-2.adoc:138
-#, no-wrap
-msgid "crud-database.png"
-msgstr ""
-
-#. type: Plain text
-#: upstream/_posts/2023-09-23-virtual-threads-2.adoc:143
-#, fuzzy
-msgid "Thus, when another request comes, the carrier thread can handle it.  It radically reduces the number of platform threads required when there are many concurrent requests.  As a result, the number of worker threads, generally used when using a synchronous and blocking development model, is not the bottleneck anymore."
-msgstr "従って、別のリクエストが来ても、キャリア・スレッドがそれを処理できる。これは、多くのリクエストが同時に発生した場合に必要となるプラットフォーム・スレッドの数を根本的に減らします。その結果、同期やブロッキングの開発モデルを使うときに一般的に使われるワーカースレッドの数は、もうボトルネックではなくなります。"
-
-#. type: Plain text
-#: upstream/_posts/2023-09-23-virtual-threads-2.adoc:150
-#, fuzzy
-msgid "However, that's not because you use virtual threads that your application has no more concurrency limit.  There is a new bottleneck: the **database connection pool**.  When you interact with the database, you ask for a connection to the connection pool (Agroal in our case).  The number of connections is not infinite (20 by default).  Once all the connections are used, you must wait until another processing completes and releases its connection.  You can still handle many requests concurrently, but they will wait for database connections to be available, reducing the response time."
-msgstr "しかし、仮想スレッドを使用したからといって、アプリケーションの並行性制限がなくなるわけではない。新しいボトルネックがあります： *データベース接続プール* です。データベースとやりとりするとき、コネクションプール（我々の場合は Agroal）に接続を要求します。コネクションの数は無限ではありません（デフォルトでは20）。全てのコネクションが使用されると、他の処理が完了してコネクションを解放するまで待たなければなりません。多くのリクエストを同時に処理することはできますが、データベース接続が利用可能になるまで待つことになり、レスポンスタイムが短くなります。"
-
-#. type: Plain text
-#: upstream/_posts/2023-09-23-virtual-threads-2.adoc:152
-#, fuzzy
-msgid "### A note about pinning"
-msgstr "ピン留めの注意点"
-
-#. type: Plain text
-#: upstream/_posts/2023-09-23-virtual-threads-2.adoc:155
-#, fuzzy
-msgid "As the https://quarkus.io/blog/virtual-thread-1/[previous blog post] described, pinning happens when the virtual thread cannot be unmounted from the carrier thread.  In this case, blocking the virtual thread also blocks the carrier thread:"
-msgstr "link:https://quarkus.io/blog/virtual-thread-1/[前のブログ記事で] 説明したように、ピン止めは、仮想スレッドがキャリアスレッドからアンマウントできないときに起こる。この場合、仮想スレッドをブロックすると、キャリアスレッドもブロックされる："
-
-#. type: Positional ($1) AttributeList argument for macro 'image'
-#: upstream/_posts/2023-09-23-virtual-threads-2.adoc:156
-#, fuzzy, no-wrap
-msgid "Pinning of the carrier thread"
-msgstr "キャリア糸のピン止め"
-
-#. type: Target for macro image
-#: upstream/_posts/2023-09-23-virtual-threads-2.adoc:156
-#, no-wrap
-msgid "pinning.png"
-msgstr ""
-
-#. type: Plain text
-#: upstream/_posts/2023-09-23-virtual-threads-2.adoc:163
-#, fuzzy
-msgid "Fortunately, in this application, there is no pinning.  The PostgreSQL driver is one of the only JDBC drivers that does not pin.  If you plan to use another database, check first.  We will be discussing how to detect pinning in the next post.  Quarkus, Narayana and Hibernate have been patched to avoid the pinning."
-msgstr "幸いなことに、このアプリケーションではピン止めはありません。PostgreSQLドライバはPinしない唯一のJDBCドライバの1つです。他のデータベースを使用する予定がある場合は、まず確認してください。ピン留めを検出する方法については、次の投稿で説明します。Quarkus、Narayana、Hibernate は、ピニングを回避するパッチが適用されています。"
-
-#. type: Plain text
-#: upstream/_posts/2023-09-23-virtual-threads-2.adoc:167
-#, fuzzy
-msgid "Pinning is one of many problems that can arise.  The application will suffer from the default object pooling mechanism used by Jackson.  Fortunately, we contributed an SPI to https://github.com/FasterXML/jackson-core/pull/1064[Jackson] that will allow us to remove this allocation hog."
-msgstr "ピン止めは、発生する可能性のある多くの問題の1つです。アプリケーションは、Jacksonが使用するデフォルトのオブジェクト・プーリング・メカニズムに悩まされることになる。幸いなことに、私たちは link:https://github.com/FasterXML/jackson-core/pull/1064[Jacksonに] SPIを提供し、このアロケーション・ホッグを除去できるようにしました。"
-
-#. type: Plain text
-#: upstream/_posts/2023-09-23-virtual-threads-2.adoc:169
-msgid "## Conclusion"
-msgstr "## まとめ"
-
-#. type: Plain text
-#: upstream/_posts/2023-09-23-virtual-threads-2.adoc:173
-#, fuzzy
-msgid "This post explains implementing a CRUD application using virtual threads in Quarkus.  You can now use an imperative development model without compromising the application's concurrency.  It's as simple as using RESTEasy Reactive and adding one annotation: `@RunOnVirtualThread` on your resource."
-msgstr "この投稿では、Quarkusで仮想スレッドを使用したCRUDアプリケーションの実装について説明します。アプリケーションの並行性を損なうことなく、命令型の開発モデルを使用できるようになりました。RESTEasy Reactiveを使用し、リソースに `@RunOnVirtualThread` 。"
-
-#. type: Plain text
-#: upstream/_posts/2023-09-23-virtual-threads-2.adoc:176
-#, fuzzy
-msgid "We tailored Quarkus and upstream projects (such as Hibernate, Narayana, SmallRye Mutiny, etc.) to become virtual-thread-friendly.  As we will see in other posts, most Quarkus extensions are ready to be used with virtual threads."
-msgstr "私たちは、Quarkusや上流のプロジェクト（Hibernate、Narayana、SmallRye Mutinyなど）が仮想スレッドに対応できるように調整しました。他の記事で説明するように、ほとんどのQuarkus拡張機能は仮想スレッドで使用する準備ができています。"
 
 #. type: Plain text
 #: upstream/_posts/2023-09-23-virtual-threads-2.adoc:178

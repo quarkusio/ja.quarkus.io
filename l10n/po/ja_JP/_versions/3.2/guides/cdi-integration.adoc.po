@@ -1,20 +1,242 @@
-# SOME DESCRIPTIVE TITLE
-# Copyright (C) YEAR Free Software Foundation, Inc.
-# This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
-#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2023-09-03 08:14+0000\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: ja_JP\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Generator: jekyll-l10n\n"
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_versions/3.2/guides/cdi-integration.adoc
+msgid ""
+"ArC, the CDI container in Quarkus, is bootstrapped at build time.\n"
+"To integrate with the container, https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0.html#spi_lite[CDI Build Compatible Extensions, window=\"_blank\"] can be used, as well as a Quarkus-specific extension API.\n"
+"CDI Portable Extensions are not and cannot be supported.\n"
+"This guide focuses on the Quarkus-specific extensions API."
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_versions/3.2/guides/cdi-integration.adoc
+msgid ""
+"The container is bootstrapped in multiple phases.\n"
+"From a high level perspective these phases go as follows:"
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_versions/3.2/guides/cdi-integration.adoc
+msgid ""
+"In the _initialization_ phase the preparatory work is being carried out and custom contexts are registered.\n"
+"_Bean discovery_ is then the process where the container analyzes all application classes, identifies beans and wires them all together based on the provided metadata.\n"
+"Subsequently, the extensions can register _synthetic components_.\n"
+"Attributes of these components are fully controlled by the extensions, i.e. are not derived from an existing class.\n"
+"Finally, the _deployment is validated_.\n"
+"For example, the container validates every injection point in the application and fails the build if there is no bean that satisfies the given required type and qualifiers."
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_versions/3.2/guides/cdi-integration.adoc
+msgid ""
+"Quarkus build steps can produce and consume various build items and hook into each phase.\n"
+"In the following sections we will describe all the relevant build items and common scenarios."
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_versions/3.2/guides/cdi-integration.adoc
+msgid ""
+"Classes and annotations are the primary source of bean-level metadata.\n"
+"The initial metadata are read from the _bean archive index_, an immutable https://github.com/wildfly/jandex[Jandex index, window=\"_blank\"] which is built from various sources during xref:cdi-reference.adoc#bean_discovery[bean discovery].\n"
+"However, extensions can add, remove or transform the metadata at certain stages of the bootstrap.\n"
+"Moreover, extensions can also register xref:synthetic_beans[synthetic components].\n"
+"This is an important aspect to realize when integrating CDI components in Quarkus."
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_versions/3.2/guides/cdi-integration.adoc
+msgid ""
+"This way, extensions can turn classes, that would be otherwise ignored, into beans and vice versa.\n"
+"For example, a class that declares a `@Scheduled` method is always registered as a bean even if it is not annotated with a bean defining annotation and would be normally ignored."
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_versions/3.2/guides/cdi-integration.adoc
+msgid ""
+"An `UnsatisfiedResolutionException` indicates a problem during xref:cdi.adoc#typesafe_resolution[typesafe resolution].\n"
+"Sometimes an injection point cannot be satisfied even if there is a class on the classpath that appears to be eligible for injection.\n"
+"There are several reasons why a class is not recognized and also several ways to fix it.\n"
+"In the first step we should identify the _reason_."
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_versions/3.2/guides/cdi-integration.adoc
+msgid "_Reason 1_: Class Is Not discovered"
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_versions/3.2/guides/cdi-integration.adoc
+msgid ""
+"Quarkus has a xref:cdi-reference.adoc#bean_discovery[simplified discovery].\n"
+"It might happen that the class is not part of the application index.\n"
+"For example, classes from the _runtime module_ of a Quarkus extension are not indexed automatically."
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_versions/3.2/guides/cdi-integration.adoc
+msgid ""
+"_Solution_: Use the `AdditionalBeanBuildItem`.\n"
+"This build item can be used to specify one or more additional classes to be analyzed during the discovery.\n"
+"Additional bean classes are transparently added to the application index processed by the container."
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_versions/3.2/guides/cdi-integration.adoc
+msgid ""
+"Bean classes added via `AdditionalBeanBuildItem` are _removable_ by default.\n"
+"If the container considers them xref:cdi-reference.adoc#remove_unused_beans[unused], they are just ignored.\n"
+"However, you can use `AdditionalBeanBuildItem.Builder.setUnremovable()` method to instruct the container to never remove bean classes registered via this build item.\n"
+"See also xref:cdi-reference.adoc#remove_unused_beans[Removing Unused Beans] and xref:unremovable_builditem[_Reason 3_: Class Was Discovered and Has a Bean Defining Annotation but Was Removed] for more details."
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_versions/3.2/guides/cdi-integration.adoc
+msgid ""
+"It is aso possible to set the default scope via `AdditionalBeanBuildItem.Builder#setDefaultScope()`.\n"
+"The default scope is only used if there is no scope declared on the bean class."
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_versions/3.2/guides/cdi-integration.adoc
+msgid ""
+"In Quarkus, the application is represented by a single bean archive with the https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0.html#default_bean_discovery[bean discovery mode `annotated`, window=\"_blank\"].\n"
+"Therefore, bean classes that don't have a https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0.html#bean_defining_annotations[bean defining annotation, window=\"_blank\"] are ignored.\n"
+"Bean defining annotations are declared on the class-level and include scopes, stereotypes and `@Interceptor`."
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_versions/3.2/guides/cdi-integration.adoc
+msgid ""
+"Bean classes added via `BeanDefiningAnnotationBuildItem` are _not removable_ by default, i.e. the resulting beans must not be removed even if they are considered unused.\n"
+"However, you can change the default behavior.\n"
+"See also xref:cdi-reference.adoc#remove_unused_beans[Removing Unused Beans] and xref:unremovable_builditem[_Reason 3_: Class Was Discovered and Has a Bean Defining Annotation but Was Removed] for more details."
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_versions/3.2/guides/cdi-integration.adoc
+msgid ""
+"It is also possible to specify the default scope.\n"
+"The default scope is only used if there is no scope declared on the bean class."
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_versions/3.2/guides/cdi-integration.adoc
+msgid ""
+"The container attempts to xref:cdi-reference.adoc#remove_unused_beans[remove all unused beans] during the build by default.\n"
+"This optimization allows for _framework-level dead code elimination_.\n"
+"In few special cases, it's not possible to correctly identify an unused bean.\n"
+"In particular, Quarkus is not able to detect the usage of the `CDI.current()` static method yet.\n"
+"Extensions can eliminate possible false positives by producing an `UnremovableBeanBuildItem`."
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_versions/3.2/guides/cdi-integration.adoc
+msgid ""
+"It is likely that the annotation class is not part of the application index.\n"
+"For example, classes from the _runtime module_ of a Quarkus extension are not indexed automatically."
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_versions/3.2/guides/cdi-integration.adoc
+msgid ""
+"In some cases, it's useful to be able to modify the annotation metadata.\n"
+"Quarkus provides a powerful alternative to https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0.html#process_annotated_type[`jakarta.enterprise.inject.spi.ProcessAnnotatedType`, window=\"_blank\"] and https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0.html#bce_enhancement[`jakarta.enterprise.inject.build.compatible.spi.Enhancement`, window=\"_blank\"].\n"
+"With an `AnnotationsTransformerBuildItem` it's possible to override the annotations that exist on bean classes."
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_versions/3.2/guides/cdi-integration.adoc
+msgid ""
+"For example, you might want to add an interceptor binding to a specific bean class.\n"
+"You can use a convenient builder-like API to create a transformer instance:"
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_versions/3.2/guides/cdi-integration.adoc
+msgid ""
+"Consumers of `BeanDiscoveryFinishedBuildItem` can easily inspect all class-based beans, observers and injection points registered in the application.\n"
+"However, synthetic beans and observers are _not included_ because this build item is produced _before_ the synthetic components are registered."
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_versions/3.2/guides/cdi-integration.adoc
+msgid ""
+"Sometimes it is practical to be able to register a _synthetic bean_.\n"
+"Bean attributes of a synthetic bean are not derived from a Java class, method or field.\n"
+"Instead, all the attributes are defined by an extension.\n"
+"In regular CDI, this could be achieved using the https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0.html#after_bean_discovery[`AfterBeanDiscovery.addBean()`, window=\"_blank\"] and https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0.html#bce_synthesis[`SyntheticComponents.addBean()`] methods."
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_versions/3.2/guides/cdi-integration.adoc
+msgid ""
+"The output of a bean configurator is recorded as bytecode.\n"
+"Therefore, there are some limitations in how a synthetic bean instance is created at runtime.\n"
+"You can:"
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_versions/3.2/guides/cdi-integration.adoc
+msgid "Produce the runtime instance through a proxy returned from a xref:writing-extensions.adoc#bytecode-recording[`@Recorder` method] and set it via `ExtendedBeanConfigurator#runtimeValue(RuntimeValue<?>)`, `ExtendedBeanConfigurator#runtimeProxy(Object)`,  `ExtendedBeanConfigurator#supplier(Supplier<?>)` or `ExtendedBeanConfigurator#createWith(Function<SyntheticCreationalContext<?>, <?>)`."
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_versions/3.2/guides/cdi-integration.adoc
+msgid ""
+"It is possible to mark a synthetic bean to be initialized during `RUNTIME_INIT`.\n"
+"See the xref:writing-extensions.adoc#bootstrap-three-phases[Three Phases of Bootstrap and Quarkus Philosophy] for more information about the difference between `STATIC_INIT` and `RUNTIME_INIT`."
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_versions/3.2/guides/cdi-integration.adoc
+msgid ""
+"A synthetic bean may register a synthetic injection point via the `ExtendedBeanConfigurator#addInjectionPoint()` method.\n"
+"This injection point is validated at build time and considered when xref:cdi-reference.adoc#remove_unused_beans[detecting unused beans].\n"
+"The injected reference is accessible through the `SyntheticCreationalContext#getInjectedReference()` methods at runtime."
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_versions/3.2/guides/cdi-integration.adoc
+msgid ""
+"The output of a `ObserverConfigurator` is recorded as bytecode.\n"
+"Therefore, there are some limitations in how a synthetic observer is invoked at runtime.\n"
+"Currently, you must generate the bytecode of the method body directly."
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_versions/3.2/guides/cdi-integration.adoc
+msgid ""
+"No problem.\n"
+"You can generate the bytecode of a bean class manually and then all you need to do is to produce a `GeneratedBeanBuildItem` instead of `GeneratedClassBuildItem`."
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_versions/3.2/guides/cdi-integration.adoc
+msgid ""
+"In rare cases it might be handy to programmatically register an existing annotation that is not annotated with `@jakarta.interceptor.InterceptorBinding` as an interceptor binding.\n"
+"This is similar to what CDI achieves through `BeforeBeanDiscovery#addInterceptorBinding()`.\n"
+"We are going to use `InterceptorBindingRegistrarBuildItem` to get it done."
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_versions/3.2/guides/cdi-integration.adoc
+msgid ""
+"Sometimes it might be useful to register an existing annotation that is not annotated with `@jakarta.inject.Qualifier` as a CDI qualifier.\n"
+"This is similar to what CDI achieves through `BeforeBeanDiscovery#addQualifier()`.\n"
+"We are going to use `QualifierRegistrarBuildItem` to get it done."
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_versions/3.2/guides/cdi-integration.adoc
+msgid ""
+"It is sometimes useful to register an existing annotation that is not annotated with `@jakarta.enterprise.inject.Stereotype` as a CDI stereotype.\n"
+"This is similar to what CDI achieves through `BeforeBeanDiscovery#addStereotype()`.\n"
+"We are going to use `StereotypeRegistrarBuildItem` to get it done."
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_versions/3.2/guides/cdi-integration.adoc
+msgid ""
+"Every now and then it is handy to be able to change the qualifiers of an injection point programmatically.\n"
+"You can do just that with `InjectionPointTransformerBuildItem`.\n"
+"The following sample shows how to apply transformation to injection points with type `Foo` that contain qualifier `MyQualifier`:"
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_versions/3.2/guides/cdi-integration.adoc
+msgid ""
+"The `ResourceAnnotationBuildItem` can be used to specify resource annotations that make it possible to resolve non-CDI injection points, such as Jakarta EE resources.\n"
+"An integrator must also provide a corresponding `io.quarkus.arc.ResourceReferenceProvider` service provider implementation."
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_versions/3.2/guides/cdi-integration.adoc
+msgid ""
+"Any of the above extensions that operates with `BuildExtension.BuildContext` can leverage certain build time metadata that are generated during build.\n"
+"The built-in keys located in `io.quarkus.arc.processor.BuildExtension.Key` are:"
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_versions/3.2/guides/cdi-integration.adoc
+msgid ""
+"To get hold of these, simply query the extension context object for given key.\n"
+"Note that these metadata are made available as build proceeds which means that extensions can only leverage metadata that were built before the extensions are invoked.\n"
+"If your extension attempts to retrieve metadata that wasn't yet produced, `null` will be returned.\n"
+"Here is a summary of which extensions can access which metadata:"
+msgstr ""
 
 #. This guide is maintained in the main Quarkus repository
 #. and pull requests should be submitted there:
@@ -24,17 +246,6 @@ msgstr ""
 #, no-wrap
 msgid "CDI Integration Guide"
 msgstr "CDI 統合ガイド"
-
-#. type: Plain text
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:17
-#, fuzzy
-msgid "ArC, the CDI container in Quarkus, is bootstrapped at build time.  To integrate with the container, https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0.html#spi_lite[CDI Build Compatible Extensions, window=\"_blank\"] can be used, as well as a Quarkus-specific extension API.  CDI Portable Extensions are not and cannot be supported.  This guide focuses on the Quarkus-specific extensions API."
-msgstr "QuarkusのCDIコンテナであるArCは、ビルド時にブートストラップされます。このコンテナと統合するには、 link:https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0.html#spi_lite[CDI Build Compatible Extensionsと] Quarkus固有の拡張APIを使用します。CDI Portable Extensionsはサポートされていません。このガイドでは、Quarkus固有の拡張機能APIを中心に説明します。"
-
-#. type: Plain text
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:20
-msgid "The container is bootstrapped in multiple phases.  From a high level perspective these phases go as follows:"
-msgstr "コンテナーは複数のフェーズでブートストラップされます。高レベルの視点から見ると、これらのフェーズは以下のようになります。"
 
 #. type: Plain text
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:22
@@ -57,19 +268,9 @@ msgid "Validation"
 msgstr "バリデーション"
 
 #. type: Plain text
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:32
-msgid "In the _initialization_ phase the preparatory work is being carried out and custom contexts are registered.  _Bean discovery_ is then the process where the container analyzes all application classes, identifies beans and wires them all together based on the provided metadata.  Subsequently, the extensions can register _synthetic components_.  Attributes of these components are fully controlled by the extensions, i.e. are not derived from an existing class.  Finally, the _deployment is validated_.  For example, the container validates every injection point in the application and fails the build if there is no bean that satisfies the given required type and qualifiers."
-msgstr "_初期化_ フェーズでは、準備作業が行われ、カスタムコンテキストが登録されます。その後、コンテナーがすべてのアプリケーションクラスを分析し、Beanを識別し、提供されたメタデータに基づいてそれらをすべて繋ぎ合わせるプロセスがBean _ディスカバリ_ です。その後、エクステンションは _合成コンポーネント_ を登録することができます。これらのコンポーネントの属性はエクステンションによって完全に制御されます。最後に、 _デプロイメントが検証されます_ 。例えば、コンテナーはアプリケーション内のすべての注入ポイントを検証し、与えられた必要な型と修飾子を満たすBeanがない場合はビルドを失敗させます。"
-
-#. type: Plain text
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:34
 msgid "You can see more information about the bootstrap by enabling additional logging. Simply run the Maven build with `-X` or `--debug` and grep the lines that contain `io.quarkus.arc`. In the xref:cdi-reference.adoc#dev-mode[development mode], you can use `quarkus.log.category.\"io.quarkus.arc.processor\".level=DEBUG` and two special endpoints are also registered automatically to provide some basic debug info in the JSON format."
 msgstr "追加のロギングを有効にすることで、ブートストラップに関するより多くの情報を見ることができます。単に `-X` または `--debug` で Maven ビルドを実行し、 `io.quarkus.arc` を含む行を grep してください。 xref:cdi-reference.adoc#dev-mode[開発モード] では、 `quarkus.log.category.\"io.quarkus.arc.processor\".level=DEBUG` と、2つの特別なエンドポイントも自動的に登録され、JSONフォーマットでいくつかの基本的なデバッグ情報を提供することができます。"
-
-#. type: Plain text
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:37
-msgid "Quarkus build steps can produce and consume various build items and hook into each phase.  In the following sections we will describe all the relevant build items and common scenarios."
-msgstr "Quarkusのビルドステップでは、さまざまなビルドアイテムを生成したり消費したりして、各フェーズにフックすることができます。以下のセクションでは、関連するすべてのビルド項目と一般的なシナリオについて説明します。"
 
 #. type: Title ==
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:38
@@ -77,42 +278,11 @@ msgstr "Quarkusのビルドステップでは、さまざまなビルドアイ�
 msgid "Metadata Sources"
 msgstr "メタデータソース"
 
-#. type: Plain text
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:45
-msgid "Classes and annotations are the primary source of bean-level metadata.  The initial metadata are read from the _bean archive index_, an immutable https://github.com/wildfly/jandex[Jandex index, window=\"_blank\"] which is built from various sources during xref:cdi-reference.adoc#bean_discovery[bean discovery].  However, extensions can add, remove or transform the metadata at certain stages of the bootstrap.  Moreover, extensions can also register xref:synthetic_beans[synthetic components].  This is an important aspect to realize when integrating CDI components in Quarkus."
-msgstr "クラスとアノテーションは、Beanレベルのメタデータの主要なソースです。初期メタデータは、Bean xref:cdi-reference.adoc#bean_discovery[ディスカバリー] 時に様々なソースから構築される不変の link:https://github.com/wildfly/jandex[Jandex] インデックスである _Bean archive index_ から読み取られます。しかし、エクステンションは、ブートストラップの特定の段階でメタデータを追加、削除、変換することができます。さらに、エクステンションは xref:synthetic_beans[合成コンポーネント] を登録することもできます。これは、QuarkusでCDIコンポーネントを統合する際に実現すべき重要な点です。"
-
-#. type: Plain text
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:48
-msgid "This way, extensions can turn classes, that would be otherwise ignored, into beans and vice versa.  For example, a class that declares a `@Scheduled` method is always registered as a bean even if it is not annotated with a bean defining annotation and would be normally ignored."
-msgstr "このようにして、エクステンションは、そうでなければ無視されていたクラスをBeanに変えたり、その逆を行ったりすることができます。例えば、 `@Scheduled` メソッドを宣言するクラスは、たとえそれがBean定義アノテーションでアノテーションされておらず、通常は無視されるようなクラスであっても、常にBeanとして登録されます。"
-
 #. type: Title ==
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:52
 #, no-wrap
 msgid "Use Case - My Class Is Not Recognized as a Bean"
 msgstr "ユースケース - クラスがBeanとして認識されません"
-
-#. type: Plain text
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:58
-msgid "An `UnsatisfiedResolutionException` indicates a problem during xref:cdi.adoc#typesafe_resolution[typesafe resolution].  Sometimes an injection point cannot be satisfied even if there is a class on the classpath that appears to be eligible for injection.  There are several reasons why a class is not recognized and also several ways to fix it.  In the first step we should identify the _reason_."
-msgstr "`UnsatisfiedResolutionException` は、 xref:cdi.adoc#typesafe_resolution[タイプセーフな解決] 中に問題が発生したことを示しています。クラスパス上に注入可能なクラスがあっても、注入ポイントを満たすことができないことがあります。クラスが認識されない理由はいくつかあり、またそれを解決する方法もいくつかあります。最初のステップでは、その _原因を_ 特定する必要があります。"
-
-#. type: Title ===
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:60
-#, no-wrap
-msgid "_Reason 1_: Class Is Not discovered "
-msgstr "_理由1_ :クラスが発見されない"
-
-#. type: Plain text
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:65
-msgid "Quarkus has a xref:cdi-reference.adoc#bean_discovery[simplified discovery].  It might happen that the class is not part of the application index.  For example, classes from the _runtime module_ of a Quarkus extension are not indexed automatically."
-msgstr "Quarkusは xref:cdi-reference.adoc#bean_discovery[簡略化されたディスカバリー] があります。クラスがアプリケーションのインデックスの一部でないことがあります。例えば、Quarkusエクステンションの _実行時モジュール_ のクラスは、自動的にインデックスされません。"
-
-#. type: Plain text
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:69
-msgid "_Solution_: Use the `AdditionalBeanBuildItem`.  This build item can be used to specify one or more additional classes to be analyzed during the discovery.  Additional bean classes are transparently added to the application index processed by the container."
-msgstr "_解決策_ 。 `AdditionalBeanBuildItem` .このビルド項目は、ディスカバリー中に解析する1つ以上の追加クラスを指定するために使用することができます。追加のBean・クラスは、コンテナーによって処理されるアプリケーション・インデックスに透過的に追加されます。"
 
 #. type: Plain text
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:71
@@ -125,30 +295,10 @@ msgstr "xref:cdi-reference.adoc#enable_build_profile[Quarkus Build Profileでの
 msgid "`AdditionalBeanBuildItem` Example"
 msgstr "`AdditionalBeanBuildItem` の例"
 
-#. type: delimited block -
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:79
-#, no-wrap
-msgid ""
-"@BuildStep\n"
-"AdditionalBeanBuildItem additionalBeans() {\n"
-"     return new AdditionalBeanBuildItem(SmallRyeHealthReporter.class, HealthServlet.class)); <1>\n"
-"}\n"
-msgstr ""
-
 #. type: Plain text
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:81
 msgid "`AdditionalBeanBuildItem.Builder` can be used for more complex use cases."
 msgstr "`AdditionalBeanBuildItem.Builder` は、より複雑なユースケースに使用することができます。"
-
-#. type: Plain text
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:86
-msgid "Bean classes added via `AdditionalBeanBuildItem` are _removable_ by default.  If the container considers them xref:cdi-reference.adoc#remove_unused_beans[unused], they are just ignored.  However, you can use `AdditionalBeanBuildItem.Builder.setUnremovable()` method to instruct the container to never remove bean classes registered via this build item.  See also xref:cdi-reference.adoc#remove_unused_beans[Removing Unused Beans] and xref:unremovable_builditem[_Reason 3_: Class Was Discovered and Has a Bean Defining Annotation but Was Removed] for more details."
-msgstr "`AdditionalBeanBuildItem` を介して追加された Bean クラスは、デフォルトで _削除可能_ です。コンテナがそれらを xref:cdi-reference.adoc#remove_unused_beans[未使用] とみなした場合、それらはただ無視されます。しかし， `AdditionalBeanBuildItem.Builder.setUnremovable()` メソッドを使用すると，このビルド項目を通じて登録された Bean クラスを決して削除しないようにコンテナに指示することができます。詳細は， xref:cdi-reference.adoc#remove_unused_beans[未使用のBeanの削除] 及び xref:unremovable_builditem[理由3：クラスが発見され，Bean定義アノテーションを有するが削除された] も参照下さい。"
-
-#. type: Plain text
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:89
-msgid "It is aso possible to set the default scope via `AdditionalBeanBuildItem.Builder#setDefaultScope()`.  The default scope is only used if there is no scope declared on the bean class."
-msgstr "`AdditionalBeanBuildItem.Builder#setDefaultScope()` からデフォルトのスコープを設定することも可能です。デフォルトのスコープは、Beanクラスにスコープが宣言されていない場合にのみ使用されます。"
 
 #. type: Plain text
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:91
@@ -163,12 +313,6 @@ msgid "_Reason 2_: Class Is Discovered but Has No Bean Defining Annotation"
 msgstr "_理由2_ : クラスは発見されたが、Beanを定義するアノテーションがない"
 
 #. type: Plain text
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:97
-#, fuzzy
-msgid "In Quarkus, the application is represented by a single bean archive with the https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0.html#default_bean_discovery[bean discovery mode `annotated`, window=\"_blank\"].  Therefore, bean classes that don't have a https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0.html#bean_defining_annotations[bean defining annotation, window=\"_blank\"] are ignored.  Bean defining annotations are declared on the class-level and include scopes, stereotypes and `@Interceptor`."
-msgstr "Quarkusでは、アプリケーションは link:https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0.html#default_bean_discovery[ビーン発見モードannotated] を持つ単一のビーンアーカイブによって表現されます。したがって、 link:https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0.html#bean_defining_annotations[Bean定義アノテーションを] 持たないBeanクラスは無視されます。ビーン定義注釈は，クラスレベルで宣言され，スコープ，ステレオタイプ及び `@Interceptor` を含む。"
-
-#. type: Plain text
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:99
 msgid "_Solution 1_: Use the `AutoAddScopeBuildItem`. This build item can be used to add a scope to a class that meets certain conditions."
 msgstr "_解決策1_ : `AutoAddScopeBuildItem` の使用。このビルドアイテムを使用すると、特定の条件を満たすクラスにスコープを追加することができます。"
@@ -178,18 +322,6 @@ msgstr "_解決策1_ : `AutoAddScopeBuildItem` の使用。このビルドアイ
 #, no-wrap
 msgid "`AutoAddScopeBuildItem` Example"
 msgstr "`AutoAddScopeBuildItem` の例"
-
-#. type: delimited block -
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:109
-#, no-wrap
-msgid ""
-"@BuildStep\n"
-"AutoAddScopeBuildItem autoAddScope() {\n"
-"   return AutoAddScopeBuildItem.builder().containsAnnotations(SCHEDULED_NAME, SCHEDULES_NAME) <1>\n"
-"      .defaultScope(BuiltinScope.SINGLETON) <2>\n"
-"      .build();\n"
-"}\n"
-msgstr ""
 
 #. type: Plain text
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:111
@@ -212,31 +344,10 @@ msgstr "_解決策2_: 特定のアノテーションが付けられたクラス�
 msgid "`BeanDefiningAnnotationBuildItem` Example"
 msgstr "`BeanDefiningAnnotationBuildItem` の例"
 
-#. type: delimited block -
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:122
-#, no-wrap
-msgid ""
-"@BuildStep\n"
-"BeanDefiningAnnotationBuildItem additionalBeanDefiningAnnotation() {\n"
-"   return new BeanDefiningAnnotationBuildItem(Annotations.GRAPHQL_API); <1>\n"
-"}\n"
-msgstr ""
-
 #. type: Plain text
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:124
 msgid "Add `org.eclipse.microprofile.graphql.GraphQLApi` to the set of bean defining annotations."
 msgstr "Bean 定義アノテーションのセットに `org.eclipse.microprofile.graphql.GraphQLApi` を追加します。"
-
-#. type: Plain text
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:128
-#, fuzzy
-msgid "Bean classes added via `BeanDefiningAnnotationBuildItem` are _not removable_ by default, i.e. the resulting beans must not be removed even if they are considered unused.  However, you can change the default behavior.  See also xref:cdi-reference.adoc#remove_unused_beans[Removing Unused Beans] and xref:unremovable_builditem[_Reason 3_: Class Was Discovered and Has a Bean Defining Annotation but Was Removed] for more details."
-msgstr "`BeanDefiningAnnotationBuildItem` 経由で追加されたBeanクラスは，デフォルトでは _削除できない_ 。 すなわち，結果として生成されたBeanは，たとえ未使用とみなされたとしても， 削除してはならない。しかし，デフォルトの振る舞いを変更することができる。詳細については， xref:cdi-reference.adoc#remove_unused_beans[未使用ビーンの削除] 及び xref:unremovable_builditem[理由3: クラスが発見され，ビーン定義アノテーションがあるが削除さ] れたも参照すること。"
-
-#. type: Plain text
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:131
-msgid "It is also possible to specify the default scope.  The default scope is only used if there is no scope declared on the bean class."
-msgstr "デフォルトスコープを設定することもできます。デフォルトスコープは、Bean クラスにスコープが宣言されていない場合にのみ使用されます。"
 
 #. type: Title ===
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:135
@@ -244,26 +355,11 @@ msgstr "デフォルトスコープを設定することもできます。デフ
 msgid "_Reason 3_: Class Was Discovered and Has a Bean Defining Annotation but Was Removed"
 msgstr "_理由3_: クラスが検出され、Bean 定義のアノテーションがあるが削除されている"
 
-#. type: Plain text
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:142
-msgid "The container attempts to xref:cdi-reference.adoc#remove_unused_beans[remove all unused beans] during the build by default.  This optimization allows for _framework-level dead code elimination_.  In few special cases, it's not possible to correctly identify an unused bean.  In particular, Quarkus is not able to detect the usage of the `CDI.current()` static method yet.  Extensions can eliminate possible false positives by producing an `UnremovableBeanBuildItem`."
-msgstr "コンテナは、デフォルトでビルド中に xref:cdi-reference.adoc#remove_unused_beans[すべての未使用Beanを削除] しようとします。この最適化によって， _フレームワークレベルのデッドコード除去が_ 可能になります。いくつかの特殊なケースでは、未使用のBeanを正しく識別することができません。特に、Quarkusでは、 `CDI.current()` 静的メソッドの使用をまだ検出できません。エクステンションは、 `UnremovableBeanBuildItem` を生成することで、誤検出の可能性を排除することができます。"
-
 #. type: Block title
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:143
 #, no-wrap
 msgid "`UnremovableBeanBuildItem` Example"
 msgstr "`UnremovableBeanBuildItem` の例"
-
-#. type: delimited block -
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:150
-#, no-wrap
-msgid ""
-"@BuildStep\n"
-"UnremovableBeanBuildItem unremovableBeans() {\n"
-"   return UnremovableBeanBuildItem.targetWithAnnotation(STARTUP_NAME); <1>\n"
-"}\n"
-msgstr ""
 
 #. type: Plain text
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:152
@@ -275,11 +371,6 @@ msgstr "`@Startup` でアノテーションされたすべてのクラスを削�
 #, no-wrap
 msgid "Use Case - My Annotation Is Not Recognized as a Qualifier or an Interceptor Binding"
 msgstr "ユースケース - アノテーションが修飾子またはインターセプターバインディングとして認識されない"
-
-#. type: Plain text
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:157
-msgid "It is likely that the annotation class is not part of the application index.  For example, classes from the _runtime module_ of a Quarkus extension are not indexed automatically."
-msgstr "アノテーションクラスがアプリケーションインデックスに含まれていない可能性があります。たとえば、Quarkus エクステンションの _ランタイムモジュール_ のクラスは自動的にインデックス化されません。"
 
 #. type: Plain text
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:159
@@ -294,39 +385,15 @@ msgid "Use Case - I Need To Transform Annotation Metadata"
 msgstr "ユースケース - アノテーションのメタデータを変換する必要がある場合"
 
 #. type: Plain text
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:166
-#, fuzzy
-msgid "In some cases, it's useful to be able to modify the annotation metadata.  Quarkus provides a powerful alternative to https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0.html#process_annotated_type[`jakarta.enterprise.inject.spi.ProcessAnnotatedType`, window=\"_blank\"] and https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0.html#bce_enhancement[`jakarta.enterprise.inject.build.compatible.spi.Enhancement`, window=\"_blank\"].  With an `AnnotationsTransformerBuildItem` it's possible to override the annotations that exist on bean classes."
-msgstr "場合によっては、注釈メタデータを変更できると便利です。Quarkusは link:https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0.html#process_annotated_type[jakarta.enterprise.inject.spi.ProcessAnnotatedType] そして link:https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0.html#bce_enhancement[jakarta.enterprise.inject.build.compatible.spi.Enhancement] . `AnnotationsTransformerBuildItem` を使用すると、Bean クラスに存在するアノテーションをオーバーライドできます。"
-
-#. type: Plain text
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:168
 msgid "Keep in mind that annotation transformers must be produced _before_ the bean discovery starts."
 msgstr "アノテーショントランスフォーマーは、Beanディスカバリが始まる _前に_ 生成されなければならないことを覚えておいてください。"
-
-#. type: Plain text
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:171
-#, fuzzy
-msgid "For example, you might want to add an interceptor binding to a specific bean class.  You can use a convenient builder-like API to create a transformer instance:"
-msgstr "例えば、特定のビーンクラスにインターセプターバインディングを追加したいとします。トランスフォーマーのインスタンスを作成するには、便利なビルダーのような API を使用できます："
 
 #. type: Plain text
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:173
 #, fuzzy
 msgid "Builder Example"
 msgstr "ビルダーの例"
-
-#. type: delimited block -
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:181
-#, no-wrap
-msgid ""
-"@BuildStep\n"
-"AnnotationsTransformerBuildItem transform() {\n"
-"   return new AnnotationsTransformerBuildItem(AnnotationsTransformer.appliedToClass() <1>\n"
-"        .whenClass(c -> c.name().toString().equals(\"org.acme.Bar\")) <2>\n"
-"        .thenTransform(t -> t.add(MyInterceptorBinding.class))); <3>\n"
-"}\n"
-msgstr ""
 
 #. type: Plain text
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:183
@@ -357,37 +424,6 @@ msgstr "上の例は匿名クラスで書き直すことができる："
 msgid "`AnnotationsTransformerBuildItem` Example"
 msgstr "`AnnotationsTransformerBuildItem` の例"
 
-#. type: delimited block -
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:194
-#, no-wrap
-msgid ""
-"@BuildStep\n"
-"AnnotationsTransformerBuildItem transform() {\n"
-"   return new AnnotationsTransformerBuildItem(new AnnotationsTransformer() {\n"
-msgstr ""
-
-#. type: delimited block -
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:198
-#, no-wrap
-msgid ""
-"      public boolean appliesTo(org.jboss.jandex.AnnotationTarget.Kind kind) {\n"
-"         return kind == org.jboss.jandex.AnnotationTarget.Kind.CLASS; <1>\n"
-"      }\n"
-msgstr ""
-
-#. type: delimited block -
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:206
-#, no-wrap
-msgid ""
-"      public void transform(TransformationContext context) {\n"
-"         if (context.getTarget().asClass().name().toString().equals(\"org.acme.Bar\")) {\n"
-"            context.transform().add(MyInterceptorBinding.class).done(); <2>\n"
-"         }\n"
-"      }\n"
-"    });\n"
-"}\n"
-msgstr ""
-
 #. type: Plain text
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:209
 msgid "If the class name equals to `org.acme.Bar` then add `@MyInterceptorBinding`. Don't forget to invoke `Transformation#done()`."
@@ -403,19 +439,6 @@ msgstr "ビルドステップでは、`TransformedAnnotationsBuildItem` を介�
 #, no-wrap
 msgid "`TransformedAnnotationsBuildItem` Example"
 msgstr "`TransformedAnnotationsBuildItem` の例"
-
-#. type: delimited block -
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:222
-#, no-wrap
-msgid ""
-"@BuildStep\n"
-"void queryAnnotations(TransformedAnnotationsBuildItem transformedAnnotations, BuildProducer<MyBuildItem> myBuildItem) {\n"
-"   ClassInfo myClazz = ...;\n"
-"   if (transformedAnnotations.getAnnotations(myClazz).isEmpty()) { <1>\n"
-"     myBuildItem.produce(new MyBuildItem());\n"
-"   }\n"
-"}\n"
-msgstr ""
 
 #. type: Plain text
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:224
@@ -445,14 +468,6 @@ msgstr " `io.quarkus.arc.processor` のカテゴリーに `TRACE` レベルを�
 msgid "`application.properties` Example"
 msgstr "`application.properties` の例"
 
-#. type: delimited block -
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:236
-#, no-wrap
-msgid ""
-"quarkus.log.category.\"io.quarkus.arc.processor\".min-level=TRACE <1>\n"
-"quarkus.log.category.\"io.quarkus.arc.processor\".level=TRACE\n"
-msgstr ""
-
 #. type: Plain text
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:238
 msgid "You also need to adjust the minimum log level for the relevant category."
@@ -471,11 +486,6 @@ msgid "_Solution 1_: `BeanDiscoveryFinishedBuildItem`"
 msgstr "_解決策1._ `BeanDiscoveryFinishedBuildItem`"
 
 #. type: Plain text
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:246
-msgid "Consumers of `BeanDiscoveryFinishedBuildItem` can easily inspect all class-based beans, observers and injection points registered in the application.  However, synthetic beans and observers are _not included_ because this build item is produced _before_ the synthetic components are registered."
-msgstr "`BeanDiscoveryFinishedBuildItem` のコンシューマーは、アプリケーションに登録されているすべてのクラスベースの Bean、オブザーバー、およびインジェクションポイントを簡単に検査できます。ただし、このビルドアイテムは合成コンポーネントが登録される _前_ に作成されるため、合成 Bean とオブザーバーは _含まれません_ 。"
-
-#. type: Plain text
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:248
 msgid "Additionally, the bean resolver returned from `BeanDiscoveryFinishedBuildItem#getBeanResolver()` can be used to apply the type-safe resolution rules, e.g. to find out whether there is a bean that would satisfy certain combination of required type and qualifiers."
 msgstr "さらに、`BeanDiscoveryFinishedBuildItem#getBeanResolver()` から返された Bean リゾルバーを使用して、タイプセーフな解決ルールを適用できます。たとえば、必要な型と修飾子の特定の組み合わせを満たす Bean があるかどうかを確認できます。"
@@ -485,17 +495,6 @@ msgstr "さらに、`BeanDiscoveryFinishedBuildItem#getBeanResolver()` から返
 #, no-wrap
 msgid "`BeanDiscoveryFinishedBuildItem` Example"
 msgstr "`BeanDiscoveryFinishedBuildItem` の例"
-
-#. type: delimited block -
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:257
-#, no-wrap
-msgid ""
-"@BuildStep\n"
-"void doSomethingWithNamedBeans(BeanDiscoveryFinishedBuildItem beanDiscovery, BuildProducer<NamedBeansBuildItem> namedBeans) {\n"
-"   List<BeanInfo> namedBeans = beanDiscovery.beanStream().withName().collect(toList())); <1>\n"
-"   namedBeans.produce(new NamedBeansBuildItem(namedBeans));\n"
-"}\n"
-msgstr ""
 
 #. type: Plain text
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:259
@@ -524,17 +523,6 @@ msgstr "さらに、`SynthesisFinishedBuildItem#getBeanResolver()` から返さ�
 msgid "`SynthesisFinishedBuildItem` Example"
 msgstr "`SynthesisFinishedBuildItem` の例"
 
-#. type: delimited block -
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:274
-#, no-wrap
-msgid ""
-"@BuildStep\n"
-"void doSomethingWithNamedBeans(SynthesisFinishedBuildItem synthesisFinished, BuildProducer<NamedBeansBuildItem> namedBeans) {\n"
-"   List<BeanInfo> namedBeans = synthesisFinished.beanStream().withName().collect(toList())); <1>\n"
-"   namedBeans.produce(new NamedBeansBuildItem(namedBeans));\n"
-"}\n"
-msgstr ""
-
 #. type: Plain text
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:276
 msgid "The resulting list will contain `@Named` synthetic beans."
@@ -547,12 +535,6 @@ msgid "Use Case - The Need for Synthetic Beans"
 msgstr "ユースケース - 合成 Bean の必要性"
 
 #. type: Plain text
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:284
-#, fuzzy
-msgid "Sometimes it is practical to be able to register a _synthetic bean_.  Bean attributes of a synthetic bean are not derived from a Java class, method or field.  Instead, all the attributes are defined by an extension.  In regular CDI, this could be achieved using the https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0.html#after_bean_discovery[`AfterBeanDiscovery.addBean()`, window=\"_blank\"] and https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0.html#bce_synthesis[`SyntheticComponents.addBean()`] methods."
-msgstr "_合成Beanを_ 登録できることが実用的な場合もある。合成BeanのBean属性は，Javaクラス，メソッド又はフィールドから派生しない。代わりに，すべての属性は，拡張によって定義される。通常のCDIでは，これは link:https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0.html#after_bean_discovery[AfterBeanDiscovery.addBean()] メソッドと link:https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0.html#bce_synthesis[SyntheticComponents.addBean()] メソッドを使用して実現できる。"
-
-#. type: Plain text
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:286
 msgid "_Solution_: If you need to register a synthetic bean then use the `SyntheticBeanBuildItem`."
 msgstr "_解決策_: 合成 Bean を登録する必要がある場合は、`SyntheticBeanBuildItem` を使用します。"
@@ -563,29 +545,11 @@ msgstr "_解決策_: 合成 Bean を登録する必要がある場合は、`Synt
 msgid "`SyntheticBeanBuildItem` Example 1"
 msgstr "`SyntheticBeanBuildItem` の例 1"
 
-#. type: delimited block -
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:297
-#, no-wrap
-msgid ""
-"@BuildStep\n"
-"SyntheticBeanBuildItem syntheticBean() {\n"
-"   return SyntheticBeanBuildItem.configure(String.class)\n"
-"             .qualifiers(AnnotationInstance.builder(MyQualifier.class).build())\n"
-"             .creator(mc -> mc.returnValue(mc.load(\"foo\"))) <1>\n"
-"             .done();\n"
-"}\n"
-msgstr ""
-
 #. type: Plain text
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:299
 #, fuzzy
 msgid "Generate the bytecode of the `jakarta.enterprise.context.spi.Contextual#create(CreationalContext<T>)` implementation."
 msgstr "`jakarta.enterprise.context.spi.Contextual#create(CreationalContext<T>)` 実装のバイトコードを生成する。"
-
-#. type: Plain text
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:303
-msgid "The output of a bean configurator is recorded as bytecode.  Therefore, there are some limitations in how a synthetic bean instance is created at runtime.  You can:"
-msgstr "Bean Configurator の出力は、バイトコードとして記録されます。したがって、実行時に合成 Bean インスタンスを作成する方法にはいくつかの制限があります。以下が可能です。"
 
 #. type: Plain text
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:305
@@ -598,30 +562,11 @@ msgstr "`Contextual#create(CreationalContext<T>)` メソッドのバイトコー
 msgid "Pass a subclass of `io.quarkus.arc.BeanCreator` via `ExtendedBeanConfigurator#creator(Class<? extends BeanCreator<U>>)`, and possibly specify some build-time parameters via `ExtendedBeanConfigurator#param()` and synthetic injection points via `ExtendedBeanConfigurator#addInjectionPoint()`."
 msgstr "`ExtendedBeanConfigurator#creator(Class<? extends BeanCreator<U>>)` で `io.quarkus.arc.BeanCreator` のサブクラスを渡し、 `ExtendedBeanConfigurator#param()` でビルド時のパラメータを指定し、 `ExtendedBeanConfigurator#addInjectionPoint()` で合成インジェクション・ポイントを指定します。"
 
-#. type: Plain text
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:307
-#, fuzzy
-msgid "Produce the runtime instance through a proxy returned from a xref:writing-extensions.adoc#bytecode-recording[`@Recorder` method] and set it via `ExtendedBeanConfigurator#runtimeValue(RuntimeValue<?>)`, `ExtendedBeanConfigurator#runtimeProxy(Object)`, `ExtendedBeanConfigurator#supplier(Supplier<?>)` or `ExtendedBeanConfigurator#createWith(Function<SyntheticCreationalContext<?>, <?>)`."
-msgstr "xref:writing-extensions.adoc#bytecode-recording[@Recorder メソッドから] 返されたプロキシを通してランタイムインスタンスを生成し、 `ExtendedBeanConfigurator#runtimeValue(RuntimeValue<?>)` 、 `ExtendedBeanConfigurator#runtimeProxy(Object)` 、 `ExtendedBeanConfigurator#supplier(Supplier<?>)` 、 `ExtendedBeanConfigurator#createWith(Function<SyntheticCreationalContext<?>, <?>)` のいずれかを通して設定する。"
-
 #. type: Block title
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:308
 #, no-wrap
 msgid "`SyntheticBeanBuildItem` Example 2"
 msgstr "`SyntheticBeanBuildItem` の例 2"
-
-#. type: delimited block -
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:318
-#, no-wrap
-msgid ""
-"@BuildStep\n"
-"@Record(STATIC_INIT) <1>\n"
-"SyntheticBeanBuildItem syntheticBean(TestRecorder recorder) {\n"
-"   return SyntheticBeanBuildItem.configure(Foo.class).scope(Singleton.class)\n"
-"                .runtimeValue(recorder.createFoo()) <2>\n"
-"                .done();\n"
-"}\n"
-msgstr ""
 
 #. type: Plain text
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:320
@@ -633,31 +578,11 @@ msgstr "デフォルトでは、合成 Bean は `STATIC_INIT` の間に初期化
 msgid "The bean instance is supplied by a value returned from a recorder method."
 msgstr "Bean インスタンスは、レコーダーメソッドから返される値によって提供されます。"
 
-#. type: Plain text
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:324
-#, fuzzy
-msgid "It is possible to mark a synthetic bean to be initialized during `RUNTIME_INIT`.  See the xref:writing-extensions.adoc#bootstrap-three-phases[Three Phases of Bootstrap and Quarkus Philosophy] for more information about the difference between `STATIC_INIT` and `RUNTIME_INIT`."
-msgstr "`RUNTIME_INIT` の間に初期化される合成Beanをマークすることが可能である。 `STATIC_INIT` と `RUNTIME_INIT` の違いについての詳細は、 xref:writing-extensions.adoc#bootstrap-three-phases[ブートストラップと Quarkus の哲学の3つのフェーズ] を参照してください。"
-
 #. type: Block title
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:325
 #, no-wrap
 msgid "`RUNTIME_INIT` `SyntheticBeanBuildItem` Example"
 msgstr "`RUNTIME_INIT` `SyntheticBeanBuildItem` の例"
-
-#. type: delimited block -
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:336
-#, no-wrap
-msgid ""
-"@BuildStep\n"
-"@Record(RUNTIME_INIT) <1>\n"
-"SyntheticBeanBuildItem syntheticBean(TestRecorder recorder) {\n"
-"   return SyntheticBeanBuildItem.configure(Foo.class).scope(Singleton.class)\n"
-"                .setRuntimeInit() <2>\n"
-"                .runtimeValue(recorder.createFoo())\n"
-"                .done();\n"
-"}\n"
-msgstr ""
 
 #. type: Plain text
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:338
@@ -674,18 +599,6 @@ msgstr "Bean インスタンスは、`RUNTIME_INIT` の間に初期化されま�
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:343
 msgid "Synthetic beans initialized during `RUNTIME_INIT` must not be accessed during `STATIC_INIT`. `RUNTIME_INIT` build steps that access a runtime-init synthetic bean should consume the `SyntheticBeansRuntimeInitBuildItem`:"
 msgstr "`RUNTIME_INIT` の間に初期化された合成 Bean は、`STATIC_INIT` の間にアクセスしてはいけません。runtime-init 合成 Bean にアクセスする `RUNTIME_INIT` ビルドステップは、`SyntheticBeansRuntimeInitBuildItem` を消費します。"
-
-#. type: delimited block -
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:352
-#, no-wrap
-msgid ""
-"@BuildStep\n"
-"@Record(RUNTIME_INIT) \n"
-"@Consume(SyntheticBeansRuntimeInitBuildItem.class) <1>\n"
-"void accessFoo(TestRecorder recorder) {\n"
-"   recorder.foo(); <2>\n"
-"}\n"
-msgstr ""
 
 #. type: Plain text
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:354
@@ -708,40 +621,11 @@ msgstr "`BeanRegistrationPhaseBuildItem` を使用して合成 Bean を登録す
 msgid "Synthetic Injection Points"
 msgstr "合成インジェクション・ポイント"
 
-#. type: delimited block =
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:364
-#, fuzzy
-msgid "A synthetic bean may register a synthetic injection point via the `ExtendedBeanConfigurator#addInjectionPoint()` method.  This injection point is validated at build time and considered when xref:cdi-reference.adoc#remove_unused_beans[detecting unused beans].  The injected reference is accessible through the `SyntheticCreationalContext#getInjectedReference()` methods at runtime."
-msgstr "合成ビーンは， `ExtendedBeanConfigurator#addInjectionPoint()` メソッドによって，合成注入点を登録できる。この注入点は，構築時に検証され， xref:cdi-reference.adoc#remove_unused_beans[未使用Beanを検出する] ときに考慮される。注入された参照は，実行時に `SyntheticCreationalContext#getInjectedReference()` メソッドを通じてアクセスできる。"
-
 #. type: Block title
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:365
 #, fuzzy, no-wrap
 msgid "Synthetic Injection Point - Build Step Example"
 msgstr "合成インジェクション・ポイント - ビルド・ステップの例"
-
-#. type: delimited block -
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:370
-#, no-wrap
-msgid ""
-"import org.jboss.jandex.ClassType;\n"
-"import org.jboss.jandex.DotName;\n"
-msgstr ""
-
-#. type: delimited block -
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:380
-#, no-wrap
-msgid ""
-"@BuildStep\n"
-"@Record(RUNTIME_INIT) <1>\n"
-"SyntheticBeanBuildItem syntheticBean(TestRecorder recorder) {\n"
-"   return SyntheticBeanBuildItem.configure(Foo.class)\n"
-"                .scope(Singleton.class)\n"
-"                .addInjectionPoint(ClassType.create(DotName.createSimple(Bar.class))) <2>\n"
-"                .createWith(recorder.createFoo()) <3>\n"
-"                .done();\n"
-"}\n"
-msgstr ""
 
 #. type: Plain text
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:383
@@ -760,26 +644,6 @@ msgstr "Beanインスタンスは，レコーダメソッドから返される�
 #, fuzzy, no-wrap
 msgid "Synthetic Injection Point - Recorder Example"
 msgstr "合成インジェクション・ポイント - レコーダーの例"
-
-#. type: delimited block -
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:390
-#, no-wrap
-msgid ""
-"@Recorder\n"
-"public class TestRecorder {\n"
-msgstr ""
-
-#. type: delimited block -
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:397
-#, no-wrap
-msgid ""
-"   public Function<SyntheticCreationalContext<Foo>, Foo> createFoo() {\n"
-"     return (context) -> {\n"
-"        return new Foo(context.getInjectedReference(Bar.class)); <1>\n"
-"     };\n"
-"   }\n"
-"}\n"
-msgstr ""
 
 #. type: Plain text
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:399
@@ -815,61 +679,17 @@ msgstr "`ObserverRegistrationPhaseBuildItem` を消費するビルドステッ�
 msgid "`ObserverRegistrationPhaseBuildItem` Example"
 msgstr "`ObserverRegistrationPhaseBuildItem` の例"
 
-#. type: delimited block -
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:425
-#, no-wrap
-msgid ""
-"@BuildStep\n"
-"void syntheticObserver(ObserverRegistrationPhaseBuildItem observerRegistrationPhase,\n"
-"            BuildProducer<MyBuildItem> myBuildItem, \n"
-"            BuildProducer<ObserverConfiguratorBuildItem> observerConfigurationRegistry) {\n"
-"   observerConfigurationRegistry.produce(new ObserverConfiguratorBuildItem(observerRegistrationPhase.getContext()\n"
-"       .configure()\n"
-"       .beanClass(DotName.createSimple(MyBuildStep.class.getName()))\n"
-"       .observedType(String.class)\n"
-"       .notify(mc -> {\n"
-"           // do some gizmo bytecode generation...\n"
-"       })));\n"
-"   myBuildItem.produce(new MyBuildItem());\n"
-"}\n"
-msgstr ""
-
-#. type: Plain text
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:430
-msgid "The output of a `ObserverConfigurator` is recorded as bytecode.  Therefore, there are some limitations in how a synthetic observer is invoked at runtime.  Currently, you must generate the bytecode of the method body directly."
-msgstr "`ObserverConfigurator` の出力はバイトコードとして記録されます。したがって、実行時に合成オブザーバーを呼び出す方法にはいくつかの制限があります。現時点では、メソッド本体のバイトコードを直接生成する必要があります。"
-
 #. type: Title ==
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:432
 #, no-wrap
 msgid "Use Case - I Have a Generated Bean Class"
 msgstr "ユースケース - 生成された Bean クラスがある"
 
-#. type: Plain text
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:436
-msgid "No problem.  You can generate the bytecode of a bean class manually and then all you need to do is to produce a `GeneratedBeanBuildItem` instead of `GeneratedClassBuildItem`."
-msgstr "問題ありません。Bean クラスのバイトコードを手動で生成し、その後に `GeneratedClassBuildItem` ではなく `GeneratedBeanBuildItem` を生成してください。"
-
 #. type: Block title
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:437
 #, no-wrap
 msgid "`GeneratedBeanBuildItem` Example"
 msgstr "`GeneratedBeanBuildItem` の例"
-
-#. type: delimited block -
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:449
-#, no-wrap
-msgid ""
-"@BuildStep\n"
-"void generatedBean(BuildProducer<GeneratedBeanBuildItem> generatedBeans) {\n"
-"    ClassOutput beansClassOutput = new GeneratedBeanGizmoAdaptor(generatedBeans); <1>\n"
-"    ClassCreator beanClassCreator = ClassCreator.builder().classOutput(beansClassOutput)\n"
-"                .className(\"org.acme.MyBean\")\n"
-"                .build();\n"
-"    beanClassCreator.addAnnotation(Singleton.class);\n"
-"    beanClassCreator.close(); <2>\n"
-"}\n"
-msgstr ""
 
 #. type: Plain text
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:451
@@ -902,21 +722,6 @@ msgstr "_解決策_: エクステンションがデプロイメントを検証�
 msgid "A build step that consumes the `ValidationPhaseBuildItem` should always produce a `ValidationErrorBuildItem` or at least inject a `BuildProducer` for this build item, otherwise it could be ignored or processed at the wrong time (e.g. after the correct CDI bootstrap phase)."
 msgstr "`ValidationPhaseBuildItem` を消費するビルドステップでは、常に `ValidationErrorBuildItem` を生成するか、少なくともこのビルドアイテムに `BuildProducer` を 挿入する必要があります。でなければ、無視されるか、間違ったタイミングで処理される可能性があります (例: 正しい CDI ブートストラップフェーズの後)。"
 
-#. type: delimited block -
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:472
-#, no-wrap
-msgid ""
-"@BuildStep\n"
-"void validate(ValidationPhaseBuildItem validationPhase,\n"
-"            BuildProducer<MyBuildItem> myBuildItem, \n"
-"            BuildProducer<ValidationErrorBuildItem> errors) {\n"
-"   if (someCondition) {\n"
-"     errors.produce(new ValidationErrorBuildItem(new IllegalStateException()));\n"
-"     myBuildItem.produce(new MyBuildItem());\n"
-"   }\n"
-"}\n"
-msgstr ""
-
 #. type: Plain text
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:475
 msgid "You can easily filter all registered beans via the convenient `BeanStream` returned from the `ValidationPhaseBuildItem.getContext().beans()` method."
@@ -948,16 +753,6 @@ msgstr "`ContextRegistrationPhaseBuildItem` を消費するビルドステップ
 msgid "`ContextRegistrationPhaseBuildItem` Example"
 msgstr "`ContextRegistrationPhaseBuildItem` の例"
 
-#. type: delimited block -
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:492
-#, no-wrap
-msgid ""
-"@BuildStep\n"
-"ContextConfiguratorBuildItem registerContext(ContextRegistrationPhaseBuildItem phase) {\n"
-"      return new ContextConfiguratorBuildItem(phase.getContext().configure(TransactionScoped.class).normal().contextClass(TransactionContext.class));\n"
-"}\n"
-msgstr ""
-
 #. type: Plain text
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:495
 msgid "Additionally, each extension that registers a custom CDI context via `ContextRegistrationPhaseBuildItem` should also produce the `CustomScopeBuildItem` in order to contribute the custom scope annotation name to the set of bean defining annotations."
@@ -967,16 +762,6 @@ msgstr "さらに、`ContextRegistrationPhaseBuildItem` を介してカスタム
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:497
 msgid "`CustomScopeBuildItem` Example"
 msgstr "`CustomScopeBuildItem` の例"
-
-#. type: delimited block -
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:503
-#, no-wrap
-msgid ""
-"@BuildStep\n"
-"CustomScopeBuildItem customScope() {\n"
-"   return new CustomScopeBuildItem(DotName.createSimple(TransactionScoped.class.getName()));\n"
-"}\n"
-msgstr ""
 
 #. type: Title ===
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:505
@@ -995,32 +780,11 @@ msgstr "_ソリューション_: ビルドステップで `CustomScopeAnnotation
 msgid "Use Case - Additional Interceptor Bindings"
 msgstr "ユースケース - 追加のインターセプターバインディング"
 
-#. type: Plain text
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:515
-#, fuzzy
-msgid "In rare cases it might be handy to programmatically register an existing annotation that is not annotated with `@jakarta.interceptor.InterceptorBinding` as an interceptor binding.  This is similar to what CDI achieves through `BeforeBeanDiscovery#addInterceptorBinding()`.  We are going to use `InterceptorBindingRegistrarBuildItem` to get it done."
-msgstr "まれに、 `@jakarta.interceptor.InterceptorBinding` でアノテーションされていない既存のアノテーションを、インターセプター・バインディングとしてプログラム的に登録すると便利な場合があります。これはCDIが `BeforeBeanDiscovery#addInterceptorBinding()` 。ここでは、 `InterceptorBindingRegistrarBuildItem` 。"
-
 #. type: Block title
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:516
 #, no-wrap
 msgid "`InterceptorBindingRegistrarBuildItem` Example"
 msgstr "`InterceptorBindingRegistrarBuildItem` の例"
-
-#. type: delimited block -
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:528
-#, no-wrap
-msgid ""
-"@BuildStep\n"
-"InterceptorBindingRegistrarBuildItem addInterceptorBindings() {\n"
-"    return new InterceptorBindingRegistrarBuildItem(new InterceptorBindingRegistrar() {\n"
-"        @Override\n"
-"        public List<InterceptorBinding> getAdditionalBindings() {\n"
-"            return List.of(InterceptorBinding.of(NotAnInterceptorBinding.class));\n"
-"        }\n"
-"    });\n"
-"}\n"
-msgstr ""
 
 #. type: Title ==
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:530
@@ -1028,33 +792,11 @@ msgstr ""
 msgid "Use Case - Additional Qualifiers"
 msgstr "使用例 - 追加の修飾子"
 
-#. type: Plain text
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:535
-#, fuzzy
-msgid "Sometimes it might be useful to register an existing annotation that is not annotated with `@jakarta.inject.Qualifier` as a CDI qualifier.  This is similar to what CDI achieves through `BeforeBeanDiscovery#addQualifier()`.  We are going to use `QualifierRegistrarBuildItem` to get it done."
-msgstr "時には、 `@jakarta.inject.Qualifier` でアノテーションされていない既存のアノテーションを、CDI修飾子として登録すると便利な場合がある。これはCDIが `BeforeBeanDiscovery#addQualifier()` 。 `QualifierRegistrarBuildItem` 。"
-
 #. type: Block title
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:536
 #, no-wrap
 msgid "`QualifierRegistrarBuildItem` Example"
 msgstr "`QualifierRegistrarBuildItem` の例"
-
-#. type: delimited block -
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:549
-#, no-wrap
-msgid ""
-"@BuildStep\n"
-"QualifierRegistrarBuildItem addQualifiers() {\n"
-"    return new QualifierRegistrarBuildItem(new QualifierRegistrar() {\n"
-"        @Override\n"
-"        public Map<DotName, Set<String>> getAdditionalQualifiers() {\n"
-"            return Collections.singletonMap(DotName.createSimple(NotAQualifier.class.getName()),\n"
-"                                        Collections.emptySet());\n"
-"        }\n"
-"    });\n"
-"}\n"
-msgstr ""
 
 #. type: Title ==
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:551
@@ -1062,32 +804,11 @@ msgstr ""
 msgid "Use Case - Additional Stereotypes"
 msgstr "使用例 - 追加のステレオタイプ"
 
-#. type: Plain text
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:556
-#, fuzzy
-msgid "It is sometimes useful to register an existing annotation that is not annotated with `@jakarta.enterprise.inject.Stereotype` as a CDI stereotype.  This is similar to what CDI achieves through `BeforeBeanDiscovery#addStereotype()`.  We are going to use `StereotypeRegistrarBuildItem` to get it done."
-msgstr "`@jakarta.enterprise.inject.Stereotype` でアノテーションされていない既存のアノテーションを、CDI ステレオタイプとして登録すると便利な場合があります。これは、CDI が `BeforeBeanDiscovery#addStereotype()` を使って実現することと似ています。ここでは、 `StereotypeRegistrarBuildItem` を使用します。"
-
 #. type: Block title
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:557
 #, no-wrap
 msgid "`StereotypeRegistrarBuildItem` Example"
 msgstr "`StereotypeRegistrarBuildItem` の例"
-
-#. type: delimited block -
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:569
-#, no-wrap
-msgid ""
-"@BuildStep\n"
-"StereotypeRegistrarBuildItem addStereotypes() {\n"
-"    return new StereotypeRegistrarBuildItem(new StereotypeRegistrar() {\n"
-"        @Override\n"
-"        public Set<DotName> getAdditionalStereotypes() {\n"
-"            return Collections.singleton(DotName.createSimple(NotAStereotype.class.getName()));\n"
-"        }\n"
-"    });\n"
-"}\n"
-msgstr ""
 
 #. type: Plain text
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:572
@@ -1101,51 +822,11 @@ msgstr "新しく登録したステレオタイプ注釈に、スコープやイ
 msgid "Use Case - Injection Point Transformation"
 msgstr "ユースケース - インジェクションポイントの変換"
 
-#. type: Plain text
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:579
-msgid "Every now and then it is handy to be able to change the qualifiers of an injection point programmatically.  You can do just that with `InjectionPointTransformerBuildItem`.  The following sample shows how to apply transformation to injection points with type `Foo` that contain qualifier `MyQualifier`:"
-msgstr "プログラムでインジェクションポイントの修飾子を変更できると便利な場合があります。それは、`InjectionPointTransformerBuildItem` で実行できます。次のサンプルは、修飾子 `MyQualifier` を含むタイプ `Foo` のインジェクションポイント変換を適用する方法を示しています。"
-
 #. type: Block title
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:580
 #, no-wrap
 msgid "`InjectionPointTransformerBuildItem` Example"
 msgstr "`InjectionPointTransformerBuildItem` の例"
-
-#. type: delimited block -
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:586
-#, no-wrap
-msgid ""
-"@BuildStep\n"
-"InjectionPointTransformerBuildItem transformer() {\n"
-"    return new InjectionPointTransformerBuildItem(new InjectionPointsTransformer() {\n"
-msgstr ""
-
-#. type: delimited block -
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:590
-#, no-wrap
-msgid ""
-"        public boolean appliesTo(Type requiredType) {\n"
-"            return requiredType.name().equals(DotName.createSimple(Foo.class.getName()));\n"
-"        }\n"
-msgstr ""
-
-#. type: delimited block -
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:602
-#, no-wrap
-msgid ""
-"        public void transform(TransformationContext context) {\n"
-"            if (context.getQualifiers().stream()\n"
-"                    .anyMatch(a -> a.name().equals(DotName.createSimple(MyQualifier.class.getName())))) {\n"
-"                context.transform()\n"
-"                        .removeAll()\n"
-"                        .add(DotName.createSimple(MyOtherQualifier.class.getName()))\n"
-"                        .done();\n"
-"            }\n"
-"        }\n"
-"    });\n"
-"}\n"
-msgstr ""
 
 #. type: Plain text
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:605
@@ -1159,39 +840,17 @@ msgstr "理論的には、 xref:annotations_transformer_build_item[AnnotationsTr
 msgid "Use Case - Resource Annotations and Injection"
 msgstr "ユースケース - リソースアノテーションとインジェクション"
 
-#. type: Plain text
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:610
-msgid "The `ResourceAnnotationBuildItem` can be used to specify resource annotations that make it possible to resolve non-CDI injection points, such as Jakarta EE resources.  An integrator must also provide a corresponding `io.quarkus.arc.ResourceReferenceProvider` service provider implementation."
-msgstr "`ResourceAnnotationBuildItem` を使用して、Jakarta EE リソースなどの非 CDI インジェクションポイントを解決できるリソースアノテーションを指定できます。インテグレーターは、対応する `io.quarkus.arc.ResourceReferenceProvider` サービスプロバイダー実装も提供する必要があります。"
-
 #. type: Block title
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:611
 #, no-wrap
 msgid "`ResourceAnnotationBuildItem` Example"
 msgstr "`ResourceAnnotationBuildItem` の例"
 
-#. type: delimited block -
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:620
-#, no-wrap
-msgid ""
-"@BuildStep\n"
-"void setupResourceInjection(BuildProducer<ResourceAnnotationBuildItem> resourceAnnotations, BuildProducer<GeneratedResourceBuildItem> resources) {\n"
-"    resources.produce(new GeneratedResourceBuildItem(\"META-INF/services/io.quarkus.arc.ResourceReferenceProvider\",\n"
-"        MyResourceReferenceProvider.class.getName().getBytes()));\n"
-"    resourceAnnotations.produce(new ResourceAnnotationBuildItem(DotName.createSimple(MyAnnotation.class.getName())));\n"
-"}\n"
-msgstr ""
-
 #. type: Title ==
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:623
 #, no-wrap
 msgid "Available Build Time Metadata"
 msgstr "利用可能なビルドタイムメタデータ"
-
-#. type: Plain text
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:627
-msgid "Any of the above extensions that operates with `BuildExtension.BuildContext` can leverage certain build time metadata that are generated during build.  The built-in keys located in `io.quarkus.arc.processor.BuildExtension.Key` are:"
-msgstr "`BuildExtension.BuildContext` で動作する上記のエクステンションはいずれも、ビルドタイムに生成される特定のビルドタイムメタデータを利用することができます。 `io.quarkus.arc.processor.BuildExtension.Key` にある組込キーは以下の通りです。"
 
 #. type: Labeled list
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:628
@@ -1292,11 +951,6 @@ msgstr "STEREOTYPES"
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:637
 msgid "`Map<DotName, StereotypeInfo>` containing all stereotypes"
 msgstr "すべてのステレオタイプを含む `Map<DotName, StereotypeInfo>`"
-
-#. type: Plain text
-#: upstream/_versions/3.2/guides/cdi-integration.adoc:642
-msgid "To get hold of these, simply query the extension context object for given key.  Note that these metadata are made available as build proceeds which means that extensions can only leverage metadata that were built before the extensions are invoked.  If your extension attempts to retrieve metadata that wasn't yet produced, `null` will be returned.  Here is a summary of which extensions can access which metadata:"
-msgstr "これらのメタデータを取得するには、そのキーのエクステンションコンテキストオブジェクトをクエリするだけ可能です。これらのメタデータはビルドが進むにつれて利用可能になることに注意してください。エクステンションがまだ生成されていないメタデータを取得しようとすると、 `null` が返されます。どのエクステンションがどのメタデータにアクセスできるかをまとめてみました。"
 
 #. type: Labeled list
 #: upstream/_versions/3.2/guides/cdi-integration.adoc:643

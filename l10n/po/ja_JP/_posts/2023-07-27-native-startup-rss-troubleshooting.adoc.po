@@ -1,50 +1,196 @@
-# SOME DESCRIPTIVE TITLE
-# Copyright (C) YEAR Free Software Foundation, Inc.
-# This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
-#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2023-07-30 08:14+0000\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: ja_JP\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Generator: jekyll-l10n\n"
 
-#. type: YAML Front Matter: author
-#: upstream/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc:1
-#, no-wrap
-msgid "galderz"
-msgstr "galderz"
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc
+msgid ""
+"During the development of Quarkus 2.13,\n"
+"we discovered that there was a startup degradation in native mode.\n"
+"One of the key aspects of this degradation was that RSS consumption on start up had gone up by about 10-15% compared to Quarkus 2.7.\n"
+"In this blog post you will learn how the Quarkus native RSS consumption debugging techniques described in\n"
+"https://quarkus.io/guides/native-reference#rss[the Quarkus native reference guide]\n"
+"were used to diagnose this issue.\n"
+"You will also learn about recent updates in GraalVM that make doing this kind of analysis more convenient."
+msgstr ""
 
-#. type: YAML Front Matter: date
-#: upstream/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc:1
-#, fuzzy, no-wrap
-msgid "2023-07-27"
-msgstr "2023-07-27"
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc
+msgid ""
+"Our analysis showed that the RSS consumption for Quarkus 2.7 was about ~33MB while for Quarkus 2.13 it was about ~36MB, roughly a 10 % increase.\n"
+"Below we see how we measured the RSS consumption for Quarkus 2.7.6.Final:"
+msgstr ""
 
-#. type: YAML Front Matter: layout
-#: upstream/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc:1
-#, no-wrap
-msgid "post"
-msgstr "post"
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc
+msgid ""
+"Similarly, below we see how we measured the RSS consumption for Quarkus 2.13.4.Final:\n"
+"In our environment, the RSS consumption had gone up to about ~36M, roughly a 10% increase:"
+msgstr ""
 
-#. type: YAML Front Matter: synopsis
-#: upstream/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc:1
-#, fuzzy, no-wrap
-msgid "Use Linux native tooling and JFR to understand Quarkus Native startup RSS consumption"
-msgstr "LinuxネイティブツールとJFRを使用して、Quarkus Nativeの起動時のRSS消費を理解する"
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc
+msgid ""
+"Since Quarkus 2.7 and 2.13 used different GraalVM versions (21.3 vs 22.3),\n"
+"we first investigated whether the increase in the startup time and RSS consumption was due to a change in GraalVM.\n"
+"This turned out to not be the case,\n"
+"as using the same GraalVM version on both Quarkus versions still resulted in similar differences."
+msgstr ""
 
-#. type: YAML Front Matter: tags
-#: upstream/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc:1
-#, fuzzy, no-wrap
-msgid "native rss jfr"
-msgstr "ネイティブRSS JFR"
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc
+msgid ""
+"We also profiled the startup time in JVM mode,\n"
+"and although we could observe some slight increase in heap usage,\n"
+"the RSS increase was not apparent at runtime.\n"
+"So, the challenge was to understand what was causing the RSS increase that seemed to only affect native mode\n"
+"and that was Quarkus specific."
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc
+msgid ""
+"In native mode we needed to look for system calls that increased RSS,\n"
+"and investigate what caused them.\n"
+"There are several system calls that can be used to allocate memory, e.g. `malloc`, `mmap`...etc,\n"
+"but when we analysed the system calls emitted on startup,\n"
+"we discovered that `mmap` calls were the prominent ones.\n"
+"Following\n"
+"https://www.brendangregg.com/FlameGraphs/memoryflamegraphs.html[Brendan Gregg’s Memory Leak (and Growth) Flame Graphs guide]\n"
+"on a Linux environment,\n"
+"we were able to produce flamegraphs for the `mmap` system calls.\n"
+"To obtain these flamegraphs, we capture the `sys_enter_mmap` system call events with `perf record`,\n"
+"and then we generate flamegraphs with the recorded data:"
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc
+msgid ""
+"The native executable above was created passing in\n"
+"`-Dquarkus.native.debug.enabled` and `-Dquarkus.native.additional-build-args=-H:-DeleteLocalSymbols`\n"
+"as extra build flags."
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc
+msgid ""
+"`mmap` calls happen for a variety of reasons,\n"
+"but in the context of this blog post,\n"
+"we're interested in those `mmap` calls that are triggered by object allocations.\n"
+"Not every object allocation triggers an `mmap` call.\n"
+"Instead, each thread in SubstrateVM will allocate a heap chunk using `mmap` when the first object is allocated,\n"
+"and it will use this heap chunk as long as there's space for further objects allocated in the same thread.\n"
+"When the heap chunk is full,\n"
+"the thread will request a new heap chunk using `mmap`.\n"
+"This pattern is called thread-local allocation.\n"
+"HotSpot has a similar feature as well,\n"
+"but there the heap chunk size is dynamically computed depending on multiple factors,\n"
+"while on SubstrateVM the size is fixed.\n"
+"At the time of writing, the default heap chunk size is 1MB,\n"
+"but an upcoming change will make it 512KB instead."
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc
+msgid ""
+"We describe the object allocation as fast when the thread has a heap chunk cached and there's enough space for the object.\n"
+"We describe the object allocation as slow when the thread needs to request a new heap chunk via the `mmap` system call to satisfy the object allocation.\n"
+"Slow allocations are the most interesting in this case,\n"
+"because they give us a rough indication of which allocations are pushing the number of heap chunks up,\n"
+"and therefore are pushing the RSS consumption up.\n"
+"In SubstrateVM, stacktraces of the slow allocation path contain invocations to methods defined in the `com.oracle.svm.core.genscavenge.ThreadLocalAllocation` class that contain the `slowPathNew` prefix in their name .\n"
+"E.g. `slowPathNewInstance` for plain objects or `slowPathNewArray` for arrays."
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc
+msgid ""
+"The areas of interest in the flamegraphs are those stacktraces that contain `ApplicationImpl.doStart()` method call,\n"
+"because that's the method that is responsible for starting up Quarkus applications.\n"
+"We want to find out how many slow path allocations are visible in these stacktraces,\n"
+"which are executed by the `main` thread.\n"
+"Also, by looking at the stacktraces that cause these slow path allocations,\n"
+"we can get an idea of which components might be allocation heavy.\n"
+"If you focus the flamegraph on that method,\n"
+"and then click on `Search` at the top right and type `slowPathNew`,\n"
+"you can observe which of the `sys_enter_mmap` system calls are related to native heap memory allocation."
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc
+msgid ""
+"The increase in object allocation at runtime startup between these two Quarkus versions,\n"
+"combined with the idiosyncrasies of how thread local allocation works in SubstrateVM,\n"
+"is what was causing the increase in RSS consumption.\n"
+"In other words, even though both HotSpot and SubstrateVM experience higher allocations,\n"
+"SubstrateVM's fixed thread-local allocation heap chunk sizes make this more apparent,\n"
+"compared to the dynamic thread-local allocation logic in HotSpot."
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc
+msgid ""
+"Since then, improvements were made to the components that caused the extra object allocation.\n"
+"We were able to detect the changes that had caused these extra allocations\n"
+"by looking at the components that appeared in the stacktrace leading to slow allocations,\n"
+"and inspecting updates that had happened in those components.\n"
+"In this case, updates to the SmallRye configuration handling at startup caused the regression."
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc
+msgid ""
+"The stacktraces that cause slow object allocations give us an approximation on the components that cause memory usage increase.\n"
+"There could be situations where the stacktrace leading to a slow allocation is perfectly valid,\n"
+"but due to the non-deterministic nature of object allocation,\n"
+"the stacktrace just happens to be the one that caused a new heap chunk to be allocated.\n"
+"However, if you see multiple stacktraces in the same area,\n"
+"that's probably a good hint that something in that area needs to be investigated."
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc
+msgid ""
+"By Quarkus version 2.13.7.Final, the RSS consumption on startup was back to previous levels.\n"
+"The RSS regression was introduced by the changes in\n"
+"https://github.com/quarkusio/quarkus/pull/26802#issue-1308798216[PR #26802],\n"
+"and the fixes in https://github.com/quarkusio/quarkus/pull/29408[PR #29408]\n"
+"and https://github.com/quarkusio/quarkus/pull/29842[PR #29842]\n"
+"brought it back down."
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc
+msgid ""
+"As newer versions of GraalVM implement https://github.com/oracle/graal/issues/5410[more and more JFR events] in native mode,\n"
+"it also becomes easier to analyse Quarkus application performance.\n"
+"For instance the recent release of GraalVM for JDK 17/20 adds support for the `jdk.ObjectAllocationInNewTLAB` event,\n"
+"which would have highlighted the discrepancies in the Quarkus versions compared above.\n"
+"Unfortunately, the Quarkus versions tested here are not compatible with this GraalVM version,\n"
+"but we can give it a go with the latest Quarkus version to see what comes out."
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc
+msgid ""
+"To obtain `jdk.ObjectAllocationInNewTLAB` events,\n"
+"a custom JFC configuration file is required.\n"
+"We use `jfr configure` to generate it:"
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc
+msgid ""
+"After shutting down Quarkus,\n"
+"we can use https://adoptium.net/jmc[Adoptium's Eclipse Mission Control]\n"
+"to visualize a flamegraph for all the `jdk.ObjectAllocationInNewTLAB` events.\n"
+"We can also do a similar focus on `ApplicationImpl.doStart()` method to observe which slow path allocations get triggered from there:"
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc
+msgid ""
+"Looking at the flamegraph,\n"
+"we can count 7 stacktraces for slow path allocations for the `main` thread.\n"
+"Whether this is a problem,\n"
+"or maybe code execution has shifted from another thread to `main`,\n"
+"would be something we would need to explore further and see if there's a regression."
+msgstr ""
+
+#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc
+msgid ""
+"If you encounter memory issues in your native applications,\n"
+"or any other type of performance issues,\n"
+"do not hesitate giving JFR a go.\n"
+"Robert Toyonaga has written a couple of blog posts on the latest JFR additions,\n"
+"see link:/blog/profile-and-monitor-native-executables-with-jfr[here] to find out more."
+msgstr ""
 
 #. type: YAML Front Matter: title
 #: upstream/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc:1
@@ -52,126 +198,11 @@ msgstr "ネイティブRSS JFR"
 msgid "Analysing Quarkus Native startup RSS consumption"
 msgstr "Quarkus NativeスタートアップのRSS消費量の分析"
 
-#. type: Plain text
-#: upstream/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc:18
-#, fuzzy
-msgid "During the development of Quarkus 2.13, we discovered that there was a startup degradation in native mode.  One of the key aspects of this degradation was that RSS consumption on start up had gone up by about 10-15% compared to Quarkus 2.7.  In this blog post you will learn how the Quarkus native RSS consumption debugging techniques described in https://quarkus.io/guides/native-reference#rss[the Quarkus native reference guide] were used to diagnose this issue.  You will also learn about recent updates in GraalVM that make doing this kind of analysis more convenient."
-msgstr "Quarkus 2.13の開発中に、ネイティブモードでの起動時の劣化があることがわかりました。この劣化の重要な側面の1つは、Quarkus 2.7と比較して、起動時のRSS消費量が約10～15%増加していることでした。このブログ記事では、 link:https://quarkus.io/guides/native-reference#rss[Quarkusネイティブリファレンスガイドに] 記載されているQuarkusネイティブのRSS消費デバッグテクニックを使用して、この問題を診断した方法について説明します。また、この種の分析をより便利にするGraalVMの最近のアップデートについてもご紹介します。"
-
-#. type: Plain text
-#: upstream/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc:21
-#, fuzzy
-msgid "Our analysis showed that the RSS consumption for Quarkus 2.7 was about ~33MB while for Quarkus 2.13 it was about ~36MB, roughly a 10 % increase.  Below we see how we measured the RSS consumption for Quarkus 2.7.6.Final:"
-msgstr "分析によると、Quarkus 2.7のRSS消費量は約33MBでしたが、Quarkus 2.13では約36MBとなり、およそ10%増加しました。以下に、Quarkus 2.7.6.FinalのRSS消費量を測定した結果を示します："
-
-#. type: delimited block -
-#: upstream/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc:27
-#, no-wrap
-msgid ""
-"$ getting-started/target/getting-started-1.0.0-SNAPSHOT-runner -Xmx64m\n"
-"...\n"
-"2023-07-21 10:13:11,304 INFO  [io.quarkus] (main) getting-started 1.0.0-SNAPSHOT native (powered by Quarkus 2.7.6.Final) started in 0.023s. Listening on: http://0.0.0.0:8080\n"
-msgstr ""
-
-#. type: delimited block -
-#: upstream/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc:30
-#, no-wrap
-msgid ""
-"$ ps -p $(pidof getting-started-1.0.0-SNAPSHOT-runner) -o rss=\n"
-"33024\n"
-msgstr ""
-
-#. type: Plain text
-#: upstream/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc:34
-#, fuzzy
-msgid "Similarly, below we see how we measured the RSS consumption for Quarkus 2.13.4.Final: In our environment, the RSS consumption had gone up to about ~36M, roughly a 10% increase:"
-msgstr "同様に、Quarkus 2.13.4.FinalのRSS消費量を測定した結果を以下に示します：私たちの環境では、RSSの消費量が約36Mになり、およそ10%増加しました："
-
-#. type: delimited block -
-#: upstream/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc:40
-#, no-wrap
-msgid ""
-"$ getting-started/target/getting-started-1.0.0-SNAPSHOT-runner -Xmx64m\n"
-"...\n"
-"2023-07-21 10:24:38,529 INFO  [io.quarkus] (main) getting-started 1.0.0-SNAPSHOT native (powered by Quarkus 2.13.4.Final) started in 0.027s. Listening on: http://0.0.0.0:8080\n"
-msgstr ""
-
-#. type: delimited block -
-#: upstream/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc:43
-#, no-wrap
-msgid ""
-"$ ps -p $(pidof getting-started-1.0.0-SNAPSHOT-runner) -o rss=\n"
-"36608\n"
-msgstr ""
-
-#. type: Plain text
-#: upstream/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc:49
-#, fuzzy
-msgid "Since Quarkus 2.7 and 2.13 used different GraalVM versions (21.3 vs 22.3), we first investigated whether the increase in the startup time and RSS consumption was due to a change in GraalVM.  This turned out to not be the case, as using the same GraalVM version on both Quarkus versions still resulted in similar differences."
-msgstr "Quarkus 2.7と2.13は異なるGraalVMバージョン（21.3対22.3）を使用していたため、まず、起動時間とRSS消費量の増加がGraalVMの変更によるものかどうかを調査しました。Quarkusの両バージョンで同じGraalVMバージョンを使用しても、やはり同様の違いが生じたため、これは事実ではないことが判明しました。"
-
-#. type: Plain text
-#: upstream/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc:55
-#, fuzzy
-msgid "We also profiled the startup time in JVM mode, and although we could observe some slight increase in heap usage, the RSS increase was not apparent at runtime.  So, the challenge was to understand what was causing the RSS increase that seemed to only affect native mode and that was Quarkus specific."
-msgstr "また、JVMモードでの起動時間もプロファイリングしましたが、ヒープ使用量のわずかな増加は確認できたものの、RSSの増加は実行時には明らかではありませんでした。そのため、課題は、ネイティブ・モードのみに影響すると思われる、Quarkus特有のRSS増加の原因を理解することでした。"
-
-#. type: Plain text
-#: upstream/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc:67
-#, fuzzy
-msgid "In native mode we needed to look for system calls that increased RSS, and investigate what caused them.  There are several system calls that can be used to allocate memory, e.g. `malloc`, `mmap`...etc, but when we analysed the system calls emitted on startup, we discovered that `mmap` calls were the prominent ones.  Following https://www.brendangregg.com/FlameGraphs/memoryflamegraphs.html[Brendan Gregg’s Memory Leak (and Growth) Flame Graphs guide] on a Linux environment, we were able to produce flamegraphs for the `mmap` system calls.  To obtain these flamegraphs, we capture the `sys_enter_mmap` system call events with `perf record`, and then we generate flamegraphs with the recorded data:"
-msgstr "ネイティブ・モードでは、RSSを増加させるシステムコールを探し、その原因を調査する必要があった。メモリを確保するために使用できるシステムコールは、 `malloc` 、 `mmap` ...などいくつかあるが、起動時に発せられるシステムコールを分析したところ、 `mmap` のコールが目立つことがわかった。 link:https://www.brendangregg.com/FlameGraphs/memoryflamegraphs.html[Brendan Greggの] Linux環境での link:https://www.brendangregg.com/FlameGraphs/memoryflamegraphs.html[メモリリーク（および成長）フレームグラフガイドに従い] 、 `mmap` システムコールのフレームグラフを作成することができた。これらのフレームグラフを得るために、 `sys_enter_mmap` システムコールのイベントを `perf record` でキャプチャし、記録されたデータでフレームグラフを生成する："
-
-#. type: delimited block -
-#: upstream/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc:74
-#, no-wrap
-msgid ""
-"$ sudo perf record -e syscalls:sys_enter_mmap --call-graph dwarf \\\n"
-"  -- getting-started/target/getting-started-1.0.0-SNAPSHOT-runner -Xmx64m\n"
-"...\n"
-"2023-07-21 10:13:11,304 INFO  [io.quarkus] (main) getting-started 1.0.0-SNAPSHOT native (powered by Quarkus 2.7.6.Final) started in 0.023s. Listening on: http://0.0.0.0:8080\n"
-msgstr ""
-
-#. type: delimited block -
-#: upstream/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc:76
-#, no-wrap
-msgid "$ perf script -i perf.data > out.stacks\n"
-msgstr ""
-
-#. type: delimited block -
-#: upstream/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc:82
-#, no-wrap
-msgid ""
-"$ /opt/FlameGraph/stackcollapse-perf.pl < out.stacks \\\n"
-"  | /opt/FlameGraph/flamegraph.pl \\\n"
-"   --color=mem \\\n"
-"   --title=\"mmap Flame Graph\" \\\n"
-"   --countname=\"calls\" > out.svg\n"
-msgstr ""
-
-#. type: delimited block =
-#: upstream/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc:89
-#, fuzzy
-msgid "The native executable above was created passing in `-Dquarkus.native.debug.enabled` and `-Dquarkus.native.additional-build-args=-H:-DeleteLocalSymbols` as extra build flags."
-msgstr "上記のネイティブ実行ファイルは、ビルドの追加フラグとして `-Dquarkus.native.debug.enabled` と `-Dquarkus.native.additional-build-args=-H:-DeleteLocalSymbols` を渡して作成されている。"
-
-#. type: Plain text
-#: upstream/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc:105
-#, fuzzy
-msgid "`mmap` calls happen for a variety of reasons, but in the context of this blog post, we're interested in those `mmap` calls that are triggered by object allocations.  Not every object allocation triggers an `mmap` call.  Instead, each thread in SubstrateVM will allocate a heap chunk using `mmap` when the first object is allocated, and it will use this heap chunk as long as there's space for further objects allocated in the same thread.  When the heap chunk is full, the thread will request a new heap chunk using `mmap`.  This pattern is called thread-local allocation.  HotSpot has a similar feature as well, but there the heap chunk size is dynamically computed depending on multiple factors, while on SubstrateVM the size is fixed.  At the time of writing, the default heap chunk size is 1MB, but an upcoming change will make it 512KB instead."
-msgstr "`mmap` の呼び出しはさまざまな理由で発生するが、このブログ記事の文脈では、オブジェクトの割り当てをトリガーとする 。すべてのオブジェクト割り当てが 呼び出しをトリガーするわけではありません。その代わり、SubstrateVMの各スレッドは、最初のオブジェクトが割り当てられると、 を使ってヒープチャンクを割り当て、同じスレッドでさらにオブジェクトを割り当てるスペースがある限り、このヒープチャンクを使用します。ヒープ・チャンクが一杯になると、スレッドは を使って新しいヒープ・チャンクを要求する。このパターンはスレッドローカルアロケーションと呼ばれます。HotSpotにも同様の機能があるが、そちらではヒープチャンクのサイズは複数の要因に応じて動的に計算されるのに対し、SubstrateVMではサイズが固定されている。本稿執筆時点では、デフォルトのヒープチャンクサイズは1MBですが、今後の変更で512KBになる予定です。 `mmap` `mmap` `mmap` `mmap`"
-
-#. type: Plain text
-#: upstream/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc:113
-#, fuzzy
-msgid "We describe the object allocation as fast when the thread has a heap chunk cached and there's enough space for the object.  We describe the object allocation as slow when the thread needs to request a new heap chunk via the `mmap` system call to satisfy the object allocation.  Slow allocations are the most interesting in this case, because they give us a rough indication of which allocations are pushing the number of heap chunks up, and therefore are pushing the RSS consumption up.  In SubstrateVM, stacktraces of the slow allocation path contain invocations to methods defined in the `com.oracle.svm.core.genscavenge.ThreadLocalAllocation` class that contain the `slowPathNew` prefix in their name .  E.g. `slowPathNewInstance` for plain objects or `slowPathNewArray` for arrays."
-msgstr "スレッドがヒープチャンクをキャッシュしていて、オブジェクトのための十分なスペースがある場合、オブジェクトの割り当ては速いと表現する。オブジェクトの割り当てを満足させるために、スレッドが `mmap` システムコールを使って新しいヒープチャンクを要求する必要がある場合、オブジェクトの割り当ては遅いと表現します。この場合、どの割り当てがヒープ・チャンクの数を増やし、RSSの消費量を増やしているのかを大まかに知ることができるからです。SubstrateVMでは、スローアロケーションパスのスタックトレースには、 `com.oracle.svm.core.genscavenge.ThreadLocalAllocation` クラスで定義されたメソッドのうち、 `slowPathNew` プレフィックスを名前に含むメソッドへの呼び出しが含まれます。例えば、 `slowPathNewInstance` はプレーン・オブジェクト、 `slowPathNewArray` は配列です。"
-
-#. type: Plain text
-#: upstream/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc:123
-#, fuzzy
-msgid "The areas of interest in the flamegraphs are those stacktraces that contain `ApplicationImpl.doStart()` method call, because that's the method that is responsible for starting up Quarkus applications.  We want to find out how many slow path allocations are visible in these stacktraces, which are executed by the `main` thread.  Also, by looking at the stacktraces that cause these slow path allocations, we can get an idea of which components might be allocation heavy.  If you focus the flamegraph on that method, and then click on `Search` at the top right and type `slowPathNew`, you can observe which of the `sys_enter_mmap` system calls are related to native heap memory allocation."
-msgstr "Quarkusのアプリケーションを起動するためのメソッドであるため、 `ApplicationImpl.doStart()` のメソッドコールを含むスタックトレースが炎グラフの対象となる。これらのスタックトレースで、 `main` スレッドによって実行されるスローパスの割り当てがどれだけあるかを調べたい。また、これらのスローパスの割り当ての原因となるスタックトレースを見ることで、どのコンポーネントが割り当てが多いかを知ることができます。flamegraphをそのメソッドにフォーカスし、右上の `Search` をクリックし、 `slowPathNew` と入力すると、 `sys_enter_mmap` システムコールのどれがネイティブ・ヒープ・メモリ割り当てに関連しているかを観察できる。"
+#. type: YAML Front Matter: synopsis
+#: upstream/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc:1
+#, fuzzy, no-wrap
+msgid "Use Linux native tooling and JFR to understand Quarkus Native startup RSS consumption"
+msgstr "LinuxネイティブツールとJFRを使用して、Quarkus Nativeの起動時のRSS消費を理解する"
 
 #. type: Plain text
 #: upstream/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc:125
@@ -179,35 +210,11 @@ msgstr "Quarkusのアプリケーションを起動するためのメソッド�
 msgid "For Quarkus 2.7.6.Final, the flamegraph looks like this:"
 msgstr "Quarkus 2.7.6.Finalの場合、flamegraphは以下のようになります："
 
-#. type: Positional ($1) AttributeList argument for macro 'image'
-#: upstream/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc:126
-#, fuzzy, no-wrap
-msgid "startup rss startup flamegraph for Quarkus 2.7.6.Final"
-msgstr "Quarkus 2.7.6.Final用スタートアップRSSスタートアップFlamegraph"
-
-#. type: Target for macro image
-#: upstream/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc:126
-#, no-wrap
-msgid "rss-before-mmap.svg"
-msgstr ""
-
 #. type: Plain text
 #: upstream/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc:129
 #, fuzzy
 msgid "And here's a screenshot highlighting the stacktraces that contain slow path allocations:"
 msgstr "そしてこれが、遅いパス割り当てを含むスタックトレースを強調したスクリーンショットだ："
-
-#. type: Positional ($1) AttributeList argument for macro 'image'
-#: upstream/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc:130
-#, fuzzy, no-wrap
-msgid "slow path new allocations for Quarkus 2.7.6.Final"
-msgstr "Quarkus 2.7.6.Final用のスローパスの新しい割り当て"
-
-#. type: Target for macro image
-#: upstream/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc:130
-#, no-wrap
-msgid "rss-before-slowPathNew.png"
-msgstr ""
 
 #. type: Plain text
 #: upstream/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc:133
@@ -221,59 +228,11 @@ msgstr "上記の `slowPathNew` 呼び出しを含むスタックトレースの
 msgid "For Quarkus 2.13.4.Final, the flamegraph looks like this:"
 msgstr "Quarkus 2.13.4.Finalの場合、flamegraphは以下のようになります："
 
-#. type: Positional ($1) AttributeList argument for macro 'image'
-#: upstream/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc:136
-#, fuzzy, no-wrap
-msgid "startup rss startup flamegraph for Quarkus 2.13.4.Final"
-msgstr "Quarkus 2.13.4.Final用起動RSS起動Flamegraph"
-
-#. type: Target for macro image
-#: upstream/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc:136
-#, no-wrap
-msgid "rss-after-mmap.svg"
-msgstr ""
-
 #. type: Plain text
 #: upstream/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc:139
 #, fuzzy
 msgid "Focusing on the same area, we observe that the `slowPathNew` stacktrace count is 5 in this case, so the `main` thread allocates roughly 5MB of heap chunks:"
 msgstr "同じ領域に注目すると、 `slowPathNew` スタックトレースのカウントはこの場合5なので、 `main` スレッドはおよそ5MBのヒープチャンクを割り当てていることがわかる："
-
-#. type: Positional ($1) AttributeList argument for macro 'image'
-#: upstream/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc:140
-#, fuzzy, no-wrap
-msgid "slow path new allocations for Quarkus 2.13.4.Final"
-msgstr "Quarkus 2.13.4.Final用のスローパスの新しい割り当て"
-
-#. type: Target for macro image
-#: upstream/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc:140
-#, no-wrap
-msgid "rss-after-slowPathNew.png"
-msgstr ""
-
-#. type: Plain text
-#: upstream/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc:148
-#, fuzzy
-msgid "The increase in object allocation at runtime startup between these two Quarkus versions, combined with the idiosyncrasies of how thread local allocation works in SubstrateVM, is what was causing the increase in RSS consumption.  In other words, even though both HotSpot and SubstrateVM experience higher allocations, SubstrateVM's fixed thread-local allocation heap chunk sizes make this more apparent, compared to the dynamic thread-local allocation logic in HotSpot."
-msgstr "これら2つのQuarkusバージョン間でランタイム起動時のオブジェクト割り当てが増加していることと、SubstrateVMのスレッドローカル割り当ての動作方法の特異性が組み合わさったことが、RSS消費量の増加の原因となっています。言い換えると、HotSpotとSubstrateVMの両方がより高い割り当てを経験しているにもかかわらず、HotSpotの動的スレッドローカル割り当てロジックと比較して、SubstrateVMの固定スレッドローカル割り当てヒープチャンクサイズは、これをより明白にしています。"
-
-#. type: Plain text
-#: upstream/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc:154
-#, fuzzy
-msgid "Since then, improvements were made to the components that caused the extra object allocation.  We were able to detect the changes that had caused these extra allocations by looking at the components that appeared in the stacktrace leading to slow allocations, and inspecting updates that had happened in those components.  In this case, updates to the SmallRye configuration handling at startup caused the regression."
-msgstr "それ以来、余分なオブジェクト割り当ての原因となったコンポーネントに改良が加えられた。私たちは、スタックトレースで遅い割り当てにつながったコンポーネントを調べ、それらのコンポーネントで発生した更新を検査することで、これらの余分な割り当ての原因となった変更を検出することができました。このケースでは、起動時の SmallRye 設定処理の更新がリグレッションの原因でした。"
-
-#. type: delimited block =
-#: upstream/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc:163
-#, fuzzy
-msgid "The stacktraces that cause slow object allocations give us an approximation on the components that cause memory usage increase.  There could be situations where the stacktrace leading to a slow allocation is perfectly valid, but due to the non-deterministic nature of object allocation, the stacktrace just happens to be the one that caused a new heap chunk to be allocated.  However, if you see multiple stacktraces in the same area, that's probably a good hint that something in that area needs to be investigated."
-msgstr "遅いオブジェクト割り当ての原因となるスタックトレースは、メモリ使用量増加の原因となるコン ポーネントの近似値を与えてくれる。遅い割り当ての原因となったスタックトレースが完全に正当なものであっても、オブジェクト割り当ての非決定的な性質のために、そのスタックトレースがたまたま新しいヒープチャンクの割り当てを引き起こしたものであるという状況があり得る。しかし、同じ領域に複数のスタックトレースがある場合は、その領域の何かを調査する必要があるという良いヒントになるでしょう。"
-
-#. type: Plain text
-#: upstream/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc:171
-#, fuzzy
-msgid "By Quarkus version 2.13.7.Final, the RSS consumption on startup was back to previous levels.  The RSS regression was introduced by the changes in https://github.com/quarkusio/quarkus/pull/26802#issue-1308798216[PR #26802], and the fixes in https://github.com/quarkusio/quarkus/pull/29408[PR #29408] and https://github.com/quarkusio/quarkus/pull/29842[PR #29842] brought it back down."
-msgstr "Quarkusバージョン2.13.7.Finalでは、起動時のRSS消費量が以前のレベルに戻りました。RSSのリグレッションは link:https://github.com/quarkusio/quarkus/pull/26802#issue-1308798216[PR #26802の] 変更によって発生し、 link:https://github.com/quarkusio/quarkus/pull/29408[PR #29408と] link:https://github.com/quarkusio/quarkus/pull/29842[PR #29842の] 修正によって減少しました。"
 
 #. type: Title ==
 #: upstream/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc:172
@@ -282,76 +241,13 @@ msgid "Performing the analysis with `ObjectAllocationInNewTLAB` JFR event"
 msgstr "`ObjectAllocationInNewTLAB` JFRイベントによる分析の実行"
 
 #. type: Plain text
-#: upstream/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc:180
-#, fuzzy
-msgid "As newer versions of GraalVM implement https://github.com/oracle/graal/issues/5410[more and more JFR events] in native mode, it also becomes easier to analyse Quarkus application performance.  For instance the recent release of GraalVM for JDK 17/20 adds support for the `jdk.ObjectAllocationInNewTLAB` event, which would have highlighted the discrepancies in the Quarkus versions compared above.  Unfortunately, the Quarkus versions tested here are not compatible with this GraalVM version, but we can give it a go with the latest Quarkus version to see what comes out."
-msgstr "GraalVMの新しいバージョンがネイティブ・モードで link:https://github.com/oracle/graal/issues/5410[より多くのJFRイベントを] 実装するにつれて、Quarkusアプリケーションのパフォーマンスを分析することも容易になります。例えば、JDK 17/20用のGraalVMの最近のリリースでは、 `jdk.ObjectAllocationInNewTLAB` イベントのサポートが追加されました。これは、上記で比較したQuarkusバージョンの不一致を浮き彫りにしたことでしょう。残念ながら、ここでテストしたQuarkusのバージョンは、このGraalVMのバージョンと互換性がありませんが、最新のQuarkusのバージョンで試してみて、何が出てくるか見てみましょう。"
-
-#. type: Plain text
 #: upstream/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc:182
 #, fuzzy
 msgid "First, we build the native Quarkus application with JFR support:"
 msgstr "まず、JFRをサポートしたネイティブのQuarkusアプリケーションを構築します："
-
-#. type: delimited block -
-#: upstream/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc:186
-#, no-wrap
-msgid "$ ./mvnw package -DskipTests -Dquarkus.native.monitoring=jfr -Dnative\n"
-msgstr ""
-
-#. type: Plain text
-#: upstream/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc:191
-#, fuzzy
-msgid "To obtain `jdk.ObjectAllocationInNewTLAB` events, a custom JFC configuration file is required.  We use `jfr configure` to generate it:"
-msgstr "`jdk.ObjectAllocationInNewTLAB` イベントを取得するには、カスタムJFC設定ファイルが必要です。その生成には `jfr configure` を使用する："
-
-#. type: delimited block -
-#: upstream/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc:195
-#, no-wrap
-msgid "$ $JAVA_HOME/bin/jfr configure jdk.ObjectAllocationInNewTLAB#enabled=true --output newtlab.jfc\n"
-msgstr ""
 
 #. type: Plain text
 #: upstream/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc:198
 #, fuzzy
 msgid "Then, we start the Quarkus native executable with the necessary JFR flags:"
 msgstr "次に、Quarkusのネイティブ実行ファイルを、必要なJFRフラグを付けて起動します："
-
-#. type: delimited block -
-#: upstream/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc:204
-#, no-wrap
-msgid ""
-"$ getting-started/target/getting-started-1.0.0-SNAPSHOT-runner -XX:+FlightRecorder -XX:StartFlightRecording=settings=newtlab.jfc,filename=recording.jfr -Xmx64m\n"
-"...\n"
-"2023-07-21 12:25:33,739 INFO  [io.quarkus] (main) getting-started 1.0.0-SNAPSHOT native (powered by Quarkus 3.2.1.Final) started in 0.019s. Listening on: http://0.0.0.0:8080\n"
-msgstr ""
-
-#. type: Plain text
-#: upstream/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc:210
-#, fuzzy
-msgid "After shutting down Quarkus, we can use https://adoptium.net/jmc[Adoptium's Eclipse Mission Control] to visualize a flamegraph for all the `jdk.ObjectAllocationInNewTLAB` events.  We can also do a similar focus on `ApplicationImpl.doStart()` method to observe which slow path allocations get triggered from there:"
-msgstr "Quarkusをシャットダウンした後、 link:https://adoptium.net/jmc[AdoptiumのEclipse Mission Controlを使って] 、すべての `jdk.ObjectAllocationInNewTLAB` イベントのフレームグラフを視覚化することができます。また、 `ApplicationImpl.doStart()` メソッドにフォーカスして、そこからどのスローパスの割り当てがトリガーされるかを観察することもできます："
-
-#. type: Positional ($1) AttributeList argument for macro 'image'
-#: upstream/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc:211
-#, fuzzy, no-wrap
-msgid "new tlab events from ApplicationImpl.doStart() method Quarkus 3.2.1.Final"
-msgstr "ApplicationImpl.doStart()メソッドからの新しいtlabイベント Quarkus 3.2.1.Final"
-
-#. type: Target for macro image
-#: upstream/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc:211
-#, no-wrap
-msgid "jmc-new-tlab-event-from-doStart.png"
-msgstr ""
-
-#. type: Plain text
-#: upstream/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc:218
-#, fuzzy
-msgid "Looking at the flamegraph, we can count 7 stacktraces for slow path allocations for the `main` thread.  Whether this is a problem, or maybe code execution has shifted from another thread to `main`, would be something we would need to explore further and see if there's a regression."
-msgstr "flamegraphを見ると、 `main` スレッドの遅いパス割り当てのスタックトレースを7つ数えることができる。これが問題なのか、それともコードの実行が別のスレッドから `main` 、リグレッションが発生しているのか、さらに調査する必要があるだろう。"
-
-#. type: Plain text
-#: upstream/_posts/2023-07-27-native-startup-rss-troubleshooting.adoc:223
-#, fuzzy
-msgid "If you encounter memory issues in your native applications, or any other type of performance issues, do not hesitate giving JFR a go.  Robert Toyonaga has written a couple of blog posts on the latest JFR additions, see link:/blog/profile-and-monitor-native-executables-with-jfr[here] to find out more."
-msgstr "ネイティブ・アプリケーションのメモリ問題やその他のパフォーマンス問題に遭遇したら、迷わずJFRを試してみよう。ロバート・トヨナガ氏は、最新のJFR追加機能に関するブログ記事をいくつか書いている link:/blog/profile-and-monitor-native-executables-with-jfr[。]"
