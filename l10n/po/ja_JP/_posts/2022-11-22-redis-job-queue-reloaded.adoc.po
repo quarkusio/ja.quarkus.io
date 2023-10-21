@@ -4,50 +4,86 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: doc-l10n-kit"
+"X-Generator: jekyll-l10n\n"
 
-#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2022-11-22-redis-job-queue-reloaded.adoc
+#. type: YAML Front Matter: title
+#: _posts/2022-11-22-redis-job-queue-reloaded.adoc
+#, fuzzy, no-wrap
+msgid "Redis Job Queue - Reloaded"
+msgstr "Redisジョブキュー - Reloaded"
+
+#. type: YAML Front Matter: synopsis
+#: _posts/2022-11-22-redis-job-queue-reloaded.adoc
+#, fuzzy, no-wrap
+msgid "How to implement a more reliable job queue with Redis, including fault tolerance, de-duplication, and poison pill."
+msgstr "フォールトトレランス、重複排除、ポイズンピルなど、より信頼性の高いジョブキューをRedisで実装する方法。"
+
+#: _posts/2022-11-22-redis-job-queue-reloaded.adoc
 msgid ""
 "In https://quarkus.io/blog/redis-job-queue/[How to implement a job queue with Redis], we explained how to implement a job queue mechanism with Redis and the new Redis API from Quarkus.\n"
 "The approach explored in that blog post had a significant flaw: if the execution of a job failed, the request was lost and will never be re-attempted."
 msgstr ""
 
-#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2022-11-22-redis-job-queue-reloaded.adoc
+#. type: Plain text
+#: _posts/2022-11-22-redis-job-queue-reloaded.adoc
+#, fuzzy
+msgid "In this post, we explain how to improve the reliability of the job queue to handle failures, enable retry and use a _dead-letter queue_ to avoid poison pills."
+msgstr "この記事では、ジョブキューの信頼性を高めて障害に対応する方法、リトライを有効にする方法、毒薬を避けるために _デッドレターキューを_ 使用する方法について解説しています。"
+
+#: _posts/2022-11-22-redis-job-queue-reloaded.adoc
 msgid "Recap & Problem"
 msgstr ""
 
-#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2022-11-22-redis-job-queue-reloaded.adoc
+#. type: Plain text
+#: _posts/2022-11-22-redis-job-queue-reloaded.adoc
+#, fuzzy
+msgid "In the https://quarkus.io/blog/redis-job-queue/[previous blog post], we implemented the following system."
+msgstr "link:https://quarkus.io/blog/redis-job-queue/[前回のブログ記事で] 、以下のシステムを導入しました。"
+
+#: _posts/2022-11-22-redis-job-queue-reloaded.adoc
 msgid ""
 "An application receives _fight requests_ and writes these requests into a Redis list.\n"
 "Several simulators processed this list.\n"
 "The outcomes of the _fights_ were communicated using Redis Pub/Sub."
 msgstr ""
 
-#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2022-11-22-redis-job-queue-reloaded.adoc
+#: _posts/2022-11-22-redis-job-queue-reloaded.adoc
 msgid ""
 "The architecture works and ensures that a fight can only be executed once, thanks to the `brpop` command used by the simulator code.\n"
 "This command pops the item from the queue in an atomic manner and ensure that the other simulators can't process it too."
 msgstr ""
 
-#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2022-11-22-redis-job-queue-reloaded.adoc
+#: _posts/2022-11-22-redis-job-queue-reloaded.adoc
 msgid ""
 "However, this architecture has a drawback.\n"
 "If the processing of the popped fight request fails, the request is lost.\n"
 "No other simulator would be able to process it, and if the simulator that failed restarts, it will not reprocess the same request."
 msgstr ""
 
-#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2022-11-22-redis-job-queue-reloaded.adoc
+#: _posts/2022-11-22-redis-job-queue-reloaded.adoc
 msgid "Introducing more queues"
 msgstr ""
 
-#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2022-11-22-redis-job-queue-reloaded.adoc
+#: _posts/2022-11-22-redis-job-queue-reloaded.adoc
 msgid ""
 "An approach to handle that problem is to introduce more queues.\n"
 "In addition to the main queue (the Redis list from the image above), we introduce one queue per simulator.\n"
 "Thus, each simulator has its private queue."
 msgstr ""
 
-#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2022-11-22-redis-job-queue-reloaded.adoc
+#. type: Plain text
+#: _posts/2022-11-22-redis-job-queue-reloaded.adoc
+#, fuzzy
+msgid "These private queues form a safety net."
+msgstr "これらのプライベートキューは、セーフティネットを形成しています。"
+
+#. type: Plain text
+#: _posts/2022-11-22-redis-job-queue-reloaded.adoc
+#, fuzzy
+msgid "So, the simulator does use not only the _main queue_ but also its private queue:"
+msgstr "つまり、シミュレータは _メインキューだけ_ でなく、そのプライベートキューも使っているのです："
+
+#: _posts/2022-11-22-redis-job-queue-reloaded.adoc
 msgid ""
 "When a simulator pops a request from the main queue, it does not process it immediately; it writes it to its private queue.\n"
 "To achieve this, we cannot use `brpop` and then write to the other queue, as if something wrong happens in between, we would have the same problem.\n"
@@ -55,7 +91,19 @@ msgid ""
 "Thus, we ensure that multiple simulators cannot consume the same request and that the request cannot be lost."
 msgstr ""
 
-#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2022-11-22-redis-job-queue-reloaded.adoc
+#. type: Plain text
+#: _posts/2022-11-22-redis-job-queue-reloaded.adoc
+#, fuzzy
+msgid "So, we use the following code to move the request from the main queue to the private queue:"
+msgstr "そこで、以下のコードでメインキューからプライベートキューにリクエストを移動させます："
+
+#. type: Plain text
+#: _posts/2022-11-22-redis-job-queue-reloaded.adoc
+#, fuzzy
+msgid "Now, the simulator does not simulate the requests from the main queue but needs to process the ones added to its private queue."
+msgstr "さて、シミュレータはメインキューからのリクエストをシミュレートするのではなく、プライベートキューに追加されたリクエストを処理する必要があります。"
+
+#: _posts/2022-11-22-redis-job-queue-reloaded.adoc
 msgid ""
 "This code is slightly different from the code from the previous blog.\n"
 "This time, we do not pop.\n"
@@ -63,39 +111,57 @@ msgid ""
 "We do this until the queue is empty."
 msgstr ""
 
-#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2022-11-22-redis-job-queue-reloaded.adoc
+#: _posts/2022-11-22-redis-job-queue-reloaded.adoc
 msgid ""
 "Let's put everything together:\n"
 "1. when the simulator starts, it should process the items from its private queue. So, if it crashes, it will retry to process the item.\n"
 "2. once the private queue is empty, it gets new requests from the main queue. It will not process them directly but re-trigger the processing of the private queue until the queue is empty."
 msgstr ""
 
-#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2022-11-22-redis-job-queue-reloaded.adoc
+#: _posts/2022-11-22-redis-job-queue-reloaded.adoc
 msgid "New architecture, new problems"
 msgstr ""
 
-#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2022-11-22-redis-job-queue-reloaded.adoc
+#: _posts/2022-11-22-redis-job-queue-reloaded.adoc
 msgid ""
 "That approach fixes the initial problem.\n"
 "If the processing fails, we retry it (as the request is not removed from the private queue).\n"
 "That will handle transient failures pretty well."
 msgstr ""
 
-#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2022-11-22-redis-job-queue-reloaded.adoc
+#. type: Plain text
+#: _posts/2022-11-22-redis-job-queue-reloaded.adoc
+#, fuzzy
+msgid "However, it also has its own set of drawbacks:"
+msgstr "しかし、それなりの欠点もあります："
+
+#. type: Plain text
+#: _posts/2022-11-22-redis-job-queue-reloaded.adoc
+#, fuzzy
+msgid "_Duplicates_: if the processing succeeds, but the `lrem` fails for any reason (like a network failure), the request will be processed another time as it was not removed from the queue."
+msgstr "_重複_ ：処理が成功しても、何らかの理由（ネットワーク障害など）で `lrem` が失敗した場合、リクエストはキューから削除されなかったため、別の機会に処理されます。"
+
+#. type: Plain text
+#: _posts/2022-11-22-redis-job-queue-reloaded.adoc
+#, fuzzy
+msgid "_Poison pill_: if a request cannot be processed successfully, it will retry to process it forever."
+msgstr "_毒薬_ ：リクエストを正常に処理できない場合、永遠に処理をやり直します。"
+
+#: _posts/2022-11-22-redis-job-queue-reloaded.adoc
 msgid "De-duplication"
 msgstr ""
 
-#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2022-11-22-redis-job-queue-reloaded.adoc
+#: _posts/2022-11-22-redis-job-queue-reloaded.adoc
 msgid ""
 "Handling _duplicates_ require having a way to identify the requests uniquely and deduplicate manually.\n"
 "In other words, if all our requests have a unique id, we can check if that id has already been processed (for example, by storing the processed ids in another list or a hash). If the item has already been processed, ignore it (remove it from the queue) and process it to the next one:"
 msgstr ""
 
-#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2022-11-22-redis-job-queue-reloaded.adoc
+#: _posts/2022-11-22-redis-job-queue-reloaded.adoc
 msgid "Avoiding swallowing the poison pill"
 msgstr ""
 
-#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2022-11-22-redis-job-queue-reloaded.adoc
+#: _posts/2022-11-22-redis-job-queue-reloaded.adoc
 msgid ""
 "Handling _poison pills_ is more complex.\n"
 "A _poison pill_ is a request that will always make the processing fails.\n"
@@ -103,25 +169,31 @@ msgid ""
 "Retrying, in this case, will not help; we are not facing a transient issue."
 msgstr ""
 
-#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2022-11-22-redis-job-queue-reloaded.adoc
+#: _posts/2022-11-22-redis-job-queue-reloaded.adoc
 msgid ""
 "So, what can we do?\n"
 "We need to track the number of processing attempts for that request, and if it exceeds a specific number, let's face it: we won't be able to handle the request.\n"
 "We generally want to send the request to a dead-letter queue (DLQ), i.e., a specific queue storing the unprocessable items:"
 msgstr ""
 
-#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2022-11-22-redis-job-queue-reloaded.adoc
+#. type: Plain text
+#: _posts/2022-11-22-redis-job-queue-reloaded.adoc
+#, fuzzy
+msgid "The counter is a specific Redis integer value that we increment and reset once we succeed or give up."
+msgstr "カウンターは特定のRedis整数値で、成功したりあきらめたりしたらインクリメントしてリセットします。"
+
+#: _posts/2022-11-22-redis-job-queue-reloaded.adoc
 msgid ""
 "The items from the DLQ are not lost; they are saved for future processing.\n"
 "These items could be re-added to the main queue (to verify if it was not a transient issue or the bug was fixed).\n"
 "Another approach requires that a human administrator looks at these requests before re-injecting them into the system; maybe it was just a formatting issue..."
 msgstr ""
 
-#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2022-11-22-redis-job-queue-reloaded.adoc
+#: _posts/2022-11-22-redis-job-queue-reloaded.adoc
 msgid "Summary"
 msgstr "まとめ"
 
-#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2022-11-22-redis-job-queue-reloaded.adoc
+#: _posts/2022-11-22-redis-job-queue-reloaded.adoc
 msgid ""
 "This post explores how to improve the job queue we implemented in https://quarkus.io/blog/redis-job-queue/[How to implement a job queue with Redis].\n"
 "This initial implementation, while simple, would lose requests if the processing fails.\n"
@@ -129,81 +201,9 @@ msgid ""
 "But, nothing comes for free, and the resulting code is slightly more complex."
 msgstr ""
 
-#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2022-11-22-redis-job-queue-reloaded.adoc
+#: _posts/2022-11-22-redis-job-queue-reloaded.adoc
 msgid ""
 "Remember: Redis is a fantastic toolbox.\n"
 "But, it's a toolbox; you build what you need with it, as it is rarely available out of the box.\n"
 "That being said, the richness of the Redis commands lets you do many things... (spoiler: we will see some of these things in future posts)."
 msgstr ""
-
-#. type: YAML Front Matter: title
-#: upstream/_posts/2022-11-22-redis-job-queue-reloaded.adoc:1
-#, fuzzy, no-wrap
-msgid "Redis Job Queue - Reloaded"
-msgstr "Redisジョブキュー - Reloaded"
-
-#. type: YAML Front Matter: synopsis
-#: upstream/_posts/2022-11-22-redis-job-queue-reloaded.adoc:1
-#, fuzzy, no-wrap
-msgid "How to implement a more reliable job queue with Redis, including fault tolerance, de-duplication, and poison pill."
-msgstr "フォールトトレランス、重複排除、ポイズンピルなど、より信頼性の高いジョブキューをRedisで実装する方法。"
-
-#. type: Plain text
-#: upstream/_posts/2022-11-22-redis-job-queue-reloaded.adoc:14
-#, fuzzy
-msgid "In this post, we explain how to improve the reliability of the job queue to handle failures, enable retry and use a _dead-letter queue_ to avoid poison pills."
-msgstr "この記事では、ジョブキューの信頼性を高めて障害に対応する方法、リトライを有効にする方法、毒薬を避けるために _デッドレターキューを_ 使用する方法について解説しています。"
-
-#. type: Plain text
-#: upstream/_posts/2022-11-22-redis-job-queue-reloaded.adoc:18
-#, fuzzy
-msgid "In the https://quarkus.io/blog/redis-job-queue/[previous blog post], we implemented the following system."
-msgstr "link:https://quarkus.io/blog/redis-job-queue/[前回のブログ記事で] 、以下のシステムを導入しました。"
-
-#. type: Plain text
-#: upstream/_posts/2022-11-22-redis-job-queue-reloaded.adoc:41
-#, fuzzy
-msgid "These private queues form a safety net."
-msgstr "これらのプライベートキューは、セーフティネットを形成しています。"
-
-#. type: Plain text
-#: upstream/_posts/2022-11-22-redis-job-queue-reloaded.adoc:43
-#, fuzzy
-msgid "So, the simulator does use not only the _main queue_ but also its private queue:"
-msgstr "つまり、シミュレータは _メインキューだけ_ でなく、そのプライベートキューも使っているのです："
-
-#. type: Plain text
-#: upstream/_posts/2022-11-22-redis-job-queue-reloaded.adoc:56
-#, fuzzy
-msgid "So, we use the following code to move the request from the main queue to the private queue:"
-msgstr "そこで、以下のコードでメインキューからプライベートキューにリクエストを移動させます："
-
-#. type: Plain text
-#: upstream/_posts/2022-11-22-redis-job-queue-reloaded.adoc:68
-#, fuzzy
-msgid "Now, the simulator does not simulate the requests from the main queue but needs to process the ones added to its private queue."
-msgstr "さて、シミュレータはメインキューからのリクエストをシミュレートするのではなく、プライベートキューに追加されたリクエストを処理する必要があります。"
-
-#. type: Plain text
-#: upstream/_posts/2022-11-22-redis-job-queue-reloaded.adoc:117
-#, fuzzy
-msgid "However, it also has its own set of drawbacks:"
-msgstr "しかし、それなりの欠点もあります："
-
-#. type: Plain text
-#: upstream/_posts/2022-11-22-redis-job-queue-reloaded.adoc:119
-#, fuzzy
-msgid "_Duplicates_: if the processing succeeds, but the `lrem` fails for any reason (like a network failure), the request will be processed another time as it was not removed from the queue."
-msgstr "_重複_ ：処理が成功しても、何らかの理由（ネットワーク障害など）で `lrem` が失敗した場合、リクエストはキューから削除されなかったため、別の機会に処理されます。"
-
-#. type: Plain text
-#: upstream/_posts/2022-11-22-redis-job-queue-reloaded.adoc:120
-#, fuzzy
-msgid "_Poison pill_: if a request cannot be processed successfully, it will retry to process it forever."
-msgstr "_毒薬_ ：リクエストを正常に処理できない場合、永遠に処理をやり直します。"
-
-#. type: Plain text
-#: upstream/_posts/2022-11-22-redis-job-queue-reloaded.adoc:170
-#, fuzzy
-msgid "The counter is a specific Redis integer value that we increment and reset once we succeed or give up."
-msgstr "カウンターは特定のRedis整数値で、成功したりあきらめたりしたらインクリメントしてリセットします。"

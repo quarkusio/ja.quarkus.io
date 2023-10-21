@@ -4,9 +4,21 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: doc-l10n-kit"
+"X-Generator: jekyll-l10n\n"
 
-#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2022-09-15-redis-job-queue.adoc
+#. type: YAML Front Matter: title
+#: _posts/2022-09-15-redis-job-queue.adoc
+#, fuzzy, no-wrap
+msgid "How to implement a job queue with Redis"
+msgstr "Redisでジョブキューを実装する方法"
+
+#. type: YAML Front Matter: synopsis
+#: _posts/2022-09-15-redis-job-queue.adoc
+#, fuzzy, no-wrap
+msgid "Implementing a job queue using Redis list and the Quarkus Redis extension"
+msgstr "RedisリストとQuarkus Redisエクステンションを使用したジョブキューの実装"
+
+#: _posts/2022-09-15-redis-job-queue.adoc
 msgid ""
 "In https://quarkus.io/blog/redis-api-intro/[how to cache with Redis], we implemented a simple cache backed by Redis. +\n"
 "That's just one use case of Redis.\n"
@@ -14,14 +26,20 @@ msgid ""
 "This post explores implementing this pattern with Quarkus and the new Redis data source API."
 msgstr ""
 
-#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2022-09-15-redis-job-queue.adoc
+#. type: Title ==
+#: _posts/2022-09-15-redis-job-queue.adoc
+#, fuzzy, no-wrap
+msgid "Job Queues and Supes!"
+msgstr "ジョブキューとスぺース！"
+
+#: _posts/2022-09-15-redis-job-queue.adoc
 msgid ""
 "A job queue is a data structure storing _execution_ requests.\n"
 "Job dispatchers submit the tasks they want to execute in that data structure.\n"
 "On the other side, job consumers poll the requests and execute them."
 msgstr ""
 
-#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2022-09-15-redis-job-queue.adoc
+#: _posts/2022-09-15-redis-job-queue.adoc
 msgid ""
 "There are plenty of variants of that pattern, so let's focus on the following application.\n"
 "We have an application managing heroes and villains.\n"
@@ -29,64 +47,82 @@ msgid ""
 "The fight simulation is delegated to _fight simulators_, applications dedicated to that task."
 msgstr ""
 
-#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2022-09-15-redis-job-queue.adoc
+#: _posts/2022-09-15-redis-job-queue.adoc
 msgid ""
 "In this context, the main application submits the fight request to the job queue.\n"
 "Then, the fight simulators poll the submitted fight request and execute them."
 msgstr ""
 
-#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2022-09-15-redis-job-queue.adoc
+#: _posts/2022-09-15-redis-job-queue.adoc
 msgid ""
 "The fight outcomes are communicated using another Redis feature: pub/sub communication.\n"
 "The simulators send the outcome to a _channel_ consumed by the application.\n"
 "The application then broadcasts these outcomes to a web page."
 msgstr ""
 
-#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2022-09-15-redis-job-queue.adoc
+#: _posts/2022-09-15-redis-job-queue.adoc
 msgid ""
 "This post only discusses the interaction with Redis.\n"
 "The rest of the application is straightforward and just uses RESTEasy Reactive and Hibernate ORM with Panache.\n"
 "You can find the full code of the application on https://github.com/cescoffier/quarkus-redis-job-queue-demo."
 msgstr ""
 
-#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2022-09-15-redis-job-queue.adoc
+#. type: Title ==
+#: _posts/2022-09-15-redis-job-queue.adoc
+#, fuzzy, no-wrap
+msgid "Submitting jobs"
+msgstr "ジョブの送信"
+
+#: _posts/2022-09-15-redis-job-queue.adoc
 msgid ""
 "The first task is to model the job queue.\n"
 "We are using a https://redis.io/docs/data-types/#lists[Redis list] to store the https://github.com/cescoffier/quarkus-redis-job-queue-demo/blob/main/fight-simulator/src/main/java/me/escoffier/quarkus/redis/fight/FightRequest.java[FightRequest]."
 msgstr ""
 
-#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2022-09-15-redis-job-queue.adoc
+#: _posts/2022-09-15-redis-job-queue.adoc
 msgid ""
 "Redis lists distinguish the left side of the list from the right side of the list.\n"
 "This distinction allows implementing a FIFO queue where we write on the left side and consume from the right side."
 msgstr ""
 
-#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2022-09-15-redis-job-queue.adoc
+#: _posts/2022-09-15-redis-job-queue.adoc
 msgid ""
 "To manipulate a Redis list, we need the _group of commands_ associated with this data structure.\n"
 "In the https://github.com/cescoffier/quarkus-redis-job-queue-demo/blob/main/supes-application/src/main/java/me/escoffier/quarkus/redis/supes/SupesService.java[SupesService class], we inject the `RedisDataSource` and retrieve the group of commands:"
 msgstr ""
 
-#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2022-09-15-redis-job-queue.adoc
+#. type: Plain text
+#: _posts/2022-09-15-redis-job-queue.adoc
+#, fuzzy
+msgid "Let's now look at the `submitAFight` method:"
+msgstr "それでは、 `submitAFight` 方式を見てみましょう："
+
+#: _posts/2022-09-15-redis-job-queue.adoc
 msgid ""
 "The `submitAFight` method retrieves the random fighters, computes an id,  builds the `FightRequest` instance, and executes the `LPUSH` command.\n"
 "The `LPUSH`  command writes the given item to the left side of the list stored at the given key (`fight-requests`)."
 msgstr ""
 
-#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2022-09-15-redis-job-queue.adoc
+#. type: Title ==
+#: _posts/2022-09-15-redis-job-queue.adoc
+#, fuzzy, no-wrap
+msgid "Receiving the job requests"
+msgstr "仕事の依頼を受ける"
+
+#: _posts/2022-09-15-redis-job-queue.adoc
 msgid ""
 "Let's now look at the other side: the fight simulators.\n"
 "The simulators poll the `FightRequests` from the Redis list representing our job queue and simulate the fight."
 msgstr ""
 
-#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2022-09-15-redis-job-queue.adoc
+#: _posts/2022-09-15-redis-job-queue.adoc
 msgid ""
 "The simulator is implemented in https://github.com/cescoffier/quarkus-redis-job-queue-demo/blob/main/fight-simulator/src/main/java/me/escoffier/quarkus/redis/fight/FightSimulator.java[`me.escoffier.quarkus.redis.fight.FightSimulator`].\n"
 "The constructor receives a configured name (to distinguish multiple simulators) and the Redis data source.\n"
 "It creates the objects to emit the Redis commands to read from a Redis list:"
 msgstr ""
 
-#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2022-09-15-redis-job-queue.adoc
+#: _posts/2022-09-15-redis-job-queue.adoc
 msgid ""
 "The simulator polls the fight requests and for each of them simulate the fight.\n"
 "The implementation is an _infinite_ loop (it only stops when the application is shut down).\n"
@@ -95,7 +131,7 @@ msgid ""
 "If it has a request, it simulates the fight:"
 msgstr ""
 
-#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2022-09-15-redis-job-queue.adoc
+#: _posts/2022-09-15-redis-job-queue.adoc
 msgid ""
 "The `BRPOP` command retrieves and removes the last (right) element of the list.\n"
 "Unlike the `RPOP`, it waits for a given amount of time (1 second in the code above) if there are no elements in the list.\n"
@@ -106,7 +142,7 @@ msgid ""
 "It uses that structure because you can pass multiple keys, which is convenient when you have lists with priorities."
 msgstr ""
 
-#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2022-09-15-redis-job-queue.adoc
+#: _posts/2022-09-15-redis-job-queue.adoc
 msgid ""
 "The `BRPOP` command also avoids spinning indefinitely if the list is empty, as it waits for 1 second during each iteration.\n"
 "Finally, the `BRPOP` command is _atomic_.\n"
@@ -114,31 +150,73 @@ msgid ""
 "It dispatches each item once."
 msgstr ""
 
-#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2022-09-15-redis-job-queue.adoc
+#. type: Title ==
+#: _posts/2022-09-15-redis-job-queue.adoc
+#, fuzzy, no-wrap
+msgid "Sending the fight outcome"
+msgstr "戦果を送る"
+
+#: _posts/2022-09-15-redis-job-queue.adoc
 msgid ""
 "The pool loop retrieves the `FightRequests` from the queue and simulates the fights, but how to communicate the results?\n"
 "For this, we use another Redis feature: pub/sub communication."
 msgstr ""
 
-#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2022-09-15-redis-job-queue.adoc
+#: _posts/2022-09-15-redis-job-queue.adoc
 msgid ""
 "In simple words, we are going to send the `FightResult` to a _channel_.\n"
 "Applications subscribing to that channel will receive the emitted `FightResult`."
 msgstr ""
 
-#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2022-09-15-redis-job-queue.adoc
+#. type: Plain text
+#: _posts/2022-09-15-redis-job-queue.adoc
+#, fuzzy
+msgid "A `FightResult` contains the request id, the two fighters, and the name of the winner:"
+msgstr "`FightResult` には、リクエストID、2人のファイター、勝者の名前が含まれています："
+
+#: _posts/2022-09-15-redis-job-queue.adoc
 msgid ""
 "To use Redis _pub/sub_ commands, we need the object associated with this group.\n"
 "In the `FightSimulator`, we also uses the `pubsub` method to get that object:"
 msgstr ""
 
-#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2022-09-15-redis-job-queue.adoc
+#: _posts/2022-09-15-redis-job-queue.adoc
 msgid ""
 "Now, we can use this `publisher` to send the `FightResults`.\n"
 "After each fight, we call `publisher.publish` to send the `FightResult` instance to the `fight-results` channel:"
 msgstr ""
 
-#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2022-09-15-redis-job-queue.adoc
+#. type: Title ==
+#: _posts/2022-09-15-redis-job-queue.adoc
+#, fuzzy, no-wrap
+msgid "Receiving the fight outcome"
+msgstr "試合結果の受け取り"
+
+#. type: Plain text
+#: _posts/2022-09-15-redis-job-queue.adoc
+#, fuzzy
+msgid "At that point:"
+msgstr "その時は、その時で："
+
+#. type: Plain text
+#: _posts/2022-09-15-redis-job-queue.adoc
+#, fuzzy
+msgid "we submit the fight request into the job queue,"
+msgstr "ファイトリクエストをジョブキューに投入します、"
+
+#. type: Plain text
+#: _posts/2022-09-15-redis-job-queue.adoc
+#, fuzzy
+msgid "we consume that queue and simulate the fight,"
+msgstr "そのキューを消費して、戦いをシミュレートするのです、"
+
+#. type: Plain text
+#: _posts/2022-09-15-redis-job-queue.adoc
+#, fuzzy
+msgid "we send the outcome to the `fight-results` channel."
+msgstr "その結果を `fight-results` チャンネルに送ります。"
+
+#: _posts/2022-09-15-redis-job-queue.adoc
 msgid ""
 "So, the only missing piece is the consumption of that channel.\n"
 "Let's return to the https://github.com/cescoffier/quarkus-redis-job-queue-demo/blob/main/supes-application/src/main/java/me/escoffier/quarkus/redis/supes/SupesService.java[`me.escoffier.quarkus.redis.supes.SupesService`] class.\n"
@@ -146,20 +224,32 @@ msgid ""
 "Then, in the constructor code, we subscribe to the `fight-results`."
 msgstr ""
 
-#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2022-09-15-redis-job-queue.adoc
+#. type: Plain text
+#: _posts/2022-09-15-redis-job-queue.adoc
+#, fuzzy
+msgid "Because we use the reactive data source, this subscription returns a `Multi<FightResult>`, ready to be served by Quarkus and an SSE (see https://github.com/cescoffier/quarkus-redis-job-queue-demo/blob/main/supes-application/src/main/java/me/escoffier/quarkus/redis/supes/SupesResource.java[SupesResource.java]):"
+msgstr "リアクティブデータソースを使用しているため、このサブスクリプションは、QuarkusとSSE（ link:https://github.com/cescoffier/quarkus-redis-job-queue-demo/blob/main/supes-application/src/main/java/me/escoffier/quarkus/redis/supes/SupesResource.java[SupesResource.javaを] 参照）によって提供される準備ができている `Multi<FightResult>` を返します："
+
+#: _posts/2022-09-15-redis-job-queue.adoc
 msgid ""
 "`.broadcast().toAllSubscribers()` instructs Quarkus to broadcast all the received `FightResult` to all the connected SSE.\n"
 "So, the browser filters out unrequested results."
 msgstr ""
 
-#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2022-09-15-redis-job-queue.adoc
+#. type: Title ==
+#: _posts/2022-09-15-redis-job-queue.adoc
+#, fuzzy, no-wrap
+msgid "Running the system"
+msgstr "システムを動かす"
+
+#: _posts/2022-09-15-redis-job-queue.adoc
 msgid ""
 "The circle is complete!\n"
 "The full code source is available from https://github.com/cescoffier/quarkus-redis-job-queue-demo.\n"
 "To run the system, open three terminals."
 msgstr ""
 
-#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2022-09-15-redis-job-queue.adoc
+#: _posts/2022-09-15-redis-job-queue.adoc
 msgid ""
 "First, we start the `supes-application`.\n"
 "In the first terminal, navigate to the `supes-application` and run `mvn quarkus:dev`\n"
@@ -169,168 +259,78 @@ msgid ""
 "Look for the redis one, and copy the `quarkus.redis.hosts` injected configuration:"
 msgstr ""
 
-#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2022-09-15-redis-job-queue.adoc
+#: _posts/2022-09-15-redis-job-queue.adoc
 msgid ""
 "In the previous snippet, copy: `quarkus.redis.hosts=redis://localhost:53853`.\n"
 "This is the address of the redis server.\n"
 "We need to configure to the simulators with that address."
 msgstr ""
 
-#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2022-09-15-redis-job-queue.adoc
+#: _posts/2022-09-15-redis-job-queue.adoc
 msgid ""
 "If you go to http://localhost:8080, the web page is served.\n"
 "You can hit the `fights!` button a few times."
 msgstr ""
 
-#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2022-09-15-redis-job-queue.adoc
+#: _posts/2022-09-15-redis-job-queue.adoc
 msgid ""
 "The fight won't happen as we have no simulator.\n"
 "However, the fight requests have been submitted and stored in the list.\n"
 "So they are not lost."
 msgstr ""
 
-#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2022-09-15-redis-job-queue.adoc
-msgid "*IMPORTANT*: update the `quarkus.redis-hosts` with the one copied above."
-msgstr ""
-
-#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2022-09-15-redis-job-queue.adoc
-msgid "*IMPORTANT*: as in the previous command, update the `quarkus.redis-hosts` with the one copied above."
-msgstr ""
-
-#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2022-09-15-redis-job-queue.adoc
-msgid ""
-"Go back to the web page and click on the `fight!` button a few times.\n"
-"Check the logs of both simulators to see that the fight requests are now dispatched beween the two simulators."
-msgstr ""
-
-#: /home/ynojima/playground/ja.quarkus.io/build/jekyll-source/_posts/2022-09-15-redis-job-queue.adoc
-msgid ""
-"Learn more about the Redis data source API from the https://quarkus.io/guides/redis[Quarkus documentation].\n"
-"We will publish more content about Redis patterns, so stay tuned!"
-msgstr ""
-
-#. type: YAML Front Matter: title
-#: upstream/_posts/2022-09-15-redis-job-queue.adoc:1
-#, fuzzy, no-wrap
-msgid "How to implement a job queue with Redis"
-msgstr "Redisでジョブキューを実装する方法"
-
-#. type: YAML Front Matter: synopsis
-#: upstream/_posts/2022-09-15-redis-job-queue.adoc:1
-#, fuzzy, no-wrap
-msgid "Implementing a job queue using Redis list and the Quarkus Redis extension"
-msgstr "RedisリストとQuarkus Redisエクステンションを使用したジョブキューの実装"
-
-#. type: Title ==
-#: upstream/_posts/2022-09-15-redis-job-queue.adoc:15
-#, fuzzy, no-wrap
-msgid "Job Queues and Supes!"
-msgstr "ジョブキューとスぺース！"
-
-#. type: Title ==
-#: upstream/_posts/2022-09-15-redis-job-queue.adoc:41
-#, fuzzy, no-wrap
-msgid "Submitting jobs"
-msgstr "ジョブの送信"
-
 #. type: Plain text
-#: upstream/_posts/2022-09-15-redis-job-queue.adoc:70
-#, fuzzy
-msgid "Let's now look at the `submitAFight` method:"
-msgstr "それでは、 `submitAFight` 方式を見てみましょう："
-
-#. type: Title ==
-#: upstream/_posts/2022-09-15-redis-job-queue.adoc:86
-#, fuzzy, no-wrap
-msgid "Receiving the job requests"
-msgstr "仕事の依頼を受ける"
-
-#. type: Title ==
-#: upstream/_posts/2022-09-15-redis-job-queue.adoc:140
-#, fuzzy, no-wrap
-msgid "Sending the fight outcome"
-msgstr "戦果を送る"
-
-#. type: Plain text
-#: upstream/_posts/2022-09-15-redis-job-queue.adoc:149
-#, fuzzy
-msgid "A `FightResult` contains the request id, the two fighters, and the name of the winner:"
-msgstr "`FightResult` には、リクエストID、2人のファイター、勝者の名前が含まれています："
-
-#. type: Title ==
-#: upstream/_posts/2022-09-15-redis-job-queue.adoc:191
-#, fuzzy, no-wrap
-msgid "Receiving the fight outcome"
-msgstr "試合結果の受け取り"
-
-#. type: Plain text
-#: upstream/_posts/2022-09-15-redis-job-queue.adoc:194
-#, fuzzy
-msgid "At that point:"
-msgstr "その時は、その時で："
-
-#. type: Plain text
-#: upstream/_posts/2022-09-15-redis-job-queue.adoc:196
-#, fuzzy
-msgid "we submit the fight request into the job queue,"
-msgstr "ファイトリクエストをジョブキューに投入します、"
-
-#. type: Plain text
-#: upstream/_posts/2022-09-15-redis-job-queue.adoc:197
-#, fuzzy
-msgid "we consume that queue and simulate the fight,"
-msgstr "そのキューを消費して、戦いをシミュレートするのです、"
-
-#. type: Plain text
-#: upstream/_posts/2022-09-15-redis-job-queue.adoc:198
-#, fuzzy
-msgid "we send the outcome to the `fight-results` channel."
-msgstr "その結果を `fight-results` チャンネルに送ります。"
-
-#. type: Plain text
-#: upstream/_posts/2022-09-15-redis-job-queue.adoc:214
-#, fuzzy
-msgid "Because we use the reactive data source, this subscription returns a `Multi<FightResult>`, ready to be served by Quarkus and an SSE (see https://github.com/cescoffier/quarkus-redis-job-queue-demo/blob/main/supes-application/src/main/java/me/escoffier/quarkus/redis/supes/SupesResource.java[SupesResource.java]):"
-msgstr "リアクティブデータソースを使用しているため、このサブスクリプションは、QuarkusとSSE（ link:https://github.com/cescoffier/quarkus-redis-job-queue-demo/blob/main/supes-application/src/main/java/me/escoffier/quarkus/redis/supes/SupesResource.java[SupesResource.javaを] 参照）によって提供される準備ができている `Multi<FightResult>` を返します："
-
-#. type: Title ==
-#: upstream/_posts/2022-09-15-redis-job-queue.adoc:228
-#, fuzzy, no-wrap
-msgid "Running the system"
-msgstr "システムを動かす"
-
-#. type: Plain text
-#: upstream/_posts/2022-09-15-redis-job-queue.adoc:264
+#: _posts/2022-09-15-redis-job-queue.adoc
 #, fuzzy
 msgid "Now, in the second terminal, navigate to the `fight-simulator` directory, and run:"
 msgstr "さて、2つ目の端末で、 `fight-simulator` ディレクトリに移動し、実行します："
 
+#: _posts/2022-09-15-redis-job-queue.adoc
+msgid "*IMPORTANT*: update the `quarkus.redis-hosts` with the one copied above."
+msgstr ""
+
 #. type: Plain text
-#: upstream/_posts/2022-09-15-redis-job-queue.adoc:274
+#: _posts/2022-09-15-redis-job-queue.adoc
 #, fuzzy
 msgid "As soon as you start it, it processes the pending fight requests:"
 msgstr "起動するとすぐに、保留中の対戦要求を処理します："
 
 #. type: Plain text
-#: upstream/_posts/2022-09-15-redis-job-queue.adoc:283
+#: _posts/2022-09-15-redis-job-queue.adoc
 #, fuzzy
 msgid "If you go back to the web page, the winners get a _halo_:"
 msgstr "ウェブページに戻ると、受賞者には _後光が差して_ いる："
 
 #. type: Plain text
-#: upstream/_posts/2022-09-15-redis-job-queue.adoc:287
+#: _posts/2022-09-15-redis-job-queue.adoc
 #, fuzzy
 msgid "Now, in the third terminal, navigate to the `fight-simulator` directory, and run:"
 msgstr "さて、3つ目のターミナルで、 `fight-simulator` ディレクトリに移動し、実行します："
 
+#: _posts/2022-09-15-redis-job-queue.adoc
+msgid "*IMPORTANT*: as in the previous command, update the `quarkus.redis-hosts` with the one copied above."
+msgstr ""
+
+#: _posts/2022-09-15-redis-job-queue.adoc
+msgid ""
+"Go back to the web page and click on the `fight!` button a few times.\n"
+"Check the logs of both simulators to see that the fight requests are now dispatched beween the two simulators."
+msgstr ""
+
 #. type: Title ==
-#: upstream/_posts/2022-09-15-redis-job-queue.adoc:298
+#: _posts/2022-09-15-redis-job-queue.adoc
 #, no-wrap
 msgid "Summary"
 msgstr "まとめ"
 
 #. type: Plain text
-#: upstream/_posts/2022-09-15-redis-job-queue.adoc:301
+#: _posts/2022-09-15-redis-job-queue.adoc
 #, fuzzy
 msgid "This posts explains how you can implement a job queue with Redis and the Quarkus Redis datasource API."
 msgstr "この記事では、RedisとQuarkus RedisデータソースAPIを使用してジョブキューを実装する方法について説明します。"
+
+#: _posts/2022-09-15-redis-job-queue.adoc
+msgid ""
+"Learn more about the Redis data source API from the https://quarkus.io/guides/redis[Quarkus documentation].\n"
+"We will publish more content about Redis patterns, so stay tuned!"
+msgstr ""
