@@ -40,15 +40,25 @@ build a localized site and deploys it to surge.sh with preview domain. When the 
 the URL to the pull-request. Reviewers can check the deployed site for review.
 When the pull-request is merged into `master`, it is automatically deployed to the production site (https://ja.quarkus.io).
 
-#### Build a localized site locally
 
-If you would like to build a site locally, run:
+### Local build
 
+If you would like to build a site in your local environment, first you need to install some tools.
+`bin/setup-build-env-on-ubuntu` is a silent setup script for GitHub Actions(Ubuntu).
+Please install tools by just executing it, or execute equivalent your package manager commands.
 ```
-bin/build
+bin/setup-build-env-on-ubuntu
 ```
-
+After that, run the following command to build the site. 
+```
+vendor/quarkus-l10n-utils/bin/build
+```
 The site is built in `doc` directory.
+
+You can start local server to preview the site.
+```
+vendor/quarkus-l10n-utils/bin/exec-jekyll-serve
+```
 
 ### HTML templates localization
 
