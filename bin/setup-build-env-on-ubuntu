@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+set -eu
+
+#
+# This script installs build tools.
+# Since the main target environment is Ubuntu Server on GitHub Actions, this script install without asking confirmation.
+# If you are using other OS, please read this script and install equivalent packages manually.
+#
+
+SCRIPT_DIR=$(cd $(dirname $0); pwd)
+L10N_HOME=$(cd $(dirname $SCRIPT_DIR); pwd)
+cd $L10N_HOME
+
+sudo apt-get update
+sudo apt-get -y install python3-pip git ruby-dev nodejs npm po4a gettext jq
+sudo gem install bundler
+sudo npm --global install surge
+
+export DOC_L10N_KIT_VERSION=`jq ".[\"doc-l10n-kit\"].version" config/l10n-utils.json -r`
+
+mkdir -p vendor
+
+git submodule init
+git submodule update
+
+curl -L https://github.com/doc-l10n-kit/doc-l10n-kit/releases/download/$DOC_L10N_KIT_VERSION/doc-l10n-kit-runner.jar -o vendor/doc-l10n-kit-runner.jar
+
+rm -rf vendor/po4a
+git clone https://github.com/doc-l10n-kit/po4a.git vendor/po4a -b v0.66-mod1
