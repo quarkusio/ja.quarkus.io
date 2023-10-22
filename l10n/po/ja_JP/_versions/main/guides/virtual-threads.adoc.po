@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2023-10-15 08:09+0000\n"
+"POT-Creation-Date: 2023-10-22 08:09+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -304,104 +304,113 @@ msgid "when it executes a blocking operation inside a native method or a foreign
 msgstr "ネイティブメソッドや外部関数内でブロッキング操作を実行した場合"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/virtual-threads.adoc:141
-#, fuzzy
-msgid "It can be reasonably easy to avoid these situations in your code, but verifying every dependency you use is hard.  Typically, while experimenting with virtual threads, we realized that old versions of the link:{pgsql-driver}[postgresql-JDBC driver] results in frequent pinning.  Most JDBC drivers still pin the carrier thread.  Even worse, lots of widespread libraries are pinning and would require code changes."
-msgstr "コードでこのような状況を回避するのはそれなりに簡単ですが、使用する依存関係をすべて検証するのは大変です。典型的な例としては、仮想スレッドの実験中に、 link:{pgsql-driver}[postgresql-JDBC ドライバの] 古いバージョンでは頻繁にピニングが発生することに気づきました。ほとんどのJDBCドライバはまだキャリアスレッドをピンしています。さらに悪いことに、広く普及しているライブラリの多くが pin しており、コードの変更が必要になります。"
+#: upstream/_versions/main/guides/virtual-threads.adoc:140
+msgid "It can be reasonably easy to avoid these situations in your code, but verifying every dependency you use is hard.  Typically, while experimenting with virtual threads, we realized that versions older than 42.6.0 of the link:{pgsql-driver}[postgresql-JDBC driver] result in frequent pinning.  Most JDBC drivers still pin the carrier thread.  Even worse, many libraries require code changes."
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/virtual-threads.adoc:142
+msgid "For more information, see link:https://quarkus.io/blog/virtual-thread-1/[When Quarkus meets Virtual Threads]"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/virtual-threads.adoc:146
+msgid "This information about pinning cases applies to PostgreSQL JDBC driver 42.5.4 and earlier.  For PostgreSQL JDBC driver 42.6.0 and later, virtually all synchronized methods have been replaced by reentrant locks.  For more information, see the link:https://jdbc.postgresql.org/changelogs/2023-03-17-42.6.0-release/[Notable Changes] for PostgreSQL JDBC driver 42.6.0."
+msgstr ""
 
 #. type: Title ====
-#: upstream/_versions/main/guides/virtual-threads.adoc:143
+#: upstream/_versions/main/guides/virtual-threads.adoc:148
 #, fuzzy, no-wrap
 msgid "The pooling case"
 msgstr "プーリングの場合"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/virtual-threads.adoc:146
+#: upstream/_versions/main/guides/virtual-threads.adoc:151
 #, fuzzy
 msgid "Some libraries are using `ThreadLocal` as an object pooling mechanism.  Extremely popular libraries like https://github.com/FasterXML/jackson-core/issues/919[Jackson] and Netty assume that the application uses a limited number of threads, which are recycled (using a thread pool) to run multiple (unrelated but sequential) tasks."
 msgstr "`ThreadLocal` をオブジェクト・プールの仕組みとして使っているライブラリもある。 link:https://github.com/FasterXML/jackson-core/issues/919[Jacksonや] Nettyのような非常に人気のあるライブラリは、アプリケーションが限られた数のスレッドを使用し、そのスレッドを（スレッドプールを使用して）リサイクルして複数の（無関係だが連続した）タスクを実行することを想定している。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/virtual-threads.adoc:148
+#: upstream/_versions/main/guides/virtual-threads.adoc:153
 #, fuzzy
 msgid "This pattern has multiple advantages, such as:"
 msgstr "このパターンには、次のような利点がある："
 
 #. type: Plain text
-#: upstream/_versions/main/guides/virtual-threads.adoc:150
+#: upstream/_versions/main/guides/virtual-threads.adoc:155
 #, fuzzy
 msgid "Allocation benefit: heavy objects are only allocated once per thread, but because the number of these threads was intended to be limited, it would not use too much memory."
 msgstr "割り当ての利点：重いオブジェクトはスレッドごとに一度だけ割り当てられるが、このスレッドの数は制限されることを意図しているため、メモリを使いすぎることはない。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/virtual-threads.adoc:151
+#: upstream/_versions/main/guides/virtual-threads.adoc:156
 #, fuzzy
 msgid "Thread safety: only one thread can access the object stored in the thread local - preventing concurrent accesses."
 msgstr "スレッドセーフ：スレッドローカルに格納されたオブジェクトにアクセスできるのは1つのスレッドのみで、同時アクセスを防ぐことができます。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/virtual-threads.adoc:158
+#: upstream/_versions/main/guides/virtual-threads.adoc:163
 #, fuzzy
 msgid "However, this pattern is counter-productive when using virtual threads.  Virtual threads are not pooled and generally short-lived.  So, instead of a few of them, we now have many of them.  For each of them, the object stored in the `ThreadLocal` is created (often large and expensive) and won't be reused, as the virtual thread is not pooled (and won't be used to run another task once the execution completes).  This problem leads to high memory usage.  Unfortunately, it requires sophisticated code changes in the libraries themselves."
 msgstr "しかし、仮想スレッドを使う場合、このパターンは逆効果である。仮想スレッドはプールされておらず、一般的に短命である。そのため、スレッド数が少ない代わりに、スレッド数が多くなる。そのたびに、 `ThreadLocal` に格納されたオブジェクトが作成され（多くの場合、大きくて高価）、仮想スレッドはプールされていないため再利用されることはない（実行が完了したら別のタスクを実行するために使われることもない）。この問題はメモリ使用量の多さにつながる。残念ながら、ライブラリ自体に高度なコード変更が必要になる。"
 
 #. type: Title ===
-#: upstream/_versions/main/guides/virtual-threads.adoc:159
+#: upstream/_versions/main/guides/virtual-threads.adoc:164
 #, fuzzy, no-wrap
 msgid "Use @RunOnVirtualThread with RESTEasy Reactive"
 msgstr "RESTEasy Reactiveで@RunOnVirtualThreadを使用する。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/virtual-threads.adoc:163
+#: upstream/_versions/main/guides/virtual-threads.adoc:168
 #, fuzzy
 msgid "This section shows a brief example of using the link:{runonvthread}[@RunOnVirtualThread] annotation.  It also explains the various development and execution models offered by Quarkus."
 msgstr "このセクションでは、 link:{runonvthread}[@RunOnVirtualThread] アノテーションの簡単な使用例を示します。また、Quarkusが提供するさまざまな開発モデルと実行モデルについても説明します。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/virtual-threads.adoc:166
+#: upstream/_versions/main/guides/virtual-threads.adoc:171
 #, fuzzy
 msgid "The `@RunOnVirtualThread` annotation instructs Quarkus to invoke the annotated method on a **new** virtual thread instead of the current one.  Quarkus handles the creation of the virtual thread and the offloading."
 msgstr "`@RunOnVirtualThread` アノテーションは、Quarkusに対して、現在のスレッドではなく *新しい* 仮想スレッドでアノテーション付きメソッドを呼び出すように指示します。Quarkusは、仮想スレッドの作成とオフロードを処理します。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/virtual-threads.adoc:168
+#: upstream/_versions/main/guides/virtual-threads.adoc:173
 #, fuzzy
 msgid "Since virtual threads are disposable entities, the fundamental idea of `@RunOnVirtualThread` is to offload the execution of an endpoint handler on a new virtual thread instead of running it on an event-loop or worker thread (in the case of RESTEasy Reactive)."
 msgstr "仮想スレッドは使い捨てのエンティティであるため、 `@RunOnVirtualThread` の基本的な考え方は、エンドポイントハンドラの実行をイベントループまたはワーカースレッド（RESTEasy Reactiveの場合）で実行する代わりに、新しい仮想スレッドでオフロードすることです。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/virtual-threads.adoc:172
+#: upstream/_versions/main/guides/virtual-threads.adoc:177
 #, fuzzy
 msgid "To do so, it suffices to add the link:{runonvthread}[@RunOnVirtualThread] annotation to the endpoint.  If the Java Virtual Machine used to **run** the application provides virtual thread support (so Java 21 or later versions), then the endpoint execution is offloaded to a virtual thread.  It will then be possible to perform blocking operations without blocking the platform thread upon which the virtual thread is mounted."
 msgstr "そのためには、エンドポイントに link:{runonvthread}[@RunOnVirtualThread] アノテーションを追加すれば十分です。アプリケーションの *実行に* 使用される Java 仮想マシンが仮想スレッドのサポートを提供している場合 (Java 21 またはそれ以降のバージョン)、エンドポイントの実行は仮想スレッドにオフロードされます。すると、仮想スレッドがマウントされているプラットフォーム・スレッドをブロックすることなく、ブロッキング処理を実行できるようになります。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/virtual-threads.adoc:177
+#: upstream/_versions/main/guides/virtual-threads.adoc:182
 #, fuzzy
 msgid "In the case of RESTEasy Reactive, this annotation can only be used on endpoints annotated with link:{blockingannotation}[@Blocking] or considered blocking because of their signature.  You can visit xref:resteasy-reactive.adoc#execution-model-blocking-non-blocking[Execution model, blocking, non-blocking] for more information."
 msgstr "RESTEasy Reactive の場合、このアノテーションは link:{blockingannotation}[@Blocking] でアノテーションされたエンドポイント、またはシグネチャによってブロッキングと見なされるエンドポイントにのみ使用できます。詳細については、 xref:resteasy-reactive.adoc#execution-model-blocking-non-blocking[実行モデル、ブロッキング、ノンブロッキングを] 参照してください。"
 
 #. type: Title ====
-#: upstream/_versions/main/guides/virtual-threads.adoc:178
+#: upstream/_versions/main/guides/virtual-threads.adoc:183
 #, fuzzy, no-wrap
 msgid "Get started with virtual threads with RESTEasy Reactive"
 msgstr "RESTEasy Reactiveで仮想スレッドを始める"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/virtual-threads.adoc:181
+#: upstream/_versions/main/guides/virtual-threads.adoc:186
 #, fuzzy
 msgid "Add the following dependency to your build file:"
 msgstr "ビルドファイルに以下の依存関係を追加する："
 
 #. type: Block title
-#: upstream/_versions/main/guides/virtual-threads.adoc:183
-#: upstream/_versions/main/guides/virtual-threads.adoc:200
+#: upstream/_versions/main/guides/virtual-threads.adoc:188
+#: upstream/_versions/main/guides/virtual-threads.adoc:205
 #, no-wrap
 msgid "pom.xml"
 msgstr "pom.xml"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/virtual-threads.adoc:189
+#: upstream/_versions/main/guides/virtual-threads.adoc:194
 #, no-wrap
 msgid ""
 "<dependency>\n"
@@ -411,25 +420,25 @@ msgid ""
 msgstr ""
 
 #. type: Block title
-#: upstream/_versions/main/guides/virtual-threads.adoc:192
+#: upstream/_versions/main/guides/virtual-threads.adoc:197
 #, no-wrap
 msgid "build.gradle"
 msgstr "build.gradle"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/virtual-threads.adoc:195
+#: upstream/_versions/main/guides/virtual-threads.adoc:200
 #, no-wrap
 msgid "implementation(\"io.quarkus:quarkus-resteasy-reactive\")\n"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/virtual-threads.adoc:198
+#: upstream/_versions/main/guides/virtual-threads.adoc:203
 #, fuzzy
 msgid "Then, you also need to make sure that you are using Java 21+, this can be enforced in your pom.xml file with the following:"
 msgstr "次に、Java 21+を使用していることを確認する必要があります。これは、pom.xmlファイルで以下のように強制することができます："
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/virtual-threads.adoc:206
+#: upstream/_versions/main/guides/virtual-threads.adoc:211
 #, no-wrap
 msgid ""
 "<properties>\n"
@@ -439,42 +448,42 @@ msgid ""
 msgstr ""
 
 #. type: Title ====
-#: upstream/_versions/main/guides/virtual-threads.adoc:208
+#: upstream/_versions/main/guides/virtual-threads.adoc:213
 #, fuzzy, no-wrap
 msgid "Three development and execution models"
 msgstr "3つの開発・実行モデル"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/virtual-threads.adoc:212
+#: upstream/_versions/main/guides/virtual-threads.adoc:217
 #, fuzzy
 msgid "The example below shows the differences between three endpoints, all of them querying a _fortune_ in the database then returning it to the client."
 msgstr "以下の例は、3つのエンドポイントの違いを示している。これらのエンドポイントはすべて、データベースの _財産を_ 照会し、それをクライアントに返す。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/virtual-threads.adoc:214
+#: upstream/_versions/main/guides/virtual-threads.adoc:219
 msgid "the first one uses the traditional blocking style, it is considered blocking due to its signature."
 msgstr "1つ目は伝統的なブロッキングスタイルを採用しており、そのシグネチャからブロッキングとみなされます。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/virtual-threads.adoc:215
+#: upstream/_versions/main/guides/virtual-threads.adoc:220
 #, fuzzy
 msgid "the second one uses Mutiny, it is considered non-blocking due to its signature."
 msgstr "番目のものはMutinyを使用しており、そのシグネチャーからノンブロッキングとみなされている。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/virtual-threads.adoc:217
+#: upstream/_versions/main/guides/virtual-threads.adoc:222
 #, fuzzy
 msgid "the third one uses Mutiny but in a synchronous way, since it doesn't return a \"reactive type\" it is considered blocking and the link:{runonvthread}[@RunOnVirtualThread] annotation can be used."
 msgstr "リアクティブ型」を返さないので、ブロッキングとみなされ、 link:{runonvthread}[@RunOnVirtualThread] アノテーションが使える。"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/virtual-threads.adoc:221
+#: upstream/_versions/main/guides/virtual-threads.adoc:226
 #, no-wrap
 msgid "package org.acme.rest;\n"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/virtual-threads.adoc:226
+#: upstream/_versions/main/guides/virtual-threads.adoc:231
 #, no-wrap
 msgid ""
 "import org.acme.fortune.model.Fortune;\n"
@@ -484,7 +493,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/virtual-threads.adoc:231
+#: upstream/_versions/main/guides/virtual-threads.adoc:236
 #, no-wrap
 msgid ""
 "import jakarta.ws.rs.GET;\n"
@@ -494,7 +503,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/virtual-threads.adoc:235
+#: upstream/_versions/main/guides/virtual-threads.adoc:240
 #, no-wrap
 msgid ""
 "@Path(\"\")\n"
@@ -502,13 +511,13 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/virtual-threads.adoc:237
+#: upstream/_versions/main/guides/virtual-threads.adoc:242
 #, no-wrap
 msgid "    @Inject FortuneRepository repository;\n"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/virtual-threads.adoc:245
+#: upstream/_versions/main/guides/virtual-threads.adoc:250
 #, no-wrap
 msgid ""
 "    @GET\n"
@@ -521,7 +530,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/virtual-threads.adoc:253
+#: upstream/_versions/main/guides/virtual-threads.adoc:258
 #, no-wrap
 msgid ""
 "    @GET\n"
@@ -534,7 +543,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/virtual-threads.adoc:262
+#: upstream/_versions/main/guides/virtual-threads.adoc:267
 #, no-wrap
 msgid ""
 "    @GET\n"
@@ -548,171 +557,172 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/virtual-threads.adoc:264
-#: upstream/_versions/main/guides/virtual-threads.adoc:516
+#: upstream/_versions/main/guides/virtual-threads.adoc:269
+#: upstream/_versions/main/guides/virtual-threads.adoc:492
+#: upstream/_versions/main/guides/virtual-threads.adoc:560
 #, no-wrap
 msgid "}\n"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/virtual-threads.adoc:267
+#: upstream/_versions/main/guides/virtual-threads.adoc:272
 #, fuzzy
 msgid "The following table summarizes the options:"
 msgstr "以下の表はオプションの要約である："
 
 #. type: Table
-#: upstream/_versions/main/guides/virtual-threads.adoc:269
+#: upstream/_versions/main/guides/virtual-threads.adoc:274
 #, fuzzy, no-wrap
 msgid "Model"
 msgstr "モデル"
 
 #. type: Table
-#: upstream/_versions/main/guides/virtual-threads.adoc:269
+#: upstream/_versions/main/guides/virtual-threads.adoc:274
 #, fuzzy, no-wrap
 msgid "Example of signature"
 msgstr "署名の例"
 
 #. type: Table
-#: upstream/_versions/main/guides/virtual-threads.adoc:269
+#: upstream/_versions/main/guides/virtual-threads.adoc:274
 #, fuzzy, no-wrap
 msgid "Pros"
 msgstr "長所"
 
 #. type: Table
-#: upstream/_versions/main/guides/virtual-threads.adoc:271
+#: upstream/_versions/main/guides/virtual-threads.adoc:276
 #, fuzzy, no-wrap
 msgid "Cons"
 msgstr "短所"
 
 #. type: Table
-#: upstream/_versions/main/guides/virtual-threads.adoc:272
+#: upstream/_versions/main/guides/virtual-threads.adoc:277
 #, fuzzy, no-wrap
 msgid "Synchronous code on worker thread"
 msgstr "ワーカースレッド上の同期コード"
 
 #. type: Table
-#: upstream/_versions/main/guides/virtual-threads.adoc:273
+#: upstream/_versions/main/guides/virtual-threads.adoc:278
 #, fuzzy, no-wrap
 msgid "`Fortune blocking()`"
 msgstr "`Fortune blocking()`"
 
 #. type: Table
-#: upstream/_versions/main/guides/virtual-threads.adoc:274
-#: upstream/_versions/main/guides/virtual-threads.adoc:284
+#: upstream/_versions/main/guides/virtual-threads.adoc:279
+#: upstream/_versions/main/guides/virtual-threads.adoc:289
 #, fuzzy, no-wrap
 msgid "Simple code"
 msgstr "シンプルなコード"
 
 #. type: Table
-#: upstream/_versions/main/guides/virtual-threads.adoc:276
+#: upstream/_versions/main/guides/virtual-threads.adoc:281
 #, fuzzy, no-wrap
 msgid "Use worker thread (limit concurrency)"
 msgstr "ワーカースレッドを使用する（同時実行を制限する）"
 
 #. type: Table
-#: upstream/_versions/main/guides/virtual-threads.adoc:277
+#: upstream/_versions/main/guides/virtual-threads.adoc:282
 #, fuzzy, no-wrap
 msgid "Reactive code on event loop"
 msgstr "イベントループのリアクティブコード"
 
 #. type: Table
-#: upstream/_versions/main/guides/virtual-threads.adoc:278
+#: upstream/_versions/main/guides/virtual-threads.adoc:283
 #, fuzzy, no-wrap
 msgid "`Uni<Fortune> reactive()`"
 msgstr "`Uni<Fortune> reactive()`"
 
 #. type: Table
-#: upstream/_versions/main/guides/virtual-threads.adoc:279
+#: upstream/_versions/main/guides/virtual-threads.adoc:284
 #, fuzzy, no-wrap
 msgid "High concurrency and low resource usage"
 msgstr "高い同時実行性と低いリソース使用"
 
 #. type: Table
-#: upstream/_versions/main/guides/virtual-threads.adoc:281
+#: upstream/_versions/main/guides/virtual-threads.adoc:286
 #, fuzzy, no-wrap
 msgid "More complex code"
 msgstr "より複雑なコード"
 
 #. type: Table
-#: upstream/_versions/main/guides/virtual-threads.adoc:282
+#: upstream/_versions/main/guides/virtual-threads.adoc:287
 #, fuzzy, no-wrap
 msgid "Synchronous code on virtual thread"
 msgstr "仮想スレッド上の同期コード"
 
 #. type: Table
-#: upstream/_versions/main/guides/virtual-threads.adoc:283
+#: upstream/_versions/main/guides/virtual-threads.adoc:288
 #, fuzzy, no-wrap
 msgid "`@RunOnVirtualThread Fortune vt()`"
 msgstr "`@RunOnVirtualThread Fortune vt()`"
 
 #. type: Table
-#: upstream/_versions/main/guides/virtual-threads.adoc:285
+#: upstream/_versions/main/guides/virtual-threads.adoc:290
 #, fuzzy, no-wrap
 msgid "Risk of pinning, monopolization and under-efficient object pooling"
 msgstr "ピン止め、独占、効率の悪いオブジェクト・プーリングのリスク"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/virtual-threads.adoc:288
+#: upstream/_versions/main/guides/virtual-threads.adoc:293
 #, fuzzy
 msgid "Note that all three models can be used in a single application."
 msgstr "なお、この3つのモデルはすべて1つのアプリケーションで使用できる。"
 
 #. type: Title ==
-#: upstream/_versions/main/guides/virtual-threads.adoc:289
+#: upstream/_versions/main/guides/virtual-threads.adoc:294
 #, fuzzy, no-wrap
 msgid "Use virtual thread friendly clients"
 msgstr "仮想スレッド・フレンドリー・クライアントを使用する"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/virtual-threads.adoc:293
+#: upstream/_versions/main/guides/virtual-threads.adoc:298
 #, fuzzy
 msgid "As mentioned in the xref:why-not[Why not run everything on virtual threads?] section, the Java ecosystem is not entirely ready for virtual threads.  So, you need to be careful, especially when using a libraries doing I/O."
 msgstr "xref:why-not[なぜすべてを仮想スレッドで実行しないのか] 」のセクションで述べたように、Javaエコシステムは仮想スレッドの準備が完全に整っているわけではない。そのため、特にI/Oを行うライブラリを使うときには注意が必要だ。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/virtual-threads.adoc:296
+#: upstream/_versions/main/guides/virtual-threads.adoc:301
 #, fuzzy
 msgid "Fortunately, Quarkus provides a massive ecosystem that is ready to be used in virtual threads.  Mutiny, the reactive programming library used in Quarkus, and the Vert.x Mutiny bindings provides the ability to write blocking code (so, no fear, no learning curve) which do not pin the carrier thread."
 msgstr "幸いなことに、Quarkusは仮想スレッドで使用できる大規模なエコシステムを提供しています。Quarkusで使用されているリアクティブプログラミングライブラリであるMutinyと、Vert.xのMutinyバインディングは、キャリアスレッドを固定しないブロッキングコードを書く能力を提供します（そのため、恐れることなく、学習曲線もありません）。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/virtual-threads.adoc:298
+#: upstream/_versions/main/guides/virtual-threads.adoc:303
 #, fuzzy
 msgid "As a result:"
 msgstr "その結果だ："
 
 #. type: Plain text
-#: upstream/_versions/main/guides/virtual-threads.adoc:301
+#: upstream/_versions/main/guides/virtual-threads.adoc:306
 #, fuzzy
 msgid "Quarkus extensions providing blocking APIs on top of reactive APIs can be used in virtual threads.  This includes the reactive rest client, the redis client, the mailer..."
 msgstr "リアクティブAPIの上にブロッキングAPIを提供するQuarkusの拡張機能は、仮想スレッドで使用できます。これには、リアクティブレストクライアント、redisクライアント、メーラー..."
 
 #. type: Plain text
-#: upstream/_versions/main/guides/virtual-threads.adoc:302
+#: upstream/_versions/main/guides/virtual-threads.adoc:307
 #, fuzzy
 msgid "API returning `Uni` can be used directly using `uni.await().atMost(...)`. It blocks the virtual thread, without blocking the carrier thread, and also improves the resilience of your application with an easy (non-blocking) timeout support."
 msgstr "`Uni` を返す API は、 `uni.await().atMost(…​)` を使って直接使うことができる。これは、キャリアのスレッドをブロックすることなく、仮想スレッドをブロックし、また、簡単な（ノンブロッキング）タイムアウトのサポートにより、アプリケーションの回復力を向上させます。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/virtual-threads.adoc:303
+#: upstream/_versions/main/guides/virtual-threads.adoc:308
 #, fuzzy
 msgid "If you use a https://smallrye.io/smallrye-mutiny-vertx-bindings/latest/[Vert.x client using the Mutiny bindings], use the `andAwait()` methods which block until you get the result without pinning the carrier thread. It includes all the reactive SQL drivers."
 msgstr "link:https://smallrye.io/smallrye-mutiny-vertx-bindings/latest/[Mutinyバインディングを使用するVert.xクライアントを] 使用する場合は、キャリアスレッドを固定せずに結果を取得するまでブロックする `andAwait()` メソッドを使用してください。これには、すべてのリアクティブ SQL ドライバが含まれています。"
 
 #. type: Title ==
-#: upstream/_versions/main/guides/virtual-threads.adoc:304
+#: upstream/_versions/main/guides/virtual-threads.adoc:309
 #, fuzzy, no-wrap
 msgid "Detect pinned thread in tests"
 msgstr "テストでピン止めされたスレッドを検出する"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/virtual-threads.adoc:308
+#: upstream/_versions/main/guides/virtual-threads.adoc:313
 #, fuzzy
 msgid "We recommend to use the following configuration when running tests in application using virtual threads.  If would not fail the tests, but at least dump start traces if the code pins the carrier thread:"
 msgstr "仮想スレッドを使用するアプリケーションでテストを実行する場合は、以下の設定を使用することを推奨します。テストが失敗することはありませんが、コードがキャリアのスレッドをピン留めした場合は、少なくとも開始トレースをダンプします："
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/virtual-threads.adoc:322
+#: upstream/_versions/main/guides/virtual-threads.adoc:327
 #, no-wrap
 msgid ""
 "<plugin>\n"
@@ -729,55 +739,55 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/virtual-threads.adoc:325
+#: upstream/_versions/main/guides/virtual-threads.adoc:330
 #, fuzzy
 msgid "The `--enable-preview` flag is not necessary with Java 21."
 msgstr "Java21では、 `--enable-preview` フラグは必要ない。"
 
 #. type: Title ==
-#: upstream/_versions/main/guides/virtual-threads.adoc:326
+#: upstream/_versions/main/guides/virtual-threads.adoc:331
 #, fuzzy, no-wrap
 msgid "Run application using virtual threads"
 msgstr "仮想スレッドを使用してアプリケーションを実行する"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/virtual-threads.adoc:329
+#: upstream/_versions/main/guides/virtual-threads.adoc:334
 #, fuzzy
 msgid "Prior to Java 21, virtual threads are still an experimental feature, you need to start your application with the `--enable-preview` flag:"
 msgstr "Java 21以前では、仮想スレッドはまだ実験的な機能なので、 `--enable-preview` フラグを付けてアプリケーションを起動する必要がある："
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/virtual-threads.adoc:333
+#: upstream/_versions/main/guides/virtual-threads.adoc:338
 #, no-wrap
 msgid "java --enable-preview -jar target/quarkus-app/quarkus-run.jar\n"
 msgstr ""
 
 #. type: Title ==
-#: upstream/_versions/main/guides/virtual-threads.adoc:335
+#: upstream/_versions/main/guides/virtual-threads.adoc:340
 #, fuzzy, no-wrap
 msgid "Build containers for application using virtual threads"
 msgstr "仮想スレッドを使用したアプリケーション用コンテナの構築"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/virtual-threads.adoc:338
+#: upstream/_versions/main/guides/virtual-threads.adoc:343
 #, fuzzy
 msgid "When running your application in JVM mode (so not compiled into native, for native check xref:native[the dedicated section]), you can follow the xref:./container-image.adoc[containerization guide] to build a container."
 msgstr "アプリケーションをJVMモードで実行する場合（ネイティブにコンパイルされていない。ネイティブについては xref:native[専用のセクションを] 参照）、 xref:./container-image.adoc[コンテナ化ガイドに従って] コンテナを構築することができる。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/virtual-threads.adoc:341
+#: upstream/_versions/main/guides/virtual-threads.adoc:346
 #, fuzzy
 msgid "In this section, we use JIB to build the container.  Refer to the xref:./container-image.adoc[containerization guide] to learn more about the alternatives."
 msgstr "このセクションでは、JIB を使ってコンテナを構築する。他の方法については、 xref:./container-image.adoc[コンテナ化ガイドを] 参照のこと。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/virtual-threads.adoc:343
+#: upstream/_versions/main/guides/virtual-threads.adoc:348
 #, fuzzy
 msgid "To containerize your Quarkus application that use `@RunOnVirtualThread`, add the following properties in your `application.properties`:"
 msgstr "`@RunOnVirtualThread` を使用する Quarkus アプリケーションをコンテナ化するには、 `application.properties` に以下のプロパティを追加します："
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/virtual-threads.adoc:352
+#: upstream/_versions/main/guides/virtual-threads.adoc:357
 #, no-wrap
 msgid ""
 "quarkus.container-image.build=true\n"
@@ -789,117 +799,98 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/virtual-threads.adoc:354
+#: upstream/_versions/main/guides/virtual-threads.adoc:359
 #, fuzzy
 msgid "Make sure you use a base image supporting virtual threads. Here we use an image providing Java 20."
 msgstr "必ず仮想スレッドをサポートするベース・イメージを使用してください。ここではJava 20を提供するイメージを使用する。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/virtual-threads.adoc:355
+#: upstream/_versions/main/guides/virtual-threads.adoc:360
 #, fuzzy
 msgid "Select the target architecture. You can select more than one to build multi-archs images."
 msgstr "ターゲット・アーキテクチャを選択します。マルチアーキテクチャイメージを構築する場合は、複数選択することができます。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/virtual-threads.adoc:356
+#: upstream/_versions/main/guides/virtual-threads.adoc:361
 #, fuzzy
 msgid "Don't forget to use the `--enable-preview` flag if you are not using Java 21+."
 msgstr "Java 21+を使用していない場合は、 `--enable-preview` フラグを使用することをお忘れなく。"
 
 #. type: delimited block =
-#: upstream/_versions/main/guides/virtual-threads.adoc:359
+#: upstream/_versions/main/guides/virtual-threads.adoc:364
 #: upstream/_versions/main/guides/virtual-threads.adoc:423
 #, fuzzy
 msgid "Then, build your container as you would do usually.  For example, if you are using Maven, run:"
 msgstr "それから、通常と同じようにコンテナをビルドする。例えば、Mavenを使用している場合は、以下を実行する："
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/virtual-threads.adoc:363
+#: upstream/_versions/main/guides/virtual-threads.adoc:368
 #, no-wrap
 msgid "mvn package\n"
 msgstr ""
 
 #. type: Title ==
-#: upstream/_versions/main/guides/virtual-threads.adoc:366
+#: upstream/_versions/main/guides/virtual-threads.adoc:371
 #, fuzzy, no-wrap
 msgid "Compiling Quarkus application using virtual threads into native executable"
 msgstr "仮想スレッドを使用したQuarkusアプリケーションのネイティブ実行ファイルへのコンパイル"
 
 #. type: Title ===
-#: upstream/_versions/main/guides/virtual-threads.adoc:368
+#: upstream/_versions/main/guides/virtual-threads.adoc:373
 #, fuzzy, no-wrap
 msgid "Using a local GraalVM installation"
 msgstr "ローカルのGraalVMインストールを使用する"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/virtual-threads.adoc:371
+#: upstream/_versions/main/guides/virtual-threads.adoc:376
 #, fuzzy
 msgid "To compile a Quarkus applications leveraging `@RunOnVirtualThread` into a native executable, you must be sure to use a GraalVM / Mandrel `native-image` supporting virtual threads, so providing at least Java 21."
 msgstr "`@RunOnVirtualThread` 、Quarkusアプリケーションをネイティブ実行ファイルにコンパイルするには、仮想スレッドをサポートするGraalVM / Mandrel `native-image` を使用する必要があります。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/virtual-threads.adoc:374
+#: upstream/_versions/main/guides/virtual-threads.adoc:379
 #, fuzzy
 msgid "Build the native executable as indicated on xref:./building-native-image.adoc[the native compilation guide].  For example, with Maven, run:"
 msgstr "ネイティブ・ xref:./building-native-image.adoc[コンパイル・ガイドに従って] 、ネイティブ実行ファイルをビルドする。たとえば、Mavenを使用して、実行します："
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/virtual-threads.adoc:378
+#: upstream/_versions/main/guides/virtual-threads.adoc:383
 #: upstream/_versions/main/guides/virtual-threads.adoc:427
 #, no-wrap
 msgid "mvn package -Dnative\n"
 msgstr ""
 
 #. type: Title ===
-#: upstream/_versions/main/guides/virtual-threads.adoc:380
+#: upstream/_versions/main/guides/virtual-threads.adoc:385
 #, fuzzy, no-wrap
 msgid "Using an in-container build"
 msgstr "コンテナ内ビルドの使用"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/virtual-threads.adoc:385
+#: upstream/_versions/main/guides/virtual-threads.adoc:390
 #, fuzzy
 msgid "In-container build allows building Linux 64 executables by using a `native-image` compiler running in a container.  It avoids having to install `native-image` on your machine, and also allows configuring the GraalVM version you need.  Note that, to use in-container build, you must have Docker or Podman installed on your machine."
 msgstr "コンテナ内ビルドでは、コンテナ内で動作する `native-image` コンパイラを使用して Linux 64 実行可能ファイルをビルドできます。マシンに `native-image` をインストールする必要がなく、必要な GraalVM バージョンを設定することもできます。コンテナ内ビルドを使用するには、DockerまたはPodmanがマシンにインストールされている必要があることに注意してください。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/virtual-threads.adoc:387
+#: upstream/_versions/main/guides/virtual-threads.adoc:392
 #, fuzzy
 msgid "Then, add to your `application.properties` file:"
 msgstr "そして、 `application.properties` ："
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/virtual-threads.adoc:391
-#, no-wrap
-msgid "quarkus.native.additional-build-args=--enable-preview <1>\n"
-msgstr ""
-
-#. type: delimited block -
-#: upstream/_versions/main/guides/virtual-threads.adoc:395
+#: upstream/_versions/main/guides/virtual-threads.adoc:397
 #, no-wrap
 msgid ""
 "# In-container build to get a linux 64 executable\n"
-"quarkus.native.container-build=true <2>\n"
-"quarkus.native.builder-image=quay.io/quarkus/ubi-quarkus-mandrel-builder-image:jdk-20 <3>\n"
+"quarkus.native.container-build=true <1>\n"
 msgstr ""
-
-#. type: Plain text
-#: upstream/_versions/main/guides/virtual-threads.adoc:397
-#, fuzzy
-msgid "The `enable-preview` flag in only necessary until Java 21."
-msgstr "`enable-preview` フラグが必要なのはJava 21までだ。"
-
-#. type: Plain text
-#: upstream/_versions/main/guides/virtual-threads.adoc:398
-#, fuzzy
-msgid "Enables the in-container build"
-msgstr "コンテナ内ビルドを有効にする"
 
 #. type: Plain text
 #: upstream/_versions/main/guides/virtual-threads.adoc:399
 #, fuzzy
-msgid "The builder container to use. Make sure it supports virtual threads"
-msgstr "使用するビルダー・コンテナ。仮想スレッドをサポートしていることを確認する"
+msgid "Enables the in-container build"
+msgstr "コンテナ内ビルドを有効にする"
 
 #. type: Block title
 #: upstream/_versions/main/guides/virtual-threads.adoc:401
@@ -986,30 +977,124 @@ msgstr ""
 
 #. type: Title ==
 #: upstream/_versions/main/guides/virtual-threads.adoc:450
+#, no-wrap
+msgid "Inject the virtual thread executor"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/virtual-threads.adoc:454
+msgid "In order to run tasks on virtual threads Quarkus manages an internal `ThreadPerTaskExecutor`.  In rare instances where you'd need to access this executor directly you can inject it using the `@VirtualThreads` CDI qualifier:"
+msgstr ""
+
+#. type: Plain text
+#: upstream/_versions/main/guides/virtual-threads.adoc:456
+msgid "Injecting the Virtual Thread ExecutorService is experimental and may change in future versions."
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/virtual-threads.adoc:460
+#, no-wrap
+msgid "package org.acme;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/virtual-threads.adoc:462
+#, no-wrap
+msgid "import org.acme.fortune.repository.FortuneRepository;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/virtual-threads.adoc:464
+#, no-wrap
+msgid "import java.util.concurrent.ExecutorService;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/virtual-threads.adoc:468
+#, no-wrap
+msgid ""
+"import jakarta.enterprise.event.Observes;\n"
+"import jakarta.inject.Inject;\n"
+"import jakarta.transaction.Transactional;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/virtual-threads.adoc:472
+#, no-wrap
+msgid ""
+"import io.quarkus.logging.Log;\n"
+"import io.quarkus.runtime.StartupEvent;\n"
+"import io.quarkus.virtual.threads.VirtualThreads;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/virtual-threads.adoc:474
+#, no-wrap
+msgid "public class MyApplication {\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/virtual-threads.adoc:477
+#, no-wrap
+msgid ""
+"    @Inject\n"
+"    FortuneRepository repository;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/virtual-threads.adoc:481
+#, no-wrap
+msgid ""
+"    @Inject\n"
+"    @VirtualThreads\n"
+"    ExecutorService vThreads;\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/virtual-threads.adoc:485
+#, no-wrap
+msgid ""
+"    void onEvent(@Observes StartupEvent event) {\n"
+"        vThreads.execute(this::findAll);\n"
+"    }\n"
+msgstr ""
+
+#. type: delimited block -
+#: upstream/_versions/main/guides/virtual-threads.adoc:490
+#, no-wrap
+msgid ""
+"    @Transactional\n"
+"    void findAll() {\n"
+"        Log.info(repository.findAllBlocking());\n"
+"    }\n"
+msgstr ""
+
+#. type: Title ==
+#: upstream/_versions/main/guides/virtual-threads.adoc:494
 #, fuzzy, no-wrap
 msgid "Testing virtual thread applications"
 msgstr "仮想スレッドアプリケーションのテスト"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/virtual-threads.adoc:455
+#: upstream/_versions/main/guides/virtual-threads.adoc:499
 #, fuzzy
 msgid "As mentioned above, virtual threads have a few limitations that can drastically affect your application performance and memory usage.  The _junit5-virtual-threads_ extension provides a way to detect pinned carrier threads while running your tests.  Thus, you can eliminate one of the most prominent limitations or be aware of the problem."
 msgstr "上述したように、仮想スレッドにはいくつかの制限があり、 アプリケーションのパフォーマンスやメモリ使用量に大きな影響を与える可能性があります。 _junit5-virtual-threads_ 拡張モジュールは、テストの実行中にピン留めされたキャリアスレッドを検出する方法を提供します。このため、最も顕著な制限のひとつを取り除いたり、 問題に気づいたりすることができます。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/virtual-threads.adoc:457
+#: upstream/_versions/main/guides/virtual-threads.adoc:501
 #, fuzzy
 msgid "To enable this detection:"
 msgstr "この検出を有効にするには"
 
 #. type: Bullet: '1) '
-#: upstream/_versions/main/guides/virtual-threads.adoc:459
+#: upstream/_versions/main/guides/virtual-threads.adoc:503
 #, fuzzy
 msgid "Add the `junit5-virtual-threads` dependency to your project:"
 msgstr "`junit5-virtual-threads` の依存関係をプロジェクトに追加する："
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/virtual-threads.adoc:466
+#: upstream/_versions/main/guides/virtual-threads.adoc:510
 #, no-wrap
 msgid ""
 "<dependency>\n"
@@ -1020,13 +1105,13 @@ msgid ""
 msgstr ""
 
 #. type: Bullet: '2) '
-#: upstream/_versions/main/guides/virtual-threads.adoc:469
+#: upstream/_versions/main/guides/virtual-threads.adoc:513
 #, fuzzy
 msgid "In your test case, add the `io.quarkus.test.junit5.virtual.VirtualThreadUnit` and `io.quarkus.test.junit.virtual.ShouldNotPin` annotations:"
 msgstr "テストケースに、 `io.quarkus.test.junit5.virtual.VirtualThreadUnit` と `io.quarkus.test.junit.virtual.ShouldNotPin` のアノテーションを追加する："
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/virtual-threads.adoc:478
+#: upstream/_versions/main/guides/virtual-threads.adoc:522
 #, no-wrap
 msgid ""
 "@QuarkusTest\n"
@@ -1039,25 +1124,25 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: upstream/_versions/main/guides/virtual-threads.adoc:482
+#: upstream/_versions/main/guides/virtual-threads.adoc:526
 #, fuzzy
 msgid "When you run your test (remember to use Java 21+), Quarkus detects pinned carrier threads.  When it happens, the test fails."
 msgstr "テストを実行すると（Java 21+を使用することを忘れないでください）、Quarkusはキャリアスレッドのピンを検出します。この場合、テストは失敗します。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/virtual-threads.adoc:484
+#: upstream/_versions/main/guides/virtual-threads.adoc:528
 #, fuzzy
 msgid "The `@ShouldNotPin` can also be used on methods directly."
 msgstr "`@ShouldNotPin` 、メソッドに直接使用することもできる。"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/virtual-threads.adoc:487
+#: upstream/_versions/main/guides/virtual-threads.adoc:531
 #, fuzzy
 msgid "The _junit5-virtual-threads_ also provides a `@ShouldPin` annotation for cases where pinning is unavoidable.  The following snippet demonstrates the `@ShouldPin` annotation usage and the possibility to inject a `ThreadPinnedEvents` instance in your test to verify when the carrier thread was pinned manually."
 msgstr "_junit5-virtual-threads_ は、ピニングが避けられない場合のために `@ShouldPin` アノテーションも提供しています。次のスニペットは、 `@ShouldPin` アノテーションの使用法と、 `ThreadPinnedEvents` インスタンスをテストに注入してキャリアスレッドが手動でピン留めされたことを検証する可能性を示しています。"
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/virtual-threads.adoc:492
+#: upstream/_versions/main/guides/virtual-threads.adoc:536
 #, no-wrap
 msgid ""
 "@VirtualThreadUnit // Use the extension\n"
@@ -1065,13 +1150,13 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/virtual-threads.adoc:494
+#: upstream/_versions/main/guides/virtual-threads.adoc:538
 #, no-wrap
 msgid "    CodeUnderTest codeUnderTest = new CodeUnderTest();\n"
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/virtual-threads.adoc:500
+#: upstream/_versions/main/guides/virtual-threads.adoc:544
 #, no-wrap
 msgid ""
 "    @Test\n"
@@ -1082,7 +1167,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/virtual-threads.adoc:506
+#: upstream/_versions/main/guides/virtual-threads.adoc:550
 #, no-wrap
 msgid ""
 "    @Test\n"
@@ -1093,7 +1178,7 @@ msgid ""
 msgstr ""
 
 #. type: delimited block -
-#: upstream/_versions/main/guides/virtual-threads.adoc:514
+#: upstream/_versions/main/guides/virtual-threads.adoc:558
 #, no-wrap
 msgid ""
 "    @Test\n"
@@ -1106,16 +1191,28 @@ msgid ""
 msgstr ""
 
 #. type: Title ==
-#: upstream/_versions/main/guides/virtual-threads.adoc:518
+#: upstream/_versions/main/guides/virtual-threads.adoc:562
 #, fuzzy, no-wrap
 msgid "Additional references"
 msgstr "参考文献"
 
 #. type: Plain text
-#: upstream/_versions/main/guides/virtual-threads.adoc:520
+#: upstream/_versions/main/guides/virtual-threads.adoc:564
 #, fuzzy
 msgid "https://dl.acm.org/doi/10.1145/3583678.3596895[Considerations for integrating virtual threads in a Java framework: a Quarkus example in a resource-constrained environment]"
 msgstr "link:https://dl.acm.org/doi/10.1145/3583678.3596895[Javaフレームワークにおける仮想スレッドの統合に関する考察：リソース制約環境におけるQuarkusの例]"
+
+#, fuzzy
+#~ msgid "It can be reasonably easy to avoid these situations in your code, but verifying every dependency you use is hard.  Typically, while experimenting with virtual threads, we realized that old versions of the link:{pgsql-driver}[postgresql-JDBC driver] results in frequent pinning.  Most JDBC drivers still pin the carrier thread.  Even worse, lots of widespread libraries are pinning and would require code changes."
+#~ msgstr "コードでこのような状況を回避するのはそれなりに簡単ですが、使用する依存関係をすべて検証するのは大変です。典型的な例としては、仮想スレッドの実験中に、 link:{pgsql-driver}[postgresql-JDBC ドライバの] 古いバージョンでは頻繁にピニングが発生することに気づきました。ほとんどのJDBCドライバはまだキャリアスレッドをピンしています。さらに悪いことに、広く普及しているライブラリの多くが pin しており、コードの変更が必要になります。"
+
+#, fuzzy
+#~ msgid "The `enable-preview` flag in only necessary until Java 21."
+#~ msgstr "`enable-preview` フラグが必要なのはJava 21までだ。"
+
+#, fuzzy
+#~ msgid "The builder container to use. Make sure it supports virtual threads"
+#~ msgstr "使用するビルダー・コンテナ。仮想スレッドをサポートしていることを確認する"
 
 #, fuzzy
 #~ msgid "This guide explains how to benefit from Java 19+ virtual threads in Quarkus application."
