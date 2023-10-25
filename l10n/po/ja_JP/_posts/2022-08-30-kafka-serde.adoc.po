@@ -1,546 +1,303 @@
-# SOME DESCRIPTIVE TITLE
-# Copyright (C) YEAR Free Software Foundation, Inc.
-# This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
-#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2023-05-01 01:08+0900\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: ja_JP\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-
-#. type: YAML Front Matter: author
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:1
-#, no-wrap
-msgid "cescoffier"
-msgstr "cescoffier"
-
-#. type: YAML Front Matter: date
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:1
-#, fuzzy, no-wrap
-msgid "2022-08-30"
-msgstr "2022-08-30"
-
-#. type: YAML Front Matter: layout
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:1
-#, no-wrap
-msgid "post"
-msgstr "post"
-
-#. type: YAML Front Matter: synopsis
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:1
-#, fuzzy, no-wrap
-msgid "JSON, Avro and Custom Kafka Serializers and Deserializers with Quarkus"
-msgstr "QuarkusによるJSON、Avro、カスタムKafkaのシリアライザーとデシリアライザー"
-
-#. type: YAML Front Matter: tags
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:1
-#, no-wrap
-msgid "kafka"
-msgstr "kafka"
+"X-Generator: doc-l10n-kit"
 
 #. type: YAML Front Matter: title
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:1
+#: _posts/2022-08-30-kafka-serde.adoc
 #, fuzzy, no-wrap
 msgid "How to implement Kafka Serializers and Deserializers?"
 msgstr "KafkaのSerializersとDeserializersはどのように実装するのですか？"
 
-#. type: Plain text
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:14
-#, fuzzy
-msgid "When your application writes a _record_ into a Kafka topic or when it consumes a _record_ from a Kafka topic, a mechanism of serialization and deserialization happens.  The serialization process transforms the business objects you want to send to Kafka into bytes.  The deserialization process is the opposite.  It receives the bytes from Kafka and recreates the business objects."
-msgstr "アプリケーションがKafkaトピックに _レコードを_ 書き込むとき、またはKafkaトピックから _レコードを_ 消費するとき、シリアライズとデシリアライズのメカニズムが起こります。シリアライズ処理は、Kafkaに送りたいビジネスオブジェクトをバイトに変換する処理です。デシリアライズのプロセスはその逆です。Kafkaからバイトを受け取り、ビジネスオブジェクトを再作成するのです。"
+#. type: YAML Front Matter: synopsis
+#: _posts/2022-08-30-kafka-serde.adoc
+#, fuzzy, no-wrap
+msgid "JSON, Avro and Custom Kafka Serializers and Deserializers with Quarkus"
+msgstr "QuarkusによるJSON、Avro、カスタムKafkaのシリアライザーとデシリアライザー"
 
-#. type: Target for macro image
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:15
-#, no-wrap
-msgid "/assets/images/posts/kafka-serde/serde.png"
+#: _posts/2022-08-30-kafka-serde.adoc
+msgid ""
+"When your application writes a _record_ into a Kafka topic or when it consumes a _record_ from a Kafka topic, a mechanism of serialization and deserialization happens.\n"
+"The serialization process transforms the business objects you want to send to Kafka into bytes.\n"
+"The deserialization process is the opposite.\n"
+"It receives the bytes from Kafka and recreates the business objects."
 msgstr ""
 
 #. type: Plain text
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:18
+#: _posts/2022-08-30-kafka-serde.adoc
 #, fuzzy
 msgid "This blog post explores different approaches for this serialization and deserialization and explains how you can implement a custom serializer and deserializer. It also highlights facilities provided by the Kafka connector from Quarkus."
 msgstr "このブログ記事では、このシリアライズとデシリアライズのさまざまなアプローチについて説明し、カスタムのシリアライザーとデシリアライザーを実装する方法について説明します。また、QuarkusのKafkaコネクターが提供する機能にも注目しています。"
 
 #. type: Title ==
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:19
+#: _posts/2022-08-30-kafka-serde.adoc
 #, fuzzy, no-wrap
 msgid "Why do I need a custom serializer and deserializer?"
 msgstr "なぜカスタムシリアライザーとデシリアライザーが必要なのですか？"
 
-#. type: Plain text
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:23
-#, fuzzy
-msgid "https://javadoc.io/static/org.apache.kafka/kafka-clients/3.2.1/org/apache/kafka/common/serialization/package-summary.html[Kafka] provides a set of serializers and deserializers for the common types: `String`, `Double`, `Integer`, `Bytes`...  But that's rarely enough for business objects, even for objects are simple as:"
-msgstr "link:https://javadoc.io/static/org.apache.kafka/kafka-clients/3.2.1/org/apache/kafka/common/serialization/package-summary.html[Kafkaは] 、一般的なタイプのシリアライザーとデシリアライザーのセットを提供します： `String` `Double` `Integer` `Bytes` しかし、ビジネスオブジェクトの場合、単純なオブジェクトであっても、それで十分であることはほとんどありません："
-
-#. type: delimited block -
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:27
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:164
-#, no-wrap
-msgid "package me.escoffier.quarkus;\n"
+#: _posts/2022-08-30-kafka-serde.adoc
+msgid ""
+"https://javadoc.io/static/org.apache.kafka/kafka-clients/3.2.1/org/apache/kafka/common/serialization/package-summary.html[Kafka] provides a set of serializers and deserializers for the common types: `String`, `Double`, `Integer`, `Bytes`...\n"
+"But that's rarely enough for business objects, even for objects are simple as:"
 msgstr ""
 
-#. type: delimited block -
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:29
-#, no-wrap
-msgid "public record Hero(String name, String picture) {\n"
+#: _posts/2022-08-30-kafka-serde.adoc
+msgid ""
+"Fortunately, Kafka lets us implement our own.\n"
+"To achieve this, you need to implement the following interfaces:"
 msgstr ""
-
-#. type: delimited block -
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:31
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:190
-#, no-wrap
-msgid "}\n"
-msgstr ""
-
-#. type: Plain text
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:35
-#, fuzzy
-msgid "Fortunately, Kafka lets us implement our own.  To achieve this, you need to implement the following interfaces:"
-msgstr "幸い、Kafkaでは独自に実装することができます。そのためには、以下のインターフェイスを実装する必要があります："
 
 #. type: Block title
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:36
+#: _posts/2022-08-30-kafka-serde.adoc
 #, fuzzy, no-wrap
 msgid "The Serializer interface"
 msgstr "Serializerインターフェイス"
 
-#. type: delimited block -
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:40
-#, no-wrap
-msgid "public interface Serializer<T> extends Closeable {\n"
-msgstr ""
-
-#. type: delimited block -
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:42
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:60
-#, no-wrap
-msgid "  default void configure(Map<String, ?> configs, boolean isKey) {  }\n"
-msgstr ""
-
-#. type: delimited block -
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:44
-#, no-wrap
-msgid "  byte[] serialize(String topic, T data);\n"
-msgstr ""
-
-#. type: delimited block -
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:48
-#, no-wrap
-msgid ""
-"  default byte[] serialize(String topic, Headers headers, T data) {\n"
-"    return serialize(topic, data);\n"
-"  }\n"
-msgstr ""
-
-#. type: delimited block -
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:52
-#, no-wrap
-msgid ""
-"  @Override\n"
-"  default void close() {   }\n"
-"}\n"
-msgstr ""
-
 #. type: Block title
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:54
+#: _posts/2022-08-30-kafka-serde.adoc
 #, fuzzy, no-wrap
 msgid "The Deserializer interface"
 msgstr "Deserializer インタフェース"
 
-#. type: delimited block -
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:58
-#, no-wrap
-msgid "public interface Deserializer<T> extends Closeable {\n"
-msgstr ""
-
-#. type: delimited block -
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:62
-#, no-wrap
-msgid "  T deserialize(String topic, byte[] data);\n"
-msgstr ""
-
-#. type: delimited block -
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:66
-#, no-wrap
+#: _posts/2022-08-30-kafka-serde.adoc
 msgid ""
-"  default T deserialize(String topic, Headers headers, byte[] data) {\n"
-"    return deserialize(topic, data);\n"
-"  }\n"
-msgstr ""
-
-#. type: delimited block -
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:69
-#, no-wrap
-msgid ""
-"  @Override\n"
-"  default void close() {  }\n"
+"Once implemented, you need to configure your Kafka producer and consumer's key and value serializer and deserializer.\n"
+"If you are using the Kafka connector from Quarkus, it will look like this:"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:73
-#, fuzzy
-msgid "Once implemented, you need to configure your Kafka producer and consumer's key and value serializer and deserializer.  If you are using the Kafka connector from Quarkus, it will look like this:"
-msgstr "実装したら、Kafkaプロデューサーとコンシューマーのキーと値のシリアライザーとデシリアライザーを設定する必要があります。QuarkusのKafkaコネクタを使用している場合は、次のようになります："
-
-#. type: delimited block -
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:78
-#, no-wrap
-msgid ""
-"mp.messaging.incoming.heroes.value.deserializer=me.escoffier.MyHeroDeserializer\n"
-"mp.messaging.outgoing.heroes.value.serializer=me.escoffier.MyHeroSerializer\n"
-msgstr ""
-
-#. type: Plain text
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:81
+#: _posts/2022-08-30-kafka-serde.adoc
 #, fuzzy
 msgid "But, no worries, Quarkus has a few magic tricks for you."
 msgstr "でも、心配ご無用！Quarkusはいくつかのマジックを用意しています。"
 
 #. type: Plain text
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:83
+#: _posts/2022-08-30-kafka-serde.adoc
 #, fuzzy
 msgid "In the rest of this post, we will use the following application:"
 msgstr "この記事の続きでは、以下のアプリケーションを使用します："
 
-#. type: Target for macro image
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:84
-#, no-wrap
-msgid "/assets/images/posts/kafka-serde/system.png"
+#: _posts/2022-08-30-kafka-serde.adoc
+msgid ""
+"The code can be found on https://github.com/cescoffier/quarkus-kafka-serde-demo.\n"
+"We will develop three variants:"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:88
-#, fuzzy
-msgid "The code can be found on https://github.com/cescoffier/quarkus-kafka-serde-demo.  We will develop three variants:"
-msgstr "コードは https://github.com/cescoffier/quarkus-kafka-serde-demo に掲載されています。3つのバリエーションを開発する予定です："
-
-#. type: Plain text
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:90
+#: _posts/2022-08-30-kafka-serde.adoc
 #, fuzzy
 msgid "The first version uses JSON."
 msgstr "最初のバージョンは、JSONを使用しています。"
 
 #. type: Plain text
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:91
+#: _posts/2022-08-30-kafka-serde.adoc
 #, fuzzy
 msgid "The second version uses Avro."
 msgstr "第2弾はアブロを使用。"
 
 #. type: Plain text
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:92
+#: _posts/2022-08-30-kafka-serde.adoc
 #, fuzzy
 msgid "The third version uses custom (and dumb) serializer and deserializer."
 msgstr "第3のバージョンは、カスタム（そしてダム）シリアライザーとデシリアライザーを使用します。"
 
 #. type: Title ==
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:93
+#: _posts/2022-08-30-kafka-serde.adoc
 #, fuzzy, no-wrap
 msgid "Using JSON"
 msgstr "JSONの使用"
 
-#. type: Plain text
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:97
-#, fuzzy
-msgid "Using JSON with Kafka is very popular.  As most web applications use JSON to exchange messages, using it with Kafka sounds like a natural extension."
-msgstr "KafkaでJSONを使用することは非常に人気があります。ほとんどのWebアプリケーションがJSONを使ってメッセージをやり取りしているので、KafkaでJSONを使うのは自然なエクステンションに聞こえます。"
+#: _posts/2022-08-30-kafka-serde.adoc
+msgid ""
+"Using JSON with Kafka is very popular.\n"
+"As most web applications use JSON to exchange messages, using it with Kafka sounds like a natural extension."
+msgstr ""
 
-#. type: Plain text
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:101
-#, fuzzy
-msgid "In our case, it means transforming the instances of https://github.com/cescoffier/quarkus-kafka-serde-demo/blob/main/json-serde/json-serde-publisher/src/main/java/me/escoffier/quarkus/json/publisher/Hero.java[Hero] to a JSON document and then using the String serializer.  For the deserialization process, we would do the reverse process.  To do that with Quarkus, you have *nothing* to do: Quarkus generates the custom JSON serializer and deserializer for you."
-msgstr "我々の場合、 link:https://github.com/cescoffier/quarkus-kafka-serde-demo/blob/main/json-serde/json-serde-publisher/src/main/java/me/escoffier/quarkus/json/publisher/Hero.java[Heroの] インスタンスをJSONドキュメントに変換し、Stringシリアライザを使用することを意味します。デシリアライズ処理については、逆の処理を行うことになります。Quarkusでこれを行うには、 *何も* する必要がありません：Quarkusでは、カスタムのJSONシリアライザーとデシリアライザーが生成されるためです。"
+#: _posts/2022-08-30-kafka-serde.adoc
+msgid ""
+"In our case, it means transforming the instances of https://github.com/cescoffier/quarkus-kafka-serde-demo/blob/main/json-serde/json-serde-publisher/src/main/java/me/escoffier/quarkus/json/publisher/Hero.java[Hero] to a JSON document and then using the String serializer.\n"
+"For the deserialization process, we would do the reverse process.\n"
+"To do that with Quarkus, you have *nothing* to do: Quarkus generates the custom JSON serializer and deserializer for you."
+msgstr ""
 
-#. type: Plain text
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:107
-#, fuzzy
-msgid "In the https://github.com/cescoffier/quarkus-kafka-serde-demo/tree/main/json-serde[json-serde directory], you can find a version of the application using JSON to serialize and deserialize the records.  It does not contain any custom code or configuration.  Quarkus automatically detects that you need to write and consume Heroes and generates the serializer and deserializer for you.  It also configures the channels for you.  Of course, you can override the configuration, but it's what you want most of the time."
-msgstr "link:https://github.com/cescoffier/quarkus-kafka-serde-demo/tree/main/json-serde[json-serdeディレクトリには] 、レコードのシリアライズとデシリアライズにJSONを使用するアプリケーションのバージョンがあります。これには、カスタムコードや設定は含まれていません。Quarkusは、Heroesの書き込みと消費が必要であることを自動的に検出し、シリアライザーとデシリアライザーを生成します。また、チャンネルも設定されます。もちろん、設定をオーバーライドすることもできますが、ほとんどの場合、この設定が必要です。"
+#: _posts/2022-08-30-kafka-serde.adoc
+msgid ""
+"In the https://github.com/cescoffier/quarkus-kafka-serde-demo/tree/main/json-serde[json-serde directory], you can find a version of the application using JSON to serialize and deserialize the records.\n"
+"It does not contain any custom code or configuration.\n"
+"Quarkus automatically detects that you need to write and consume Heroes and generates the serializer and deserializer for you.\n"
+"It also configures the channels for you.\n"
+"Of course, you can override the configuration, but it's what you want most of the time."
+msgstr ""
 
-#. type: Plain text
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:113
-#, fuzzy
-msgid "To run this application, open two terminals.  In the first one, navigate to `json-serde/json-serde-publisher`, and run `mvn quarkus:dev`.  In the second terminal, navigate to `json-serde/json-serde-consumer`, and run `mvn quarkus:dev`.  Then, open a browser to http://localhost:8080.  Every 5 seconds, a new picture of a hero is displayed."
-msgstr "このアプリケーションを実行するには、2つのターミナルを開いてください。最初の端末で、 `json-serde/json-serde-publisher` に移動し、 `mvn quarkus:dev` を実行します。2台目の端末では、 `json-serde/json-serde-consumer` に移動し、 `mvn quarkus:dev` を実行します。次に、ブラウザを開いて http://localhost:8080 にアクセスします。5秒ごとに、新しいヒーローの写真が表示されます。"
-
-#. type: Target for macro image
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:114
-#, no-wrap
-msgid "/assets/images/posts/kafka-serde/heroes-screenshot.png"
+#: _posts/2022-08-30-kafka-serde.adoc
+msgid ""
+"To run this application, open two terminals.\n"
+"In the first one, navigate to `json-serde/json-serde-publisher`, and run `mvn quarkus:dev`.\n"
+"In the second terminal, navigate to `json-serde/json-serde-consumer`, and run `mvn quarkus:dev`.\n"
+"Then, open a browser to http://localhost:8080.\n"
+"Every 5 seconds, a new picture of a hero is displayed."
 msgstr ""
 
 #. type: Title ==
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:116
+#: _posts/2022-08-30-kafka-serde.adoc
 #, fuzzy, no-wrap
 msgid "Using Avro"
 msgstr "アブロの使用"
 
-#. type: Plain text
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:120
-#, fuzzy
-msgid "The second approach uses https://avro.apache.org/[Avro].  Avro has several advantages over (bare) JSON:"
-msgstr "2つ目のアプローチでは、 link:https://avro.apache.org/[Avroを] 使用します。Avroは、（素の）JSONに比べていくつかの利点があります："
+#: _posts/2022-08-30-kafka-serde.adoc
+msgid ""
+"The second approach uses https://avro.apache.org/[Avro].\n"
+"Avro has several advantages over (bare) JSON:"
+msgstr ""
 
 #. type: Plain text
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:122
+#: _posts/2022-08-30-kafka-serde.adoc
 #, fuzzy
 msgid "It's a binary and compact protocol. The payloads will be a lot smaller than with JSON."
 msgstr "バイナリでコンパクトなプロトコルです。ペイロードはJSONの場合よりもずっと小さくなります。"
 
 #. type: Plain text
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:123
+#: _posts/2022-08-30-kafka-serde.adoc
 #, fuzzy
 msgid "The serialization and deserialization processes are a lot faster (avoiding reflection)."
 msgstr "シリアライズとデシリアライズの処理は、（リフレクションを回避して）かなり高速になります。"
 
 #. type: Plain text
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:124
+#: _posts/2022-08-30-kafka-serde.adoc
 #, fuzzy
 msgid "The format of the message is defined using a schema stored on a schema registry which enables versioning and enforces the structure."
 msgstr "メッセージのフォーマットは、バージョン管理を可能にし、構造を強制するスキーマレジストリに格納されたスキーマを使用して定義されます。"
 
-#. type: Plain text
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:129
-#, fuzzy
-msgid "The last point is essential.  To use Avro, you need a schema registry.  In this post, we are using https://www.apicur.io/registry/[Apicurio], but you can use the https://docs.confluent.io/platform/current/schema-registry/index.html[Confluent Schema Registry] or https://github.com/aiven/karapace[Karapace].  Quarkus provides a dev service for Apicurio, so you have nothing to do (as soon as you can run containers on your machine)."
-msgstr "最後のポイントは必須です。Avroを使うには、スキーマレジストリが必要です。この記事では link:https://www.apicur.io/registry/[Apicurioを] 使用していますが、 link:https://docs.confluent.io/platform/current/schema-registry/index.html[Confluent Schema Registryや] link:https://github.com/aiven/karapace[Karapaceを] 使用することができます。QuarkusはApicurioのdevサービスを提供しているので、（自分のマシンでコンテナを実行できるようになれば）何もすることはありません。"
-
-#. type: Plain text
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:132
-#, fuzzy
-msgid "To use Avro, we need a schema.  In https://github.com/cescoffier/quarkus-kafka-serde-demo/blob/main/avro-serde/avro-serde-consumer/src/main/avro/hero.avsc[hero.avsc], you can find the schema representing our heroes:"
-msgstr "Avroを使うには、スキーマが必要です。 link:https://github.com/cescoffier/quarkus-kafka-serde-demo/blob/main/avro-serde/avro-serde-consumer/src/main/avro/hero.avsc[hero.avscでは] 、ヒーローを表すスキーマを見ることができます："
-
-#. type: delimited block -
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:150
-#, no-wrap
+#: _posts/2022-08-30-kafka-serde.adoc
 msgid ""
-"{\n"
-"  \"namespace\": \"me.escoffier.quarkus.avro\",\n"
-"  \"type\": \"record\",\n"
-"  \"name\": \"Hero\",\n"
-"  \"fields\": [\n"
-"    {\n"
-"      \"name\": \"name\",\n"
-"      \"type\": \"string\"\n"
-"    },\n"
-"    {\n"
-"      \"name\": \"picture\",\n"
-"      \"type\": \"string\"\n"
-"    }\n"
-"  ]\n"
-"}\n"
+"The last point is essential.\n"
+"To use Avro, you need a schema registry.\n"
+"In this post, we are using https://www.apicur.io/registry/[Apicurio], but you can use the https://docs.confluent.io/platform/current/schema-registry/index.html[Confluent Schema Registry] or https://github.com/aiven/karapace[Karapace].\n"
+"Quarkus provides a dev service for Apicurio, so you have nothing to do (as soon as you can run containers on your machine)."
 msgstr ""
 
-#. type: Plain text
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:154
-#, fuzzy
-msgid "Avro relies on code generation.  It processes the schema to generate Java classes with the defined fields and serialization and deserialization methods."
-msgstr "Avroはコード生成に依存しています。スキーマを処理して、定義されたフィールドとシリアライズおよびデシリアライズのメソッドを持つJavaクラスを生成します。"
-
-#. type: Plain text
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:157
-#, fuzzy
-msgid "While in general, using code generation is an extra step, with Quarkus, it's built-in! Once you have a schema in `src/main/avro`, it generates the code for you, and you are ready to use the produced classes."
-msgstr "一般的に、コード生成の使用は余分なステップとなりますが、Quarkusでは内蔵されています！スキーマを `src/main/avro` 、コードを生成し、生成されたクラスを使用する準備が整います。"
-
-#. type: Plain text
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:160
-#, fuzzy
-msgid "In https://github.com/cescoffier/quarkus-kafka-serde-demo/blob/main/avro-serde/avro-serde-publisher/src/main/java/me/escoffier/quarkus/json/publisher/AvroPublisherApp.java[AvroPublisherApp] and https://github.com/cescoffier/quarkus-kafka-serde-demo/blob/main/avro-serde/avro-serde-consumer/src/main/java/me/escoffier/quarkus/AvroConsumerResource.java[AvroConsumerResource], we are using the `Hero` class generated from the schema.  As an example, the consumer application looks like this:"
-msgstr "link:https://github.com/cescoffier/quarkus-kafka-serde-demo/blob/main/avro-serde/avro-serde-publisher/src/main/java/me/escoffier/quarkus/json/publisher/AvroPublisherApp.java[AvroPublisherApp] と link:https://github.com/cescoffier/quarkus-kafka-serde-demo/blob/main/avro-serde/avro-serde-consumer/src/main/java/me/escoffier/quarkus/AvroConsumerResource.java[AvroConsumerResource] では、スキーマから生成された `Hero` クラスを使用しています。例として、コンシューマーアプリケーションは次のようになります："
-
-#. type: delimited block -
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:169
-#, no-wrap
+#: _posts/2022-08-30-kafka-serde.adoc
 msgid ""
-"import io.smallrye.mutiny.Multi;\n"
-"import me.escoffier.quarkus.avro.Hero;   // Generated class\n"
-"import org.eclipse.microprofile.reactive.messaging.Channel;\n"
-"import org.jboss.resteasy.reactive.RestStreamElementType;\n"
+"To use Avro, we need a schema.\n"
+"In https://github.com/cescoffier/quarkus-kafka-serde-demo/blob/main/avro-serde/avro-serde-consumer/src/main/avro/hero.avsc[hero.avsc], you can find the schema representing our heroes:"
 msgstr ""
 
-#. type: delimited block -
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:174
-#, no-wrap
+#: _posts/2022-08-30-kafka-serde.adoc
 msgid ""
-"import javax.ws.rs.GET;\n"
-"import javax.ws.rs.Path;\n"
-"import javax.ws.rs.Produces;\n"
-"import javax.ws.rs.core.MediaType;\n"
+"Avro relies on code generation.\n"
+"It processes the schema to generate Java classes with the defined fields and serialization and deserialization methods."
 msgstr ""
 
-#. type: delimited block -
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:177
-#, no-wrap
+#: _posts/2022-08-30-kafka-serde.adoc
 msgid ""
-"@Path(\"/heroes\")\n"
-"public class AvroConsumerResource {\n"
+"While in general, using code generation is an extra step, with Quarkus, it's built-in!\n"
+"Once you have a schema in `src/main/avro`, it generates the code for you, and you are ready to use the produced classes."
 msgstr ""
 
-#. type: delimited block -
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:180
-#, no-wrap
+#: _posts/2022-08-30-kafka-serde.adoc
 msgid ""
-"    @Channel(\"heroes\")\n"
-"    Multi<Hero> heroes;  // The hero class is generated from the schema.\n"
+"In https://github.com/cescoffier/quarkus-kafka-serde-demo/blob/main/avro-serde/avro-serde-publisher/src/main/java/me/escoffier/quarkus/json/publisher/AvroPublisherApp.java[AvroPublisherApp] and https://github.com/cescoffier/quarkus-kafka-serde-demo/blob/main/avro-serde/avro-serde-consumer/src/main/java/me/escoffier/quarkus/AvroConsumerResource.java[AvroConsumerResource], we are using the `Hero` class generated from the schema.\n"
+"As an example, the consumer application looks like this:"
 msgstr ""
 
-#. type: delimited block -
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:187
-#, no-wrap
+#: _posts/2022-08-30-kafka-serde.adoc
 msgid ""
-"    @GET\n"
-"    @Produces(MediaType.SERVER_SENT_EVENTS)\n"
-"    @RestStreamElementType(MediaType.APPLICATION_JSON)\n"
-"    public Multi<Hero> stream() {\n"
-"        return heroes;\n"
-"    }\n"
+"Quarkus automatically finds the serializer and deserializer and configures the channels, so again: *no config*.\n"
+"However, you still need to instruct Apicurio to register the schema.\n"
+"In general, it's a manual operation, but for development, you can use the following property:"
 msgstr ""
 
-#. type: Plain text
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:195
-#, fuzzy
-msgid "Quarkus automatically finds the serializer and deserializer and configures the channels, so again: *no config*.  However, you still need to instruct Apicurio to register the schema.  In general, it's a manual operation, but for development, you can use the following property:"
-msgstr "Quarkusは自動的にシリアライザーとデシリアライザーを見つけ、チャンネルを設定するので、やはり *設定は* 不要です。ただし、スキーマを登録するようApicurioに指示する必要があります。一般的には手作業ですが、開発用には次のプロパティを使用します："
-
-#. type: delimited block -
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:199
-#, no-wrap
-msgid "kafka.apicurio.registry.auto-register=true\n"
+#: _posts/2022-08-30-kafka-serde.adoc
+msgid ""
+"To run this application, open two terminals.\n"
+"In the first one, navigate to `avro-serde/avro-serde-publisher`, and run `mvn quarkus:dev`.\n"
+"In the second terminal, navigate to `avro-serde/avro-serde-consumer`, and run `mvn quarkus:dev`.\n"
+"Then, open a browser to http://localhost:8080.\n"
+"As for the JSON variant, every 5 seconds, a new picture of a hero is displayed.\n"
+"This time the Kafka records are serialized using Avro"
 msgstr ""
-
-#. type: Plain text
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:207
-#, fuzzy
-msgid "To run this application, open two terminals.  In the first one, navigate to `avro-serde/avro-serde-publisher`, and run `mvn quarkus:dev`.  In the second terminal, navigate to `avro-serde/avro-serde-consumer`, and run `mvn quarkus:dev`.  Then, open a browser to http://localhost:8080.  As for the JSON variant, every 5 seconds, a new picture of a hero is displayed.  This time the Kafka records are serialized using Avro"
-msgstr "このアプリケーションを実行するには、2つのターミナルを開いてください。最初の端末で、 `avro-serde/avro-serde-publisher` に移動し、 `mvn quarkus:dev` を実行します。2台目の端末では、 `avro-serde/avro-serde-consumer` に移動し、 `mvn quarkus:dev` を実行します。次に、ブラウザを開いて http://localhost:8080 にアクセスします。JSONのバリエーションとしては、5秒ごとに新しいヒーローの絵が表示される。今回、KafkaのレコードはAvroを使用してシリアライズされています。"
 
 #. type: Title ==
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:208
+#: _posts/2022-08-30-kafka-serde.adoc
 #, fuzzy, no-wrap
 msgid "Writing a custom serializer and deserializer"
 msgstr "カスタムシリアライザーとデシリアライザーを書く"
 
-#. type: Plain text
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:212
-#, fuzzy
-msgid "Of course, you can still write your custom serializer and deserializer.  As mentioned above, you need to implement the `Serializer` and `Deserializer` interfaces."
-msgstr "もちろん、カスタムのシリアライザーとデシリアライザーを書くことも可能です。前述したように、 `Serializer` と `Deserializer` のインターフェイスを実装する必要があります。"
-
-#. type: Plain text
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:214
-#, fuzzy
-msgid "For example, the https://github.com/cescoffier/quarkus-kafka-serde-demo/blob/main/custom-serde/custom-serde-publisher/src/main/java/me/escoffier/quarkus/json/publisher/HeroSerializer.java[HeroSerializer class] contains a straightforward (and inefficient) approach to serializing our heroes:"
-msgstr "例えば、 link:https://github.com/cescoffier/quarkus-kafka-serde-demo/blob/main/custom-serde/custom-serde-publisher/src/main/java/me/escoffier/quarkus/json/publisher/HeroSerializer.java[HeroSerializerクラスは] 、ヒーローをシリアライズするための直接的な（そして非効率的な）アプローチを含んでいます："
-
-#. type: delimited block -
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:218
-#, no-wrap
-msgid "package me.escoffier.quarkus.json.publisher;\n"
-msgstr ""
-
-#. type: delimited block -
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:220
-#, no-wrap
-msgid "import org.apache.kafka.common.serialization.Serializer;\n"
-msgstr ""
-
-#. type: delimited block -
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:222
-#, no-wrap
-msgid "import java.nio.charset.StandardCharsets;\n"
-msgstr ""
-
-#. type: delimited block -
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:224
-#, no-wrap
-msgid "public class HeroSerializer implements Serializer<Hero> {\n"
-msgstr ""
-
-#. type: delimited block -
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:231
-#, no-wrap
+#: _posts/2022-08-30-kafka-serde.adoc
 msgid ""
-"    @Override\n"
-"    public byte[] serialize(String topic, Hero data) {\n"
-"        return (data.name() + \",\" + data.picture())\n"
-"                .getBytes(StandardCharsets.UTF_8);\n"
-"    }\n"
-"}\n"
+"Of course, you can still write your custom serializer and deserializer.\n"
+"As mentioned above, you need to implement the `Serializer` and `Deserializer` interfaces."
+msgstr ""
+
+#: _posts/2022-08-30-kafka-serde.adoc
+msgid "For example, the  https://github.com/cescoffier/quarkus-kafka-serde-demo/blob/main/custom-serde/custom-serde-publisher/src/main/java/me/escoffier/quarkus/json/publisher/HeroSerializer.java[HeroSerializer class] contains a straightforward (and inefficient) approach to serializing our heroes:"
 msgstr ""
 
 #. type: Plain text
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:234
+#: _posts/2022-08-30-kafka-serde.adoc
 #, fuzzy
 msgid "The https://github.com/cescoffier/quarkus-kafka-serde-demo/blob/main/custom-serde/custom-serde-consumer/src/main/java/me/escoffier/quarkus/HeroDeserializer.java[HeroDeserializer class] contains the deserialization counterpart."
 msgstr "link:https://github.com/cescoffier/quarkus-kafka-serde-demo/blob/main/custom-serde/custom-serde-consumer/src/main/java/me/escoffier/quarkus/HeroDeserializer.java[HeroDeserializerクラスは] 、デシリアライズの対応部分を含んでいます。"
 
-#. type: Plain text
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:237
-#, fuzzy
-msgid "As before, Quarkus discovers these implementations and configures the channels for you.  So you do not have to configure anything."
-msgstr "これまでと同様に、Quarkusがこれらの実装を検出し、チャンネルを設定することができます。そのため、何も設定する必要はありません。"
+#: _posts/2022-08-30-kafka-serde.adoc
+msgid ""
+"As before, Quarkus discovers these implementations and configures the channels for you.\n"
+"So you do not have to configure anything."
+msgstr ""
+
+#: _posts/2022-08-30-kafka-serde.adoc
+msgid ""
+"Custom serializers and deserializers can receive configuration attributes.\n"
+"They receive the producer/consumer configuration in the `configure` method."
+msgstr ""
 
 #. type: Plain text
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:240
-#, fuzzy
-msgid "Custom serializers and deserializers can receive configuration attributes.  They receive the producer/consumer configuration in the `configure` method."
-msgstr "カスタムシリアライザーとデシリアライザーは、構成属性を受け取ることができます。それらは `configure` メソッドでプロデューサー/コンシューマーの設定を受け取ります。"
-
-#. type: Plain text
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:242
+#: _posts/2022-08-30-kafka-serde.adoc
 #, fuzzy
 msgid "Custom serializers and deserializers cannot be CDI beans. Kafka instantiates them directly using reflection."
 msgstr "カスタムシリアライザーとデシリアライザーは、CDI Beanにすることはできません。Kafkaはリフレクションを使用して直接インスタンス化します。"
 
 #. type: Title ==
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:243
+#: _posts/2022-08-30-kafka-serde.adoc
 #, no-wrap
 msgid "Conclusion"
 msgstr "まとめ"
 
 #. type: Plain text
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:246
+#: _posts/2022-08-30-kafka-serde.adoc
 #, fuzzy
 msgid "This post explores different possibilities to serialize and deserialize your messages with Kafka and how Quarkus reduces the amount of boilerplate and configuration you need to use."
 msgstr "この記事では、Kafkaでメッセージをシリアライズおよびデシリアライズするさまざまな可能性と、Quarkusが使用する必要のある定型文や設定の量をいかに減らすかについて説明します。"
 
 #. type: Plain text
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:248
+#: _posts/2022-08-30-kafka-serde.adoc
 #, fuzzy
 msgid "So, what should you use?"
 msgstr "では、何を使えばいいのでしょうか？"
 
 #. type: Plain text
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:250
+#: _posts/2022-08-30-kafka-serde.adoc
 #, fuzzy
 msgid "JSON is massively used, but the lack of structure verification, by default, can quickly be a problem if the format evolves rapidly."
 msgstr "JSONは大量に使われていますが、デフォルトでは構造検証ができないため、フォーマットが急速に進化するとすぐに問題になってしまいます。"
 
 #. type: Plain text
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:251
+#: _posts/2022-08-30-kafka-serde.adoc
 #, fuzzy
 msgid "Avro provides better performances and handles validation and evolutions. But it requires a schema registry. If your system exchanges lots of messages with evolving structures, Avro should be preferred. Also, Avro produces smaller payloads."
 msgstr "Avroはより良いパフォーマンスを提供し、バリデーションやエボリューションを処理することができます。しかし、スキーマレジストリが必要です。もし、あなたのシステムが進化する構造と多くのメッセージを交換するのであれば、Avroを優先すべきです。また、Avroはより小さなペイロードを生成します。"
 
 #. type: Plain text
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:252
+#: _posts/2022-08-30-kafka-serde.adoc
 #, fuzzy
 msgid "If you have stringent requirements not covered by the JSON and Avro approaches, you can develop a custom serializer and deserializer."
 msgstr "JSONやAvroのアプローチではカバーできない厳しい要件がある場合は、カスタムシリアライザーとデシリアライザーを開発することができます。"
 
 #. type: Plain text
-#: upstream/_posts/2022-08-30-kafka-serde.adoc:254
+#: _posts/2022-08-30-kafka-serde.adoc
 #, fuzzy
 msgid "Note that JSON can be combined with JSON-Schema (with the schema stored on a schema registry). Protobuf is also a possible alternative if you prefer a binary format."
 msgstr "なお、JSONはJSON-Schemaと組み合わせることができます（スキーマはスキーマレジストリに保存されます）。バイナリ形式を好む場合は、Protobufも代替となりえます。"
