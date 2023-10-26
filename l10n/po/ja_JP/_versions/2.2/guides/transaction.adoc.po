@@ -45,6 +45,10 @@ msgid ""
 "    <artifactId>quarkus-narayana-jta</artifactId>\n"
 "</dependency>\n"
 msgstr ""
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-narayana-jta</artifactId>\n"
+"</dependency>\n"
 
 #. type: Title ==
 #: upstream/_versions/2.2/guides/transaction.adoc:31
@@ -77,6 +81,8 @@ msgid ""
 "@ApplicationScoped\n"
 "public class SantaClausService {\n"
 msgstr ""
+"@ApplicationScoped\n"
+"public class SantaClausService {\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/transaction.adoc:46
@@ -85,6 +91,8 @@ msgid ""
 "    @Inject ChildDAO childDAO;\n"
 "    @Inject SantaClausDAO santaDAO;\n"
 msgstr ""
+"    @Inject ChildDAO childDAO;\n"
+"    @Inject SantaClausDAO santaDAO;\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/transaction.adoc:59
@@ -103,6 +111,18 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    @Transactional // <1>\n"
+"    public void getAGiftFromSanta(Child child, String giftDescription) {\n"
+"        // some transaction work\n"
+"        Gift gift = childDAO.addToGiftList(child, giftDescription);\n"
+"        if (gift == null) {\n"
+"            throw new OMGGiftNotRecognizedException(); // <2>\n"
+"        }\n"
+"        else {\n"
+"            santaDAO.addToSantaTodoList(gift);\n"
+"        }\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/transaction.adoc:62
@@ -177,6 +197,9 @@ msgid ""
 "    @Inject ChildDAO childDAO;\n"
 "    @Inject SantaClausDAO santaDAO;\n"
 msgstr ""
+"    @Inject TransactionManager tm; // <1>\n"
+"    @Inject ChildDAO childDAO;\n"
+"    @Inject SantaClausDAO santaDAO;\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/transaction.adoc:108
@@ -195,6 +218,18 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    @Transactional\n"
+"    public void getAGiftFromSanta(Child child, String giftDescription) {\n"
+"        // some transaction work\n"
+"        Gift gift = childDAO.addToGiftList(child, giftDescription);\n"
+"        if (gift == null) {\n"
+"            tm.setRollbackOnly(); // <2>\n"
+"        }\n"
+"        else {\n"
+"            santaDAO.addToSantaTodoList(gift);\n"
+"        }\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/transaction.adoc:111
@@ -281,6 +316,9 @@ msgid ""
 "    @Inject SantaClausDAO santaDAO;\n"
 "    @Inject UserTransaction transaction;\n"
 msgstr ""
+"    @Inject ChildDAO childDAO;\n"
+"    @Inject SantaClausDAO santaDAO;\n"
+"    @Inject UserTransaction transaction;\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/transaction.adoc:172
@@ -301,6 +339,20 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    public void getAGiftFromSanta(Child child, String giftDescription) {\n"
+"        // some transaction work\n"
+"        try {\n"
+"            transaction.begin();\n"
+"            Gift gift = childDAO.addToGiftList(child, giftDescription);\n"
+"            santaDAO.addToSantaTodoList(gift);\n"
+"            transaction.commit();\n"
+"        }\n"
+"        catch(SomeException e) {\n"
+"            // do something on Tx failure\n"
+"            transaction.rollback();\n"
+"        }\n"
+"    }\n"
+"}\n"
 
 #. type: delimited block =
 #: upstream/_versions/2.2/guides/transaction.adoc:177

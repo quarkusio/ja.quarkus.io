@@ -132,6 +132,10 @@ msgid ""
 "    <artifactId>quarkus-micrometer-registry-prometheus</artifactId>\n"
 "</dependency>\n"
 msgstr ""
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-micrometer-registry-prometheus</artifactId>\n"
+"</dependency>\n"
 
 #. type: Block title
 #: upstream/_versions/main/guides/micrometer.adoc:85
@@ -146,7 +150,7 @@ msgstr "build.gradle"
 #: upstream/_versions/main/guides/micrometer.adoc:88
 #, no-wrap
 msgid "implementation(\"io.quarkus:quarkus-micrometer-registry-prometheus\")\n"
-msgstr ""
+msgstr "implementation(\"io.quarkus:quarkus-micrometer-registry-prometheus\")\n"
 
 #. type: Title ==
 #: upstream/_versions/main/guides/micrometer.adoc:90
@@ -168,13 +172,13 @@ msgstr "メーターを登録するには、Micrometerエクステンション�
 #: upstream/_versions/main/guides/micrometer.adoc:102
 #, no-wrap
 msgid "package org.acme.micrometer;\n"
-msgstr ""
+msgstr "package org.acme.micrometer;\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/micrometer.adoc:104
 #, no-wrap
 msgid "import io.micrometer.core.instrument.MeterRegistry;\n"
-msgstr ""
+msgstr "import io.micrometer.core.instrument.MeterRegistry;\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/micrometer.adoc:108
@@ -184,6 +188,9 @@ msgid ""
 "import jakarta.ws.rs.Path;\n"
 "import jakarta.ws.rs.Produces;\n"
 msgstr ""
+"import jakarta.ws.rs.GET;\n"
+"import jakarta.ws.rs.Path;\n"
+"import jakarta.ws.rs.Produces;\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/micrometer.adoc:112
@@ -193,12 +200,15 @@ msgid ""
 "@Produces(\"text/plain\")\n"
 "public class ExampleResource {\n"
 msgstr ""
+"@Path(\"/example\")\n"
+"@Produces(\"text/plain\")\n"
+"public class ExampleResource {\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/micrometer.adoc:114
 #, no-wrap
 msgid "    private final MeterRegistry registry;\n"
-msgstr ""
+msgstr "    private final MeterRegistry registry;\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/micrometer.adoc:119
@@ -209,6 +219,10 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    ExampleResource(MeterRegistry registry) {\n"
+"        this.registry = registry;\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/main/guides/micrometer.adoc:124
@@ -230,7 +244,7 @@ msgstr "ゲージは、車のスピードメーターのように、時間の経
 #: upstream/_versions/main/guides/micrometer.adoc:134
 #, no-wrap
 msgid "    LinkedList<Long> list = new LinkedList<>();\n"
-msgstr ""
+msgstr "    LinkedList<Long> list = new LinkedList<>();\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/micrometer.adoc:140
@@ -242,6 +256,11 @@ msgid ""
 "        registry.gaugeCollectionSize(\"example.list.size\", Tags.empty(), list);\n"
 "    }\n"
 msgstr ""
+"    // Update the constructor to create the gauge\n"
+"    ExampleResource(MeterRegistry registry) {\n"
+"        this.registry = registry;\n"
+"        registry.gaugeCollectionSize(\"example.list.size\", Tags.empty(), list);\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/micrometer.adoc:157
@@ -264,6 +283,22 @@ msgid ""
 "        return number;\n"
 "    }\n"
 msgstr ""
+"    @GET\n"
+"    @Path(\"gauge/{number}\")\n"
+"    public Long checkListSize(long number) {\n"
+"        if (number == 2 || number % 2 == 0) {\n"
+"            // add even numbers to the list\n"
+"            list.add(number);\n"
+"        } else {\n"
+"            // remove items from the list for odd numbers\n"
+"            try {\n"
+"                number = list.removeFirst();\n"
+"            } catch (NoSuchElementException nse) {\n"
+"                number = 0;\n"
+"            }\n"
+"        }\n"
+"        return number;\n"
+"    }\n"
 
 #. type: Plain text
 #: upstream/_versions/main/guides/micrometer.adoc:160
@@ -293,6 +328,14 @@ msgid ""
 "curl http://localhost:8080/example/gauge/7\n"
 "curl http://localhost:8080/q/metrics\n"
 msgstr ""
+"curl http://localhost:8080/example/gauge/1\n"
+"curl http://localhost:8080/example/gauge/2\n"
+"curl http://localhost:8080/example/gauge/4\n"
+"curl http://localhost:8080/q/metrics\n"
+"curl http://localhost:8080/example/gauge/6\n"
+"curl http://localhost:8080/example/gauge/5\n"
+"curl http://localhost:8080/example/gauge/7\n"
+"curl http://localhost:8080/q/metrics\n"
 
 #. type: Plain text
 #: upstream/_versions/main/guides/micrometer.adoc:182
@@ -346,6 +389,15 @@ msgid ""
 "            return number + \" is not prime.\";\n"
 "        }\n"
 msgstr ""
+"    @GET\n"
+"    @Path(\"prime/{number}\")\n"
+"    public String checkIfPrime(long number) {\n"
+"        if (number < 1) {\n"
+"            return \"Only natural numbers can be prime numbers.\";\n"
+"        }\n"
+"        if (number == 1 || number == 2 || number % 2 == 0) {\n"
+"            return number + \" is not prime.\";\n"
+"        }\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/micrometer.adoc:223
@@ -358,6 +410,12 @@ msgid ""
 "        }\n"
 "    }\n"
 msgstr ""
+"        if ( testPrimeNumber(number) ) {\n"
+"            return number + \" is prime.\";\n"
+"        } else {\n"
+"            return number + \" is not prime.\";\n"
+"        }\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/micrometer.adoc:234
@@ -374,6 +432,16 @@ msgid ""
 "        return true;\n"
 "    }\n"
 msgstr ""
+"    protected boolean testPrimeNumber(long number) {\n"
+"        // Count the number of times we test for a prime number\n"
+"        registry.counter(\"example.prime.number\").increment();\n"
+"        for (int i = 3; i < Math.floor(Math.sqrt(number)) + 1; i = i + 2) {\n"
+"            if (number % i == 0) {\n"
+"                return false;\n"
+"            }\n"
+"        }\n"
+"        return true;\n"
+"    }\n"
 
 #. type: Plain text
 #: upstream/_versions/main/guides/micrometer.adoc:240
@@ -410,6 +478,21 @@ msgid ""
 "            return number + \" is not prime.\";\n"
 "        }\n"
 msgstr ""
+"    @GET\n"
+"    @Path(\"prime/{number}\")\n"
+"    public String checkIfPrime(long number) {\n"
+"        if (number < 1) {\n"
+"            registry.counter(\"example.prime.number\", \"type\", \"not-natural\").increment();\n"
+"            return \"Only natural numbers can be prime numbers.\";\n"
+"        }\n"
+"        if (number == 1 ) {\n"
+"            registry.counter(\"example.prime.number\", \"type\", \"one\").increment();\n"
+"            return number + \" is not prime.\";\n"
+"        }\n"
+"        if (number == 2 || number % 2 == 0) {\n"
+"            registry.counter(\"example.prime.number\", \"type\", \"even\").increment();\n"
+"            return number + \" is not prime.\";\n"
+"        }\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/micrometer.adoc:278
@@ -424,6 +507,14 @@ msgid ""
 "        }\n"
 "    }\n"
 msgstr ""
+"        if ( testPrimeNumber(number) ) {\n"
+"            registry.counter(\"example.prime.number\", \"type\", \"prime\").increment();\n"
+"            return number + \" is prime.\";\n"
+"        } else {\n"
+"            registry.counter(\"example.prime.number\", \"type\", \"not-prime\").increment();\n"
+"            return number + \" is not prime.\";\n"
+"        }\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/micrometer.adoc:287
@@ -438,6 +529,14 @@ msgid ""
 "        return true;\n"
 "    }\n"
 msgstr ""
+"    protected boolean testPrimeNumber(long number) {\n"
+"        for (int i = 3; i < Math.floor(Math.sqrt(number)) + 1; i = i + 2) {\n"
+"            if (number % i == 0) {\n"
+"                return false;\n"
+"            }\n"
+"        }\n"
+"        return true;\n"
+"    }\n"
 
 #. type: Plain text
 #: upstream/_versions/main/guides/micrometer.adoc:293
@@ -468,6 +567,13 @@ msgid ""
 "curl http://localhost:8080/example/prime/15\n"
 "curl http://localhost:8080/q/metrics\n"
 msgstr ""
+"curl http://localhost:8080/example/prime/-1\n"
+"curl http://localhost:8080/example/prime/0\n"
+"curl http://localhost:8080/example/prime/1\n"
+"curl http://localhost:8080/example/prime/2\n"
+"curl http://localhost:8080/example/prime/3\n"
+"curl http://localhost:8080/example/prime/15\n"
+"curl http://localhost:8080/q/metrics\n"
 
 #. type: Plain text
 #: upstream/_versions/main/guides/micrometer.adoc:315
@@ -506,6 +612,17 @@ msgid ""
 "        });\n"
 "    }\n"
 msgstr ""
+"    protected boolean testPrimeNumber(long number) {\n"
+"        Timer timer = registry.timer(\"example.prime.number.test\");\n"
+"        return timer.record(() -> {\n"
+"            for (int i = 3; i < Math.floor(Math.sqrt(number)) + 1; i = i + 2) {\n"
+"                if (number % i == 0) {\n"
+"                    return false;\n"
+"                }\n"
+"            }\n"
+"            return true;\n"
+"        });\n"
+"    }\n"
 
 #. type: Plain text
 #: upstream/_versions/main/guides/micrometer.adoc:347
@@ -521,6 +638,10 @@ msgid ""
 "curl http://localhost:8080/example/prime/7919\n"
 "curl http://localhost:8080/q/metrics\n"
 msgstr ""
+"curl http://localhost:8080/example/prime/256\n"
+"curl http://localhost:8080/q/metrics\n"
+"curl http://localhost:8080/example/prime/7919\n"
+"curl http://localhost:8080/q/metrics\n"
 
 #. type: Plain text
 #: upstream/_versions/main/guides/micrometer.adoc:365
@@ -556,6 +677,14 @@ msgid ""
 "http_server_requests_seconds_max{method=\"GET\",outcome=\"SUCCESS\",status=\"200\",uri=\"/example/prime/{number}\"} 0.017385896\n"
 "#\n"
 msgstr ""
+"# HELP http_server_requests_seconds\n"
+"# TYPE http_server_requests_seconds summary\n"
+"http_server_requests_seconds_count{method=\"GET\",outcome=\"SUCCESS\",status=\"200\",uri=\"/example/prime/{number}\"} 1.0\n"
+"http_server_requests_seconds_sum{method=\"GET\",outcome=\"SUCCESS\",status=\"200\",uri=\"/example/prime/{number}\"} 0.017385896\n"
+"# HELP http_server_requests_seconds_max\n"
+"# TYPE http_server_requests_seconds_max gauge\n"
+"http_server_requests_seconds_max{method=\"GET\",outcome=\"SUCCESS\",status=\"200\",uri=\"/example/prime/{number}\"} 0.017385896\n"
+"#\n"
 
 #. type: Plain text
 #: upstream/_versions/main/guides/micrometer.adoc:389
@@ -618,6 +747,8 @@ msgid ""
 "@Singleton\n"
 "public class CustomConfiguration {\n"
 msgstr ""
+"@Singleton\n"
+"public class CustomConfiguration {\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/micrometer.adoc:428
@@ -626,6 +757,8 @@ msgid ""
 "    @ConfigProperty(name = \"deployment.env\")\n"
 "    String deploymentEnv;\n"
 msgstr ""
+"    @ConfigProperty(name = \"deployment.env\")\n"
+"    String deploymentEnv;\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/micrometer.adoc:437
@@ -640,6 +773,14 @@ msgid ""
 "                Tag.of(\"registry\", \"prometheus\")));\n"
 "    }\n"
 msgstr ""
+"    /** Define common tags that apply only to a Prometheus Registry */\n"
+"    @Produces\n"
+"    @Singleton\n"
+"    @MeterFilterConstraint(applyTo = PrometheusMeterRegistry.class)\n"
+"    public MeterFilter configurePrometheusRegistries() {\n"
+"        return MeterFilter.commonTags(Arrays.asList(\n"
+"                Tag.of(\"registry\", \"prometheus\")));\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/micrometer.adoc:445
@@ -653,6 +794,13 @@ msgid ""
 "                Tag.of(\"env\", deploymentEnv)));\n"
 "    }\n"
 msgstr ""
+"    /** Define common tags that apply globally */\n"
+"    @Produces\n"
+"    @Singleton\n"
+"    public MeterFilter configureAllRegistries() {\n"
+"        return MeterFilter.commonTags(Arrays.asList(\n"
+"                Tag.of(\"env\", deploymentEnv)));\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/micrometer.adoc:465
@@ -678,6 +826,25 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    /** Enable histogram buckets for a specific timer */\n"
+"    @Produces\n"
+"    @Singleton\n"
+"    public MeterFilter enableHistogram() {\n"
+"        return new MeterFilter() {\n"
+"            @Override\n"
+"            public DistributionStatisticConfig configure(Meter.Id id, DistributionStatisticConfig config) {\n"
+"                if(id.getName().startsWith(\"myservice\")) {\n"
+"                    return DistributionStatisticConfig.builder()\n"
+"                        .percentiles(0.5, 0.95)     // median and 95th percentile, not aggregable\n"
+"                        .percentilesHistogram(true) // histogram buckets (e.g. prometheus histogram_quantile)\n"
+"                        .build()\n"
+"                        .merge(config);\n"
+"                }\n"
+"                return config;\n"
+"            }\n"
+"        };\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/main/guides/micrometer.adoc:472
@@ -720,12 +887,16 @@ msgid ""
 "    <artifactId>quarkus-micrometer-registry-stackdriver</artifactId>\n"
 "</dependency>\n"
 msgstr ""
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-micrometer-registry-stackdriver</artifactId>\n"
+"</dependency>\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/micrometer.adoc:503
 #, no-wrap
 msgid "implementation(\"io.quarkus:quarkus-micrometer-registry-stackdriver\")\n"
-msgstr ""
+msgstr "implementation(\"io.quarkus:quarkus-micrometer-registry-stackdriver\")\n"
 
 #. type: Plain text
 #: upstream/_versions/main/guides/micrometer.adoc:507
@@ -745,6 +916,14 @@ msgid ""
 "    <artifactId>custom-micrometer-registry</artifactId>\n"
 "</dependency>\n"
 msgstr ""
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-micrometer</artifactId>\n"
+"</dependency>\n"
+"<dependency>\n"
+"    <groupId>com.acme</groupId>\n"
+"    <artifactId>custom-micrometer-registry</artifactId>\n"
+"</dependency>\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/micrometer.adoc:526
@@ -753,6 +932,8 @@ msgid ""
 "implementation(\"io.quarkus:quarkus-micrometer\")\n"
 "implementation(\"com.acme:custom-micrometer-registry\")\n"
 msgstr ""
+"implementation(\"io.quarkus:quarkus-micrometer\")\n"
+"implementation(\"com.acme:custom-micrometer-registry\")\n"
 
 #. type: Plain text
 #: upstream/_versions/main/guides/micrometer.adoc:530
@@ -785,6 +966,11 @@ msgid ""
 "    // define what to do with lines\n"
 "    Consumer<String> lineLogger = line -> logger.info(line);\n"
 msgstr ""
+"@Produces\n"
+"@Singleton\n"
+"public StatsdMeterRegistry createStatsdMeterRegistry(StatsdConfig statsdConfig, Clock clock) {\n"
+"    // define what to do with lines\n"
+"    Consumer<String> lineLogger = line -> logger.info(line);\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/micrometer.adoc:551
@@ -797,6 +983,12 @@ msgid ""
 "          .build();\n"
 "}\n"
 msgstr ""
+"    // inject a configuration object, and then customize the line builder\n"
+"    return StatsdMeterRegistry.builder(statsdConfig)\n"
+"          .clock(clock)\n"
+"          .lineSink(lineLogger)\n"
+"          .build();\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/main/guides/micrometer.adoc:555
@@ -828,6 +1020,10 @@ msgid ""
 "public MeterFilter renameApplicationMeters() {\n"
 "    final String targetMetric = MPResourceClass.class.getName() + \".mpAnnotatedMethodName\";\n"
 msgstr ""
+"@Produces\n"
+"@Singleton\n"
+"public MeterFilter renameApplicationMeters() {\n"
+"    final String targetMetric = MPResourceClass.class.getName() + \".mpAnnotatedMethodName\";\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/micrometer.adoc:589
@@ -848,6 +1044,20 @@ msgid ""
 "    };\n"
 "}\n"
 msgstr ""
+"    return MeterFilter() {\n"
+"        @Override\n"
+"        public Meter.Id map(Meter.Id id) {\n"
+"            if (id.getName().equals(targetMetric)) {\n"
+"                // Drop the scope tag (MP Registry type: application, vendor, base)\n"
+"                List<Tag> tags = id.getTags().stream().filter(x -> !\"scope\".equals(x.getKey()))\n"
+"                        .collect(Collectors.toList());\n"
+"                // rename the metric\n"
+"                return id.withName(\"my.metric.name\").replaceTags(tags);\n"
+"            }\n"
+"            return id;\n"
+"        }\n"
+"    };\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/main/guides/micrometer.adoc:592
@@ -863,12 +1073,16 @@ msgid ""
 "    <artifactId>microprofile-metrics-api</artifactId>\n"
 "</dependency>\n"
 msgstr ""
+"<dependency>\n"
+"    <groupId>org.eclipse.microprofile.metrics</groupId>\n"
+"    <artifactId>microprofile-metrics-api</artifactId>\n"
+"</dependency>\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/micrometer.adoc:606
 #, no-wrap
 msgid "implementation(\"org.eclipse.microprofile.metrics:microprofile-metrics-api\")\n"
-msgstr ""
+msgstr "implementation(\"org.eclipse.microprofile.metrics:microprofile-metrics-api\")\n"
 
 #. type: Plain text
 #: upstream/_versions/main/guides/micrometer.adoc:609
@@ -893,6 +1107,9 @@ msgid ""
 "quarkus.micrometer.export.json.path=metrics/json\n"
 "quarkus.micrometer.export.prometheus.path=metrics/prometheus\n"
 msgstr ""
+"quarkus.micrometer.export.json.enabled=true # Enable json metrics\n"
+"quarkus.micrometer.export.json.path=metrics/json\n"
+"quarkus.micrometer.export.prometheus.path=metrics/prometheus\n"
 
 #. type: Plain text
 #: upstream/_versions/main/guides/micrometer.adoc:628

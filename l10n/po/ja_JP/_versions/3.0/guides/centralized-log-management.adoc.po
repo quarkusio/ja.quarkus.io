@@ -77,6 +77,10 @@ msgid ""
 "    <artifactId>quarkus-logging-gelf</artifactId>\n"
 "</dependency>\n"
 msgstr ""
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-logging-gelf</artifactId>\n"
+"</dependency>\n"
 
 #. type: Block title
 #: upstream/_versions/3.0/guides/centralized-log-management.adoc:53
@@ -88,7 +92,7 @@ msgstr "build.gradle"
 #: upstream/_versions/3.0/guides/centralized-log-management.adoc:56
 #, no-wrap
 msgid "implementation(\"io.quarkus:quarkus-logging-gelf\")\n"
-msgstr ""
+msgstr "implementation(\"io.quarkus:quarkus-logging-gelf\")\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/centralized-log-management.adoc:59
@@ -103,12 +107,15 @@ msgid ""
 "import jakarta.ws.rs.GET;\n"
 "import jakarta.ws.rs.Path;\n"
 msgstr ""
+"import jakarta.enterprise.context.ApplicationScoped;\n"
+"import jakarta.ws.rs.GET;\n"
+"import jakarta.ws.rs.Path;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/centralized-log-management.adoc:67
 #, no-wrap
 msgid "import org.jboss.logging.Logger;\n"
-msgstr ""
+msgstr "import org.jboss.logging.Logger;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/centralized-log-management.adoc:72
@@ -119,6 +126,10 @@ msgid ""
 "public class GelfLoggingResource {\n"
 "    private static final Logger LOG = Logger.getLogger(GelfLoggingResource.class);\n"
 msgstr ""
+"@Path(\"/gelf-logging\")\n"
+"@ApplicationScoped\n"
+"public class GelfLoggingResource {\n"
+"    private static final Logger LOG = Logger.getLogger(GelfLoggingResource.class);\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/centralized-log-management.adoc:77
@@ -129,12 +140,16 @@ msgid ""
 "        LOG.info(\"Some useful log message\");\n"
 "    }\n"
 msgstr ""
+"    @GET\n"
+"    public void log() {\n"
+"        LOG.info(\"Some useful log message\");\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/centralized-log-management.adoc:79
 #, no-wrap
 msgid "}\n"
-msgstr ""
+msgstr "}\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/centralized-log-management.adoc:82
@@ -149,6 +164,9 @@ msgid ""
 "quarkus.log.handler.gelf.host=localhost\n"
 "quarkus.log.handler.gelf.port=12201\n"
 msgstr ""
+"quarkus.log.handler.gelf.enabled=true\n"
+"quarkus.log.handler.gelf.host=localhost\n"
+"quarkus.log.handler.gelf.port=12201\n"
 
 #. type: Title ==
 #: upstream/_versions/3.0/guides/centralized-log-management.adoc:90
@@ -193,7 +211,7 @@ msgstr "これは、以下の `docker-compose.yml` ファイルから、 `docker
 #: upstream/_versions/3.0/guides/centralized-log-management.adoc:366
 #, no-wrap
 msgid "version: '3.2'\n"
-msgstr ""
+msgstr "version: '3.2'\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/centralized-log-management.adoc:114
@@ -210,6 +228,16 @@ msgid ""
 "    networks:\n"
 "      - graylog\n"
 msgstr ""
+"services:\n"
+"  elasticsearch:\n"
+"    image: {elasticsearch-image}\n"
+"    ports:\n"
+"      - \"9200:9200\"\n"
+"    environment:\n"
+"      ES_JAVA_OPTS: \"-Xms512m -Xmx512m\"\n"
+"      discovery.type: \"single-node\"\n"
+"    networks:\n"
+"      - graylog\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/centralized-log-management.adoc:119
@@ -220,6 +248,10 @@ msgid ""
 "    networks:\n"
 "      - graylog\n"
 msgstr ""
+"  mongo:\n"
+"    image: mongo:4.0\n"
+"    networks:\n"
+"      - graylog\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/centralized-log-management.adoc:137
@@ -243,6 +275,23 @@ msgid ""
 "      - elasticsearch\n"
 "      - mongo\n"
 msgstr ""
+"  graylog:\n"
+"    image: graylog/graylog:4.3.0\n"
+"    ports:\n"
+"      - \"9000:9000\"\n"
+"      - \"12201:12201/udp\"\n"
+"      - \"1514:1514\"\n"
+"    environment:\n"
+"      GRAYLOG_HTTP_EXTERNAL_URI: \"http://127.0.0.1:9000/\"\n"
+"      # CHANGE ME (must be at least 16 characters)!\n"
+"      GRAYLOG_PASSWORD_SECRET: \"forpasswordencryption\"\n"
+"      # Password: admin\n"
+"      GRAYLOG_ROOT_PASSWORD_SHA2: \"8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918\"\n"
+"    networks:\n"
+"      - graylog\n"
+"    depends_on:\n"
+"      - elasticsearch\n"
+"      - mongo\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/centralized-log-management.adoc:141
@@ -252,6 +301,9 @@ msgid ""
 "  graylog:\n"
 "    driver: bridge\n"
 msgstr ""
+"networks:\n"
+"  graylog:\n"
+"    driver: bridge\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/centralized-log-management.adoc:145
@@ -271,6 +323,9 @@ msgid ""
 "'{\"title\":\"udp input\",\"configuration\":{\"recv_buffer_size\":262144,\"bind_address\":\"0.0.0.0\",\"port\":12201,\"decompress_size_limit\":8388608},\"type\":\"org.graylog2.inputs.gelf.udp.GELFUDPInput\",\"global\":true}' \\\n"
 "http://localhost:9000/api/system/inputs\n"
 msgstr ""
+"curl -H \"Content-Type: application/json\" -H \"Authorization: Basic YWRtaW46YWRtaW4=\" -H \"X-Requested-By: curl\" -X POST -v -d \\\n"
+"'{\"title\":\"udp input\",\"configuration\":{\"recv_buffer_size\":262144,\"bind_address\":\"0.0.0.0\",\"port\":12201,\"decompress_size_limit\":8388608},\"type\":\"org.graylog2.inputs.gelf.udp.GELFUDPInput\",\"global\":true}' \\\n"
+"http://localhost:9000/api/system/inputs\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/centralized-log-management.adoc:156
@@ -309,6 +364,17 @@ msgid ""
 "  }\n"
 "}\n"
 msgstr ""
+"input {\n"
+"  gelf {\n"
+"    port => 12201\n"
+"  }\n"
+"}\n"
+"output {\n"
+"  stdout {}\n"
+"  elasticsearch {\n"
+"    hosts => [\"http://elasticsearch:9200\"]\n"
+"  }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/centralized-log-management.adoc:179
@@ -334,6 +400,8 @@ msgid ""
 "# Launch Elasticsearch\n"
 "version: '3.2'\n"
 msgstr ""
+"# Launch Elasticsearch\n"
+"version: '3.2'\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/centralized-log-management.adoc:202
@@ -351,6 +419,17 @@ msgid ""
 "    networks:\n"
 "      - elk\n"
 msgstr ""
+"services:\n"
+"  elasticsearch:\n"
+"    image: {elasticsearch-image}\n"
+"    ports:\n"
+"      - \"9200:9200\"\n"
+"      - \"9300:9300\"\n"
+"    environment:\n"
+"      ES_JAVA_OPTS: \"-Xms512m -Xmx512m\"\n"
+"      discovery.type: \"single-node\"\n"
+"    networks:\n"
+"      - elk\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/centralized-log-management.adoc:217
@@ -371,6 +450,20 @@ msgid ""
 "    depends_on:\n"
 "      - elasticsearch\n"
 msgstr ""
+"  logstash:\n"
+"    image: {logstash-image}\n"
+"    volumes:\n"
+"      - source: $HOME/pipelines\n"
+"        target: /usr/share/logstash/pipeline\n"
+"        type: bind\n"
+"    ports:\n"
+"      - \"12201:12201/udp\"\n"
+"      - \"5000:5000\"\n"
+"      - \"9600:9600\"\n"
+"    networks:\n"
+"      - elk\n"
+"    depends_on:\n"
+"      - elasticsearch\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/centralized-log-management.adoc:226
@@ -385,6 +478,14 @@ msgid ""
 "    depends_on:\n"
 "      - elasticsearch\n"
 msgstr ""
+"  kibana:\n"
+"    image: {kibana-image}\n"
+"    ports:\n"
+"      - \"5601:5601\"\n"
+"    networks:\n"
+"      - elk\n"
+"    depends_on:\n"
+"      - elasticsearch\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/centralized-log-management.adoc:230
@@ -394,6 +495,9 @@ msgid ""
 "  elk:\n"
 "    driver: bridge\n"
 msgstr ""
+"networks:\n"
+"  elk:\n"
+"    driver: bridge\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/centralized-log-management.adoc:234
@@ -419,6 +523,9 @@ msgid ""
 "RUN [\"gem\", \"install\", \"fluent-plugin-elasticsearch\", \"--version\", \"3.7.0\"]\n"
 "RUN [\"gem\", \"install\", \"fluent-plugin-input-gelf\", \"--version\", \"0.3.1\"]\n"
 msgstr ""
+"FROM fluent/fluentd:v1.3-debian\n"
+"RUN [\"gem\", \"install\", \"fluent-plugin-elasticsearch\", \"--version\", \"3.7.0\"]\n"
+"RUN [\"gem\", \"install\", \"fluent-plugin-input-gelf\", \"--version\", \"0.3.1\"]\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/centralized-log-management.adoc:248
@@ -441,6 +548,12 @@ msgid ""
 "  port 12201\n"
 "</source>\n"
 msgstr ""
+"<source>\n"
+"  type gelf\n"
+"  tag example.gelf\n"
+"  bind 0.0.0.0\n"
+"  port 12201\n"
+"</source>\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/centralized-log-management.adoc:266
@@ -453,6 +566,12 @@ msgid ""
 "  logstash_format true\n"
 "</match>\n"
 msgstr ""
+"<match example.gelf>\n"
+"  @type elasticsearch\n"
+"  host elasticsearch\n"
+"  port 9200\n"
+"  logstash_format true\n"
+"</match>\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/centralized-log-management.adoc:269
@@ -481,6 +600,17 @@ msgid ""
 "    networks:\n"
 "      - efk\n"
 msgstr ""
+"services:\n"
+"  elasticsearch:\n"
+"    image: {elasticsearch-image}\n"
+"    ports:\n"
+"      - \"9200:9200\"\n"
+"      - \"9300:9300\"\n"
+"    environment:\n"
+"      ES_JAVA_OPTS: \"-Xms512m -Xmx512m\"\n"
+"      discovery.type: \"single-node\"\n"
+"    networks:\n"
+"      - efk\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/centralized-log-management.adoc:304
@@ -499,6 +629,18 @@ msgid ""
 "    depends_on:\n"
 "      - elasticsearch\n"
 msgstr ""
+"  fluentd:\n"
+"    build: fluentd\n"
+"    ports:\n"
+"      - \"12201:12201/udp\"\n"
+"    volumes:\n"
+"      - source: $HOME/fluentd\n"
+"        target: /fluentd/etc\n"
+"        type: bind\n"
+"    networks:\n"
+"      - efk\n"
+"    depends_on:\n"
+"      - elasticsearch\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/centralized-log-management.adoc:313
@@ -514,6 +656,14 @@ msgid ""
 "    depends_on:\n"
 "      - elasticsearch\n"
 msgstr ""
+"  kibana:\n"
+"    image: {kibana-image}\n"
+"    ports:\n"
+"      - \"5601:5601\"\n"
+"    networks:\n"
+"      - efk\n"
+"    depends_on:\n"
+"      - elasticsearch\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/centralized-log-management.adoc:317
@@ -524,6 +674,9 @@ msgid ""
 "  efk:\n"
 "    driver: bridge\n"
 msgstr ""
+"networks:\n"
+"  efk:\n"
+"    driver: bridge\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/centralized-log-management.adoc:320
@@ -554,6 +707,8 @@ msgid ""
 "FROM fluent/fluentd:v1.3-debian\n"
 "RUN [\"gem\", \"install\", \"fluent-plugin-elasticsearch\", \"--version\", \"3.7.0\"]\n"
 msgstr ""
+"FROM fluent/fluentd:v1.3-debian\n"
+"RUN [\"gem\", \"install\", \"fluent-plugin-elasticsearch\", \"--version\", \"3.7.0\"]\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/centralized-log-management.adoc:336
@@ -572,6 +727,13 @@ msgid ""
 "  tag system\n"
 "</source>\n"
 msgstr ""
+"<source>\n"
+"  @type syslog\n"
+"  port 5140\n"
+"  bind 0.0.0.0\n"
+"  message_format rfc5424\n"
+"  tag system\n"
+"</source>\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/centralized-log-management.adoc:353
@@ -584,6 +746,12 @@ msgid ""
 "  logstash_format true\n"
 "</match>\n"
 msgstr ""
+"<match **>\n"
+"  @type elasticsearch\n"
+"  host elasticsearch\n"
+"  port 9200\n"
+"  logstash_format true\n"
+"</match>\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/centralized-log-management.adoc:356
@@ -605,6 +773,16 @@ msgid ""
 "    networks:\n"
 "      - efk\n"
 msgstr ""
+"services:\n"
+"  elasticsearch:\n"
+"    image: {elasticsearch-image}\n"
+"    ports:\n"
+"      - \"9200:9200\"\n"
+"      - \"9300:9300\"\n"
+"    environment:\n"
+"      ES_JAVA_OPTS: \"-Xms512m -Xmx512m\"\n"
+"    networks:\n"
+"      - efk\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/centralized-log-management.adoc:390
@@ -623,6 +801,18 @@ msgid ""
 "    depends_on:\n"
 "      - elasticsearch\n"
 msgstr ""
+"  fluentd:\n"
+"    build: fluentd\n"
+"    ports:\n"
+"      - \"5140:5140/udp\"\n"
+"    volumes:\n"
+"      - source: $HOME/fluentd\n"
+"        target: /fluentd/etc\n"
+"        type: bind\n"
+"    networks:\n"
+"      - efk\n"
+"    depends_on:\n"
+"      - elasticsearch\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/centralized-log-management.adoc:406
@@ -639,6 +829,11 @@ msgid ""
 "quarkus.log.syslog.app-name=quarkus\n"
 "quarkus.log.syslog.hostname=quarkus-test\n"
 msgstr ""
+"quarkus.log.syslog.enable=true\n"
+"quarkus.log.syslog.endpoint=localhost:5140\n"
+"quarkus.log.syslog.protocol=udp\n"
+"quarkus.log.syslog.app-name=quarkus\n"
+"quarkus.log.syslog.hostname=quarkus-test\n"
 
 #. type: Title ==
 #: upstream/_versions/3.0/guides/centralized-log-management.adoc:418
@@ -663,6 +858,8 @@ msgid ""
 "LOG.info(\"some {} message {} with {} param\", 1, 2, 3);\n"
 "LOG.info(\"other {} message {} with {} param\", true, true, true);\n"
 msgstr ""
+"LOG.info(\"some {} message {} with {} param\", 1, 2, 3);\n"
+"LOG.info(\"other {} message {} with {} param\", true, true, true);\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/centralized-log-management.adoc:435

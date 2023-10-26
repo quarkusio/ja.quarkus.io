@@ -60,6 +60,13 @@ msgid ""
 "    -Dextensions=\"resteasy-jsonb, jwt\"\n"
 "cd security-jwt-quickstart\n"
 msgstr ""
+"mvn io.quarkus:quarkus-maven-plugin:{quarkus-version}:create \\\n"
+"    -DprojectGroupId=org.acme \\\n"
+"    -DprojectArtifactId=security-jwt-quickstart \\\n"
+"    -DclassName=\"org.acme.security.jwt.TokenSecuredResource\" \\\n"
+"    -Dpath=\"/secured\" \\\n"
+"    -Dextensions=\"resteasy-jsonb, jwt\"\n"
+"cd security-jwt-quickstart\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/security-jwt.adoc:42
@@ -75,7 +82,7 @@ msgstr "すでにQuarkusプロジェクトが設定されている場合は、�
 #: upstream/_versions/1.7/guides/security-jwt.adoc:49
 #, no-wrap
 msgid "./mvnw quarkus:add-extension -Dextensions=\"smallrye-jwt\"\n"
-msgstr ""
+msgstr "./mvnw quarkus:add-extension -Dextensions=\"smallrye-jwt\"\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/security-jwt.adoc:52
@@ -91,6 +98,10 @@ msgid ""
 "    <artifactId>quarkus-smallrye-jwt</artifactId>\n"
 "</dependency>\n"
 msgstr ""
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-smallrye-jwt</artifactId>\n"
+"</dependency>\n"
 
 #. type: Title ===
 #: upstream/_versions/1.7/guides/security-jwt.adoc:61
@@ -117,7 +128,7 @@ msgstr "基本的なRESTエンドポイント"
 #: upstream/_versions/1.7/guides/security-jwt.adoc:468
 #, no-wrap
 msgid "package org.acme.security.jwt;\n"
-msgstr ""
+msgstr "package org.acme.security.jwt;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-jwt.adoc:74
@@ -128,6 +139,10 @@ msgid ""
 "import javax.ws.rs.Produces;\n"
 "import javax.ws.rs.core.MediaType;\n"
 msgstr ""
+"import javax.ws.rs.GET;\n"
+"import javax.ws.rs.Path;\n"
+"import javax.ws.rs.Produces;\n"
+"import javax.ws.rs.core.MediaType;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-jwt.adoc:77
@@ -136,6 +151,8 @@ msgid ""
 "@Path(\"/secured\")\n"
 "public class TokenSecuredResource {\n"
 msgstr ""
+"@Path(\"/secured\")\n"
+"public class TokenSecuredResource {\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-jwt.adoc:84
@@ -148,6 +165,12 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    @GET\n"
+"    @Produces(MediaType.TEXT_PLAIN)\n"
+"    public String hello() {\n"
+"        return \"hello\";\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/security-jwt.adoc:87
@@ -164,7 +187,7 @@ msgstr "REST エンドポイント V1"
 #: upstream/_versions/1.7/guides/security-jwt.adoc:95
 #, no-wrap
 msgid "import java.security.Principal;\n"
-msgstr ""
+msgstr "import java.security.Principal;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-jwt.adoc:106
@@ -181,13 +204,23 @@ msgid ""
 "import javax.ws.rs.core.MediaType;\n"
 "import javax.ws.rs.core.SecurityContext;\n"
 msgstr ""
+"import javax.annotation.security.PermitAll;\n"
+"import javax.enterprise.context.RequestScoped;\n"
+"import javax.inject.Inject;\n"
+"import javax.ws.rs.GET;\n"
+"import javax.ws.rs.InternalServerErrorException;\n"
+"import javax.ws.rs.Path;\n"
+"import javax.ws.rs.Produces;\n"
+"import javax.ws.rs.core.Context;\n"
+"import javax.ws.rs.core.MediaType;\n"
+"import javax.ws.rs.core.SecurityContext;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-jwt.adoc:108
 #: upstream/_versions/1.7/guides/security-jwt.adoc:221
 #, no-wrap
 msgid "import org.eclipse.microprofile.jwt.JsonWebToken;\n"
-msgstr ""
+msgstr "import org.eclipse.microprofile.jwt.JsonWebToken;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-jwt.adoc:112
@@ -197,6 +230,9 @@ msgid ""
 "@RequestScoped // <1>\n"
 "public class TokenSecuredResource {\n"
 msgstr ""
+"@Path(\"/secured\")\n"
+"@RequestScoped // <1>\n"
+"public class TokenSecuredResource {\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-jwt.adoc:115
@@ -205,6 +241,8 @@ msgid ""
 "    @Inject\n"
 "    JsonWebToken jwt; // <2>\n"
 msgstr ""
+"    @Inject\n"
+"    JsonWebToken jwt; // <2>\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-jwt.adoc:123
@@ -218,6 +256,13 @@ msgid ""
 "        return getResponseString(ctx); // <4>\n"
 "    }\n"
 msgstr ""
+"    @GET()\n"
+"    @Path(\"permit-all\")\n"
+"    @PermitAll // <3>\n"
+"    @Produces(MediaType.TEXT_PLAIN)\n"
+"    public String hello(@Context SecurityContext ctx) {\n"
+"        return getResponseString(ctx); // <4>\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-jwt.adoc:139
@@ -239,6 +284,21 @@ msgid ""
 "            name, ctx.isSecure(), ctx.getAuthenticationScheme(), hasJwt()); // <8>\n"
 "    }\n"
 msgstr ""
+"    private String getResponseString(SecurityContext ctx) {\n"
+"        String name;\n"
+"        if (ctx.getUserPrincipal() == null) { // <5>\n"
+"            name = \"anonymous\";\n"
+"        } else if (!ctx.getUserPrincipal().getName().equals(jwt.getName())) { // <6>\n"
+"            throw new InternalServerErrorException(\"Principal and JsonWebToken names do not match\");\n"
+"        } else {\n"
+"            name = ctx.getUserPrincipal().getName(); // <7>\n"
+"        }\n"
+"        return String.format(\"hello + %s,\"\n"
+"            + \" isHttps: %s,\"\n"
+"            + \" authScheme: %s,\"\n"
+"            + \" hasJWT: %s\",\n"
+"            name, ctx.isSecure(), ctx.getAuthenticationScheme(), hasJwt()); // <8>\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-jwt.adoc:144
@@ -249,6 +309,10 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    private boolean hasJwt() {\n"
+"\treturn jwt.getClaimNames() != null;\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/security-jwt.adoc:148
@@ -295,7 +359,7 @@ msgstr "これで、アプリケーションを実行する準備が整いまし
 #: upstream/_versions/1.7/guides/security-jwt.adoc:162
 #, no-wrap
 msgid "./mvnw compile quarkus:dev\n"
-msgstr ""
+msgstr "./mvnw compile quarkus:dev\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/security-jwt.adoc:165
@@ -324,6 +388,17 @@ msgid ""
 "2020-07-15 16:09:50,885 INFO  [io.quarkus] (Quarkus Main Thread) Profile dev activated. Live Coding activated.\n"
 "2020-07-15 16:09:50,885 INFO  [io.quarkus] (Quarkus Main Thread) Installed features: [cdi, mutiny, resteasy, resteasy-jsonb, security, smallrye-context-propagation, smallrye-jwt, vertx, vertx-web]\n"
 msgstr ""
+"$ ./mvnw compile quarkus:dev\n"
+"[INFO] Scanning for projects...\n"
+"[INFO]\n"
+"[INFO] ----------------------< org.acme:security-jwt-quickstart >-----------------------\n"
+"[INFO] Building security-jwt-quickstart 1.0-SNAPSHOT\n"
+"[INFO] --------------------------------[ jar ]---------------------------------\n"
+"...\n"
+"Listening for transport dt_socket at address: 5005\n"
+"2020-07-15 16:09:50,883 INFO  [io.quarkus] (Quarkus Main Thread) security-jwt-quickstart 1.0-SNAPSHOT on JVM (powered by Quarkus 999-SNAPSHOT) started in 1.073s. Listening on: http://0.0.0.0:8080\n"
+"2020-07-15 16:09:50,885 INFO  [io.quarkus] (Quarkus Main Thread) Profile dev activated. Live Coding activated.\n"
+"2020-07-15 16:09:50,885 INFO  [io.quarkus] (Quarkus Main Thread) Installed features: [cdi, mutiny, resteasy, resteasy-jsonb, security, smallrye-context-propagation, smallrye-jwt, vertx, vertx-web]\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/security-jwt.adoc:183
@@ -343,6 +418,8 @@ msgid ""
 "$ curl http://127.0.0.1:8080/secured/permit-all; echo\n"
 "hello + anonymous, isHttps: false, authScheme: null, hasJWT: false\n"
 msgstr ""
+"$ curl http://127.0.0.1:8080/secured/permit-all; echo\n"
+"hello + anonymous, isHttps: false, authScheme: null, hasJWT: false\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/security-jwt.adoc:193
@@ -402,6 +479,17 @@ msgid ""
 "import javax.ws.rs.core.MediaType;\n"
 "import javax.ws.rs.core.SecurityContext;\n"
 msgstr ""
+"import javax.annotation.security.PermitAll;\n"
+"import javax.annotation.security.RolesAllowed;\n"
+"import javax.enterprise.context.RequestScoped;\n"
+"import javax.inject.Inject;\n"
+"import javax.ws.rs.GET;\n"
+"import javax.ws.rs.InternalServerErrorException;\n"
+"import javax.ws.rs.Path;\n"
+"import javax.ws.rs.Produces;\n"
+"import javax.ws.rs.core.Context;\n"
+"import javax.ws.rs.core.MediaType;\n"
+"import javax.ws.rs.core.SecurityContext;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-jwt.adoc:225
@@ -412,6 +500,9 @@ msgid ""
 "@RequestScoped\n"
 "public class TokenSecuredResource {\n"
 msgstr ""
+"@Path(\"/secured\")\n"
+"@RequestScoped\n"
+"public class TokenSecuredResource {\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-jwt.adoc:228
@@ -420,6 +511,8 @@ msgid ""
 "    @Inject\n"
 "    JsonWebToken jwt; // <1>\n"
 msgstr ""
+"    @Inject\n"
+"    JsonWebToken jwt; // <1>\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-jwt.adoc:236
@@ -434,6 +527,13 @@ msgid ""
 "        return getResponseString(ctx);\n"
 "    }\n"
 msgstr ""
+"    @GET\n"
+"    @Path(\"permit-all\")\n"
+"    @PermitAll\n"
+"    @Produces(MediaType.TEXT_PLAIN)\n"
+"    public String hello(@Context SecurityContext ctx) {\n"
+"        return getResponseString(ctx);\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-jwt.adoc:244
@@ -447,6 +547,13 @@ msgid ""
 "        return getResponseString(ctx) + \", birthdate: \" + jwt.getClaim(\"birthdate\").toString(); // <4>\n"
 "    }\n"
 msgstr ""
+"    @GET\n"
+"    @Path(\"roles-allowed\") // <2>\n"
+"    @RolesAllowed({ \"User\", \"Admin\" }) // <3>\n"
+"    @Produces(MediaType.TEXT_PLAIN)\n"
+"    public String helloRolesAllowed(@Context SecurityContext ctx) {\n"
+"        return getResponseString(ctx) + \", birthdate: \" + jwt.getClaim(\"birthdate\").toString(); // <4>\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-jwt.adoc:260
@@ -469,6 +576,21 @@ msgid ""
 "            name, ctx.isSecure(), ctx.getAuthenticationScheme(), hasJwt());\n"
 "    }\n"
 msgstr ""
+"    private String getResponseString(SecurityContext ctx) {\n"
+"        String name;\n"
+"        if (ctx.getUserPrincipal() == null) {\n"
+"            name = \"anonymous\";\n"
+"        } else if (!ctx.getUserPrincipal().getName().equals(jwt.getName())) {\n"
+"            throw new InternalServerErrorException(\"Principal and JsonWebToken names do not match\");\n"
+"        } else {\n"
+"            name = ctx.getUserPrincipal().getName();\n"
+"        }\n"
+"        return String.format(\"hello + %s,\"\n"
+"            + \" isHttps: %s,\"\n"
+"            + \" authScheme: %s,\"\n"
+"            + \" hasJWT: %s\",\n"
+"            name, ctx.isSecure(), ctx.getAuthenticationScheme(), hasJwt());\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-jwt.adoc:265
@@ -480,6 +602,10 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    private boolean hasJwt() {\n"
+"        return jwt.getClaimNames() != null;\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/security-jwt.adoc:267
@@ -534,6 +660,23 @@ msgid ""
 "* Connection #0 to host 127.0.0.1 left intact\n"
 "Not authorized\n"
 msgstr ""
+"$ curl -v http://127.0.0.1:8080/secured/roles-allowed; echo\n"
+"*   Trying 127.0.0.1...\n"
+"* TCP_NODELAY set\n"
+"* Connected to 127.0.0.1 (127.0.0.1) port 8080 (#0)\n"
+"> GET /secured/roles-allowed HTTP/1.1\n"
+"> Host: 127.0.0.1:8080\n"
+"> User-Agent: curl/7.54.0\n"
+"> Accept: */*\n"
+">\n"
+"< HTTP/1.1 401 Unauthorized\n"
+"< Connection: keep-alive\n"
+"< Content-Type: text/html;charset=UTF-8\n"
+"< Content-Length: 14\n"
+"< Date: Sun, 03 Mar 2019 16:32:34 GMT\n"
+"<\n"
+"* Connection #0 to host 127.0.0.1 left intact\n"
+"Not authorized\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/security-jwt.adoc:297
@@ -564,6 +707,8 @@ msgid ""
 "mp.jwt.verify.publickey.location=META-INF/resources/publicKey.pem #<1>\n"
 "mp.jwt.verify.issuer=https://quarkus.io/using-jwt-rbac #<2>\n"
 msgstr ""
+"mp.jwt.verify.publickey.location=META-INF/resources/publicKey.pem #<1>\n"
+"mp.jwt.verify.issuer=https://quarkus.io/using-jwt-rbac #<2>\n"
 
 #. type: Title ===
 #: upstream/_versions/1.7/guides/security-jwt.adoc:311
@@ -591,6 +736,15 @@ msgid ""
 "nQIDAQAB\n"
 "-----END PUBLIC KEY-----\n"
 msgstr ""
+"-----BEGIN PUBLIC KEY-----\n"
+"MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlivFI8qB4D0y2jy0CfEq\n"
+"Fyy46R0o7S8TKpsx5xbHKoU1VWg6QkQm+ntyIv1p4kE1sPEQO73+HY8+Bzs75XwR\n"
+"TYL1BmR1w8J5hmjVWjc6R2BTBGAYRPFRhor3kpM6ni2SPmNNhurEAHw7TaqszP5e\n"
+"UF/F9+KEBWkwVta+PZ37bwqSE4sCb1soZFrVz/UT/LF4tYpuVYt3YbqToZ3pZOZ9\n"
+"AX2o1GCG3xwOjkc4x0W7ezbQZdC9iftPxVHR8irOijJRRjcPDtA6vPKpzLl6CyYn\n"
+"sIYPd99ltwxTHjr3npfv/3Lw50bAkbT4HeLFxTx4flEoZLKO/g0bAoV2uqBhkA9x\n"
+"nQIDAQAB\n"
+"-----END PUBLIC KEY-----\n"
 
 #. type: Title ===
 #: upstream/_versions/1.7/guides/security-jwt.adoc:336
@@ -611,18 +765,20 @@ msgid ""
 "import java.util.Arrays;\n"
 "import java.util.HashSet;\n"
 msgstr ""
+"import java.util.Arrays;\n"
+"import java.util.HashSet;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-jwt.adoc:351
 #, no-wrap
 msgid "import org.eclipse.microprofile.jwt.Claims;\n"
-msgstr ""
+msgstr "import org.eclipse.microprofile.jwt.Claims;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-jwt.adoc:353
 #, no-wrap
 msgid "import io.smallrye.jwt.build.Jwt;\n"
-msgstr ""
+msgstr "import io.smallrye.jwt.build.Jwt;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-jwt.adoc:368
@@ -643,6 +799,20 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"public class GenerateToken {\n"
+"    /**\n"
+"     * Generate JWT token\n"
+"     */\n"
+"    public static void main(String[] args) {\n"
+"        String token =\n"
+"           Jwt.issuer(\"https://quarkus.io/using-jwt-rbac\") // <1>\n"
+"             .upn(\"jdoe@quarkus.io\") // <2>\n"
+"             .groups(new HashSet<>(Arrays.asList(\"User\", \"Admin\"))) // <3>\n"
+"             .claim(Claims.birthdate.name(), \"2001-07-13\") // <4>\n"
+"           .sign();\n"
+"        System.out.println(token);\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/security-jwt.adoc:372
@@ -698,6 +868,34 @@ msgid ""
 "f3cg+fr8aou7pr9SHhJlZCU=\n"
 "-----END PRIVATE KEY-----\n"
 msgstr ""
+"-----BEGIN PRIVATE KEY-----\n"
+"MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCWK8UjyoHgPTLa\n"
+"PLQJ8SoXLLjpHSjtLxMqmzHnFscqhTVVaDpCRCb6e3Ii/WniQTWw8RA7vf4djz4H\n"
+"OzvlfBFNgvUGZHXDwnmGaNVaNzpHYFMEYBhE8VGGiveSkzqeLZI+Y02G6sQAfDtN\n"
+"qqzM/l5QX8X34oQFaTBW1r49nftvCpITiwJvWyhkWtXP9RP8sXi1im5Vi3dhupOh\n"
+"nelk5n0BfajUYIbfHA6ORzjHRbt7NtBl0L2J+0/FUdHyKs6KMlFGNw8O0Dq88qnM\n"
+"uXoLJiewhg9332W3DFMeOveel+//cvDnRsCRtPgd4sXFPHh+UShkso7+DRsChXa6\n"
+"oGGQD3GdAgMBAAECggEAAjfTSZwMHwvIXIDZB+yP+pemg4ryt84iMlbofclQV8hv\n"
+"6TsI4UGwcbKxFOM5VSYxbNOisb80qasb929gixsyBjsQ8284bhPJR7r0q8h1C+jY\n"
+"URA6S4pk8d/LmFakXwG9Tz6YPo3pJziuh48lzkFTk0xW2Dp4SLwtAptZY/+ZXyJ6\n"
+"96QXDrZKSSM99Jh9s7a0ST66WoxSS0UC51ak+Keb0KJ1jz4bIJ2C3r4rYlSu4hHB\n"
+"Y73GfkWORtQuyUDa9yDOem0/z0nr6pp+pBSXPLHADsqvZiIhxD/O0Xk5I6/zVHB3\n"
+"zuoQqLERk0WvA8FXz2o8AYwcQRY2g30eX9kU4uDQAQKBgQDmf7KGImUGitsEPepF\n"
+"KH5yLWYWqghHx6wfV+fdbBxoqn9WlwcQ7JbynIiVx8MX8/1lLCCe8v41ypu/eLtP\n"
+"iY1ev2IKdrUStvYRSsFigRkuPHUo1ajsGHQd+ucTDf58mn7kRLW1JGMeGxo/t32B\n"
+"m96Af6AiPWPEJuVfgGV0iwg+HQKBgQCmyPzL9M2rhYZn1AozRUguvlpmJHU2DpqS\n"
+"34Q+7x2Ghf7MgBUhqE0t3FAOxEC7IYBwHmeYOvFR8ZkVRKNF4gbnF9RtLdz0DMEG\n"
+"5qsMnvJUSQbNB1yVjUCnDAtElqiFRlQ/k0LgYkjKDY7LfciZl9uJRl0OSYeX/qG2\n"
+"tRW09tOpgQKBgBSGkpM3RN/MRayfBtmZvYjVWh3yjkI2GbHA1jj1g6IebLB9SnfL\n"
+"WbXJErCj1U+wvoPf5hfBc7m+jRgD3Eo86YXibQyZfY5pFIh9q7Ll5CQl5hj4zc4Y\n"
+"b16sFR+xQ1Q9Pcd+BuBWmSz5JOE/qcF869dthgkGhnfVLt/OQzqZluZRAoGAXQ09\n"
+"nT0TkmKIvlza5Af/YbTqEpq8mlBDhTYXPlWCD4+qvMWpBII1rSSBtftgcgca9XLB\n"
+"MXmRMbqtQeRtg4u7dishZVh1MeP7vbHsNLppUQT9Ol6lFPsd2xUpJDc6BkFat62d\n"
+"Xjr3iWNPC9E9nhPPdCNBv7reX7q81obpeXFMXgECgYEAmk2Qlus3OV0tfoNRqNpe\n"
+"Mb0teduf2+h3xaI1XDIzPVtZF35ELY/RkAHlmWRT4PCdR0zXDidE67L6XdJyecSt\n"
+"FdOUH8z5qUraVVebRFvJqf/oGsXc4+ex1ZKUTbY0wqY1y9E39yvB3MaTmZFuuqk8\n"
+"f3cg+fr8aou7pr9SHhJlZCU=\n"
+"-----END PRIVATE KEY-----\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/security-jwt.adoc:415
@@ -720,13 +918,13 @@ msgstr "JWT 生成出力のサンプル"
 #: upstream/_versions/1.7/guides/security-jwt.adoc:422
 #, no-wrap
 msgid "$ mvn exec:java -Dexec.mainClass=org.acme.security.jwt.GenerateToken -Dexec.classpathScope=test -Dsmallrye.jwt.sign.key-location=privateKey.pem\n"
-msgstr ""
+msgstr "$ mvn exec:java -Dexec.mainClass=org.acme.security.jwt.GenerateToken -Dexec.classpathScope=test -Dsmallrye.jwt.sign.key-location=privateKey.pem\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-jwt.adoc:424
 #, no-wrap
 msgid "eyJraWQiOiJcL3ByaXZhdGVLZXkucGVtIiwidHlwIjoiSldUIiwiYWxnIjoiUlMyNTYifQ.eyJzdWIiOiJqZG9lLXVzaW5nLWp3dC1yYmFjIiwiYXVkIjoidXNpbmctand0LXJiYWMiLCJ1cG4iOiJqZG9lQHF1YXJrdXMuaW8iLCJiaXJ0aGRhdGUiOiIyMDAxLTA3LTEzIiwiYXV0aF90aW1lIjoxNTUxNjU5Njc2LCJpc3MiOiJodHRwczpcL1wvcXVhcmt1cy5pb1wvdXNpbmctand0LXJiYWMiLCJyb2xlTWFwcGluZ3MiOnsiZ3JvdXAyIjoiR3JvdXAyTWFwcGVkUm9sZSIsImdyb3VwMSI6Ikdyb3VwMU1hcHBlZFJvbGUifSwiZ3JvdXBzIjpbIkVjaG9lciIsIlRlc3RlciIsIlN1YnNjcmliZXIiLCJncm91cDIiXSwicHJlZmVycmVkX3VzZXJuYW1lIjoiamRvZSIsImV4cCI6MTU1MTY1OTk3NiwiaWF0IjoxNTUxNjU5Njc2LCJqdGkiOiJhLTEyMyJ9.O9tx_wNNS4qdpFhxeD1e7v4aBNWz1FCq0UV8qmXd7dW9xM4hA5TO-ZREk3ApMrL7_rnX8z81qGPIo_R8IfHDyNaI1SLD56gVX-NaOLS2OjfcbO3zOWJPKR_BoZkYACtMoqlWgIwIRC-wJKUJU025dHZiNL0FWO4PjwuCz8hpZYXIuRscfFhXKrDX1fh3jDhTsOEFfu67ACd85f3BdX9pe-ayKSVLh_RSbTbBPeyoYPE59FW7H5-i8IE-Gqu838Hz0i38ksEJFI25eR-AJ6_PSUD0_-TV3NjXhF3bFIeT4VSaIZcpibekoJg0cQm-4ApPEcPLdgTejYHA-mupb8hSwg\n"
-msgstr ""
+msgstr "eyJraWQiOiJcL3ByaXZhdGVLZXkucGVtIiwidHlwIjoiSldUIiwiYWxnIjoiUlMyNTYifQ.eyJzdWIiOiJqZG9lLXVzaW5nLWp3dC1yYmFjIiwiYXVkIjoidXNpbmctand0LXJiYWMiLCJ1cG4iOiJqZG9lQHF1YXJrdXMuaW8iLCJiaXJ0aGRhdGUiOiIyMDAxLTA3LTEzIiwiYXV0aF90aW1lIjoxNTUxNjU5Njc2LCJpc3MiOiJodHRwczpcL1wvcXVhcmt1cy5pb1wvdXNpbmctand0LXJiYWMiLCJyb2xlTWFwcGluZ3MiOnsiZ3JvdXAyIjoiR3JvdXAyTWFwcGVkUm9sZSIsImdyb3VwMSI6Ikdyb3VwMU1hcHBlZFJvbGUifSwiZ3JvdXBzIjpbIkVjaG9lciIsIlRlc3RlciIsIlN1YnNjcmliZXIiLCJncm91cDIiXSwicHJlZmVycmVkX3VzZXJuYW1lIjoiamRvZSIsImV4cCI6MTU1MTY1OTk3NiwiaWF0IjoxNTUxNjU5Njc2LCJqdGkiOiJhLTEyMyJ9.O9tx_wNNS4qdpFhxeD1e7v4aBNWz1FCq0UV8qmXd7dW9xM4hA5TO-ZREk3ApMrL7_rnX8z81qGPIo_R8IfHDyNaI1SLD56gVX-NaOLS2OjfcbO3zOWJPKR_BoZkYACtMoqlWgIwIRC-wJKUJU025dHZiNL0FWO4PjwuCz8hpZYXIuRscfFhXKrDX1fh3jDhTsOEFfu67ACd85f3BdX9pe-ayKSVLh_RSbTbBPeyoYPE59FW7H5-i8IE-Gqu838Hz0i38ksEJFI25eR-AJ6_PSUD0_-TV3NjXhF3bFIeT4VSaIZcpibekoJg0cQm-4ApPEcPLdgTejYHA-mupb8hSwg\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/security-jwt.adoc:428
@@ -743,7 +941,7 @@ msgstr "/secured/roles-allowed へのセキュリティーで保護されたア�
 #: upstream/_versions/1.7/guides/security-jwt.adoc:435
 #, no-wrap
 msgid "curl -H \"Authorization: Bearer eyJraWQiOiJcL3ByaXZhdGVLZXkucGVtIiwidHlwIjoiSldUIiwiYWxnIjoiUlMyNTYifQ.eyJzdWIiOiJqZG9lLXVzaW5nLWp3dC1yYmFjIiwiYXVkIjoidXNpbmctand0LXJiYWMiLCJ1cG4iOiJqZG9lQHF1YXJrdXMuaW8iLCJiaXJ0aGRhdGUiOiIyMDAxLTA3LTEzIiwiYXV0aF90aW1lIjoxNTUxNjUyMDkxLCJpc3MiOiJodHRwczpcL1wvcXVhcmt1cy5pb1wvdXNpbmctand0LXJiYWMiLCJyb2xlTWFwcGluZ3MiOnsiZ3JvdXAyIjoiR3JvdXAyTWFwcGVkUm9sZSIsImdyb3VwMSI6Ikdyb3VwMU1hcHBlZFJvbGUifSwiZ3JvdXBzIjpbIkVjaG9lciIsIlRlc3RlciIsIlN1YnNjcmliZXIiLCJncm91cDIiXSwicHJlZmVycmVkX3VzZXJuYW1lIjoiamRvZSIsImV4cCI6MTU1MTY1MjM5MSwiaWF0IjoxNTUxNjUyMDkxLCJqdGkiOiJhLTEyMyJ9.aPA4Rlc4kw7n_OZZRRk25xZydJy_J_3BRR8ryYLyHTO1o68_aNWWQCgpnAuOW64svPhPnLYYnQzK-l2vHX34B64JySyBD4y_vRObGmdwH_SEufBAWZV7mkG3Y4mTKT3_4EWNu4VH92IhdnkGI4GJB6yHAEzlQI6EdSOa4Nq8Gp4uPGqHsUZTJrA3uIW0TbNshFBm47-oVM3ZUrBz57JKtr0e9jv0HjPQWyvbzx1HuxZd6eA8ow8xzvooKXFxoSFCMnxotd3wagvYQ9ysBa89bgzL-lhjWtusuMFDUVYwFqADE7oOSOD4Vtclgq8svznBQ-YpfTHfb9QEcofMlpyjNA\" http://127.0.0.1:8080/secured/roles-allowed; echo\n"
-msgstr ""
+msgstr "curl -H \"Authorization: Bearer eyJraWQiOiJcL3ByaXZhdGVLZXkucGVtIiwidHlwIjoiSldUIiwiYWxnIjoiUlMyNTYifQ.eyJzdWIiOiJqZG9lLXVzaW5nLWp3dC1yYmFjIiwiYXVkIjoidXNpbmctand0LXJiYWMiLCJ1cG4iOiJqZG9lQHF1YXJrdXMuaW8iLCJiaXJ0aGRhdGUiOiIyMDAxLTA3LTEzIiwiYXV0aF90aW1lIjoxNTUxNjUyMDkxLCJpc3MiOiJodHRwczpcL1wvcXVhcmt1cy5pb1wvdXNpbmctand0LXJiYWMiLCJyb2xlTWFwcGluZ3MiOnsiZ3JvdXAyIjoiR3JvdXAyTWFwcGVkUm9sZSIsImdyb3VwMSI6Ikdyb3VwMU1hcHBlZFJvbGUifSwiZ3JvdXBzIjpbIkVjaG9lciIsIlRlc3RlciIsIlN1YnNjcmliZXIiLCJncm91cDIiXSwicHJlZmVycmVkX3VzZXJuYW1lIjoiamRvZSIsImV4cCI6MTU1MTY1MjM5MSwiaWF0IjoxNTUxNjUyMDkxLCJqdGkiOiJhLTEyMyJ9.aPA4Rlc4kw7n_OZZRRk25xZydJy_J_3BRR8ryYLyHTO1o68_aNWWQCgpnAuOW64svPhPnLYYnQzK-l2vHX34B64JySyBD4y_vRObGmdwH_SEufBAWZV7mkG3Y4mTKT3_4EWNu4VH92IhdnkGI4GJB6yHAEzlQI6EdSOa4Nq8Gp4uPGqHsUZTJrA3uIW0TbNshFBm47-oVM3ZUrBz57JKtr0e9jv0HjPQWyvbzx1HuxZd6eA8ow8xzvooKXFxoSFCMnxotd3wagvYQ9ysBa89bgzL-lhjWtusuMFDUVYwFqADE7oOSOD4Vtclgq8svznBQ-YpfTHfb9QEcofMlpyjNA\" http://127.0.0.1:8080/secured/roles-allowed; echo\n"
 
 #. type: Block title
 #: upstream/_versions/1.7/guides/security-jwt.adoc:437
@@ -758,6 +956,8 @@ msgid ""
 "$ curl -H \"Authorization: Bearer eyJraWQ...\" http://127.0.0.1:8080/secured/roles-allowed; echo\n"
 "hello + jdoe@quarkus.io, isHttps: false, authScheme: MP-JWT, hasJWT: true, birthdate: 2001-07-13\n"
 msgstr ""
+"$ curl -H \"Authorization: Bearer eyJraWQ...\" http://127.0.0.1:8080/secured/roles-allowed; echo\n"
+"hello + jdoe@quarkus.io, isHttps: false, authScheme: MP-JWT, hasJWT: true, birthdate: 2001-07-13\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/security-jwt.adoc:445
@@ -808,6 +1008,9 @@ msgid ""
 "import org.eclipse.microprofile.jwt.Claims;\n"
 "import org.eclipse.microprofile.jwt.JsonWebToken;\n"
 msgstr ""
+"import org.eclipse.microprofile.jwt.Claim;\n"
+"import org.eclipse.microprofile.jwt.Claims;\n"
+"import org.eclipse.microprofile.jwt.JsonWebToken;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-jwt.adoc:494
@@ -819,6 +1022,11 @@ msgid ""
 "    @Claim(standard = Claims.birthdate)\n"
 "    String birthdate; // <1>\n"
 msgstr ""
+"    @Inject\n"
+"    JsonWebToken jwt;\n"
+"    @Inject\n"
+"    @Claim(standard = Claims.birthdate)\n"
+"    String birthdate; // <1>\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-jwt.adoc:510
@@ -832,6 +1040,13 @@ msgid ""
 "        return getResponseString(ctx) + \", birthdate: \" + jwt.getClaim(\"birthdate\").toString();\n"
 "    }\n"
 msgstr ""
+"    @GET\n"
+"    @Path(\"roles-allowed\")\n"
+"    @RolesAllowed({ \"User\", \"Admin\" })\n"
+"    @Produces(MediaType.TEXT_PLAIN)\n"
+"    public String helloRolesAllowed(@Context SecurityContext ctx) {\n"
+"        return getResponseString(ctx) + \", birthdate: \" + jwt.getClaim(\"birthdate\").toString();\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-jwt.adoc:518
@@ -845,6 +1060,13 @@ msgid ""
 "        return getResponseString(ctx) + \", birthdate: \" + birthdate; // <2>\n"
 "    }\n"
 msgstr ""
+"    @GET\n"
+"    @Path(\"roles-allowed-admin\")\n"
+"    @RolesAllowed(\"Admin\")\n"
+"    @Produces(MediaType.TEXT_PLAIN)\n"
+"    public String helloRolesAllowedAdmin(@Context SecurityContext ctx) {\n"
+"        return getResponseString(ctx) + \", birthdate: \" + birthdate; // <2>\n"
+"    }\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/security-jwt.adoc:542
@@ -860,7 +1082,7 @@ msgstr "次に、トークンを再度生成して実行します。"
 #: upstream/_versions/1.7/guides/security-jwt.adoc:548
 #, no-wrap
 msgid "curl -H \"Authorization: Bearer eyJraWQiOiJcL3ByaXZhdGVLZXkucGVtIiwidHlwIjoiSldUIiwiYWxnIjoiUlMyNTYifQ.eyJzdWIiOiJqZG9lLXVzaW5nLWp3dC1yYmFjIiwiYXVkIjoidXNpbmctand0LXJiYWMiLCJ1cG4iOiJqZG9lQHF1YXJrdXMuaW8iLCJiaXJ0aGRhdGUiOiIyMDAxLTA3LTEzIiwiYXV0aF90aW1lIjoxNTUxNjUyMDkxLCJpc3MiOiJodHRwczpcL1wvcXVhcmt1cy5pb1wvdXNpbmctand0LXJiYWMiLCJyb2xlTWFwcGluZ3MiOnsiZ3JvdXAyIjoiR3JvdXAyTWFwcGVkUm9sZSIsImdyb3VwMSI6Ikdyb3VwMU1hcHBlZFJvbGUifSwiZ3JvdXBzIjpbIkVjaG9lciIsIlRlc3RlciIsIlN1YnNjcmliZXIiLCJncm91cDIiXSwicHJlZmVycmVkX3VzZXJuYW1lIjoiamRvZSIsImV4cCI6MTU1MTY1MjM5MSwiaWF0IjoxNTUxNjUyMDkxLCJqdGkiOiJhLTEyMyJ9.aPA4Rlc4kw7n_OZZRRk25xZydJy_J_3BRR8ryYLyHTO1o68_aNWWQCgpnAuOW64svPhPnLYYnQzK-l2vHX34B64JySyBD4y_vRObGmdwH_SEufBAWZV7mkG3Y4mTKT3_4EWNu4VH92IhdnkGI4GJB6yHAEzlQI6EdSOa4Nq8Gp4uPGqHsUZTJrA3uIW0TbNshFBm47-oVM3ZUrBz57JKtr0e9jv0HjPQWyvbzx1HuxZd6eA8ow8xzvooKXFxoSFCMnxotd3wagvYQ9ysBa89bgzL-lhjWtusuMFDUVYwFqADE7oOSOD4Vtclgq8svznBQ-YpfTHfb9QEcofMlpyjNA\" http://127.0.0.1:8080/secured/roles-allowed-admin; echo\n"
-msgstr ""
+msgstr "curl -H \"Authorization: Bearer eyJraWQiOiJcL3ByaXZhdGVLZXkucGVtIiwidHlwIjoiSldUIiwiYWxnIjoiUlMyNTYifQ.eyJzdWIiOiJqZG9lLXVzaW5nLWp3dC1yYmFjIiwiYXVkIjoidXNpbmctand0LXJiYWMiLCJ1cG4iOiJqZG9lQHF1YXJrdXMuaW8iLCJiaXJ0aGRhdGUiOiIyMDAxLTA3LTEzIiwiYXV0aF90aW1lIjoxNTUxNjUyMDkxLCJpc3MiOiJodHRwczpcL1wvcXVhcmt1cy5pb1wvdXNpbmctand0LXJiYWMiLCJyb2xlTWFwcGluZ3MiOnsiZ3JvdXAyIjoiR3JvdXAyTWFwcGVkUm9sZSIsImdyb3VwMSI6Ikdyb3VwMU1hcHBlZFJvbGUifSwiZ3JvdXBzIjpbIkVjaG9lciIsIlRlc3RlciIsIlN1YnNjcmliZXIiLCJncm91cDIiXSwicHJlZmVycmVkX3VzZXJuYW1lIjoiamRvZSIsImV4cCI6MTU1MTY1MjM5MSwiaWF0IjoxNTUxNjUyMDkxLCJqdGkiOiJhLTEyMyJ9.aPA4Rlc4kw7n_OZZRRk25xZydJy_J_3BRR8ryYLyHTO1o68_aNWWQCgpnAuOW64svPhPnLYYnQzK-l2vHX34B64JySyBD4y_vRObGmdwH_SEufBAWZV7mkG3Y4mTKT3_4EWNu4VH92IhdnkGI4GJB6yHAEzlQI6EdSOa4Nq8Gp4uPGqHsUZTJrA3uIW0TbNshFBm47-oVM3ZUrBz57JKtr0e9jv0HjPQWyvbzx1HuxZd6eA8ow8xzvooKXFxoSFCMnxotd3wagvYQ9ysBa89bgzL-lhjWtusuMFDUVYwFqADE7oOSOD4Vtclgq8svznBQ-YpfTHfb9QEcofMlpyjNA\" http://127.0.0.1:8080/secured/roles-allowed-admin; echo\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-jwt.adoc:554
@@ -869,6 +1091,8 @@ msgid ""
 "$ curl -H \"Authorization: Bearer eyJraWQ...\" http://127.0.0.1:8080/secured/roles-allowed-admin; echo\n"
 "hello + jdoe@quarkus.io, isHttps: false, authScheme: MP-JWT, hasJWT: true, birthdate: 2001-07-13\n"
 msgstr ""
+"$ curl -H \"Authorization: Bearer eyJraWQ...\" http://127.0.0.1:8080/secured/roles-allowed-admin; echo\n"
+"hello + jdoe@quarkus.io, isHttps: false, authScheme: MP-JWT, hasJWT: true, birthdate: 2001-07-13\n"
 
 #. type: Title ===
 #: upstream/_versions/1.7/guides/security-jwt.adoc:556
@@ -891,6 +1115,10 @@ msgid ""
 "...\n"
 "[INFO] [io.quarkus.creator.phase.runnerjar.RunnerJarPhase] Building jar: /Users/starksm/Dev/JBoss/Protean/starksm64-quarkus-quickstarts/security-jwt-quickstart/target/security-jwt-quickstart-runner.jar\n"
 msgstr ""
+"Scotts-iMacPro:security-jwt-quickstart starksm$ ./mvnw clean package\n"
+"[INFO] Scanning for projects...\n"
+"...\n"
+"[INFO] [io.quarkus.creator.phase.runnerjar.RunnerJarPhase] Building jar: /Users/starksm/Dev/JBoss/Protean/starksm64-quarkus-quickstarts/security-jwt-quickstart/target/security-jwt-quickstart-runner.jar\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-jwt.adoc:569
@@ -900,6 +1128,9 @@ msgid ""
 "2019-03-28 14:27:48,839 INFO  [io.quarkus] (main) Quarkus 0.12.0 started in 0.796s. Listening on: http://[::]:8080\n"
 "2019-03-28 14:27:48,841 INFO  [io.quarkus] (main) Installed features: [cdi, resteasy, resteasy-jsonb, security, smallrye-jwt]\n"
 msgstr ""
+"Scotts-iMacPro:security-jwt-quickstart starksm$ java -jar target/security-jwt-quickstart-runner.jar\n"
+"2019-03-28 14:27:48,839 INFO  [io.quarkus] (main) Quarkus 0.12.0 started in 0.796s. Listening on: http://[::]:8080\n"
+"2019-03-28 14:27:48,841 INFO  [io.quarkus] (main) Installed features: [cdi, resteasy, resteasy-jsonb, security, smallrye-jwt]\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/security-jwt.adoc:572
@@ -934,6 +1165,23 @@ msgid ""
 "[INFO] Finished at: 2019-03-28T14:30:56-07:00\n"
 "[INFO] ------------------------------------------------------------------------\n"
 msgstr ""
+"Scotts-iMacPro:security-jwt-quickstart starksm$ ./mvnw clean package -Pnative\n"
+"[INFO] Scanning for projects...\n"
+"...\n"
+"[security-jwt-quickstart-runner:25602]     universe:     493.17 ms\n"
+"[security-jwt-quickstart-runner:25602]      (parse):     660.41 ms\n"
+"[security-jwt-quickstart-runner:25602]     (inline):   1,431.10 ms\n"
+"[security-jwt-quickstart-runner:25602]    (compile):   7,301.78 ms\n"
+"[security-jwt-quickstart-runner:25602]      compile:  10,542.16 ms\n"
+"[security-jwt-quickstart-runner:25602]        image:   2,797.62 ms\n"
+"[security-jwt-quickstart-runner:25602]        write:     988.24 ms\n"
+"[security-jwt-quickstart-runner:25602]      [total]:  43,778.16 ms\n"
+"[INFO] ------------------------------------------------------------------------\n"
+"[INFO] BUILD SUCCESS\n"
+"[INFO] ------------------------------------------------------------------------\n"
+"[INFO] Total time:  51.500 s\n"
+"[INFO] Finished at: 2019-03-28T14:30:56-07:00\n"
+"[INFO] ------------------------------------------------------------------------\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-jwt.adoc:596
@@ -943,6 +1191,9 @@ msgid ""
 "2019-03-28 14:31:37,315 INFO  [io.quarkus] (main) Quarkus 0.12.0 started in 0.006s. Listening on: http://[::]:8080\n"
 "2019-03-28 14:31:37,316 INFO  [io.quarkus] (main) Installed features: [cdi, resteasy, resteasy-jsonb, security, smallrye-jwt]\n"
 msgstr ""
+"Scotts-iMacPro:security-jwt-quickstart starksm$ ./target/security-jwt-quickstart-runner\n"
+"2019-03-28 14:31:37,315 INFO  [io.quarkus] (main) Quarkus 0.12.0 started in 0.006s. Listening on: http://[::]:8080\n"
+"2019-03-28 14:31:37,316 INFO  [io.quarkus] (main) Installed features: [cdi, resteasy, resteasy-jsonb, security, smallrye-jwt]\n"
 
 #. type: Title ===
 #: upstream/_versions/1.7/guides/security-jwt.adoc:598
@@ -1409,6 +1660,18 @@ msgid ""
 "// Or start typing the claims immediately:\n"
 "// JwtClaimsBuilder builder1 = Jwt.upn(\"Alice\");\n"
 msgstr ""
+"import java.util.Collections;\n"
+"import javax.json.Json;\n"
+"import javax.json.JsonObject;\n"
+"import io.smallrye.jwt.build.Jwt;\n"
+"import io.smallrye.jwt.build.JwtClaimsBuilder;\n"
+"import org.eclipse.microprofile.jwt.JsonWebToken;\n"
+"...\n"
+"// Create an empty builder and add some claims\n"
+"JwtClaimsBuilder builder1 = Jwt.claims();\n"
+"builder1.claim(\"customClaim\", \"custom-value\").issuer(\"https://issuer.org\");\n"
+"// Or start typing the claims immediately:\n"
+"// JwtClaimsBuilder builder1 = Jwt.upn(\"Alice\");\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-jwt.adoc:760
@@ -1417,6 +1680,8 @@ msgid ""
 "// Builder created from the existing claims\n"
 "JwtClaimsBuilder builder2 = Jwt.claims(\"/tokenClaims.json\");\n"
 msgstr ""
+"// Builder created from the existing claims\n"
+"JwtClaimsBuilder builder2 = Jwt.claims(\"/tokenClaims.json\");\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-jwt.adoc:763
@@ -1425,6 +1690,8 @@ msgid ""
 "// Builder created from a map of claims\n"
 "JwtClaimsBuilder builder3 = Jwt.claims(Collections.singletonMap(\"customClaim\", \"custom-value\"));\n"
 msgstr ""
+"// Builder created from a map of claims\n"
+"JwtClaimsBuilder builder3 = Jwt.claims(Collections.singletonMap(\"customClaim\", \"custom-value\"));\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-jwt.adoc:769
@@ -1436,6 +1703,11 @@ msgid ""
 "JsonObject json = Json.createObjectBuilder(userName).add(\"address\", userAddress).build();\n"
 "JwtClaimsBuilder builder4 = Jwt.claims(json);\n"
 msgstr ""
+"// Builder created from JsonObject\n"
+"JsonObject userName = Json.createObjectBuilder().add(\"username\", \"Alice\").build();\n"
+"JsonObject userAddress = Json.createObjectBuilder().add(\"city\", \"someCity\").add(\"street\", \"someStreet\").build();\n"
+"JsonObject json = Json.createObjectBuilder(userName).add(\"address\", userAddress).build();\n"
+"JwtClaimsBuilder builder4 = Jwt.claims(json);\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-jwt.adoc:773
@@ -1445,6 +1717,9 @@ msgid ""
 "@Inject JsonWebToken token;\n"
 "JwtClaimsBuilder builder5 = Jwt.claims(token);\n"
 msgstr ""
+"// Builder created from JsonWebToken\n"
+"@Inject JsonWebToken token;\n"
+"JwtClaimsBuilder builder5 = Jwt.claims(token);\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/security-jwt.adoc:776
@@ -1476,6 +1751,8 @@ msgid ""
 "import io.smallrye.jwt.build.Jwt;\n"
 "...\n"
 msgstr ""
+"import io.smallrye.jwt.build.Jwt;\n"
+"...\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-jwt.adoc:794
@@ -1485,6 +1762,9 @@ msgid ""
 "// No 'jws()' transition is necessary.\n"
 "String jwt1 = Jwt.claims(\"/tokenClaims.json\").sign();\n"
 msgstr ""
+"// Sign the claims using the private key loaded from the location set with a 'smallrye.jwt.sign.key-location' property.\n"
+"// No 'jws()' transition is necessary.\n"
+"String jwt1 = Jwt.claims(\"/tokenClaims.json\").sign();\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-jwt.adoc:797
@@ -1493,6 +1773,8 @@ msgid ""
 "// Set the headers and sign the claims with an RSA private key loaded in the code (the implementation of this method is omitted). Note a 'jws()' transition to a 'JwtSignatureBuilder'.\n"
 "String jwt2 = Jwt.claims(\"/tokenClaims.json\").jws().keyId(\"kid1\").header(\"custom-header\", \"custom-value\").sign(getPrivateKey());\n"
 msgstr ""
+"// Set the headers and sign the claims with an RSA private key loaded in the code (the implementation of this method is omitted). Note a 'jws()' transition to a 'JwtSignatureBuilder'.\n"
+"String jwt2 = Jwt.claims(\"/tokenClaims.json\").jws().keyId(\"kid1\").header(\"custom-header\", \"custom-value\").sign(getPrivateKey());\n"
 
 #. type: Title ===
 #: upstream/_versions/1.7/guides/security-jwt.adoc:801
@@ -1507,6 +1789,8 @@ msgid ""
 "// Encrypt the claims using the public key loaded from the location set with a 'smallrye.jwt.encrypt.key-location' property.\n"
 "String jwt1 = Jwt.claims(\"/tokenClaims.json\").jwe().encrypt();\n"
 msgstr ""
+"// Encrypt the claims using the public key loaded from the location set with a 'smallrye.jwt.encrypt.key-location' property.\n"
+"String jwt1 = Jwt.claims(\"/tokenClaims.json\").jwe().encrypt();\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-jwt.adoc:816
@@ -1515,6 +1799,8 @@ msgid ""
 "// Set the headers and encrypt the claims with an RSA public key loaded in the code (the implementation of this method is omitted).\n"
 "String jwt2 = Jwt.claims(\"/tokenClaims.json\").jwe().header(\"custom-header\", \"custom-value\").encrypt(getPublicKey());\n"
 msgstr ""
+"// Set the headers and encrypt the claims with an RSA public key loaded in the code (the implementation of this method is omitted).\n"
+"String jwt2 = Jwt.claims(\"/tokenClaims.json\").jwe().header(\"custom-header\", \"custom-value\").encrypt(getPublicKey());\n"
 
 #. type: Title ===
 #: upstream/_versions/1.7/guides/security-jwt.adoc:820
@@ -1534,6 +1820,8 @@ msgid ""
 "// Sign the claims and encrypt the nested token using the private and public keys loaded from the locations set with the 'smallrye.jwt.sign.key-location' and 'smallrye.jwt.encrypt.key-location' properties respectively.\n"
 "String jwt = Jwt.claims(\"/tokenClaims.json\").innerSign().encrypt();\n"
 msgstr ""
+"// Sign the claims and encrypt the nested token using the private and public keys loaded from the locations set with the 'smallrye.jwt.sign.key-location' and 'smallrye.jwt.encrypt.key-location' properties respectively.\n"
+"String jwt = Jwt.claims(\"/tokenClaims.json\").innerSign().encrypt();\n"
 
 #. type: Title ===
 #: upstream/_versions/1.7/guides/security-jwt.adoc:832

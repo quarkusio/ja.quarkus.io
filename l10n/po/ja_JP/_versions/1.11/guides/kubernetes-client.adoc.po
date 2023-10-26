@@ -31,7 +31,7 @@ msgstr "Quarkusプロジェクトを設定したら、プロジェクトのベ�
 #: upstream/_versions/1.11/guides/kubernetes-client.adoc:27
 #, no-wrap
 msgid "./mvnw quarkus:add-extension -Dextensions=\"kubernetes-client\"\n"
-msgstr ""
+msgstr "./mvnw quarkus:add-extension -Dextensions=\"kubernetes-client\"\n"
 
 #. type: Plain text
 #: upstream/_versions/1.11/guides/kubernetes-client.adoc:30
@@ -47,6 +47,10 @@ msgid ""
 "    <artifactId>quarkus-kubernetes-client</artifactId>\n"
 "</dependency>\n"
 msgstr ""
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-kubernetes-client</artifactId>\n"
+"</dependency>\n"
 
 #. type: Title ==
 #: upstream/_versions/1.11/guides/kubernetes-client.adoc:39
@@ -66,6 +70,8 @@ msgid ""
 "quarkus.kubernetes-client.trust-certs=false\n"
 "quarkus.kubernetes-client.namespace=default\n"
 msgstr ""
+"quarkus.kubernetes-client.trust-certs=false\n"
+"quarkus.kubernetes-client.namespace=default\n"
 
 #. type: Plain text
 #: upstream/_versions/1.11/guides/kubernetes-client.adoc:51
@@ -95,6 +101,8 @@ msgid ""
 "@Singleton\n"
 "public class KubernetesClientProducer {\n"
 msgstr ""
+"@Singleton\n"
+"public class KubernetesClientProducer {\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.11/guides/kubernetes-client.adoc:70
@@ -107,6 +115,12 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    @Produces\n"
+"    public KubernetesClient kubernetesClient() {\n"
+"        // here you would create a custom client\n"
+"        return new DefaultKubernetesClient();\n"
+"    }\n"
+"}\n"
 
 #. type: Title ==
 #: upstream/_versions/1.11/guides/kubernetes-client.adoc:72
@@ -126,12 +140,14 @@ msgid ""
 "@Path(\"/pod\")\n"
 "public class Pods {\n"
 msgstr ""
+"@Path(\"/pod\")\n"
+"public class Pods {\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.11/guides/kubernetes-client.adoc:86
 #, no-wrap
 msgid "    private final KubernetesClient kubernetesClient;\n"
-msgstr ""
+msgstr "    private final KubernetesClient kubernetesClient;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.11/guides/kubernetes-client.adoc:90
@@ -141,6 +157,9 @@ msgid ""
 "        this.kubernetesClient = kubernetesClient;\n"
 "    }\n"
 msgstr ""
+"    public Pods(KubernetesClient kubernetesClient) {\n"
+"        this.kubernetesClient = kubernetesClient;\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.11/guides/kubernetes-client.adoc:97
@@ -153,6 +172,12 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    @GET\n"
+"    @Path(\"/{namespace}\")\n"
+"    public List<Pod> pods(@PathParam(\"namespace\") String namespace) {\n"
+"        return kubernetesClient.pods().inNamespace(namespace).list().getItems();\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/1.11/guides/kubernetes-client.adoc:100
@@ -168,6 +193,9 @@ msgid ""
 "@QuarkusTest\n"
 "public class KubernetesClientTest {\n"
 msgstr ""
+"@QuarkusTestResource(KubernetesMockServerTestResource.class)\n"
+"@QuarkusTest\n"
+"public class KubernetesClientTest {\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.11/guides/kubernetes-client.adoc:109
@@ -176,6 +204,8 @@ msgid ""
 "    @MockServer\n"
 "    KubernetesMockServer mockServer;\n"
 msgstr ""
+"    @MockServer\n"
+"    KubernetesMockServer mockServer;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.11/guides/kubernetes-client.adoc:114
@@ -186,6 +216,10 @@ msgid ""
 "        final Pod pod1 = new PodBuilder().withNewMetadata().withName(\"pod1\").withNamespace(\"test\").and().build();\n"
 "        final Pod pod2 = new PodBuilder().withNewMetadata().withName(\"pod2\").withNamespace(\"test\").and().build();\n"
 msgstr ""
+"    @BeforeEach\n"
+"    public void before() {\n"
+"        final Pod pod1 = new PodBuilder().withNewMetadata().withName(\"pod1\").withNamespace(\"test\").and().build();\n"
+"        final Pod pod2 = new PodBuilder().withNewMetadata().withName(\"pod2\").withNamespace(\"test\").and().build();\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.11/guides/kubernetes-client.adoc:121
@@ -198,6 +232,12 @@ msgid ""
 "                .always();\n"
 "    }\n"
 msgstr ""
+"        mockServer.expect().get().withPath(\"/api/v1/namespaces/test/pods\")\n"
+"                .andReturn(200,\n"
+"                        new PodListBuilder().withNewMetadata().withResourceVersion(\"1\").endMetadata().withItems(pod1, pod2)\n"
+"                                .build())\n"
+"                .always();\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.11/guides/kubernetes-client.adoc:127
@@ -209,12 +249,17 @@ msgid ""
 "                .body(\"size()\", is(2));\n"
 "    }\n"
 msgstr ""
+"    @Test\n"
+"    public void testInteractionWithAPIServer() {\n"
+"        RestAssured.when().get(\"/pod/test\").then()\n"
+"                .body(\"size()\", is(2));\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.11/guides/kubernetes-client.adoc:129
 #, no-wrap
 msgid "}\n"
-msgstr ""
+msgstr "}\n"
 
 #. type: Plain text
 #: upstream/_versions/1.11/guides/kubernetes-client.adoc:132
@@ -231,12 +276,17 @@ msgid ""
 "    <scope>test</scope>\n"
 "</dependency>\n"
 msgstr ""
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-test-kubernetes-client</artifactId>\n"
+"    <scope>test</scope>\n"
+"</dependency>\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.11/guides/kubernetes-client.adoc:147
 #, no-wrap
 msgid "public class CustomKubernetesMockServerTestResource extends KubernetesMockServerTestResource {\n"
-msgstr ""
+msgstr "public class CustomKubernetesMockServerTestResource extends KubernetesMockServerTestResource {\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.11/guides/kubernetes-client.adoc:155
@@ -250,6 +300,13 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    @Override\n"
+"    public void configureMockServer(KubernetesMockServer mockServer) {\n"
+"        mockServer.expect().get().withPath(\"/api/v1/namespaces/test/pods\")\n"
+"                .andReturn(200, new PodList())\n"
+"                .always();\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/1.11/guides/kubernetes-client.adoc:158
@@ -263,6 +320,8 @@ msgid ""
 "    //tests will now use the configured server...\n"
 "}\n"
 msgstr ""
+"    //tests will now use the configured server...\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/1.11/guides/kubernetes-client.adoc:171
@@ -284,6 +343,11 @@ msgid ""
 "        // do something\n"
 "    }\n"
 msgstr ""
+"client.pods().watch(new Watcher<Pod>() {\n"
+"    @Override\n"
+"    public void eventReceived(Action action, Pod pod) {\n"
+"        // do something\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.11/guides/kubernetes-client.adoc:192
@@ -295,6 +359,11 @@ msgid ""
 "    }\n"
 "});\n"
 msgstr ""
+"    @Override\n"
+"    public void onClose(KubernetesClientException e) {\n"
+"        // do something\n"
+"    }\n"
+"});\n"
 
 #. type: Plain text
 #: upstream/_versions/1.11/guides/kubernetes-client.adoc:195
@@ -311,6 +380,11 @@ msgid ""
 "        // do something\n"
 "    }\n"
 msgstr ""
+"public class PodResourceWatcher implements Watcher<Pod> {\n"
+"    @Override\n"
+"    public void eventReceived(Action action, Pod pod) {\n"
+"        // do something\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.11/guides/kubernetes-client.adoc:209
@@ -323,19 +397,24 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    @Override\n"
+"    public void onClose(KubernetesClientException e) {\n"
+"        // do something\n"
+"    }\n"
+"}\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.11/guides/kubernetes-client.adoc:211
 #: upstream/_versions/1.11/guides/kubernetes-client.adoc:224
 #, no-wrap
 msgid "...\n"
-msgstr ""
+msgstr "...\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.11/guides/kubernetes-client.adoc:214
 #, no-wrap
 msgid "client.pods().watch(new PodResourceWatcher());\n"
-msgstr ""
+msgstr "client.pods().watch(new PodResourceWatcher());\n"
 
 #. type: Plain text
 #: upstream/_versions/1.11/guides/kubernetes-client.adoc:217
@@ -349,6 +428,8 @@ msgid ""
 "public abstract class MyWatcher<S> implements Watcher<S> {\n"
 "}\n"
 msgstr ""
+"public abstract class MyWatcher<S> implements Watcher<S> {\n"
+"}\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.11/guides/kubernetes-client.adoc:232
@@ -361,6 +442,12 @@ msgid ""
 "    }\n"
 "});\n"
 msgstr ""
+"client.pods().watch(new MyWatcher<Pod>() {\n"
+"    @Override\n"
+"    public void eventReceived(Action action, Pod pod) {\n"
+"        // do something\n"
+"    }\n"
+"});\n"
 
 #. type: Plain text
 #: upstream/_versions/1.11/guides/kubernetes-client.adoc:236
@@ -377,12 +464,17 @@ msgid ""
 "        // do something\n"
 "    }\n"
 msgstr ""
+"public class ResourceWatcher<T extends HasMetadata> implements Watcher<T> {\n"
+"    @Override\n"
+"    public void eventReceived(Action action, T resource) {\n"
+"        // do something\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.11/guides/kubernetes-client.adoc:252
 #, no-wrap
 msgid "client.pods().watch(new ResourceWatcher<Pod>());\n"
-msgstr ""
+msgstr "client.pods().watch(new ResourceWatcher<Pod>());\n"
 
 #. type: Title ==
 #: upstream/_versions/1.11/guides/kubernetes-client.adoc:255
@@ -399,7 +491,7 @@ msgstr "多くの場合、Kubernetes API サーバーにアクセスするには
 #: upstream/_versions/1.11/guides/kubernetes-client.adoc:262
 #, no-wrap
 msgid "---\n"
-msgstr ""
+msgstr "---\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.11/guides/kubernetes-client.adoc:268
@@ -412,6 +504,12 @@ msgid ""
 "  namespace: <namespace>\n"
 "---\n"
 msgstr ""
+"apiVersion: v1\n"
+"kind: ServiceAccount\n"
+"metadata:\n"
+"  name: <applicationName>\n"
+"  namespace: <namespace>\n"
+"---\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.11/guides/kubernetes-client.adoc:278
@@ -428,6 +526,16 @@ msgid ""
 "    verbs: [\"list\"]\n"
 "---\n"
 msgstr ""
+"apiVersion: rbac.authorization.k8s.io/v1\n"
+"kind: Role\n"
+"metadata:\n"
+"  name: <applicationName>\n"
+"  namespace: <namespace>\n"
+"rules:\n"
+"  - apiGroups: [\"\"]\n"
+"    resources: [\"pods\"]\n"
+"    verbs: [\"list\"]\n"
+"---\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.11/guides/kubernetes-client.adoc:292
@@ -447,6 +555,19 @@ msgid ""
 "    name: <applicationName>\n"
 "    namespace: <namespace>\n"
 msgstr ""
+"apiVersion: rbac.authorization.k8s.io/v1\n"
+"kind: RoleBinding\n"
+"metadata:\n"
+"  name: <applicationName>\n"
+"  namespace: <namespace>\n"
+"roleRef:\n"
+"  kind: Role\n"
+"  name: <applicationName>\n"
+"  apiGroup: rbac.authorization.k8s.io\n"
+"subjects:\n"
+"  - kind: ServiceAccount\n"
+"    name: <applicationName>\n"
+"    namespace: <namespace>\n"
 
 #. type: Plain text
 #: upstream/_versions/1.11/guides/kubernetes-client.adoc:296
@@ -478,7 +599,7 @@ msgstr "以下のコマンドでエクステンションを追加します。"
 #: upstream/_versions/1.11/guides/kubernetes-client.adoc:311
 #, no-wrap
 msgid "./mvnw quarkus:add-extension -Dextensions=\"openshift-client\"\n"
-msgstr ""
+msgstr "./mvnw quarkus:add-extension -Dextensions=\"openshift-client\"\n"
 
 #. type: Plain text
 #: upstream/_versions/1.11/guides/kubernetes-client.adoc:314
@@ -497,6 +618,8 @@ msgid ""
 "@Inject\n"
 "private OpenShiftClient openshiftClient;\n"
 msgstr ""
+"@Inject\n"
+"private OpenShiftClient openshiftClient;\n"
 
 #. type: Plain text
 #: upstream/_versions/1.11/guides/kubernetes-client.adoc:324
@@ -510,6 +633,8 @@ msgid ""
 "@Singleton\n"
 "public class OpenShiftClientProducer {\n"
 msgstr ""
+"@Singleton\n"
+"public class OpenShiftClientProducer {\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.11/guides/kubernetes-client.adoc:336
@@ -522,6 +647,12 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    @Produces\n"
+"    public OpenShiftClient openshiftClient() {\n"
+"        // here you would create a custom client\n"
+"        return new DefaultOpenShiftClient();\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/1.11/guides/kubernetes-client.adoc:339
@@ -536,6 +667,9 @@ msgid ""
 "@QuarkusTest\n"
 "public class OpenShiftClientTest {\n"
 msgstr ""
+"@QuarkusTestResource(OpenShiftMockServerTestResource.class)\n"
+"@QuarkusTest\n"
+"public class OpenShiftClientTest {\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.11/guides/kubernetes-client.adoc:349
@@ -545,6 +679,9 @@ msgid ""
 "    private OpenShiftMockServer mockServer;\n"
 "...\n"
 msgstr ""
+"    @MockServer\n"
+"    private OpenShiftMockServer mockServer;\n"
+"...\n"
 
 #. type: Plain text
 #: upstream/_versions/1.11/guides/kubernetes-client.adoc:352
@@ -561,6 +698,11 @@ msgid ""
 "    <scope>test</scope>\n"
 "</dependency>\n"
 msgstr ""
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-test-openshift-client</artifactId>\n"
+"    <scope>test</scope>\n"
+"</dependency>\n"
 
 #. type: Title ==
 #: upstream/_versions/1.11/guides/kubernetes-client.adoc:362

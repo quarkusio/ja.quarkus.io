@@ -104,6 +104,10 @@ msgid ""
 "    <artifactId>quarkus-websockets</artifactId>\n"
 "</dependency>\n"
 msgstr ""
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-websockets</artifactId>\n"
+"</dependency>\n"
 
 #. type: Block title
 #: upstream/_versions/3.0/guides/websockets.adoc:61
@@ -115,7 +119,7 @@ msgstr "build.gradle"
 #: upstream/_versions/3.0/guides/websockets.adoc:64
 #, no-wrap
 msgid "implementation(\"io.quarkus:quarkus-websockets\")\n"
-msgstr ""
+msgstr "implementation(\"io.quarkus:quarkus-websockets\")\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/websockets.adoc:67
@@ -138,7 +142,7 @@ msgstr "このアプリケーションには、Web ソケットを処理する�
 #: upstream/_versions/3.0/guides/websockets.adoc:182
 #, no-wrap
 msgid "package org.acme.websockets;\n"
-msgstr ""
+msgstr "package org.acme.websockets;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/websockets.adoc:80
@@ -147,6 +151,8 @@ msgid ""
 "import java.util.Map;\n"
 "import java.util.concurrent.ConcurrentHashMap;\n"
 msgstr ""
+"import java.util.Map;\n"
+"import java.util.concurrent.ConcurrentHashMap;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/websockets.adoc:89
@@ -161,6 +167,14 @@ msgid ""
 "import jakarta.websocket.server.ServerEndpoint;\n"
 "import jakarta.websocket.Session;\n"
 msgstr ""
+"import jakarta.enterprise.context.ApplicationScoped;\n"
+"import jakarta.websocket.OnClose;\n"
+"import jakarta.websocket.OnError;\n"
+"import jakarta.websocket.OnMessage;\n"
+"import jakarta.websocket.OnOpen;\n"
+"import jakarta.websocket.server.PathParam;\n"
+"import jakarta.websocket.server.ServerEndpoint;\n"
+"import jakarta.websocket.Session;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/websockets.adoc:93
@@ -170,12 +184,15 @@ msgid ""
 "@ApplicationScoped\n"
 "public class ChatSocket {\n"
 msgstr ""
+"@ServerEndpoint(\"/chat/{username}\")         // <1>\n"
+"@ApplicationScoped\n"
+"public class ChatSocket {\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/websockets.adoc:95
 #, no-wrap
 msgid "    Map<String, Session> sessions = new ConcurrentHashMap<>(); // <2>\n"
-msgstr ""
+msgstr "    Map<String, Session> sessions = new ConcurrentHashMap<>(); // <2>\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/websockets.adoc:100
@@ -186,6 +203,10 @@ msgid ""
 "        sessions.put(username, session);\n"
 "    }\n"
 msgstr ""
+"    @OnOpen\n"
+"    public void onOpen(Session session, @PathParam(\"username\") String username) {\n"
+"        sessions.put(username, session);\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/websockets.adoc:106
@@ -197,6 +218,11 @@ msgid ""
 "        broadcast(\"User \" + username + \" left\");\n"
 "    }\n"
 msgstr ""
+"    @OnClose\n"
+"    public void onClose(Session session, @PathParam(\"username\") String username) {\n"
+"        sessions.remove(username);\n"
+"        broadcast(\"User \" + username + \" left\");\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/websockets.adoc:112
@@ -208,6 +234,11 @@ msgid ""
 "        broadcast(\"User \" + username + \" left on error: \" + throwable);\n"
 "    }\n"
 msgstr ""
+"    @OnError\n"
+"    public void onError(Session session, @PathParam(\"username\") String username, Throwable throwable) {\n"
+"        sessions.remove(username);\n"
+"        broadcast(\"User \" + username + \" left on error: \" + throwable);\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/websockets.adoc:121
@@ -222,6 +253,14 @@ msgid ""
 "        }\n"
 "    }\n"
 msgstr ""
+"    @OnMessage\n"
+"    public void onMessage(String message, @PathParam(\"username\") String username) {\n"
+"        if (message.equalsIgnoreCase(\"_ready_\")) {\n"
+"            broadcast(\"User \" + username + \" joined\");\n"
+"        } else {\n"
+"            broadcast(\">> \" + username + \": \" + message);\n"
+"        }\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/websockets.adoc:131
@@ -237,13 +276,22 @@ msgid ""
 "        });\n"
 "    }\n"
 msgstr ""
+"    private void broadcast(String message) {\n"
+"        sessions.values().forEach(s -> {\n"
+"            s.getAsyncRemote().sendObject(message, result ->  {\n"
+"                if (result.getException() != null) {\n"
+"                    System.out.println(\"Unable to send message: \" + result.getException());\n"
+"                }\n"
+"            });\n"
+"        });\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/websockets.adoc:133
 #: upstream/_versions/3.0/guides/websockets.adoc:236
 #, no-wrap
 msgid "}\n"
-msgstr ""
+msgstr "}\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/websockets.adoc:135
@@ -346,6 +394,9 @@ msgid ""
 "import java.util.concurrent.LinkedBlockingDeque;\n"
 "import java.util.concurrent.TimeUnit;\n"
 msgstr ""
+"import java.net.URI;\n"
+"import java.util.concurrent.LinkedBlockingDeque;\n"
+"import java.util.concurrent.TimeUnit;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/websockets.adoc:192
@@ -357,6 +408,11 @@ msgid ""
 "import jakarta.websocket.OnOpen;\n"
 "import jakarta.websocket.Session;\n"
 msgstr ""
+"import jakarta.websocket.ClientEndpoint;\n"
+"import jakarta.websocket.ContainerProvider;\n"
+"import jakarta.websocket.OnMessage;\n"
+"import jakarta.websocket.OnOpen;\n"
+"import jakarta.websocket.Session;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/websockets.adoc:195
@@ -365,6 +421,8 @@ msgid ""
 "import org.junit.jupiter.api.Assertions;\n"
 "import org.junit.jupiter.api.Test;\n"
 msgstr ""
+"import org.junit.jupiter.api.Assertions;\n"
+"import org.junit.jupiter.api.Test;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/websockets.adoc:198
@@ -373,6 +431,8 @@ msgid ""
 "import io.quarkus.test.common.http.TestHTTPResource;\n"
 "import io.quarkus.test.junit.QuarkusTest;\n"
 msgstr ""
+"import io.quarkus.test.common.http.TestHTTPResource;\n"
+"import io.quarkus.test.junit.QuarkusTest;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/websockets.adoc:201
@@ -381,12 +441,14 @@ msgid ""
 "@QuarkusTest\n"
 "public class ChatTest {\n"
 msgstr ""
+"@QuarkusTest\n"
+"public class ChatTest {\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/websockets.adoc:203
 #, no-wrap
 msgid "    private static final LinkedBlockingDeque<String> MESSAGES = new LinkedBlockingDeque<>();\n"
-msgstr ""
+msgstr "    private static final LinkedBlockingDeque<String> MESSAGES = new LinkedBlockingDeque<>();\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/websockets.adoc:206
@@ -395,6 +457,8 @@ msgid ""
 "    @TestHTTPResource(\"/chat/stu\")\n"
 "    URI uri;\n"
 msgstr ""
+"    @TestHTTPResource(\"/chat/stu\")\n"
+"    URI uri;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/websockets.adoc:216
@@ -410,6 +474,15 @@ msgid ""
 "        }\n"
 "    }\n"
 msgstr ""
+"    @Test\n"
+"    public void testWebsocketChat() throws Exception {\n"
+"        try (Session session = ContainerProvider.getWebSocketContainer().connectToServer(Client.class, uri)) {\n"
+"            Assertions.assertEquals(\"CONNECT\", MESSAGES.poll(10, TimeUnit.SECONDS));\n"
+"            Assertions.assertEquals(\"User stu joined\", MESSAGES.poll(10, TimeUnit.SECONDS));\n"
+"            session.getAsyncRemote().sendText(\"hello world\");\n"
+"            Assertions.assertEquals(\">> stu: hello world\", MESSAGES.poll(10, TimeUnit.SECONDS));\n"
+"        }\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/websockets.adoc:219
@@ -418,6 +491,8 @@ msgid ""
 "    @ClientEndpoint\n"
 "    public static class Client {\n"
 msgstr ""
+"    @ClientEndpoint\n"
+"    public static class Client {\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/websockets.adoc:227
@@ -431,6 +506,13 @@ msgid ""
 "            session.getAsyncRemote().sendText(\"_ready_\");\n"
 "        }\n"
 msgstr ""
+"        @OnOpen\n"
+"        public void open(Session session) {\n"
+"            MESSAGES.add(\"CONNECT\");\n"
+"            // Send a message to indicate that we are ready,\n"
+"            // as the message handler may not be registered immediately after this callback.\n"
+"            session.getAsyncRemote().sendText(\"_ready_\");\n"
+"        }\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/websockets.adoc:232
@@ -441,12 +523,16 @@ msgid ""
 "            MESSAGES.add(msg);\n"
 "        }\n"
 msgstr ""
+"        @OnMessage\n"
+"        void message(String msg) {\n"
+"            MESSAGES.add(msg);\n"
+"        }\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/websockets.adoc:234
 #, no-wrap
 msgid "    }\n"
-msgstr ""
+msgstr "    }\n"
 
 #. type: Title ==
 #: upstream/_versions/3.0/guides/websockets.adoc:239

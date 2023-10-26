@@ -144,7 +144,7 @@ msgstr "リアクティブ型"
 #: upstream/_versions/3.0/guides/mutiny-primer.adoc:73
 #, no-wrap
 msgid "reactive-thread.png"
-msgstr ""
+msgstr "reactive-thread.png"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/mutiny-primer.adoc:79
@@ -171,7 +171,7 @@ msgstr "link:https://en.wikipedia.org/wiki/Periodic_table[周期表]の元素を
 #: upstream/_versions/3.0/guides/mutiny-primer.adoc:89
 #, no-wrap
 msgid "public class Element {\n"
-msgstr ""
+msgstr "public class Element {\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/mutiny-primer.adoc:93
@@ -181,6 +181,9 @@ msgid ""
 "   public String symbol;\n"
 "   public int position;\n"
 msgstr ""
+"   public String name;\n"
+"   public String symbol;\n"
+"   public int position;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/mutiny-primer.adoc:99
@@ -192,6 +195,11 @@ msgid ""
 "       this.position = position;\n"
 "   }\n"
 msgstr ""
+"   public Element(String name, String symbol, int position) {\n"
+"       this.name = name;\n"
+"       this.symbol = symbol;\n"
+"       this.position = position;\n"
+"   }\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/mutiny-primer.adoc:104
@@ -202,6 +210,10 @@ msgid ""
 "   }\n"
 "}\n"
 msgstr ""
+"   public Element() {\n"
+"        // Use by JSON mappers\n"
+"   }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/mutiny-primer.adoc:108
@@ -215,12 +227,14 @@ msgid ""
 "@ApplicationScoped\n"
 "public class ElementService {\n"
 msgstr ""
+"@ApplicationScoped\n"
+"public class ElementService {\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/mutiny-primer.adoc:115
 #, no-wrap
 msgid "   final ReactiveMongoCollection<Element> collection;\n"
-msgstr ""
+msgstr "   final ReactiveMongoCollection<Element> collection;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/mutiny-primer.adoc:121
@@ -232,6 +246,11 @@ msgid ""
 "               .getCollection(\"elements\", Element.class);\n"
 "   }\n"
 msgstr ""
+"   @Inject\n"
+"   ElementService(ReactiveMongoClient client) {\n"
+"       collection = client.getDatabase(\"quarkus\")\n"
+"               .getCollection(\"elements\", Element.class);\n"
+"   }\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/mutiny-primer.adoc:130
@@ -246,6 +265,14 @@ msgid ""
 "               failure -> System.out.println(\"D'oh\" + failure));\n"
 "   }\n"
 msgstr ""
+"   public void add(Element element) {\n"
+"       Uni<InsertOneResult> insertion = collection.insertOne(element);\n"
+"       insertion\n"
+"           .onItem().transform(r -> r.getInsertedId().asString())\n"
+"           .subscribe().with(\n"
+"               result -> System.out.println(\"inserted \" + result),\n"
+"               failure -> System.out.println(\"D'oh\" + failure));\n"
+"   }\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/mutiny-primer.adoc:139
@@ -260,12 +287,20 @@ msgid ""
 "       );\n"
 "   }\n"
 msgstr ""
+"   public void getAll() {\n"
+"       collection.find()\n"
+"           .subscribe().with(\n"
+"              element -> System.out.println(\"Element: \" + element),\n"
+"             failure -> System.out.println(\"D'oh! \" + failure),\n"
+"             () -> System.out.println(\"No more elements\")\n"
+"       );\n"
+"   }\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/mutiny-primer.adoc:141
 #, no-wrap
 msgid "}\n"
-msgstr ""
+msgstr "}\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/mutiny-primer.adoc:146
@@ -369,6 +404,9 @@ msgid ""
 "uni1\n"
 ".onItem().transformtoUni(item -> anotherAsynchronousAction(item));\n"
 msgstr ""
+"Uni<String> uni1 = …\n"
+"uni1\n"
+".onItem().transformtoUni(item -> anotherAsynchronousAction(item));\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/mutiny-primer.adoc:216
@@ -399,6 +437,9 @@ msgid ""
 "uni1\n"
 ".onFailure().recoverWithItem(“my fallback value”);\n"
 msgstr ""
+"Uni<String> uni1 = …\n"
+"uni1\n"
+".onFailure().recoverWithItem(“my fallback value”);\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/mutiny-primer.adoc:231
@@ -413,6 +454,9 @@ msgid ""
 "uni1\n"
 ".onFailure().retry().atMost(5);\n"
 msgstr ""
+"Uni<String> uni1 = …\n"
+"uni1\n"
+".onFailure().retry().atMost(5);\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/mutiny-primer.adoc:240

@@ -26,12 +26,16 @@ msgid ""
 "@ApplicationScoped\n"
 "public class CustomAwareJWTAuthMechanism implements HttpAuthenticationMechanism {\n"
 msgstr ""
+"@Alternative\n"
+"@Priority(1)\n"
+"@ApplicationScoped\n"
+"public class CustomAwareJWTAuthMechanism implements HttpAuthenticationMechanism {\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-customization.adoc:23
 #, no-wrap
 msgid "\tprivate static final Logger LOG = LoggerFactory.getLogger(CustomAwareJWTAuthMechanism.class);\n"
-msgstr ""
+msgstr "\tprivate static final Logger LOG = LoggerFactory.getLogger(CustomAwareJWTAuthMechanism.class);\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-customization.adoc:26
@@ -40,6 +44,8 @@ msgid ""
 "\t@Inject\n"
 "\tJWTAuthMechanism delegate;\n"
 msgstr ""
+"\t@Inject\n"
+"\tJWTAuthMechanism delegate;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-customization.adoc:32
@@ -51,6 +57,11 @@ msgid ""
 "            return delegate.authenticate(context, identityProviderManager);\n"
 "\t}\n"
 msgstr ""
+"\t@Override\n"
+"\tpublic Uni<SecurityIdentity> authenticate(RoutingContext context, IdentityProviderManager identityProviderManager) {\n"
+"\t    // do some custom action and delegate\t\n"
+"            return delegate.authenticate(context, identityProviderManager);\n"
+"\t}\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-customization.adoc:37
@@ -61,6 +72,10 @@ msgid ""
 "\t\treturn delegate.getChallenge(context);\n"
 "\t}\n"
 msgstr ""
+"\t@Override\n"
+"\tpublic Uni<ChallengeData> getChallenge(RoutingContext context) {\n"
+"\t\treturn delegate.getChallenge(context);\n"
+"\t}\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-customization.adoc:42
@@ -71,6 +86,10 @@ msgid ""
 "\t\treturn delegate.getCredentialTypes();\n"
 "\t}\n"
 msgstr ""
+"\t@Override\n"
+"\tpublic Set<Class<? extends AuthenticationRequest>> getCredentialTypes() {\n"
+"\t\treturn delegate.getCredentialTypes();\n"
+"\t}\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-customization.adoc:47
@@ -81,12 +100,16 @@ msgid ""
 "\t\treturn delegate.getCredentialTransport();\n"
 "\t}\n"
 msgstr ""
+"\t@Override\n"
+"\tpublic HttpCredentialTransport getCredentialTransport() {\n"
+"\t\treturn delegate.getCredentialTransport();\n"
+"\t}\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-customization.adoc:49
 #, no-wrap
 msgid "}\n"
-msgstr ""
+msgstr "}\n"
 
 #. type: Title ==
 #: upstream/_versions/1.7/guides/security-customization.adoc:52
@@ -109,6 +132,11 @@ msgid ""
 "import io.quarkus.security.runtime.QuarkusSecurityIdentity;\n"
 "import io.smallrye.mutiny.Uni;\n"
 msgstr ""
+"import io.quarkus.security.identity.AuthenticationRequestContext;\n"
+"import io.quarkus.security.identity.SecurityIdentity;\n"
+"import io.quarkus.security.identity.SecurityIdentityAugmentor;\n"
+"import io.quarkus.security.runtime.QuarkusSecurityIdentity;\n"
+"import io.smallrye.mutiny.Uni;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-customization.adoc:66
@@ -117,6 +145,8 @@ msgid ""
 "import javax.enterprise.context.ApplicationScoped;\n"
 "import java.util.function.Supplier;\n"
 msgstr ""
+"import javax.enterprise.context.ApplicationScoped;\n"
+"import java.util.function.Supplier;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-customization.adoc:69
@@ -126,6 +156,8 @@ msgid ""
 "@ApplicationScoped\n"
 "public class RolesAugmentor implements SecurityIdentityAugmentor {\n"
 msgstr ""
+"@ApplicationScoped\n"
+"public class RolesAugmentor implements SecurityIdentityAugmentor {\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-customization.adoc:74
@@ -137,6 +169,10 @@ msgid ""
 "        return 0;\n"
 "    }\n"
 msgstr ""
+"    @Override\n"
+"    public int priority() {\n"
+"        return 0;\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-customization.adoc:78
@@ -146,6 +182,9 @@ msgid ""
 "    public Uni<SecurityIdentity> augment(SecurityIdentity identity, AuthenticationRequestContext context) {\n"
 "        return Uni.createFrom().item(build(identity));\n"
 msgstr ""
+"    @Override\n"
+"    public Uni<SecurityIdentity> augment(SecurityIdentity identity, AuthenticationRequestContext context) {\n"
+"        return Uni.createFrom().item(build(identity));\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-customization.adoc:82
@@ -155,6 +194,9 @@ msgid ""
 "        // if a blocking call is required to customize the identity\n"
 "    }\n"
 msgstr ""
+"        // Do 'return context.runBlocking(build(identity));'\n"
+"        // if a blocking call is required to customize the identity\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-customization.adoc:89
@@ -167,6 +209,12 @@ msgid ""
 "            // create a new builder and copy principal, attributes, credentials and roles from the original identity\n"
 "            QuarkusSecurityIdentity.Builder builder = QuarkusSecurityIdentity.builder(identity);\n"
 msgstr ""
+"    private Supplier<SecurityIdentity> build(SecurityIdentity identity) {\n"
+"        if(identity.isAnonymous()) {\n"
+"            return () -> identity;\n"
+"        } else {\n"
+"            // create a new builder and copy principal, attributes, credentials and roles from the original identity\n"
+"            QuarkusSecurityIdentity.Builder builder = QuarkusSecurityIdentity.builder(identity);\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-customization.adoc:96
@@ -179,6 +227,12 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"            // add custom role source here\n"
+"            builder.addRole(\"dummy\");\n"
+"            return builder::build;\n"
+"        }\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/security-customization.adoc:99
@@ -197,6 +251,13 @@ msgid ""
 "import io.quarkus.security.runtime.QuarkusSecurityIdentity;\n"
 "import io.smallrye.mutiny.Uni;\n"
 msgstr ""
+"import java.security.cert.X509Certificate;\n"
+"import io.quarkus.security.credential.CertificateCredential;\n"
+"import io.quarkus.security.identity.AuthenticationRequestContext;\n"
+"import io.quarkus.security.identity.SecurityIdentity;\n"
+"import io.quarkus.security.identity.SecurityIdentityAugmentor;\n"
+"import io.quarkus.security.runtime.QuarkusSecurityIdentity;\n"
+"import io.smallrye.mutiny.Uni;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-customization.adoc:113
@@ -206,6 +267,9 @@ msgid ""
 "import java.util.function.Supplier;\n"
 "import java.util.Set;\n"
 msgstr ""
+"import javax.enterprise.context.ApplicationScoped;\n"
+"import java.util.function.Supplier;\n"
+"import java.util.Set;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-customization.adoc:126
@@ -216,6 +280,10 @@ msgid ""
 "        return Uni.createFrom().item(build(identity));\n"
 "    }\n"
 msgstr ""
+"    @Override\n"
+"    public Uni<SecurityIdentity> augment(SecurityIdentity identity, AuthenticationRequestContext context) {\n"
+"        return Uni.createFrom().item(build(identity));\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-customization.adoc:130
@@ -225,6 +293,9 @@ msgid ""
 "        // create a new builder and copy principal, attributes, credentials and roles from the original identity\n"
 "        QuarkusSecurityIdentity.Builder builder = QuarkusSecurityIdentity.builder(identity);\n"
 msgstr ""
+"    private Supplier<SecurityIdentity> build(SecurityIdentity identity) {\n"
+"        // create a new builder and copy principal, attributes, credentials and roles from the original identity\n"
+"        QuarkusSecurityIdentity.Builder builder = QuarkusSecurityIdentity.builder(identity);\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-customization.adoc:137
@@ -237,6 +308,12 @@ msgid ""
 "        return builder::build;\n"
 "    }\n"
 msgstr ""
+"        CertificateCredential certificate = identity.getCredential(CertificateCredential.class);\n"
+"        if (certificate != null) {\n"
+"            builder.addRoles(extractRoles(certificate.getCertificate()));\n"
+"        }\n"
+"        return builder::build;\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-customization.adoc:140
@@ -245,6 +322,8 @@ msgid ""
 "    private Set<String> extractRoles(X509Certificate certificate) {\n"
 "        String name = certificate.getSubjectX500Principal().getName();\n"
 msgstr ""
+"    private Set<String> extractRoles(X509Certificate certificate) {\n"
+"        String name = certificate.getSubjectX500Principal().getName();\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-customization.adoc:151
@@ -261,6 +340,16 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"        switch (name) {\n"
+"            case \"CN=client\":\n"
+"                return Collections.singleton(\"user\");\n"
+"            case \"CN=guest-client\":\n"
+"                return Collections.singleton(\"guest\");\n"
+"            default:\n"
+"                return Collections.emptySet();\n"
+"        }\n"
+"    }\n"
+"}\n"
 
 #. type: Title ==
 #: upstream/_versions/1.7/guides/security-customization.adoc:153
@@ -277,7 +366,7 @@ msgstr "JAX-RS `ContainerRequestFilter` を使用してカスタム JAX-RS `Secu
 #: upstream/_versions/1.7/guides/security-customization.adoc:160
 #, no-wrap
 msgid "import java.security.Principal;\n"
-msgstr ""
+msgstr "import java.security.Principal;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-customization.adoc:166
@@ -289,6 +378,11 @@ msgid ""
 "import javax.ws.rs.core.SecurityContext;\n"
 "import javax.ws.rs.ext.Provider;\n"
 msgstr ""
+"import javax.ws.rs.container.ContainerRequestContext;\n"
+"import javax.ws.rs.container.ContainerRequestFilter;\n"
+"import javax.ws.rs.container.PreMatching;\n"
+"import javax.ws.rs.core.SecurityContext;\n"
+"import javax.ws.rs.ext.Provider;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-customization.adoc:185
@@ -313,6 +407,24 @@ msgid ""
 "                    };\n"
 "                }\n"
 msgstr ""
+"@Provider\n"
+"@PreMatching\n"
+"public class SecurityOverrideFilter implements ContainerRequestFilter {\n"
+"    @Override\n"
+"    public void filter(ContainerRequestContext requestContext) throws IOException {\n"
+"        String user = requestContext.getHeaders().getFirst(\"User\");\n"
+"        String role = requestContext.getHeaders().getFirst(\"Role\");\n"
+"        if (user != null && role != null) {\n"
+"            requestContext.setSecurityContext(new SecurityContext() {\n"
+"                @Override\n"
+"                public Principal getUserPrincipal() {\n"
+"                    return new Principal() {\n"
+"                        @Override\n"
+"                        public String getName() {\n"
+"                            return user;\n"
+"                        }\n"
+"                    };\n"
+"                }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-customization.adoc:190
@@ -323,6 +435,10 @@ msgid ""
 "                    return role.equals(r);\n"
 "                }\n"
 msgstr ""
+"                @Override\n"
+"                public boolean isUserInRole(String r) {\n"
+"                    return role.equals(r);\n"
+"                }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-customization.adoc:195
@@ -333,6 +449,10 @@ msgid ""
 "                    return false;\n"
 "                }\n"
 msgstr ""
+"                @Override\n"
+"                public boolean isSecure() {\n"
+"                    return false;\n"
+"                }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-customization.adoc:202
@@ -345,6 +465,12 @@ msgid ""
 "            });\n"
 "        }\n"
 msgstr ""
+"                @Override\n"
+"                public String getAuthenticationScheme() {\n"
+"                    return \"basic\";\n"
+"                }\n"
+"            });\n"
+"        }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-customization.adoc:205
@@ -353,6 +479,8 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    }\n"
+"}\n"
 
 #. type: Title ==
 #: upstream/_versions/1.7/guides/security-customization.adoc:207
@@ -376,6 +504,12 @@ msgid ""
 "    @ConfigProperty(name = \"disable.authorization\")\n"
 "    boolean disableAuthorization;\n"
 msgstr ""
+"@Alternative\n"
+"@Priority(Interceptor.Priority.LIBRARY_AFTER)\n"
+"@ApplicationScoped\n"
+"public class DisabledAuthController extends AuthorizationController {\n"
+"    @ConfigProperty(name = \"disable.authorization\")\n"
+"    boolean disableAuthorization;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/security-customization.adoc:225
@@ -387,6 +521,11 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    @Override\n"
+"    public boolean isAuthorizationEnabled() {\n"
+"        return disableAuthorization;\n"
+"    }\n"
+"}\n"
 
 #. type: Title ==
 #: upstream/_versions/1.7/guides/security-customization.adoc:227
@@ -409,7 +548,7 @@ msgstr "セキュリティー プロバイダの設定例"
 #: upstream/_versions/1.7/guides/security-customization.adoc:238
 #, no-wrap
 msgid "quarkus.security.security-providers=SunRsaSign,SunJCE\n"
-msgstr ""
+msgstr "quarkus.security.security-providers=SunRsaSign,SunJCE\n"
 
 #. type: Title ==
 #: upstream/_versions/1.7/guides/security-customization.adoc:240
@@ -431,6 +570,10 @@ msgid ""
 "  <artifactId>quarkus-smallrye-context-propagation</artifactId>\n"
 "</dependency>\n"
 msgstr ""
+"<dependency>\n"
+"  <groupId>io.quarkus</groupId>\n"
+"  <artifactId>quarkus-smallrye-context-propagation</artifactId>\n"
+"</dependency>\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/security-customization.adoc:256

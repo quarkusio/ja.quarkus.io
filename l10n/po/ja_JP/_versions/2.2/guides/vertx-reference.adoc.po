@@ -50,6 +50,10 @@ msgid ""
 "// Field injection\n"
 "@Inject Vertx vertx;\n"
 msgstr ""
+"@ApplicationScoped\n"
+"public class MyBean {\n"
+"// Field injection\n"
+"@Inject Vertx vertx;\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:36
@@ -60,6 +64,10 @@ msgid ""
 "    // ...\n"
 "}\n"
 msgstr ""
+"// Constructor injection\n"
+"MyBean(Vertx vertx) {\n"
+"    // ...\n"
+"}\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:38
@@ -68,7 +76,7 @@ msgstr ""
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:784
 #, no-wrap
 msgid "}\n"
-msgstr ""
+msgstr "}\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:41
@@ -402,6 +410,10 @@ msgid ""
 "  <artifactId>smallrye-mutiny-vertx-web-client</artifactId>\n"
 "</dependency>\n"
 msgstr ""
+"<dependency>\n"
+"  <groupId>io.smallrye.reactive</groupId>\n"
+"  <artifactId>smallrye-mutiny-vertx-web-client</artifactId>\n"
+"</dependency>\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:152
@@ -418,7 +430,7 @@ msgstr "さて、コードの中で、 `WebClient` のインスタンスを作�
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:758
 #, no-wrap
 msgid "package org.acme.vertx;\n"
-msgstr ""
+msgstr "package org.acme.vertx;\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:164
@@ -431,6 +443,12 @@ msgid ""
 "import javax.ws.rs.Produces;\n"
 "import javax.ws.rs.core.MediaType;\n"
 msgstr ""
+"import javax.annotation.PostConstruct;\n"
+"import javax.inject.Inject;\n"
+"import javax.ws.rs.GET;\n"
+"import javax.ws.rs.Path;\n"
+"import javax.ws.rs.Produces;\n"
+"import javax.ws.rs.core.MediaType;\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:167
@@ -439,6 +457,8 @@ msgid ""
 "import io.smallrye.mutiny.Uni;\n"
 "import org.jboss.resteasy.annotations.jaxrs.PathParam;\n"
 msgstr ""
+"import io.smallrye.mutiny.Uni;\n"
+"import org.jboss.resteasy.annotations.jaxrs.PathParam;\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:172
@@ -449,6 +469,10 @@ msgid ""
 "import io.vertx.core.json.JsonObject;\n"
 "import io.vertx.ext.web.client.WebClientOptions;\n"
 msgstr ""
+"import io.vertx.mutiny.core.Vertx;\n"
+"import io.vertx.mutiny.ext.web.client.WebClient;\n"
+"import io.vertx.core.json.JsonObject;\n"
+"import io.vertx.ext.web.client.WebClientOptions;\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:175
@@ -457,12 +481,14 @@ msgid ""
 "@Path(\"/fruit-data\")\n"
 "public class ResourceUsingWebClient {\n"
 msgstr ""
+"@Path(\"/fruit-data\")\n"
+"public class ResourceUsingWebClient {\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:177
 #, no-wrap
 msgid "    private final WebClient client;\n"
-msgstr ""
+msgstr "    private final WebClient client;\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:182
@@ -473,6 +499,10 @@ msgid ""
 "        this.client = WebClient.create(vertx);\n"
 "    }\n"
 msgstr ""
+"    @Inject\n"
+"    VertxResource(Vertx vertx) {\n"
+"        this.client = WebClient.create(vertx);\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:199
@@ -495,6 +525,22 @@ msgid ""
 "                });\n"
 "    }\n"
 msgstr ""
+"    @GET\n"
+"    @Produces(MediaType.APPLICATION_JSON)\n"
+"    @Path(\"/{name}\")\n"
+"    public Uni<JsonObject> getFruitData(@PathParam(\"name\") String name) {\n"
+"        return client.getAbs(\"https://.../api/fruit/\" + name)\n"
+"                .send()\n"
+"                .onItem().transform(resp -> {\n"
+"                    if (resp.statusCode() == 200) {\n"
+"                        return resp.bodyAsJsonObject();\n"
+"                    } else {\n"
+"                        return new JsonObject()\n"
+"                                .put(\"code\", resp.statusCode())\n"
+"                                .put(\"message\", resp.bodyAsString());\n"
+"                    }\n"
+"                });\n"
+"    }\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:207
@@ -510,7 +556,7 @@ msgstr "このアプリケーションは、ネイティブ実行可能ファイ
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:215
 #, no-wrap
 msgid "quarkus.ssl.native=true\n"
-msgstr ""
+msgstr "quarkus.ssl.native=true\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:218
@@ -521,7 +567,7 @@ msgstr "そして、ネイティブ実行可能ファイルを作成します。
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:222
 #, no-wrap
 msgid "./mvnw package -Pnative\n"
-msgstr ""
+msgstr "./mvnw package -Pnative\n"
 
 #. type: Title ==
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:225
@@ -547,6 +593,9 @@ msgid ""
 "Person person = ...;\n"
 "JsonObject json = JsonObject.mapFrom(person);\n"
 msgstr ""
+"// Map an object into JSON\n"
+"Person person = ...;\n"
+"JsonObject json = JsonObject.mapFrom(person);\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:241
@@ -556,6 +605,9 @@ msgid ""
 "json = new JsonObject();\n"
 "person = json.mapTo(Person.class);\n"
 msgstr ""
+"// Build an object from JSON\n"
+"json = new JsonObject();\n"
+"person = json.mapTo(Person.class);\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:245
@@ -575,6 +627,9 @@ msgid ""
 "@Produces(MediaType.APPLICATION_JSON)\n"
 "public class VertxJsonResource {\n"
 msgstr ""
+"@Path(\"/hello\")\n"
+"@Produces(MediaType.APPLICATION_JSON)\n"
+"public class VertxJsonResource {\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:262
@@ -586,6 +641,11 @@ msgid ""
 "        return new JsonObject().put(\"Hello\", name);\n"
 "    }\n"
 msgstr ""
+"    @GET\n"
+"    @Path(\"{name}/object\")\n"
+"    public JsonObject jsonObject(@PathParam String name) {\n"
+"        return new JsonObject().put(\"Hello\", name);\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:269
@@ -598,6 +658,12 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    @GET\n"
+"    @Path(\"{name}/array\")\n"
+"    public JsonArray jsonArray(@PathParam String name) {\n"
+"        return new JsonArray().add(\"Hello\").add(name);\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:272
@@ -608,7 +674,7 @@ msgstr "http://localhost:8080/hello/Quarkus/object は次を返却します"
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:276
 #, no-wrap
 msgid "{\"Hello\":\"Quarkus\"}\n"
-msgstr ""
+msgstr "{\"Hello\":\"Quarkus\"}\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:279
@@ -619,7 +685,7 @@ msgstr "http://localhost:8080/hello/Quarkus/array は次を返却します"
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:283
 #, no-wrap
 msgid "[\"Hello\",\"Quarkus\"]\n"
-msgstr ""
+msgstr "[\"Hello\",\"Quarkus\"]\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:286
@@ -651,7 +717,7 @@ msgstr "_Mutiny_ verticle - `io.smallrye.mutiny.vertx.core.AbstractVerticle` を
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:304
 #, no-wrap
 msgid "@Inject Vertx vertx;\n"
-msgstr ""
+msgstr "@Inject Vertx vertx;\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:308
@@ -661,6 +727,9 @@ msgid ""
 "vertx.deployVerticle(MyVerticle.class.getName(), ar -> { });\n"
 "vertx.deployVerticle(new MyVerticle(), ar -> { });\n"
 msgstr ""
+"// ...\n"
+"vertx.deployVerticle(MyVerticle.class.getName(), ar -> { });\n"
+"vertx.deployVerticle(new MyVerticle(), ar -> { });\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:311
@@ -672,7 +741,7 @@ msgstr "アプリケーションの初期化時にVerticleをデプロイする�
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:348
 #, no-wrap
 msgid "package io.quarkus.vertx.verticles;\n"
-msgstr ""
+msgstr "package io.quarkus.vertx.verticles;\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:324
@@ -682,6 +751,9 @@ msgid ""
 "import io.smallrye.mutiny.vertx.core.AbstractVerticle;\n"
 "import org.eclipse.microprofile.config.inject.ConfigProperty;\n"
 msgstr ""
+"import io.smallrye.mutiny.Uni;\n"
+"import io.smallrye.mutiny.vertx.core.AbstractVerticle;\n"
+"import org.eclipse.microprofile.config.inject.ConfigProperty;\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:326
@@ -689,7 +761,7 @@ msgstr ""
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:713
 #, no-wrap
 msgid "import javax.enterprise.context.ApplicationScoped;\n"
-msgstr ""
+msgstr "import javax.enterprise.context.ApplicationScoped;\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:329
@@ -698,12 +770,14 @@ msgid ""
 "@ApplicationScoped\n"
 "public class MyBeanVerticle extends AbstractVerticle {\n"
 msgstr ""
+"@ApplicationScoped\n"
+"public class MyBeanVerticle extends AbstractVerticle {\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:331
 #, no-wrap
 msgid "    @ConfigProperty(name = \"address\") String address;\n"
-msgstr ""
+msgstr "    @ConfigProperty(name = \"address\") String address;\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:339
@@ -717,6 +791,13 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    @Override\n"
+"    public Uni<Void> asyncStart() {\n"
+"        return vertx.eventBus().consumer(address)\n"
+"                .handler(m -> m.replyAndForget(\"hello\"))\n"
+"                .completionHandler();\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:344
@@ -730,6 +811,8 @@ msgid ""
 "import io.quarkus.runtime.StartupEvent;\n"
 "import io.vertx.mutiny.core.Vertx;\n"
 msgstr ""
+"import io.quarkus.runtime.StartupEvent;\n"
+"import io.vertx.mutiny.core.Vertx;\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:354
@@ -738,6 +821,8 @@ msgid ""
 "import javax.enterprise.context.ApplicationScoped;\n"
 "import javax.enterprise.event.Observes;\n"
 msgstr ""
+"import javax.enterprise.context.ApplicationScoped;\n"
+"import javax.enterprise.event.Observes;\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:357
@@ -746,6 +831,8 @@ msgid ""
 "@ApplicationScoped\n"
 "public class VerticleDeployer {\n"
 msgstr ""
+"@ApplicationScoped\n"
+"public class VerticleDeployer {\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:362
@@ -756,6 +843,10 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    public void init(@Observes StartupEvent e, Vertx vertx, MyBeanVerticle verticle) {\n"
+"         vertx.deployVerticle(verticle).await().indefinitely();\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:365
@@ -772,6 +863,11 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"public void init(@Observes StartupEvent e, Vertx vertx, Instance<AbstractVerticle> verticles) {\n"
+"    for (AbstractVerticle verticle : verticles) {\n"
+"        vertx.deployVerticle(verticle).await().indefinitely();\n"
+"    }\n"
+"}\n"
 
 #. type: Title ==
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:376
@@ -826,7 +922,7 @@ msgstr "Vert.x APIを使用してコンシューマーを登録することが�
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:711
 #, no-wrap
 msgid "import io.quarkus.vertx.ConsumeEvent;\n"
-msgstr ""
+msgstr "import io.quarkus.vertx.ConsumeEvent;\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:405
@@ -837,6 +933,8 @@ msgid ""
 "@ApplicationScoped\n"
 "public class GreetingService {\n"
 msgstr ""
+"@ApplicationScoped\n"
+"public class GreetingService {\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:411
@@ -848,6 +946,11 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    @ConsumeEvent                           // <1>\n"
+"    public String consume(String name) {    // <2>\n"
+"        return name.toUpperCase();\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:413
@@ -879,6 +982,10 @@ msgid ""
 "    return name.toUpperCase();\n"
 "}\n"
 msgstr ""
+"@ConsumeEvent(\"greeting\")               // <1>\n"
+"public String consume(String name) {\n"
+"    return name.toUpperCase();\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:427
@@ -905,6 +1012,10 @@ msgid ""
 "import java.util.concurrent.CompletionStage;\n"
 "import io.smallrye.mutiny.Uni;\n"
 msgstr ""
+"import javax.enterprise.context.ApplicationScoped;\n"
+"import java.util.concurrent.CompletableFuture;\n"
+"import java.util.concurrent.CompletionStage;\n"
+"import io.smallrye.mutiny.Uni;\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:452
@@ -916,6 +1027,11 @@ msgid ""
 "        // You can also fail the CompletionStage explicitly\n"
 "    }\n"
 msgstr ""
+"    @ConsumeEvent\n"
+"    public CompletionStage<String> consume(String name) {\n"
+"        // return a CompletionStage completed when the processing is finished.\n"
+"        // You can also fail the CompletionStage explicitly\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:459
@@ -928,6 +1044,12 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    @ConsumeEvent\n"
+"    public Uni<String> process(String name) {\n"
+"        // return an Uni completed when the processing is finished.\n"
+"        // You can also fail the Uni explicitly\n"
+"    }\n"
+"}\n"
 
 #. type: delimited block =
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:466
@@ -955,6 +1077,11 @@ msgid ""
 "    // Something blocking\n"
 "}\n"
 msgstr ""
+"@ConsumeEvent(value = \"blocking-consumer\")\n"
+"@Blocking\n"
+"void consumeBlocking(String message) {\n"
+"    // Something blocking\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:483
@@ -970,6 +1097,10 @@ msgid ""
 "    // Something blocking\n"
 "}\n"
 msgstr ""
+"@ConsumeEvent(value = \"blocking-consumer\", blocking = true)\n"
+"void consumeBlocking(String message) {\n"
+"    // Something blocking\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:493
@@ -996,6 +1127,10 @@ msgid ""
 "    return name.toUpperCase();\n"
 "}\n"
 msgstr ""
+"@ConsumeEvent(\"greeting\")\n"
+"public String consume(String name) {\n"
+"    return name.toUpperCase();\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:508
@@ -1011,6 +1146,10 @@ msgid ""
 "    return Uni.createFrom().item(() -> name.toUpperCase()).emitOn(executor);\n"
 "}\n"
 msgstr ""
+"@ConsumeEvent(\"greeting\")\n"
+"public Uni<String> consume2(String name) {\n"
+"    return Uni.createFrom().item(() -> name.toUpperCase()).emitOn(executor);\n"
+"}\n"
 
 #. type: delimited block =
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:520
@@ -1021,7 +1160,7 @@ msgstr "Context Propagation エクステンションを使えば、 `executor` �
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:523
 #, no-wrap
 msgid "@Inject Executor executor;\n"
-msgstr ""
+msgstr "@Inject Executor executor;\n"
 
 #. type: Title ===
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:526
@@ -1043,6 +1182,10 @@ msgid ""
 "    // Do something with the event\n"
 "}\n"
 msgstr ""
+"@ConsumeEvent(\"greeting\")\n"
+"public void consume(String event) {\n"
+"    // Do something with the event\n"
+"}\n"
 
 #. type: Title ===
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:540
@@ -1065,6 +1208,11 @@ msgid ""
 "    System.out.println(msg.body());\n"
 "}\n"
 msgstr ""
+"@ConsumeEvent(\"greeting\")\n"
+"public void consume(Message<String> msg) {\n"
+"    System.out.println(msg.address());\n"
+"    System.out.println(msg.body());\n"
+"}\n"
 
 #. type: Title ===
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:553
@@ -1108,6 +1256,10 @@ msgid ""
 "import io.vertx.mutiny.core.eventbus.Message;\n"
 "import org.jboss.resteasy.annotations.jaxrs.PathParam;\n"
 msgstr ""
+"import io.smallrye.mutiny.Uni;\n"
+"import io.vertx.mutiny.core.eventbus.EventBus;\n"
+"import io.vertx.mutiny.core.eventbus.Message;\n"
+"import org.jboss.resteasy.annotations.jaxrs.PathParam;\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:578
@@ -1120,6 +1272,11 @@ msgid ""
 "import javax.ws.rs.Produces;\n"
 "import javax.ws.rs.core.MediaType;\n"
 msgstr ""
+"import javax.inject.Inject;\n"
+"import javax.ws.rs.GET;\n"
+"import javax.ws.rs.Path;\n"
+"import javax.ws.rs.Produces;\n"
+"import javax.ws.rs.core.MediaType;\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:581
@@ -1128,6 +1285,8 @@ msgid ""
 "@Path(\"/async\")\n"
 "public class EventResource {\n"
 msgstr ""
+"@Path(\"/async\")\n"
+"public class EventResource {\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:584
@@ -1136,6 +1295,8 @@ msgid ""
 "    @Inject\n"
 "    EventBus bus;                                            // <1>\n"
 msgstr ""
+"    @Inject\n"
+"    EventBus bus;                                            // <1>\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:593
@@ -1150,6 +1311,14 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    @GET\n"
+"    @Produces(MediaType.TEXT_PLAIN)\n"
+"    @Path(\"{name}\")\n"
+"    public Uni<String> greeting(@PathParam String name) {\n"
+"        return bus.<String>request(\"greeting\", name)        // <2>\n"
+"                .onItem().transform(Message::body);\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:595
@@ -1193,6 +1362,13 @@ msgid ""
 "Uni<String> response = bus.<String>request(\"address\", \"hello, how are you?\")\n"
 "        .onItem().transform(Message::body);\n"
 msgstr ""
+"// Case 1\n"
+"bus.sendAndForget(\"greeting\", name)\n"
+"// Case 2\n"
+"bus.publish(\"greeting\", name)\n"
+"// Case 3\n"
+"Uni<String> response = bus.<String>request(\"address\", \"hello, how are you?\")\n"
+"        .onItem().transform(Message::body);\n"
 
 #. type: Title ===
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:614
@@ -1217,6 +1393,13 @@ msgid ""
 "        .onItem().transform(Message::body);\n"
 "}\n"
 msgstr ""
+"@GET\n"
+"@Produces(MediaType.TEXT_PLAIN)\n"
+"@Path(\"{name}\")\n"
+"public Uni<String> greeting(@PathParam String name) {\n"
+"    return bus.<String>request(\"greeting\", new MyName(name))\n"
+"        .onItem().transform(Message::body);\n"
+"}\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:634
@@ -1227,6 +1410,10 @@ msgid ""
 "    return Uni.createFrom().item(() -> \"Hello \" + name.getName());\n"
 "}\n"
 msgstr ""
+"@ConsumeEvent(value = \"greeting\")\n"
+"Uni<String> greeting(MyName name) {\n"
+"    return Uni.createFrom().item(() -> \"Hello \" + name.getName());\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:637
@@ -1246,6 +1433,14 @@ msgid ""
 "        .onItem().transform(Message::body);\n"
 "}\n"
 msgstr ""
+"@GET\n"
+"@Produces(MediaType.TEXT_PLAIN)\n"
+"@Path(\"{name}\")\n"
+"public Uni<String> greeting(@PathParam String name) {\n"
+"    return bus.<String>request(\"greeting\", name,\n"
+"        new DeliveryOptions().setCodecName(MyNameCodec.class.getName())) // <1>\n"
+"        .onItem().transform(Message::body);\n"
+"}\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:653
@@ -1256,6 +1451,10 @@ msgid ""
 "    return Uni.createFrom().item(() -> \"Hello \"+name.getName());\n"
 "}\n"
 msgstr ""
+"@ConsumeEvent(value = \"greeting\", codec = MyNameCodec.class)            // <2>\n"
+"Uni<String> greeting(MyName name) {\n"
+"    return Uni.createFrom().item(() -> \"Hello \"+name.getName());\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:655
@@ -1290,6 +1489,8 @@ msgid ""
 "@Path(\"/bus\")\n"
 "public class EventResource {\n"
 msgstr ""
+"@Path(\"/bus\")\n"
+"public class EventResource {\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:686
@@ -1298,6 +1499,8 @@ msgid ""
 "    @Inject\n"
 "    EventBus bus;\n"
 msgstr ""
+"    @Inject\n"
+"    EventBus bus;\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:695
@@ -1312,6 +1515,14 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    @GET\n"
+"    @Produces(MediaType.TEXT_PLAIN)\n"
+"    @Path(\"{name}\")\n"
+"    public Uni<String> greeting(@PathParam String name) {\n"
+"        return bus.<String>request(\"greeting\", name)            // <1>\n"
+"                .onItem().transform(Message::body);            // <2>\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:697
@@ -1342,6 +1553,10 @@ msgid ""
 "        return \"Hello \" + name;\n"
 "    }\n"
 msgstr ""
+"    @ConsumeEvent(\"greeting\")\n"
+"    public String greeting(String name) {\n"
+"        return \"Hello \" + name;\n"
+"    }\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:726
@@ -1357,7 +1572,7 @@ msgstr "これにより、 `/bus/quarkus` のすべてのHTTPリクエストは�
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:732
 #, no-wrap
 msgid "Hello Quarkus\n"
-msgstr ""
+msgstr "Hello Quarkus\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:735
@@ -1420,6 +1635,11 @@ msgid ""
 "import io.vertx.ext.web.handler.sockjs.SockJSBridgeOptions;\n"
 "import io.vertx.ext.web.handler.sockjs.SockJSHandler;\n"
 msgstr ""
+"import io.vertx.core.Vertx;\n"
+"import io.vertx.ext.bridge.PermittedOptions;\n"
+"import io.vertx.ext.web.Router;\n"
+"import io.vertx.ext.web.handler.sockjs.SockJSBridgeOptions;\n"
+"import io.vertx.ext.web.handler.sockjs.SockJSHandler;\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:769
@@ -1430,6 +1650,10 @@ msgid ""
 "import javax.inject.Inject;\n"
 "import java.util.concurrent.atomic.AtomicInteger;\n"
 msgstr ""
+"import javax.enterprise.context.ApplicationScoped;\n"
+"import javax.enterprise.event.Observes;\n"
+"import javax.inject.Inject;\n"
+"import java.util.concurrent.atomic.AtomicInteger;\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:772
@@ -1438,6 +1662,8 @@ msgid ""
 "@ApplicationScoped\n"
 "public class SockJsExample {\n"
 msgstr ""
+"@ApplicationScoped\n"
+"public class SockJsExample {\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:775
@@ -1446,6 +1672,8 @@ msgid ""
 "    @Inject\n"
 "    Vertx vertx;\n"
 msgstr ""
+"    @Inject\n"
+"    Vertx vertx;\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:782
@@ -1458,6 +1686,12 @@ msgid ""
 "        router.route(\"/eventbus/*\").handler(sockJSHandler);\n"
 "    }\n"
 msgstr ""
+"    public void init(@Observes Router router) {\n"
+"        SockJSHandler sockJSHandler = SockJSHandler.create(vertx);\n"
+"        sockJSHandler.bridge(new SockJSBridgeOptions()\n"
+"                .addOutboundPermitted(new PermittedOptions().setAddress(\"ticks\")));\n"
+"        router.route(\"/eventbus/*\").handler(sockJSHandler);\n"
+"    }\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:788
@@ -1485,18 +1719,29 @@ msgid ""
 "</head>\n"
 "<body>\n"
 msgstr ""
+"<!doctype html>\n"
+"<html>\n"
+"<head>\n"
+"    <meta charset=\"utf-8\"/>\n"
+"    <title>SockJS example - Quarkus</title>\n"
+"    <script src=\"https://code.jquery.com/jquery-3.3.1.min.js\"\n"
+"            integrity=\"sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=\" crossorigin=\"anonymous\"></script>\n"
+"    <script type=\"application/javascript\" src=\"https://cdn.jsdelivr.net/sockjs/0.3.4/sockjs.min.js\"></script>\n"
+"    <script src=\"https://cdn.jsdelivr.net/npm/vertx3-eventbus-client@3.8.5/vertx-eventbus.min.js\"></script>\n"
+"</head>\n"
+"<body>\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:806
 #, no-wrap
 msgid "<h1>SockJS Examples</h1>\n"
-msgstr ""
+msgstr "<h1>SockJS Examples</h1>\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:808
 #, no-wrap
 msgid "<p><strong>Last Tick:</strong> <span id=\"tick\"></span></p>\n"
-msgstr ""
+msgstr "<p><strong>Last Tick:</strong> <span id=\"tick\"></span></p>\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:812
@@ -1506,12 +1751,15 @@ msgid ""
 "<script>\n"
 "    var eb = new EventBus('/eventbus');\n"
 msgstr ""
+"</body>\n"
+"<script>\n"
+"    var eb = new EventBus('/eventbus');\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:814
 #, no-wrap
 msgid "    eb.onopen = function () {\n"
-msgstr ""
+msgstr "    eb.onopen = function () {\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:819
@@ -1522,6 +1770,10 @@ msgid ""
 "        });\n"
 "    }\n"
 msgstr ""
+"        eb.registerHandler('ticks', function (error, message) {\n"
+"            $(\"#tick\").html(message.body);\n"
+"        });\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:822
@@ -1530,6 +1782,8 @@ msgid ""
 "</script>\n"
 "</html>\n"
 msgstr ""
+"</script>\n"
+"</html>\n"
 
 #. type: Title ==
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:825
@@ -1557,6 +1811,11 @@ msgid ""
 "  <classifier>linux-x86_64</classifier>\n"
 "</dependency>\n"
 msgstr ""
+"<dependency>\n"
+"  <groupId>io.netty</groupId>\n"
+"  <artifactId>netty-transport-native-epoll</artifactId>\n"
+"  <classifier>linux-x86_64</classifier>\n"
+"</dependency>\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:847
@@ -1568,6 +1827,11 @@ msgid ""
 "  <classifier>osx-x86_64</classifier>\n"
 "</dependency>\n"
 msgstr ""
+"<dependency>\n"
+"  <groupId>io.netty</groupId>\n"
+"  <artifactId>netty-transport-native-kqueue</artifactId>\n"
+"  <classifier>osx-x86_64</classifier>\n"
+"</dependency>\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:851
@@ -1578,7 +1842,7 @@ msgstr "また、Vert.xでネイティブトランスポートを使用するよ
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:855
 #, no-wrap
 msgid "quarkus.vertx.prefer-native-transport=true\n"
-msgstr ""
+msgstr "quarkus.vertx.prefer-native-transport=true\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:858
@@ -1593,6 +1857,9 @@ msgid ""
 "  vertx:\n"
 "    prefer-native-transport: true\n"
 msgstr ""
+"quarkus:\n"
+"  vertx:\n"
+"    prefer-native-transport: true\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:867
@@ -1603,7 +1870,7 @@ msgstr "すべてがうまくいけば、クァーカス以下のログ出力を
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:870
 #, no-wrap
 msgid "[io.qua.ver.cor.run.VertxCoreRecorder] (main) Vertx has Native Transport Enabled: true\n"
-msgstr ""
+msgstr "[io.qua.ver.cor.run.VertxCoreRecorder] (main) Vertx has Native Transport Enabled: true\n"
 
 #. type: Title ===
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:872
@@ -1627,7 +1894,7 @@ msgstr "SOREUSEPORT"
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:900
 #, no-wrap
 msgid "quarkus.http.so-reuse-port=true\n"
-msgstr ""
+msgstr "quarkus.http.so-reuse-port=true\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:881
@@ -1638,7 +1905,7 @@ msgstr "TCP_QUICKACK"
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:883
 #, no-wrap
 msgid "quarkus.http.tcp-quick-ack=true\n"
-msgstr ""
+msgstr "quarkus.http.tcp-quick-ack=true\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:885
@@ -1649,7 +1916,7 @@ msgstr "TCP_CORK"
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:887
 #, no-wrap
 msgid "quarkus.http.tcp-cork=true\n"
-msgstr ""
+msgstr "quarkus.http.tcp-cork=true\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:889
@@ -1660,7 +1927,7 @@ msgstr "TCP_FASTOPEN"
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:891
 #, no-wrap
 msgid "quarkus.http.tcp-fast-open=true\n"
-msgstr ""
+msgstr "quarkus.http.tcp-fast-open=true\n"
 
 #. type: Title ===
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:893
@@ -1701,6 +1968,8 @@ msgid ""
 "quarkus.http.domain-socket=/var/run/io.quarkus.app.socket\n"
 "quarkus.http.domain-socket-enabled=true\n"
 msgstr ""
+"quarkus.http.domain-socket=/var/run/io.quarkus.app.socket\n"
+"quarkus.http.domain-socket-enabled=true\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:922
@@ -1711,7 +1980,7 @@ msgstr "これだけでは、デフォルトで `0.0.0.0:8080` で開かれる t
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:925
 #, no-wrap
 msgid "quarkus.http.host-enabled=false\n"
-msgstr ""
+msgstr "quarkus.http.host-enabled=false\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:929
@@ -1733,7 +2002,7 @@ msgstr "ファイルシステムが読み取り専用の環境では、次のよ
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:937
 #, no-wrap
 msgid "java.lang.IllegalStateException: Failed to create cache dir\n"
-msgstr ""
+msgstr "java.lang.IllegalStateException: Failed to create cache dir\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/vertx-reference.adoc:939

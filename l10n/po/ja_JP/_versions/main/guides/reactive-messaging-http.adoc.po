@@ -101,6 +101,12 @@ msgid ""
 "    -DnoExamples\n"
 "cd reactive-messaging-http-quickstart\n"
 msgstr ""
+"mvn io.quarkus.platform:quarkus-maven-plugin:{quarkus-version}:create \\\n"
+"    -DprojectGroupId=org.acme \\\n"
+"    -DprojectArtifactId=reactive-messaging-http-quickstart \\\n"
+"    -Dextensions=\"reactive-messaging-http\" \\\n"
+"    -DnoExamples\n"
+"cd reactive-messaging-http-quickstart\n"
 
 #. type: Plain text
 #: upstream/_versions/main/guides/reactive-messaging-http.adoc:56
@@ -124,7 +130,7 @@ msgstr "以下の内容の `src/main/java/org/acme/reactivehttp/CostConverter.ja
 #: upstream/_versions/main/guides/reactive-messaging-http.adoc:186
 #, no-wrap
 msgid "package org.acme.reactivehttp;\n"
-msgstr ""
+msgstr "package org.acme.reactivehttp;\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/reactive-messaging-http.adoc:68
@@ -134,6 +140,9 @@ msgid ""
 "import org.eclipse.microprofile.reactive.messaging.Outgoing;\n"
 "import org.jboss.logging.Logger;\n"
 msgstr ""
+"import org.eclipse.microprofile.reactive.messaging.Incoming;\n"
+"import org.eclipse.microprofile.reactive.messaging.Outgoing;\n"
+"import org.jboss.logging.Logger;\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/reactive-messaging-http.adoc:72
@@ -143,6 +152,9 @@ msgid ""
 "import java.util.HashMap;\n"
 "import java.util.Map;\n"
 msgstr ""
+"import javax.enterprise.context.ApplicationScoped;\n"
+"import java.util.HashMap;\n"
+"import java.util.Map;\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/reactive-messaging-http.adoc:78
@@ -154,18 +166,23 @@ msgid ""
 "@ApplicationScoped\n"
 "public class CostConverter {\n"
 msgstr ""
+"/**\n"
+" * A bean consuming costs in multiple currencies and producing prices in EUR from them\n"
+" */\n"
+"@ApplicationScoped\n"
+"public class CostConverter {\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/reactive-messaging-http.adoc:80
 #, no-wrap
 msgid "    private static final Logger log = Logger.getLogger(CostConverter.class);\n"
-msgstr ""
+msgstr "    private static final Logger log = Logger.getLogger(CostConverter.class);\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/reactive-messaging-http.adoc:82
 #, no-wrap
 msgid "    private static final Map<String, Double> conversionRatios = new HashMap<>();\n"
-msgstr ""
+msgstr "    private static final Map<String, Double> conversionRatios = new HashMap<>();\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/reactive-messaging-http.adoc:89
@@ -178,6 +195,12 @@ msgid ""
 "        conversionRatios.put(\"EUR\", 1.);\n"
 "    }\n"
 msgstr ""
+"    static {\n"
+"        conversionRatios.put(\"CHF\", 0.93);\n"
+"        conversionRatios.put(\"USD\", 0.84);\n"
+"        conversionRatios.put(\"PLN\", 0.22);\n"
+"        conversionRatios.put(\"EUR\", 1.);\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/reactive-messaging-http.adoc:100
@@ -194,6 +217,16 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    @Incoming(\"incoming-costs\") // <1>\n"
+"    @Outgoing(\"outgoing-costs\") // <2>\n"
+"    double convert(Cost cost) { // <3>\n"
+"        Double conversionRatio = conversionRatios.get(cost.getCurrency().toUpperCase());\n"
+"        if (conversionRatio == null) {\n"
+"            return 0.;\n"
+"        }\n"
+"        return conversionRatio * cost.getValue();\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/main/guides/reactive-messaging-http.adoc:104
@@ -223,6 +256,9 @@ msgid ""
 "    private double value;\n"
 "    private String currency;\n"
 msgstr ""
+"public class Cost {\n"
+"    private double value;\n"
+"    private String currency;\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/reactive-messaging-http.adoc:121
@@ -232,6 +268,9 @@ msgid ""
 "        return value;\n"
 "    }\n"
 msgstr ""
+"    public double getValue() {\n"
+"        return value;\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/reactive-messaging-http.adoc:125
@@ -241,6 +280,9 @@ msgid ""
 "        this.value = value;\n"
 "    }\n"
 msgstr ""
+"    public void setValue(double value) {\n"
+"        this.value = value;\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/reactive-messaging-http.adoc:129
@@ -250,6 +292,9 @@ msgid ""
 "        return currency;\n"
 "    }\n"
 msgstr ""
+"    public String getCurrency() {\n"
+"        return currency;\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/reactive-messaging-http.adoc:134
@@ -260,6 +305,10 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    public void setCurrency(String currency) {\n"
+"        this.currency = currency;\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/main/guides/reactive-messaging-http.adoc:140
@@ -301,7 +350,7 @@ msgstr "`outgoing-costs` は、換算されたコスト値を受け取るシン�
 #: upstream/_versions/main/guides/reactive-messaging-http.adoc:156
 #, no-wrap
 msgid "mp.messaging.outgoing.outgoing-costs.connector=quarkus-http\n"
-msgstr ""
+msgstr "mp.messaging.outgoing.outgoing-costs.connector=quarkus-http\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/reactive-messaging-http.adoc:160
@@ -311,6 +360,9 @@ msgid ""
 "# you can use e.g. an environment variable to change it\n"
 "mp.messaging.outgoing.outgoing-costs.url=http://localhost:${quarkus.http.port}/cost-collector\n"
 msgstr ""
+"# here we are using a URL pointing to an endpoint\n"
+"# you can use e.g. an environment variable to change it\n"
+"mp.messaging.outgoing.outgoing-costs.url=http://localhost:${quarkus.http.port}/cost-collector\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/reactive-messaging-http.adoc:163
@@ -319,6 +371,8 @@ msgid ""
 "# we need to use a different port for tests:\n"
 "%test.mp.messaging.outgoing.outgoing-costs.url=http://localhost:${quarkus.http.test-port}/cost-collector\n"
 msgstr ""
+"# we need to use a different port for tests:\n"
+"%test.mp.messaging.outgoing.outgoing-costs.url=http://localhost:${quarkus.http.test-port}/cost-collector\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/reactive-messaging-http.adoc:166
@@ -327,12 +381,14 @@ msgid ""
 "# POST is the default method. Another possibility is PUT\n"
 "mp.messaging.outgoing.outgoing-costs.method=POST\n"
 msgstr ""
+"# POST is the default method. Another possibility is PUT\n"
+"mp.messaging.outgoing.outgoing-costs.method=POST\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/reactive-messaging-http.adoc:169
 #, no-wrap
 msgid "mp.messaging.incoming.incoming-costs.connector=quarkus-http\n"
-msgstr ""
+msgstr "mp.messaging.incoming.incoming-costs.connector=quarkus-http\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/reactive-messaging-http.adoc:172
@@ -341,6 +397,8 @@ msgid ""
 "# the incoming-costs channel will be fed via an endpoint on the `/costs` path\n"
 "mp.messaging.incoming.incoming-costs.path=/costs\n"
 msgstr ""
+"# the incoming-costs channel will be fed via an endpoint on the `/costs` path\n"
+"mp.messaging.incoming.incoming-costs.path=/costs\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/reactive-messaging-http.adoc:175
@@ -349,6 +407,8 @@ msgid ""
 "# POST is the default method. Another possibility is PUT\n"
 "mp.messaging.incoming.incoming-costs.method=POST\n"
 msgstr ""
+"# POST is the default method. Another possibility is PUT\n"
+"mp.messaging.incoming.incoming-costs.method=POST\n"
 
 #. type: Title ==
 #: upstream/_versions/main/guides/reactive-messaging-http.adoc:178
@@ -370,6 +430,10 @@ msgid ""
 "import javax.ws.rs.POST;\n"
 "import javax.ws.rs.Path;\n"
 msgstr ""
+"import javax.enterprise.context.ApplicationScoped;\n"
+"import javax.ws.rs.GET;\n"
+"import javax.ws.rs.POST;\n"
+"import javax.ws.rs.Path;\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/reactive-messaging-http.adoc:195
@@ -379,12 +443,15 @@ msgid ""
 "@ApplicationScoped\n"
 "public class CostCollector {\n"
 msgstr ""
+"@Path(\"/cost-collector\")\n"
+"@ApplicationScoped\n"
+"public class CostCollector {\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/reactive-messaging-http.adoc:197
 #, no-wrap
 msgid "    private double sum = 0;\n"
-msgstr ""
+msgstr "    private double sum = 0;\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/reactive-messaging-http.adoc:202
@@ -395,6 +462,10 @@ msgid ""
 "        sum += Double.parseDouble(valueAsString);\n"
 "    }\n"
 msgstr ""
+"    @POST\n"
+"    public void consumeCost(String valueAsString) {\n"
+"        sum += Double.parseDouble(valueAsString);\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/reactive-messaging-http.adoc:207
@@ -405,12 +476,16 @@ msgid ""
 "        return sum;\n"
 "    }\n"
 msgstr ""
+"    @GET\n"
+"    public double getSum() {\n"
+"        return sum;\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/reactive-messaging-http.adoc:209
 #, no-wrap
 msgid "}\n"
-msgstr ""
+msgstr "}\n"
 
 #. type: Title ==
 #: upstream/_versions/main/guides/reactive-messaging-http.adoc:212
@@ -443,6 +518,11 @@ msgid ""
 "    <meta charset=\"UTF-8\">\n"
 "    <title>Costs</title>\n"
 msgstr ""
+"<!DOCTYPE html>\n"
+"<html lang=\"en\">\n"
+"<head>\n"
+"    <meta charset=\"UTF-8\">\n"
+"    <title>Costs</title>\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/reactive-messaging-http.adoc:236
@@ -456,6 +536,13 @@ msgid ""
 "<body>\n"
 "<div class=\"container\">\n"
 msgstr ""
+"    <link rel=\"stylesheet\" type=\"text/css\"\n"
+"          href=\"https://cdnjs.cloudflare.com/ajax/libs/patternfly/3.24.0/css/patternfly.min.css\">\n"
+"    <link rel=\"stylesheet\" type=\"text/css\"\n"
+"          href=\"https://cdnjs.cloudflare.com/ajax/libs/patternfly/3.24.0/css/patternfly-additions.min.css\">\n"
+"</head>\n"
+"<body>\n"
+"<div class=\"container\">\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/reactive-messaging-http.adoc:253
@@ -478,6 +565,22 @@ msgid ""
 "        <input type=\"button\" onclick=\"add()\" value=\"Add\">\n"
 "    </div>\n"
 msgstr ""
+"    <h2>Add a cost</h2>\n"
+"    <div>\n"
+"        <div>\n"
+"            <label for=\"value\">Value</label>\n"
+"            <input type=\"text\" id=\"value\">\n"
+"        </div>\n"
+"        <div>\n"
+"            <label for=\"currency\">Currency</label>\n"
+"            <select id=\"currency\">\n"
+"                <option value=\"CHF\">Swiss franc</option>\n"
+"                <option value=\"USD\">United States dollar</option>\n"
+"                <option value=\"CHF\">Polish złoty</option>\n"
+"            </select>\n"
+"        </div>\n"
+"        <input type=\"button\" onclick=\"add()\" value=\"Add\">\n"
+"    </div>\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/reactive-messaging-http.adoc:265
@@ -494,6 +597,16 @@ msgid ""
 "        var value = document.getElementById('value').value;\n"
 "        var currency = document.getElementById('currency').value;\n"
 msgstr ""
+"    <h2>Last cost</h2>\n"
+"    <div class=\"row\">\n"
+"        <p class=\"col-md-12\">The total cost is <strong><span id=\"content\">N/A</span>&nbsp;&euro;</strong>.</p>\n"
+"    </div>\n"
+"</div>\n"
+"</body>\n"
+"<script>\n"
+"    add = function() {\n"
+"        var value = document.getElementById('value').value;\n"
+"        var currency = document.getElementById('currency').value;\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/reactive-messaging-http.adoc:270
@@ -504,6 +617,10 @@ msgid ""
 "            currency: document.getElementById('currency').value\n"
 "        };\n"
 msgstr ""
+"        var cost = {\n"
+"            value: document.getElementById('value').value,\n"
+"            currency: document.getElementById('currency').value\n"
+"        };\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/reactive-messaging-http.adoc:273
@@ -512,6 +629,8 @@ msgid ""
 "        fetch('costs', { method: 'POST', body: JSON.stringify(cost) });\n"
 "    }\n"
 msgstr ""
+"        fetch('costs', { method: 'POST', body: JSON.stringify(cost) });\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/reactive-messaging-http.adoc:279
@@ -523,6 +642,11 @@ msgid ""
 "        );\n"
 "    }\n"
 msgstr ""
+"    updateCost = function() {\n"
+"        fetch('cost-collector').then(response => response.text()).then(sum =>\n"
+"            document.getElementById('content').textContent=sum\n"
+"        );\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/reactive-messaging-http.adoc:283
@@ -532,6 +656,9 @@ msgid ""
 "</script>\n"
 "</html>\n"
 msgstr ""
+"    window.setInterval(updateCost, 500);\n"
+"</script>\n"
+"</html>\n"
 
 #. type: Title ==
 #: upstream/_versions/main/guides/reactive-messaging-http.adoc:285
@@ -548,7 +675,7 @@ msgstr "以下でアプリケーションを実行します。"
 #: upstream/_versions/main/guides/reactive-messaging-http.adoc:292
 #, no-wrap
 msgid "./mvnw quarkus:dev\n"
-msgstr ""
+msgstr "./mvnw quarkus:dev\n"
 
 #. type: Plain text
 #: upstream/_versions/main/guides/reactive-messaging-http.adoc:295
@@ -570,7 +697,7 @@ msgstr "以下ででネイティブ実行可能ファイルをビルドするこ
 #: upstream/_versions/main/guides/reactive-messaging-http.adoc:304
 #, no-wrap
 msgid "./mvnw package -Pnative\n"
-msgstr ""
+msgstr "./mvnw package -Pnative\n"
 
 #. type: Title ==
 #: upstream/_versions/main/guides/reactive-messaging-http.adoc:306
@@ -593,7 +720,7 @@ msgstr "`quarkus-http` コネクタの全オプション。"
 #: upstream/_versions/main/guides/reactive-messaging-http.adoc:314
 #, no-wrap
 msgid "# OUTGOING\n"
-msgstr ""
+msgstr "# OUTGOING\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/reactive-messaging-http.adoc:317
@@ -602,6 +729,8 @@ msgid ""
 "# The target URL\n"
 "mp.messaging.outgoing.<channelName>.url=http://localhost:8213\n"
 msgstr ""
+"# The target URL\n"
+"mp.messaging.outgoing.<channelName>.url=http://localhost:8213\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/reactive-messaging-http.adoc:320
@@ -610,6 +739,8 @@ msgid ""
 "# Message payload serializer, optional, implementation of `io.quarkus.reactivemessaging.http.runtime.serializers.Serializer`\n"
 "mp.messaging.outgoing.<channelName>.serializer=com.example.MySerializer\n"
 msgstr ""
+"# Message payload serializer, optional, implementation of `io.quarkus.reactivemessaging.http.runtime.serializers.Serializer`\n"
+"mp.messaging.outgoing.<channelName>.serializer=com.example.MySerializer\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/reactive-messaging-http.adoc:324
@@ -619,6 +750,9 @@ msgid ""
 "# Zero by default\n"
 "mp.messaging.outgoing.<channelName>.maxRetries=3\n"
 msgstr ""
+"# The number of attempts to make for sending a request to a remote endpoint. Must not be less than zero\n"
+"# Zero by default\n"
+"mp.messaging.outgoing.<channelName>.maxRetries=3\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/reactive-messaging-http.adoc:327
@@ -627,6 +761,8 @@ msgid ""
 "# Configures the random factor when using back-off with maxRetries > 0. 0.5 by default\n"
 "mp.messaging.outgoing.<channelName>.jitter=0.3\n"
 msgstr ""
+"# Configures the random factor when using back-off with maxRetries > 0. 0.5 by default\n"
+"mp.messaging.outgoing.<channelName>.jitter=0.3\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/reactive-messaging-http.adoc:331
@@ -636,6 +772,9 @@ msgid ""
 "# A random factor (jitter) is applied to increase the delay when several failures happen.\n"
 "mp.messaging.outgoing.<channelName>.delay=1s\n"
 msgstr ""
+"# Configures a back-off delay between attempts to send a request.\n"
+"# A random factor (jitter) is applied to increase the delay when several failures happen.\n"
+"mp.messaging.outgoing.<channelName>.delay=1s\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/reactive-messaging-http.adoc:334
@@ -644,6 +783,8 @@ msgid ""
 "#The HTTP method (either `POST` or `PUT`), `POST` by default\n"
 "mp.messaging.outgoing.<channelName>.method=PUT\n"
 msgstr ""
+"#The HTTP method (either `POST` or `PUT`), `POST` by default\n"
+"mp.messaging.outgoing.<channelName>.method=PUT\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/reactive-messaging-http.adoc:338
@@ -653,6 +794,9 @@ msgid ""
 "# The HTTP method (either `POST` or `PUT`, `POST` by default\n"
 "mp.messaging.incoming.<channelName>.method=POST\n"
 msgstr ""
+"#INCOMING\n"
+"# The HTTP method (either `POST` or `PUT`, `POST` by default\n"
+"mp.messaging.incoming.<channelName>.method=POST\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/reactive-messaging-http.adoc:341
@@ -661,6 +805,8 @@ msgid ""
 "# The path of the endpoint\n"
 "mp.messaging.incoming.<channelName>.path=/my-reactive-ws-endpoint\n"
 msgstr ""
+"# The path of the endpoint\n"
+"mp.messaging.incoming.<channelName>.path=/my-reactive-ws-endpoint\n"
 
 #. type: delimited block -
 #: upstream/_versions/main/guides/reactive-messaging-http.adoc:345
@@ -670,6 +816,9 @@ msgid ""
 "# 8 by default.\n"
 "mp.messaging.incoming.<channelName>.buffer-size=13\n"
 msgstr ""
+"# HTTP endpoint buffers messages if a consumer is not able to keep up. This setting specifies the size of the buffer.\n"
+"# 8 by default.\n"
+"mp.messaging.incoming.<channelName>.buffer-size=13\n"
 
 #. type: Title ===
 #: upstream/_versions/main/guides/reactive-messaging-http.adoc:349

@@ -40,7 +40,7 @@ msgstr "HTTP マイクロサービス"
 #: upstream/_versions/1.7/guides/topic/continuum.adoc:26
 #, no-wrap
 msgid "../../guides/images/microservices.png"
-msgstr ""
+msgstr "../../guides/images/microservices.png"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/topic/continuum.adoc:41
@@ -51,6 +51,10 @@ msgid ""
 "        return Element.listAll();\n"
 "    }\n"
 msgstr ""
+"    @GET\n"
+"    public List<Element> getAll() {\n"
+"        return Element.listAll();\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/topic/continuum.adoc:61
@@ -59,6 +63,8 @@ msgid ""
 "    //...\n"
 "}\n"
 msgstr ""
+"    //...\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/topic/continuum.adoc:72
@@ -72,6 +78,8 @@ msgid ""
 "@Entity\n"
 "public class Element extends PanacheEntity {\n"
 msgstr ""
+"@Entity\n"
+"public class Element extends PanacheEntity {\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/topic/continuum.adoc:85
@@ -83,6 +91,11 @@ msgid ""
 "    public int position;\n"
 "}\n"
 msgstr ""
+"    public String name;\n"
+"    public String symbol;\n"
+"    @Column(unique = true)\n"
+"    public int position;\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/topic/continuum.adoc:93
@@ -93,7 +106,7 @@ msgstr "まずは以下のようにサービスを宣言しましょう。"
 #: upstream/_versions/1.7/guides/topic/continuum.adoc:133
 #, no-wrap
 msgid "element-service/mp-rest/url=http://localhost:9001\n"
-msgstr ""
+msgstr "element-service/mp-rest/url=http://localhost:9001\n"
 
 #. type: Title ==
 #: upstream/_versions/1.7/guides/topic/continuum.adoc:140
@@ -105,7 +118,7 @@ msgstr "リアクティブであること"
 #: upstream/_versions/1.7/guides/topic/continuum.adoc:147
 #, no-wrap
 msgid "../../guides/images/reactive-microservice.png"
-msgstr ""
+msgstr "../../guides/images/reactive-microservice.png"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/topic/continuum.adoc:161
@@ -118,6 +131,12 @@ msgid ""
 "        .onFailure().recoverWithItem(FALLBACK);\n"
 "}\n"
 msgstr ""
+"@GET\n"
+"@Path(\"/elements/{position}\")\n"
+"public Uni<Element> getElement(@PathParam(\"position\") int position) {\n"
+"    return elements.getElement(position)\n"
+"        .onFailure().recoverWithItem(FALLBACK);\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/topic/continuum.adoc:182
@@ -135,12 +154,18 @@ msgid ""
 "    return kafka.toMulti();\n"
 "}\n"
 msgstr ""
+"@Produces(MediaType.SERVER_SENT_EVENTS)\n"
+"@GET\n"
+"@Path(\"/events\")\n"
+"public Multi<String> stream() {\n"
+"    return kafka.toMulti();\n"
+"}\n"
 
 #. type: Target for macro image
 #: upstream/_versions/1.7/guides/topic/continuum.adoc:198
 #, no-wrap
 msgid "../../guides/images/eda.png"
-msgstr ""
+msgstr "../../guides/images/eda.png"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/topic/continuum.adoc:221
@@ -161,6 +186,15 @@ msgid ""
 "        .onItem().transform(measure -> Record.of(measure.sensor, measure));\n"
 "}\n"
 msgstr ""
+"@Incoming(\"health\")\n"
+"@Outgoing(\"output\")\n"
+"public Multi<Record<String, Measure> filterState(Multi<Capture> input) {\n"
+"    return input\n"
+"        .drop().repetitions()\n"
+"        .select().where(capture -> capture.value > 0)\n"
+"        .onItem().transform(capture -> new Measure(capture.sensor, capture.value, capture.unit))    \n"
+"        .onItem().transform(measure -> Record.of(measure.sensor, measure));\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/topic/continuum.adoc:236
@@ -182,7 +216,7 @@ msgstr "Funqyでは、関数は単に次のようになります。"
 #: upstream/_versions/1.7/guides/topic/continuum.adoc:247
 #, no-wrap
 msgid "import io.quarkus.funqy.Funq;\n"
-msgstr ""
+msgstr "import io.quarkus.funqy.Funq;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/topic/continuum.adoc:254
@@ -195,6 +229,12 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"public class GreetingFunction {\n"
+"    @Funq\n"
+"    public String greet(String name) {\n"
+"       return \"Hello \" + name;\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/topic/continuum.adoc:256

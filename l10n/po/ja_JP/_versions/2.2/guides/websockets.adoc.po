@@ -105,6 +105,12 @@ msgid ""
 "    -DnoExamples\n"
 "cd websockets-quickstart\n"
 msgstr ""
+"mvn io.quarkus.platform:quarkus-maven-plugin:{quarkus-version}:create \\\n"
+"    -DprojectGroupId=org.acme \\\n"
+"    -DprojectArtifactId=websockets-quickstart \\\n"
+"    -Dextensions=\"websockets\" \\\n"
+"    -DnoExamples\n"
+"cd websockets-quickstart\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/websockets.adoc:53
@@ -120,7 +126,7 @@ msgstr "すでにQuarkusプロジェクトが設定されている場合は、�
 #: upstream/_versions/2.2/guides/websockets.adoc:60
 #, no-wrap
 msgid "./mvnw quarkus:add-extension -Dextensions=\"websockets\"\n"
-msgstr ""
+msgstr "./mvnw quarkus:add-extension -Dextensions=\"websockets\"\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/websockets.adoc:63
@@ -136,6 +142,10 @@ msgid ""
 "    <artifactId>quarkus-websockets</artifactId>\n"
 "</dependency>\n"
 msgstr ""
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-websockets</artifactId>\n"
+"</dependency>\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/websockets.adoc:73
@@ -158,7 +168,7 @@ msgstr "このアプリケーションには、Web ソケットを処理する�
 #: upstream/_versions/2.2/guides/websockets.adoc:181
 #, no-wrap
 msgid "package org.acme.websockets;\n"
-msgstr ""
+msgstr "package org.acme.websockets;\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/websockets.adoc:86
@@ -167,6 +177,8 @@ msgid ""
 "import java.util.Map;\n"
 "import java.util.concurrent.ConcurrentHashMap;\n"
 msgstr ""
+"import java.util.Map;\n"
+"import java.util.concurrent.ConcurrentHashMap;\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/websockets.adoc:95
@@ -181,6 +193,14 @@ msgid ""
 "import javax.websocket.server.ServerEndpoint;\n"
 "import javax.websocket.Session;\n"
 msgstr ""
+"import javax.enterprise.context.ApplicationScoped;\n"
+"import javax.websocket.OnClose;\n"
+"import javax.websocket.OnError;\n"
+"import javax.websocket.OnMessage;\n"
+"import javax.websocket.OnOpen;\n"
+"import javax.websocket.server.PathParam;\n"
+"import javax.websocket.server.ServerEndpoint;\n"
+"import javax.websocket.Session;\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/websockets.adoc:99
@@ -190,12 +210,15 @@ msgid ""
 "@ApplicationScoped\n"
 "public class ChatSocket {\n"
 msgstr ""
+"@ServerEndpoint(\"/chat/{username}\")         // <1>\n"
+"@ApplicationScoped\n"
+"public class ChatSocket {\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/websockets.adoc:101
 #, no-wrap
 msgid "    Map<String, Session> sessions = new ConcurrentHashMap<>(); // <2>\n"
-msgstr ""
+msgstr "    Map<String, Session> sessions = new ConcurrentHashMap<>(); // <2>\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/websockets.adoc:107
@@ -207,6 +230,11 @@ msgid ""
 "        broadcast(\"User \" + username + \" joined\");\n"
 "    }\n"
 msgstr ""
+"    @OnOpen\n"
+"    public void onOpen(Session session, @PathParam(\"username\") String username) {\n"
+"        sessions.put(username, session);\n"
+"        broadcast(\"User \" + username + \" joined\");\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/websockets.adoc:113
@@ -218,6 +246,11 @@ msgid ""
 "        broadcast(\"User \" + username + \" left\");\n"
 "    }\n"
 msgstr ""
+"    @OnClose\n"
+"    public void onClose(Session session, @PathParam(\"username\") String username) {\n"
+"        sessions.remove(username);\n"
+"        broadcast(\"User \" + username + \" left\");\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/websockets.adoc:119
@@ -229,6 +262,11 @@ msgid ""
 "        broadcast(\"User \" + username + \" left on error: \" + throwable);\n"
 "    }\n"
 msgstr ""
+"    @OnError\n"
+"    public void onError(Session session, @PathParam(\"username\") String username, Throwable throwable) {\n"
+"        sessions.remove(username);\n"
+"        broadcast(\"User \" + username + \" left on error: \" + throwable);\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/websockets.adoc:124
@@ -239,6 +277,10 @@ msgid ""
 "        broadcast(\">> \" + username + \": \" + message);\n"
 "    }\n"
 msgstr ""
+"    @OnMessage\n"
+"    public void onMessage(String message, @PathParam(\"username\") String username) {\n"
+"        broadcast(\">> \" + username + \": \" + message);\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/websockets.adoc:134
@@ -254,13 +296,22 @@ msgid ""
 "        });\n"
 "    }\n"
 msgstr ""
+"    private void broadcast(String message) {\n"
+"        sessions.values().forEach(s -> {\n"
+"            s.getAsyncRemote().sendObject(message, result ->  {\n"
+"                if (result.getException() != null) {\n"
+"                    System.out.println(\"Unable to send message: \" + result.getException());\n"
+"                }\n"
+"            });\n"
+"        });\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/websockets.adoc:136
 #: upstream/_versions/2.2/guides/websockets.adoc:235
 #, no-wrap
 msgid "}\n"
-msgstr ""
+msgstr "}\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/websockets.adoc:138
@@ -298,7 +349,7 @@ msgstr "では、実際にアプリケーションを見てみましょう。以
 #: upstream/_versions/2.2/guides/websockets.adoc:153
 #, no-wrap
 msgid "./mvnw compile quarkus:dev\n"
-msgstr ""
+msgstr "./mvnw compile quarkus:dev\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/websockets.adoc:156
@@ -364,6 +415,9 @@ msgid ""
 "import java.util.concurrent.LinkedBlockingDeque;\n"
 "import java.util.concurrent.TimeUnit;\n"
 msgstr ""
+"import java.net.URI;\n"
+"import java.util.concurrent.LinkedBlockingDeque;\n"
+"import java.util.concurrent.TimeUnit;\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/websockets.adoc:191
@@ -375,6 +429,11 @@ msgid ""
 "import javax.websocket.OnOpen;\n"
 "import javax.websocket.Session;\n"
 msgstr ""
+"import javax.websocket.ClientEndpoint;\n"
+"import javax.websocket.ContainerProvider;\n"
+"import javax.websocket.OnMessage;\n"
+"import javax.websocket.OnOpen;\n"
+"import javax.websocket.Session;\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/websockets.adoc:194
@@ -383,6 +442,8 @@ msgid ""
 "import org.junit.jupiter.api.Assertions;\n"
 "import org.junit.jupiter.api.Test;\n"
 msgstr ""
+"import org.junit.jupiter.api.Assertions;\n"
+"import org.junit.jupiter.api.Test;\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/websockets.adoc:197
@@ -391,6 +452,8 @@ msgid ""
 "import io.quarkus.test.common.http.TestHTTPResource;\n"
 "import io.quarkus.test.junit.QuarkusTest;\n"
 msgstr ""
+"import io.quarkus.test.common.http.TestHTTPResource;\n"
+"import io.quarkus.test.junit.QuarkusTest;\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/websockets.adoc:200
@@ -399,12 +462,14 @@ msgid ""
 "@QuarkusTest\n"
 "public class ChatTest {\n"
 msgstr ""
+"@QuarkusTest\n"
+"public class ChatTest {\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/websockets.adoc:202
 #, no-wrap
 msgid "    private static final LinkedBlockingDeque<String> MESSAGES = new LinkedBlockingDeque<>();\n"
-msgstr ""
+msgstr "    private static final LinkedBlockingDeque<String> MESSAGES = new LinkedBlockingDeque<>();\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/websockets.adoc:205
@@ -413,6 +478,8 @@ msgid ""
 "    @TestHTTPResource(\"/chat/stu\")\n"
 "    URI uri;\n"
 msgstr ""
+"    @TestHTTPResource(\"/chat/stu\")\n"
+"    URI uri;\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/websockets.adoc:215
@@ -428,6 +495,15 @@ msgid ""
 "        }\n"
 "    }\n"
 msgstr ""
+"    @Test\n"
+"    public void testWebsocketChat() throws Exception {\n"
+"        try (Session session = ContainerProvider.getWebSocketContainer().connectToServer(Client.class, uri)) {\n"
+"            Assertions.assertEquals(\"CONNECT\", MESSAGES.poll(10, TimeUnit.SECONDS));\n"
+"            Assertions.assertEquals(\"User stu joined\", MESSAGES.poll(10, TimeUnit.SECONDS));\n"
+"            session.getAsyncRemote().sendText(\"hello world\");\n"
+"            Assertions.assertEquals(\">> stu: hello world\", MESSAGES.poll(10, TimeUnit.SECONDS));\n"
+"        }\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/websockets.adoc:218
@@ -436,6 +512,8 @@ msgid ""
 "    @ClientEndpoint\n"
 "    public static class Client {\n"
 msgstr ""
+"    @ClientEndpoint\n"
+"    public static class Client {\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/websockets.adoc:226
@@ -449,6 +527,13 @@ msgid ""
 "            session.getAsyncRemote().sendText(\"_ready_\");\n"
 "        }\n"
 msgstr ""
+"        @OnOpen\n"
+"        public void open(Session session) {\n"
+"            MESSAGES.add(\"CONNECT\");\n"
+"            // Send a message to indicate that we are ready,\n"
+"            // as the message handler may not be registered immediately after this callback.\n"
+"            session.getAsyncRemote().sendText(\"_ready_\");\n"
+"        }\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/websockets.adoc:231
@@ -459,12 +544,16 @@ msgid ""
 "            MESSAGES.add(msg);\n"
 "        }\n"
 msgstr ""
+"        @OnMessage\n"
+"        void message(String msg) {\n"
+"            MESSAGES.add(msg);\n"
+"        }\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/websockets.adoc:233
 #, no-wrap
 msgid "    }\n"
-msgstr ""
+msgstr "    }\n"
 
 #. type: Title ==
 #: upstream/_versions/2.2/guides/websockets.adoc:238

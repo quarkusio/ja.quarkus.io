@@ -114,6 +114,8 @@ msgid ""
 "docker exec -it dev-vault sh\n"
 "export VAULT_TOKEN={root-token}\n"
 msgstr ""
+"docker exec -it dev-vault sh\n"
+"export VAULT_TOKEN={root-token}\n"
 
 #. type: delimited block -
 #: upstream/_guides/vault-pki.adoc:56
@@ -122,6 +124,8 @@ msgid ""
 "vault secrets enable pki\n"
 "# ==> Success! Enabled the pki secrets engine at: pki/\n"
 msgstr ""
+"vault secrets enable pki\n"
+"# ==> Success! Enabled the pki secrets engine at: pki/\n"
 
 #. type: delimited block -
 #: upstream/_guides/vault-pki.adoc:59
@@ -130,6 +134,8 @@ msgid ""
 "vault secrets tune -max-lease-ttl=8760h pki\n"
 "# ==> Success! Tuned the secrets engine at: pki/\n"
 msgstr ""
+"vault secrets tune -max-lease-ttl=8760h pki\n"
+"# ==> Success! Tuned the secrets engine at: pki/\n"
 
 #. type: delimited block -
 #: upstream/_guides/vault-pki.adoc:70
@@ -146,6 +152,16 @@ msgid ""
 "# ==> issuing_ca       -----BEGIN CERTIFICATE-----...\n"
 "# ==> serial_number    7c:f1:fb:2c:6e:4d:99:0e:82:1b:08:0a:81:ed:61:3e:1d:fa:f5:29\n"
 msgstr ""
+"vault write pki/root/generate/internal \\\n"
+"    common_name=my-website.com \\\n"
+"    ttl=8760h\n"
+"# ==> Success! Configured CA with self-signed root\n"
+"# ==> Key              Value\n"
+"# ==> ---              -----\n"
+"# ==> certificate      -----BEGIN CERTIFICATE-----...\n"
+"# ==> expiration       1536807433\n"
+"# ==> issuing_ca       -----BEGIN CERTIFICATE-----...\n"
+"# ==> serial_number    7c:f1:fb:2c:6e:4d:99:0e:82:1b:08:0a:81:ed:61:3e:1d:fa:f5:29\n"
 
 #. type: Plain text
 #: upstream/_guides/vault-pki.adoc:74
@@ -177,6 +193,11 @@ msgid ""
 "    max_ttl=72h\n"
 "# ==> Success! Data written to: pki/roles/example-dot-com\n"
 msgstr ""
+"vault write pki/roles/example-dot-com \\\n"
+"    allowed_domains=my-website.com \\\n"
+"    allow_subdomains=true \\\n"
+"    max_ttl=72h\n"
+"# ==> Success! Data written to: pki/roles/example-dot-com\n"
 
 #. type: Plain text
 #: upstream/_guides/vault-pki.adoc:94
@@ -206,6 +227,13 @@ msgid ""
 "    -Dextensions=\"resteasy,vault,resteasy-jackson\"\n"
 "cd vault-pki-quickstart\n"
 msgstr ""
+"mvn io.quarkus.platform:quarkus-maven-plugin:{quarkus-version}:create \\\n"
+"    -DprojectGroupId=org.acme \\\n"
+"    -DprojectArtifactId=vault-pki-quickstart \\\n"
+"    -DclassName=\"org.acme.quickstart.GreetingResource\" \\\n"
+"    -Dpath=\"/hello\" \\\n"
+"    -Dextensions=\"resteasy,vault,resteasy-jackson\"\n"
+"cd vault-pki-quickstart\n"
 
 #. type: Plain text
 #: upstream/_guides/vault-pki.adoc:111
@@ -219,6 +247,8 @@ msgid ""
 "# vault url\n"
 "quarkus.vault.url=http://localhost:8200\n"
 msgstr ""
+"# vault url\n"
+"quarkus.vault.url=http://localhost:8200\n"
 
 #. type: delimited block -
 #: upstream/_guides/vault-pki.adoc:120
@@ -228,6 +258,9 @@ msgid ""
 "quarkus.vault.authentication.userpass.username=bob\n"
 "quarkus.vault.authentication.userpass.password=sinclair\n"
 msgstr ""
+"# vault authentication\n"
+"quarkus.vault.authentication.userpass.username=bob\n"
+"quarkus.vault.authentication.userpass.password=sinclair\n"
 
 #. type: Plain text
 #: upstream/_guides/vault-pki.adoc:123
@@ -243,6 +276,10 @@ msgid ""
 "@Consumes(TEXT_PLAIN)\n"
 "public class PKIResource {\n"
 msgstr ""
+"@Path(\"/pki\")\n"
+"@Produces(TEXT_PLAIN)\n"
+"@Consumes(TEXT_PLAIN)\n"
+"public class PKIResource {\n"
 
 #. type: delimited block -
 #: upstream/_guides/vault-pki.adoc:133
@@ -251,6 +288,8 @@ msgid ""
 "    @Inject\n"
 "    public VaultPKISecretEngine pkiSecretEngine;\n"
 msgstr ""
+"    @Inject\n"
+"    public VaultPKISecretEngine pkiSecretEngine;\n"
 
 #. type: delimited block -
 #: upstream/_guides/vault-pki.adoc:143
@@ -266,6 +305,15 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    @POST\n"
+"    @Path(\"/generate\")\n"
+"    public String generate(String subdomain) {\n"
+"        GenerateCertificateOptions options = new GenerateCertificateOptions()\n"
+"            .setSubjectCommonName(subdomain + \".my-website.com\");\n"
+"        GeneratedCertificate generated =  pkiSecretEngine.generateCertificate(\"example-dot-com\",  options);\n"
+"        return generated.certificate.getData();\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_guides/vault-pki.adoc:146
@@ -276,7 +324,7 @@ msgstr "Quarkusアプリケーションをコンパイルして起動した後�
 #: upstream/_guides/vault-pki.adoc:149
 #, no-wrap
 msgid "curl -X POST --data 'a-subdomain' --header \"Content-Type: text/plain\"  http://localhost:8080/pki/generate\n"
-msgstr ""
+msgstr "curl -X POST --data 'a-subdomain' --header \"Content-Type: text/plain\"  http://localhost:8080/pki/generate\n"
 
 #. type: delimited block -
 #: upstream/_guides/vault-pki.adoc:153 upstream/_guides/vault-pki.adoc:182
@@ -286,6 +334,9 @@ msgid ""
 "# ==> ...\n"
 "# ==> -----END CERTIFICATE-----\n"
 msgstr ""
+"# ==> -----BEGIN CERTIFICATE-----\n"
+"# ==> ...\n"
+"# ==> -----END CERTIFICATE-----\n"
 
 #. type: Plain text
 #: upstream/_guides/vault-pki.adoc:156
@@ -309,6 +360,13 @@ msgid ""
 "    return signed.certificate.getData();\n"
 "}\n"
 msgstr ""
+"@POST\n"
+"@Path(\"/sign\")\n"
+"public String sign(String csr) {\n"
+"    GenerateCertificateOptions options = new GenerateCertificateOptions();\n"
+"    SignedCertificate signed = pkiSecretEngine.signRequest(\"example-dot-com\", csr, options);\n"
+"    return signed.certificate.getData();\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_guides/vault-pki.adoc:172
@@ -319,13 +377,13 @@ msgstr "これで、（OpenSSLなどを使用して）CSRを生成し、そのCS
 #: upstream/_guides/vault-pki.adoc:176
 #, no-wrap
 msgid "openssl req -newkey rsa:2048 -keyout example.key -out example.csr\n"
-msgstr ""
+msgstr "openssl req -newkey rsa:2048 -keyout example.key -out example.csr\n"
 
 #. type: delimited block -
 #: upstream/_guides/vault-pki.adoc:178
 #, no-wrap
 msgid "curl -X POST --data @example.csr --header \"Content-Type: text/plain\"  http://localhost:8080/pki/sign\n"
-msgstr ""
+msgstr "curl -X POST --data @example.csr --header \"Content-Type: text/plain\"  http://localhost:8080/pki/sign\n"
 
 #. type: Title ==
 #: upstream/_guides/vault-pki.adoc:184
@@ -348,6 +406,11 @@ msgid ""
 "    pkiSecretEngine.revokeCertificate(serialNumber);\n"
 "}\n"
 msgstr ""
+"@POST\n"
+"@Path(\"/revoke\")\n"
+"public void revoke(String serialNumber) {\n"
+"    pkiSecretEngine.revokeCertificate(serialNumber);\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_guides/vault-pki.adoc:198
@@ -361,6 +424,8 @@ msgid ""
 "curl -X POST --data '1d:2e:c6:06:45:18:60:0e:23:d6:c5:17:43:c0:fe:46:ed:d1:50:be' --header \"Content-Type: text/plain\"  http://localhost:8080/pki/revoke\n"
 "# ==> No Data\n"
 msgstr ""
+"curl -X POST --data '1d:2e:c6:06:45:18:60:0e:23:d6:c5:17:43:c0:fe:46:ed:d1:50:be' --header \"Content-Type: text/plain\"  http://localhost:8080/pki/revoke\n"
+"# ==> No Data\n"
 
 #. type: Title ==
 #: upstream/_guides/vault-pki.adoc:204
@@ -386,6 +451,9 @@ msgid ""
 "VaultSystemBackendEngine systemBackendEngine = ...;\n"
 "VaultPKISecretEngineFactory pkiSecretEngineFactory = ...;\n"
 msgstr ""
+"// Obtain interfaces via injection or other standard CDI method.\n"
+"VaultSystemBackendEngine systemBackendEngine = ...;\n"
+"VaultPKISecretEngineFactory pkiSecretEngineFactory = ...;\n"
 
 #. type: delimited block -
 #: upstream/_guides/vault-pki.adoc:222
@@ -396,6 +464,10 @@ msgid ""
 "  .setMaxLeaseTimeToLive(\"8760h\");\n"
 "systemBackendEngine.enable(VaultSecretEngine.PKI, \"pki-dyn\", \"A dynamic PKI engine\", options);\n"
 msgstr ""
+"// Mount a PKI engine at a specified path.\n"
+"EnableEngineOptions options = new EnableEngineOptions()\n"
+"  .setMaxLeaseTimeToLive(\"8760h\");\n"
+"systemBackendEngine.enable(VaultSecretEngine.PKI, \"pki-dyn\", \"A dynamic PKI engine\", options);\n"
 
 #. type: delimited block -
 #: upstream/_guides/vault-pki.adoc:225
@@ -404,6 +476,8 @@ msgid ""
 "// Obtain an engine manager for the newly mounted PKI engine.\n"
 "VaultPKISecretEngine dynPkiSecretEngine = pkiSecretEngineFactory.engine(\"pki-dyn\");\n"
 msgstr ""
+"// Obtain an engine manager for the newly mounted PKI engine.\n"
+"VaultPKISecretEngine dynPkiSecretEngine = pkiSecretEngineFactory.engine(\"pki-dyn\");\n"
 
 #. type: delimited block -
 #: upstream/_guides/vault-pki.adoc:228
@@ -412,6 +486,8 @@ msgid ""
 "// Use dynamically created engine as you please.\n"
 "dynPkiSecretEngine.generateRoot(new GenerateRootOptions());\n"
 msgstr ""
+"// Use dynamically created engine as you please.\n"
+"dynPkiSecretEngine.generateRoot(new GenerateRootOptions());\n"
 
 #. type: Plain text
 #: upstream/_guides/vault-pki.adoc:231
@@ -422,7 +498,7 @@ msgstr "特定のパスでPKIエンジンを無効化（アンマウント）す
 #: upstream/_guides/vault-pki.adoc:235
 #, no-wrap
 msgid "systemBackendEngine.disable(\"pki-dyn\");\n"
-msgstr ""
+msgstr "systemBackendEngine.disable(\"pki-dyn\");\n"
 
 #. type: Plain text
 #: upstream/_guides/vault-pki.adoc:239

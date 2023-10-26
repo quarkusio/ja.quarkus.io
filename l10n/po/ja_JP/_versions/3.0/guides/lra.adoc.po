@@ -70,6 +70,18 @@ msgid ""
 "    <artifactId>quarkus-rest-client-jackson</artifactId>\n"
 "</dependency>\n"
 msgstr ""
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-narayana-lra</artifactId>\n"
+"</dependency>\n"
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-resteasy-jackson</artifactId>\n"
+"</dependency>\n"
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-rest-client-jackson</artifactId>\n"
+"</dependency>\n"
 
 #. type: Block title
 #: upstream/_versions/3.0/guides/lra.adoc:72
@@ -85,6 +97,9 @@ msgid ""
 "implementation(\"io.quarkus:quarkus-resteasy-jackson\")\n"
 "implementation(\"io.quarkus:quarkus-rest-client-jackson\")\n"
 msgstr ""
+"implementation(\"io.quarkus:quarkus-narayana-lra\")\n"
+"implementation(\"io.quarkus:quarkus-resteasy-jackson\")\n"
+"implementation(\"io.quarkus:quarkus-rest-client-jackson\")\n"
 
 #. type: delimited block =
 #: upstream/_versions/3.0/guides/lra.adoc:83
@@ -105,7 +120,7 @@ msgstr "LRAエクステンションは、 `src/main/resources` ディレクト�
 #: upstream/_versions/3.0/guides/lra.adoc:96
 #, no-wrap
 msgid "quarkus.lra.coordinator-url=http://localhost:8080/lra-coordinator\n"
-msgstr ""
+msgstr "quarkus.lra.coordinator-url=http://localhost:8080/lra-coordinator\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/lra.adoc:104
@@ -161,6 +176,23 @@ msgid ""
 "         */\n"
 "    }\n"
 msgstr ""
+"@Path(\"/\")\n"
+"@ApplicationScoped\n"
+"public class SimpleLRAParticipant\n"
+"{\n"
+"    @LRA(LRA.Type.REQUIRES_NEW) // a new LRA is created on method entry\n"
+"    @Path(\"/work\")\n"
+"    @PUT\n"
+"    public void doInNewLongRunningAction(@HeaderParam(LRA_HTTP_CONTEXT_HEADER) URI lraId)\n"
+"    {\n"
+"        /*\n"
+"         * Perform business actions in the context of the LRA identified by the\n"
+"         * value in the injected JAX-RS header. This LRA was started just before\n"
+"         * the method was entered (REQUIRES_NEW) and will be closed when the\n"
+"         * method finishes at which point the completeWork method below will be\n"
+"         * invoked.\n"
+"         */\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/lra.adoc:164
@@ -182,6 +214,21 @@ msgid ""
 "         return Response.ok(ParticipantStatus.Completed.name()).build();\n"
 "    }\n"
 msgstr ""
+"    @org.eclipse.microprofile.lra.annotation.Complete\n"
+"    @Path(\"/complete\")\n"
+"    @PUT\n"
+"    public Response completeWork(@HeaderParam(LRA_HTTP_CONTEXT_HEADER) URI lraId,\n"
+"                                 String userData)\n"
+"    {\n"
+"        /*\n"
+"         * Free up resources allocated in the context of the LRA identified by the\n"
+"         * value in the injected JAX-RS header.\n"
+"         *\n"
+"         * Since there is no @Status method in this class, completeWork MUST be\n"
+"         * idempotent and MUST return the status.\n"
+"         */\n"
+"         return Response.ok(ParticipantStatus.Completed.name()).build();\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/lra.adoc:182
@@ -205,6 +252,23 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    @org.eclipse.microprofile.lra.annotation.Compensate\n"
+"    @Path(\"/compensate\")\n"
+"    @PUT\n"
+"    public Response compensateWork(@HeaderParam(LRA_HTTP_CONTEXT_HEADER) URI lraId,\n"
+"                                   String userData)\n"
+"    {\n"
+"        /*\n"
+"         * The LRA identified by the value in the injected JAX-RS header was\n"
+"         * cancelled so the business logic should compensate for any actions\n"
+"         * that have been performed while running in its context.\n"
+"         *\n"
+"         * Since there is no @Status method in this class, compensateWork MUST be\n"
+"         * idempotent and MUST return the status\n"
+"         */\n"
+"         return Response.ok(ParticipantStatus.Compensated.name()).build();\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/lra.adoc:186
@@ -232,6 +296,17 @@ msgid ""
 "  @POST\n"
 "  public Response bookTrip(...) { ... }\n"
 msgstr ""
+"  @LRA(value = LRA.Type.REQUIRED, // if there is no incoming context a new one is created\n"
+"       cancelOn = {\n"
+"           Response.Status.INTERNAL_SERVER_ERROR // cancel on a 500 code\n"
+"       },\n"
+"       cancelOnFamily = {\n"
+"           Response.Status.Family.CLIENT_ERROR // cancel on any 4xx code\n"
+"       },\n"
+"       end = false) // the LRA will continue to run when the method finishes\n"
+"  @Path(\"/book\")\n"
+"  @POST\n"
+"  public Response bookTrip(...) { ... }\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/lra.adoc:212
@@ -243,6 +318,11 @@ msgid ""
 "  @PUT\n"
 "  public Booking confirmTrip(Booking booking) throws BookingException { ... }\n"
 msgstr ""
+"  @LRA(value = LRA.Type.MANDATORY, // requires an active context before method can be executed\n"
+"       end = true) // end the LRA started by the bookTrip method\n"
+"  @Path(\"/confirm\")\n"
+"  @PUT\n"
+"  public Booking confirmTrip(Booking booking) throws BookingException { ... }\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/lra.adoc:219

@@ -10,7 +10,7 @@ msgstr ""
 #: upstream/_posts/2022-01-03-quarkus-aws-cloudwatch_extension.adoc:38
 #, no-wrap
 msgid "class LoggingCloudwatchProcessor {\n"
-msgstr ""
+msgstr "class LoggingCloudwatchProcessor {\n"
 
 #. type: delimited block -
 #: upstream/_posts/2022-01-03-quarkus-aws-cloudwatch_extension.adoc:43
@@ -21,6 +21,10 @@ msgid ""
 "        return new FeatureBuildItem(\"logging-cloudwatch\");\n"
 "    }\n"
 msgstr ""
+"    @BuildStep\n"
+"    FeatureBuildItem feature() {\n"
+"        return new FeatureBuildItem(\"logging-cloudwatch\");\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_posts/2022-01-03-quarkus-aws-cloudwatch_extension.adoc:51
@@ -34,6 +38,13 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    @BuildStep\n"
+"    @Record(ExecutionTime.RUNTIME_INIT)\n"
+"    LogHandlerBuildItem addCloudwatchLogHandler(final LoggingCloudWatchConfig config,\n"
+"            final LoggingCloudWatchHandlerValueFactory cloudWatchHandlerValueFactory) {\n"
+"        return new LogHandlerBuildItem(cloudWatchHandlerValueFactory.create(config));\n"
+"    }\n"
+"}\n"
 
 #. type: delimited block -
 #: upstream/_posts/2022-01-03-quarkus-aws-cloudwatch_extension.adoc:59
@@ -42,6 +53,8 @@ msgid ""
 "@ConfigRoot(phase = ConfigPhase.RUN_TIME, name = \"log.cloudwatch\")\n"
 "public class LoggingCloudWatchConfig {\n"
 msgstr ""
+"@ConfigRoot(phase = ConfigPhase.RUN_TIME, name = \"log.cloudwatch\")\n"
+"public class LoggingCloudWatchConfig {\n"
 
 #. type: delimited block -
 #: upstream/_posts/2022-01-03-quarkus-aws-cloudwatch_extension.adoc:62
@@ -50,6 +63,8 @@ msgid ""
 "    @ConfigItem(defaultValue = \"true\")\n"
 "    boolean enabled;\n"
 msgstr ""
+"    @ConfigItem(defaultValue = \"true\")\n"
+"    boolean enabled;\n"
 
 #. type: delimited block -
 #: upstream/_posts/2022-01-03-quarkus-aws-cloudwatch_extension.adoc:65
@@ -58,6 +73,8 @@ msgid ""
 "    @ConfigItem\n"
 "    public String region;\n"
 msgstr ""
+"    @ConfigItem\n"
+"    public String region;\n"
 
 #. type: delimited block -
 #: upstream/_posts/2022-01-03-quarkus-aws-cloudwatch_extension.adoc:68
@@ -66,6 +83,8 @@ msgid ""
 "    // ...\n"
 "}\n"
 msgstr ""
+"    // ...\n"
+"}\n"
 
 #. type: delimited block -
 #: upstream/_posts/2022-01-03-quarkus-aws-cloudwatch_extension.adoc:79
@@ -74,6 +93,8 @@ msgid ""
 "@Recorder\n"
 "public class LoggingCloudWatchHandlerValueFactory {\n"
 msgstr ""
+"@Recorder\n"
+"public class LoggingCloudWatchHandlerValueFactory {\n"
 
 #. type: delimited block -
 #: upstream/_posts/2022-01-03-quarkus-aws-cloudwatch_extension.adoc:84
@@ -84,6 +105,10 @@ msgid ""
 "            return new RuntimeValue<>(Optional.empty());\n"
 "        }\n"
 msgstr ""
+"    public RuntimeValue<Optional<Handler>> create(final LoggingCloudWatchConfig config) {\n"
+"        if (!config.enabled) {\n"
+"            return new RuntimeValue<>(Optional.empty());\n"
+"        }\n"
 
 #. type: delimited block -
 #: upstream/_posts/2022-01-03-quarkus-aws-cloudwatch_extension.adoc:87
@@ -92,19 +117,21 @@ msgid ""
 "        AWSLogsClientBuilder clientBuilder = AWSLogsClientBuilder.standard();\n"
 "        clientBuilder.setCredentials(new CloudWatchCredentialsProvider(config));\n"
 msgstr ""
+"        AWSLogsClientBuilder clientBuilder = AWSLogsClientBuilder.standard();\n"
+"        clientBuilder.setCredentials(new CloudWatchCredentialsProvider(config));\n"
 
 #. type: delimited block -
 #: upstream/_posts/2022-01-03-quarkus-aws-cloudwatch_extension.adoc:89
 #: upstream/_posts/2022-01-03-quarkus-aws-cloudwatch_extension.adoc:93
 #, no-wrap
 msgid "        // …\n"
-msgstr ""
+msgstr "        // …\n"
 
 #. type: delimited block -
 #: upstream/_posts/2022-01-03-quarkus-aws-cloudwatch_extension.adoc:91
 #, no-wrap
 msgid "        AWSLogs awsLogs = clientBuilder.build();\n"
-msgstr ""
+msgstr "        AWSLogs awsLogs = clientBuilder.build();\n"
 
 #. type: delimited block -
 #: upstream/_posts/2022-01-03-quarkus-aws-cloudwatch_extension.adoc:97
@@ -114,6 +141,9 @@ msgid ""
 "                config.logStreamName.get(), token);\n"
 "        // …\n"
 msgstr ""
+"        LoggingCloudWatchHandler handler = new LoggingCloudWatchHandler(awsLogs, config.logGroup.get(),\n"
+"                config.logStreamName.get(), token);\n"
+"        // …\n"
 
 #. type: delimited block -
 #: upstream/_posts/2022-01-03-quarkus-aws-cloudwatch_extension.adoc:101
@@ -123,12 +153,15 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"        return new RuntimeValue<>(Optional.of(handler));\n"
+"    }\n"
+"}\n"
 
 #. type: delimited block -
 #: upstream/_posts/2022-01-03-quarkus-aws-cloudwatch_extension.adoc:111
 #, no-wrap
 msgid "class LoggingCloudWatchHandler extends Handler {\n"
-msgstr ""
+msgstr "class LoggingCloudWatchHandler extends Handler {\n"
 
 #. type: delimited block -
 #: upstream/_posts/2022-01-03-quarkus-aws-cloudwatch_extension.adoc:116
@@ -139,12 +172,16 @@ msgid ""
 "    private String logGroupName;\n"
 "    private String sequenceToken;\n"
 msgstr ""
+"    private AWSLogs awsLogs;\n"
+"    private String logStreamName;\n"
+"    private String logGroupName;\n"
+"    private String sequenceToken;\n"
 
 #. type: delimited block -
 #: upstream/_posts/2022-01-03-quarkus-aws-cloudwatch_extension.adoc:118
 #, no-wrap
 msgid "    // ...\n"
-msgstr ""
+msgstr "    // ...\n"
 
 #. type: delimited block -
 #: upstream/_posts/2022-01-03-quarkus-aws-cloudwatch_extension.adoc:125
@@ -157,6 +194,12 @@ msgid ""
 "        this.sequenceToken = token;\n"
 "    }\n"
 msgstr ""
+"    LoggingCloudWatchHandler(AWSLogs awsLogs, String logGroup, String logStreamName, String token) {\n"
+"        this.logGroupName = logGroup;\n"
+"        this.awsLogs = awsLogs;\n"
+"        this.logStreamName = logStreamName;\n"
+"        this.sequenceToken = token;\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_posts/2022-01-03-quarkus-aws-cloudwatch_extension.adoc:128
@@ -165,12 +208,14 @@ msgid ""
 "    @Override\n"
 "    public void publish(LogRecord record) {\n"
 msgstr ""
+"    @Override\n"
+"    public void publish(LogRecord record) {\n"
 
 #. type: delimited block -
 #: upstream/_posts/2022-01-03-quarkus-aws-cloudwatch_extension.adoc:130
 #, no-wrap
 msgid "        // ...\n"
-msgstr ""
+msgstr "        // ...\n"
 
 #. type: delimited block -
 #: upstream/_posts/2022-01-03-quarkus-aws-cloudwatch_extension.adoc:137
@@ -183,6 +228,12 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"        InputLogEvent logEvent = new InputLogEvent()\n"
+"                .withMessage(body)\n"
+"                .withTimestamp(System.currentTimeMillis());\n"
+"        awsLogs.putLogEvents(request);\n"
+"    }\n"
+"}\n"
 
 #. type: Title ==
 #: upstream/_posts/2022-01-03-quarkus-aws-cloudwatch_extension.adoc:152

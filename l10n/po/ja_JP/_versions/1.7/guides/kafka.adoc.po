@@ -63,7 +63,7 @@ msgstr "このガイドでは、1 つのコンポーネントでランダムな�
 #: upstream/_versions/1.7/guides/kafka.adoc:31
 #, no-wrap
 msgid "kafka-guide-architecture.png"
-msgstr ""
+msgstr "kafka-guide-architecture.png"
 
 #. type: Title ==
 #: upstream/_versions/1.7/guides/kafka.adoc:33
@@ -107,6 +107,11 @@ msgid ""
 "    -Dextensions=\"smallrye-reactive-messaging-kafka\"\n"
 "cd kafka-quickstart\n"
 msgstr ""
+"mvn io.quarkus:quarkus-maven-plugin:{quarkus-version}:create \\\n"
+"    -DprojectGroupId=org.acme \\\n"
+"    -DprojectArtifactId=kafka-quickstart \\\n"
+"    -Dextensions=\"smallrye-reactive-messaging-kafka\"\n"
+"cd kafka-quickstart\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/kafka.adoc:56
@@ -122,7 +127,7 @@ msgstr "すでに Quarkus プロジェクトが設定されている場合は、
 #: upstream/_versions/1.7/guides/kafka.adoc:63
 #, no-wrap
 msgid "./mvnw quarkus:add-extension -Dextensions=\"smallrye-reactive-messaging-kafka\"\n"
-msgstr ""
+msgstr "./mvnw quarkus:add-extension -Dextensions=\"smallrye-reactive-messaging-kafka\"\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/kafka.adoc:66
@@ -138,6 +143,10 @@ msgid ""
 "    <artifactId>quarkus-smallrye-reactive-messaging-kafka</artifactId>\n"
 "</dependency>\n"
 msgstr ""
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-smallrye-reactive-messaging-kafka</artifactId>\n"
+"</dependency>\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/kafka.adoc:79
@@ -148,13 +157,13 @@ msgstr "次に、Kafka クラスターが必要です。https://kafka.apache.org
 #: upstream/_versions/1.7/guides/kafka.adoc:83
 #, no-wrap
 msgid "version: '2'\n"
-msgstr ""
+msgstr "version: '2'\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/kafka.adoc:85
 #, no-wrap
 msgid "services:\n"
-msgstr ""
+msgstr "services:\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/kafka.adoc:96
@@ -171,6 +180,16 @@ msgid ""
 "    environment:\n"
 "      LOG_DIR: /tmp/logs\n"
 msgstr ""
+"  zookeeper:\n"
+"    image: strimzi/kafka:0.11.3-kafka-2.1.0\n"
+"    command: [\n"
+"      \"sh\", \"-c\",\n"
+"      \"bin/zookeeper-server-start.sh config/zookeeper.properties\"\n"
+"    ]\n"
+"    ports:\n"
+"      - \"2181:2181\"\n"
+"    environment:\n"
+"      LOG_DIR: /tmp/logs\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/kafka.adoc:115
@@ -199,7 +218,7 @@ msgstr "以下の内容の `src/main/java/org/acme/kafka/PriceGenerator.java` �
 #: upstream/_versions/1.7/guides/kafka.adoc:204
 #, no-wrap
 msgid "package org.acme.kafka;\n"
-msgstr ""
+msgstr "package org.acme.kafka;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/kafka.adoc:128
@@ -208,6 +227,8 @@ msgid ""
 "import io.reactivex.Flowable;\n"
 "import org.eclipse.microprofile.reactive.messaging.Outgoing;\n"
 msgstr ""
+"import io.reactivex.Flowable;\n"
+"import org.eclipse.microprofile.reactive.messaging.Outgoing;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/kafka.adoc:132
@@ -217,6 +238,9 @@ msgid ""
 "import java.util.Random;\n"
 "import java.util.concurrent.TimeUnit;\n"
 msgstr ""
+"import javax.enterprise.context.ApplicationScoped;\n"
+"import java.util.Random;\n"
+"import java.util.concurrent.TimeUnit;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/kafka.adoc:139
@@ -229,12 +253,18 @@ msgid ""
 "@ApplicationScoped\n"
 "public class PriceGenerator {\n"
 msgstr ""
+"/**\n"
+" * A bean producing random prices every 5 seconds.\n"
+" * The prices are written to a Kafka topic (prices). The Kafka configuration is specified in the application configuration.\n"
+" */\n"
+"@ApplicationScoped\n"
+"public class PriceGenerator {\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/kafka.adoc:141
 #, no-wrap
 msgid "    private Random random = new Random();\n"
-msgstr ""
+msgstr "    private Random random = new Random();\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/kafka.adoc:147
@@ -246,6 +276,11 @@ msgid ""
 "                .map(tick -> random.nextInt(100));\n"
 "    }\n"
 msgstr ""
+"    @Outgoing(\"generated-price\")                        // <1>\n"
+"    public Flowable<Integer> generate() {               // <2>\n"
+"        return Flowable.interval(5, TimeUnit.SECONDS)\n"
+"                .map(tick -> random.nextInt(100));\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/kafka.adoc:149
@@ -254,7 +289,7 @@ msgstr ""
 #: upstream/_versions/1.7/guides/kafka.adoc:610
 #, no-wrap
 msgid "}\n"
-msgstr ""
+msgstr "}\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/kafka.adoc:151
@@ -286,13 +321,16 @@ msgid ""
 "import org.eclipse.microprofile.reactive.messaging.Incoming;\n"
 "import org.eclipse.microprofile.reactive.messaging.Outgoing;\n"
 msgstr ""
+"import io.smallrye.reactive.messaging.annotations.Broadcast;\n"
+"import org.eclipse.microprofile.reactive.messaging.Incoming;\n"
+"import org.eclipse.microprofile.reactive.messaging.Outgoing;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/kafka.adoc:170
 #: upstream/_versions/1.7/guides/kafka.adoc:421
 #, no-wrap
 msgid "import javax.enterprise.context.ApplicationScoped;\n"
-msgstr ""
+msgstr "import javax.enterprise.context.ApplicationScoped;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/kafka.adoc:177
@@ -305,13 +343,19 @@ msgid ""
 "@ApplicationScoped\n"
 "public class PriceConverter {\n"
 msgstr ""
+"/**\n"
+" * A bean consuming data from the \"prices\" Kafka topic and applying some conversion.\n"
+" * The result is pushed to the \"my-data-stream\" stream which is an in-memory stream.\n"
+" */\n"
+"@ApplicationScoped\n"
+"public class PriceConverter {\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/kafka.adoc:179
 #: upstream/_versions/1.7/guides/kafka.adoc:430
 #, no-wrap
 msgid "    private static final double CONVERSION_RATE = 0.88;\n"
-msgstr ""
+msgstr "    private static final double CONVERSION_RATE = 0.88;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/kafka.adoc:186
@@ -324,6 +368,12 @@ msgid ""
 "        return priceInUsd * CONVERSION_RATE;\n"
 "    }\n"
 msgstr ""
+"    @Incoming(\"prices\")                                 // <1>\n"
+"    @Outgoing(\"my-data-stream\")                         // <2>\n"
+"    @Broadcast                                          // <3>\n"
+"    public double process(int priceInUsd) {\n"
+"        return priceInUsd * CONVERSION_RATE;\n"
+"    }\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/kafka.adoc:190
@@ -364,6 +414,8 @@ msgid ""
 "import io.smallrye.reactive.messaging.annotations.Channel;\n"
 "import org.reactivestreams.Publisher;\n"
 msgstr ""
+"import io.smallrye.reactive.messaging.annotations.Channel;\n"
+"import org.reactivestreams.Publisher;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/kafka.adoc:214
@@ -377,6 +429,12 @@ msgid ""
 "import javax.ws.rs.core.MediaType;\n"
 "import org.jboss.resteasy.annotations.SseElementType;\n"
 msgstr ""
+"import javax.inject.Inject;\n"
+"import javax.ws.rs.GET;\n"
+"import javax.ws.rs.Path;\n"
+"import javax.ws.rs.Produces;\n"
+"import javax.ws.rs.core.MediaType;\n"
+"import org.jboss.resteasy.annotations.SseElementType;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/kafka.adoc:220
@@ -388,6 +446,11 @@ msgid ""
 "@Path(\"/prices\")\n"
 "public class PriceResource {\n"
 msgstr ""
+"/**\n"
+" * A simple resource retrieving the in-memory \"my-data-stream\" and sending the items as server-sent events.\n"
+" */\n"
+"@Path(\"/prices\")\n"
+"public class PriceResource {\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/kafka.adoc:223
@@ -396,6 +459,8 @@ msgid ""
 "    @Inject\n"
 "    @Channel(\"my-data-stream\") Publisher<Double> prices; // <1>\n"
 msgstr ""
+"    @Inject\n"
+"    @Channel(\"my-data-stream\") Publisher<Double> prices; // <1>\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/kafka.adoc:232
@@ -410,6 +475,14 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    @GET\n"
+"    @Path(\"/stream\")\n"
+"    @Produces(MediaType.SERVER_SENT_EVENTS) // <2>\n"
+"    @SseElementType(\"text/plain\") // <3>\n"
+"    public Publisher<Double> stream() { // <4>\n"
+"        return prices;\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/kafka.adoc:234
@@ -463,6 +536,8 @@ msgid ""
 "# Configure the SmallRye Kafka connector\n"
 "kafka.bootstrap.servers=localhost:9092\n"
 msgstr ""
+"# Configure the SmallRye Kafka connector\n"
+"kafka.bootstrap.servers=localhost:9092\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/kafka.adoc:259
@@ -473,6 +548,10 @@ msgid ""
 "mp.messaging.outgoing.generated-price.topic=prices\n"
 "mp.messaging.outgoing.generated-price.value.serializer=org.apache.kafka.common.serialization.IntegerSerializer\n"
 msgstr ""
+"# Configure the Kafka sink (we write to it)\n"
+"mp.messaging.outgoing.generated-price.connector=smallrye-kafka\n"
+"mp.messaging.outgoing.generated-price.topic=prices\n"
+"mp.messaging.outgoing.generated-price.value.serializer=org.apache.kafka.common.serialization.IntegerSerializer\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/kafka.adoc:263
@@ -482,6 +561,9 @@ msgid ""
 "mp.messaging.incoming.prices.connector=smallrye-kafka\n"
 "mp.messaging.incoming.prices.value.deserializer=org.apache.kafka.common.serialization.IntegerDeserializer\n"
 msgstr ""
+"# Configure the Kafka source (we read from it)\n"
+"mp.messaging.incoming.prices.connector=smallrye-kafka\n"
+"mp.messaging.incoming.prices.value.deserializer=org.apache.kafka.common.serialization.IntegerDeserializer\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/kafka.adoc:266
@@ -519,6 +601,11 @@ msgid ""
 "    <meta charset=\"UTF-8\">\n"
 "    <title>Prices</title>\n"
 msgstr ""
+"<!DOCTYPE html>\n"
+"<html lang=\"en\">\n"
+"<head>\n"
+"    <meta charset=\"UTF-8\">\n"
+"    <title>Prices</title>\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/kafka.adoc:290
@@ -532,6 +619,13 @@ msgid ""
 "<body>\n"
 "<div class=\"container\">\n"
 msgstr ""
+"    <link rel=\"stylesheet\" type=\"text/css\"\n"
+"          href=\"https://cdnjs.cloudflare.com/ajax/libs/patternfly/3.24.0/css/patternfly.min.css\">\n"
+"    <link rel=\"stylesheet\" type=\"text/css\"\n"
+"          href=\"https://cdnjs.cloudflare.com/ajax/libs/patternfly/3.24.0/css/patternfly-additions.min.css\">\n"
+"</head>\n"
+"<body>\n"
+"<div class=\"container\">\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/kafka.adoc:305
@@ -552,6 +646,20 @@ msgid ""
 "</script>\n"
 "</html>\n"
 msgstr ""
+"    <h2>Last price</h2>\n"
+"    <div class=\"row\">\n"
+"    <p class=\"col-md-12\">The last price is <strong><span id=\"content\">N/A</span>&nbsp;&euro;</strong>.</p>\n"
+"    </div>\n"
+"</div>\n"
+"</body>\n"
+"<script src=\"https://code.jquery.com/jquery-3.3.1.min.js\"></script>\n"
+"<script>\n"
+"    var source = new EventSource(\"/prices/stream\");\n"
+"    source.onmessage = function (event) {\n"
+"        document.getElementById(\"content\").innerHTML = event.data;\n"
+"    };\n"
+"</script>\n"
+"</html>\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/kafka.adoc:308
@@ -573,7 +681,7 @@ msgstr "指示に従えば、Kafka が起動しているはずです。あとは
 #: upstream/_versions/1.7/guides/kafka.adoc:317
 #, no-wrap
 msgid "./mvnw quarkus:dev\n"
-msgstr ""
+msgstr "./mvnw quarkus:dev\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/kafka.adoc:320
@@ -600,7 +708,7 @@ msgstr "以下ででネイティブ実行可能ファイルをビルドするこ
 #: upstream/_versions/1.7/guides/kafka.adoc:330
 #, no-wrap
 msgid "./mvnw package -Pnative\n"
-msgstr ""
+msgstr "./mvnw package -Pnative\n"
 
 #. type: Title ==
 #: upstream/_versions/1.7/guides/kafka.adoc:332
@@ -630,6 +738,8 @@ msgid ""
 "import org.eclipse.microprofile.reactive.messaging.Channel;\n"
 "import org.eclipse.microprofile.reactive.messaging.Emitter;\n"
 msgstr ""
+"import org.eclipse.microprofile.reactive.messaging.Channel;\n"
+"import org.eclipse.microprofile.reactive.messaging.Emitter;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/kafka.adoc:351
@@ -641,6 +751,11 @@ msgid ""
 "import javax.ws.rs.Consumes;\n"
 "import javax.ws.rs.core.MediaType;\n"
 msgstr ""
+"import javax.inject.Inject;\n"
+"import javax.ws.rs.POST;\n"
+"import javax.ws.rs.Path;\n"
+"import javax.ws.rs.Consumes;\n"
+"import javax.ws.rs.core.MediaType;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/kafka.adoc:354
@@ -649,12 +764,14 @@ msgid ""
 "@Path(\"/prices\")\n"
 "public class PriceResource {\n"
 msgstr ""
+"@Path(\"/prices\")\n"
+"public class PriceResource {\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/kafka.adoc:356
 #, no-wrap
 msgid "    @Inject @Channel(\"price-create\") Emitter<Double> priceEmitter;\n"
-msgstr ""
+msgstr "    @Inject @Channel(\"price-create\") Emitter<Double> priceEmitter;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/kafka.adoc:363
@@ -667,6 +784,12 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    @POST\n"
+"    @Consumes(MediaType.TEXT_PLAIN)\n"
+"    public void addPrice(Double price) {\n"
+"        priceEmitter.send(price);\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/kafka.adoc:367
@@ -734,7 +857,7 @@ msgstr "以下のように `Fruit` の pojo があると想像してみてくだ
 #: upstream/_versions/1.7/guides/kafka.adoc:398
 #, no-wrap
 msgid "public class Fruit {\n"
-msgstr ""
+msgstr "public class Fruit {\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/kafka.adoc:401
@@ -743,6 +866,8 @@ msgid ""
 "    public String name;\n"
 "    public int price;\n"
 msgstr ""
+"    public String name;\n"
+"    public int price;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/kafka.adoc:404
@@ -751,6 +876,8 @@ msgid ""
 "    public Fruit() {\n"
 "    }\n"
 msgstr ""
+"    public Fruit() {\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/kafka.adoc:410
@@ -762,6 +889,11 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    public Fruit(String name, int price) {\n"
+"        this.name = name;\n"
+"        this.price = price;\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/kafka.adoc:413
@@ -779,6 +911,12 @@ msgid ""
 "@ApplicationScoped\n"
 "public class FruitProcessor {\n"
 msgstr ""
+"/**\n"
+"* A bean consuming data from the \"fruit-in\" Kafka topic and applying some price conversion.\n"
+"* The result is pushed to the \"fruit-out\" stream.\n"
+"*/\n"
+"@ApplicationScoped\n"
+"public class FruitProcessor {\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/kafka.adoc:438
@@ -792,6 +930,13 @@ msgid ""
 "        return fruit;\n"
 "    }\n"
 msgstr ""
+"    @Incoming(\"fruit-in\")\n"
+"    @Outgoing(\"fruit-out\")\n"
+"    @Broadcast\n"
+"    public double process(Fruit fruit) {\n"
+"        fruit.price = fruit.price * CONVERSION_RATE;\n"
+"        return fruit;\n"
+"    }\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/kafka.adoc:445
@@ -818,6 +963,10 @@ msgid ""
 "    <artifactId>quarkus-jsonb</artifactId>\n"
 "</dependency>\n"
 msgstr ""
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-jsonb</artifactId>\n"
+"</dependency>\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/kafka.adoc:460
@@ -833,13 +982,13 @@ msgstr "そこで、一般的な `JsonbDeserializer` を拡張した `FruitDeser
 #: upstream/_versions/1.7/guides/kafka.adoc:466
 #, no-wrap
 msgid "package com.acme.fruit.jsonb;\n"
-msgstr ""
+msgstr "package com.acme.fruit.jsonb;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/kafka.adoc:468
 #, no-wrap
 msgid "import io.quarkus.kafka.client.serialization.JsonbDeserializer;\n"
-msgstr ""
+msgstr "import io.quarkus.kafka.client.serialization.JsonbDeserializer;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/kafka.adoc:475
@@ -852,6 +1001,12 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"public class FruitDeserializer extends JsonbDeserializer<Fruit> {\n"
+"    public FruitDeserializer(){\n"
+"        // pass the class to the parent.\n"
+"        super(Fruit.class);\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/kafka.adoc:479
@@ -872,6 +1027,10 @@ msgid ""
 "mp.messaging.incoming.fruit-in.topic=fruit-in\n"
 "mp.messaging.incoming.fruit-in.value.deserializer=com.acme.fruit.jsonb.FruitDeserializer\n"
 msgstr ""
+"# Configure the Kafka source (we read from it)\n"
+"mp.messaging.incoming.fruit-in.connector=smallrye-kafka\n"
+"mp.messaging.incoming.fruit-in.topic=fruit-in\n"
+"mp.messaging.incoming.fruit-in.value.deserializer=com.acme.fruit.jsonb.FruitDeserializer\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/kafka.adoc:493
@@ -882,6 +1041,10 @@ msgid ""
 "mp.messaging.outgoing.fruit-out.topic=fruit-out\n"
 "mp.messaging.outgoing.fruit-out.value.serializer=io.quarkus.kafka.client.serialization.JsonbSerializer\n"
 msgstr ""
+"# Configure the Kafka sink (we write to it)\n"
+"mp.messaging.outgoing.fruit-out.connector=smallrye-kafka\n"
+"mp.messaging.outgoing.fruit-out.topic=fruit-out\n"
+"mp.messaging.outgoing.fruit-out.value.serializer=io.quarkus.kafka.client.serialization.JsonbSerializer\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/kafka.adoc:496
@@ -908,6 +1071,10 @@ msgid ""
 "    <artifactId>quarkus-jackson</artifactId>\n"
 "</dependency>\n"
 msgstr ""
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-jackson</artifactId>\n"
+"</dependency>\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/kafka.adoc:511
@@ -923,13 +1090,13 @@ msgstr "そこで、`ObjectMapperDeserializer` を拡張した `FruitDeserialize
 #: upstream/_versions/1.7/guides/kafka.adoc:517
 #, no-wrap
 msgid "package com.acme.fruit.jackson;\n"
-msgstr ""
+msgstr "package com.acme.fruit.jackson;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/kafka.adoc:519
 #, no-wrap
 msgid "import io.quarkus.kafka.client.serialization.ObjectMapperDeserializer;\n"
-msgstr ""
+msgstr "import io.quarkus.kafka.client.serialization.ObjectMapperDeserializer;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/kafka.adoc:526
@@ -942,6 +1109,12 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"public class FruitDeserializer extends ObjectMapperDeserializer<Fruit> {\n"
+"    public FruitDeserializer(){\n"
+"        // pass the class to the parent.\n"
+"        super(Fruit.class);\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/kafka.adoc:529
@@ -957,6 +1130,10 @@ msgid ""
 "mp.messaging.incoming.fruit-in.topic=fruit-in\n"
 "mp.messaging.incoming.fruit-in.value.deserializer=com.acme.fruit.jackson.FruitDeserializer\n"
 msgstr ""
+"# Configure the Kafka source (we read from it)\n"
+"mp.messaging.incoming.fruit-in.connector=smallrye-kafka\n"
+"mp.messaging.incoming.fruit-in.topic=fruit-in\n"
+"mp.messaging.incoming.fruit-in.value.deserializer=com.acme.fruit.jackson.FruitDeserializer\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/kafka.adoc:541
@@ -967,6 +1144,10 @@ msgid ""
 "mp.messaging.outgoing.fruit-out.topic=fruit-out\n"
 "mp.messaging.outgoing.fruit-out.value.serializer=io.quarkus.kafka.client.serialization.ObjectMapperSerializer\n"
 msgstr ""
+"# Configure the Kafka sink (we write to it)\n"
+"mp.messaging.outgoing.fruit-out.connector=smallrye-kafka\n"
+"mp.messaging.outgoing.fruit-out.topic=fruit-out\n"
+"mp.messaging.outgoing.fruit-out.value.serializer=io.quarkus.kafka.client.serialization.ObjectMapperSerializer\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/kafka.adoc:544
@@ -990,6 +1171,8 @@ msgid ""
 "@Path(\"/fruits\")\n"
 "public class PriceResource {\n"
 msgstr ""
+"@Path(\"/fruits\")\n"
+"public class PriceResource {\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/kafka.adoc:569
@@ -998,6 +1181,8 @@ msgid ""
 "    @Inject\n"
 "    @Channel(\"fruit-out\") Publisher<Fruit> fruits;\n"
 msgstr ""
+"    @Inject\n"
+"    @Channel(\"fruit-out\") Publisher<Fruit> fruits;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/kafka.adoc:578
@@ -1012,6 +1197,14 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    @GET\n"
+"    @Path(\"/stream\")\n"
+"    @Produces(MediaType.SERVER_SENT_EVENTS)\n"
+"    @SseElementType(MediaType.APPLICATION_JSON)\n"
+"    public Publisher<Fruit> stream() {\n"
+"        return fruits;\n"
+"    }\n"
+"}\n"
 
 #. type: Title ==
 #: upstream/_versions/1.7/guides/kafka.adoc:580
@@ -1033,7 +1226,7 @@ msgstr "例えば、以下のコードは、Hibernate with Panacheを 使用し�
 #: upstream/_versions/1.7/guides/kafka.adoc:590
 #, no-wrap
 msgid "package org.acme.panache;\n"
-msgstr ""
+msgstr "package org.acme.panache;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/kafka.adoc:593
@@ -1042,6 +1235,8 @@ msgid ""
 "import io.smallrye.reactive.messaging.annotations.Blocking;\n"
 "import org.eclipse.microprofile.reactive.messaging.Incoming;\n"
 msgstr ""
+"import io.smallrye.reactive.messaging.annotations.Blocking;\n"
+"import org.eclipse.microprofile.reactive.messaging.Incoming;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/kafka.adoc:596
@@ -1050,6 +1245,8 @@ msgid ""
 "import javax.enterprise.context.ApplicationScoped;\n"
 "import javax.transaction.Transactional;\n"
 msgstr ""
+"import javax.enterprise.context.ApplicationScoped;\n"
+"import javax.transaction.Transactional;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/kafka.adoc:599
@@ -1058,6 +1255,8 @@ msgid ""
 "@ApplicationScoped\n"
 "public class PriceStorage {\n"
 msgstr ""
+"@ApplicationScoped\n"
+"public class PriceStorage {\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/kafka.adoc:608
@@ -1072,6 +1271,14 @@ msgid ""
 "        price.persist();\n"
 "    }\n"
 msgstr ""
+"    @Incoming(\"prices\")\n"
+"    @Blocking\n"
+"    @Transactional\n"
+"    public void store(int priceInUsd) {\n"
+"        Price price = new Price();\n"
+"        price.value = priceInUsd;\n"
+"        price.persist();\n"
+"    }\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/kafka.adoc:613

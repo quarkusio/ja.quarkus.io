@@ -108,6 +108,10 @@ msgid ""
 "    <artifactId>quarkus-qpid-jms</artifactId>\n"
 "</dependency>\n"
 msgstr ""
+"<dependency>\n"
+"    <groupId>org.amqphub.quarkus</groupId>\n"
+"    <artifactId>quarkus-qpid-jms</artifactId>\n"
+"</dependency>\n"
 
 #. type: Block title
 #: upstream/_versions/3.0/guides/jms.adoc:72
@@ -120,7 +124,7 @@ msgstr "build.gradle"
 #: upstream/_versions/3.0/guides/jms.adoc:75
 #, no-wrap
 msgid "implementation(\"org.amqphub.quarkus:quarkus-qpid-jms\")\n"
-msgstr ""
+msgstr "implementation(\"org.amqphub.quarkus:quarkus-qpid-jms\")\n"
 
 #. type: Title ===
 #: upstream/_versions/3.0/guides/jms.adoc:78
@@ -137,7 +141,7 @@ msgstr "次に、AMQPブローカーが必要です。この場合はActiveMQ Ar
 #: upstream/_versions/3.0/guides/jms.adoc:86
 #, no-wrap
 msgid "docker run -it --rm -p 8161:8161 -p 61616:61616 -p 5672:5672 -e AMQ_USER=quarkus -e AMQ_PASSWORD=quarkus quay.io/artemiscloud/activemq-artemis-broker:0.1.4\n"
-msgstr ""
+msgstr "docker run -it --rm -p 8161:8161 -p 61616:61616 -p 5672:5672 -e AMQ_USER=quarkus -e AMQ_PASSWORD=quarkus quay.io/artemiscloud/activemq-artemis-broker:0.1.4\n"
 
 #. type: Title ===
 #: upstream/_versions/3.0/guides/jms.adoc:88
@@ -156,7 +160,7 @@ msgstr "以下の内容の `src/main/java/org/acme/jms/PriceProducer.java` フ�
 #: upstream/_versions/3.0/guides/jms.adoc:212
 #, no-wrap
 msgid "package org.acme.jms;\n"
-msgstr ""
+msgstr "package org.acme.jms;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/jms.adoc:100
@@ -167,6 +171,10 @@ msgid ""
 "import java.util.concurrent.ScheduledExecutorService;\n"
 "import java.util.concurrent.TimeUnit;\n"
 msgstr ""
+"import java.util.Random;\n"
+"import java.util.concurrent.Executors;\n"
+"import java.util.concurrent.ScheduledExecutorService;\n"
+"import java.util.concurrent.TimeUnit;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/jms.adoc:106
@@ -178,6 +186,11 @@ msgid ""
 "import jakarta.jms.ConnectionFactory;\n"
 "import jakarta.jms.JMSContext;\n"
 msgstr ""
+"import jakarta.enterprise.context.ApplicationScoped;\n"
+"import jakarta.enterprise.event.Observes;\n"
+"import jakarta.inject.Inject;\n"
+"import jakarta.jms.ConnectionFactory;\n"
+"import jakarta.jms.JMSContext;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/jms.adoc:109
@@ -187,6 +200,8 @@ msgid ""
 "import io.quarkus.runtime.ShutdownEvent;\n"
 "import io.quarkus.runtime.StartupEvent;\n"
 msgstr ""
+"import io.quarkus.runtime.ShutdownEvent;\n"
+"import io.quarkus.runtime.StartupEvent;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/jms.adoc:115
@@ -198,6 +213,11 @@ msgid ""
 "@ApplicationScoped\n"
 "public class PriceProducer implements Runnable {\n"
 msgstr ""
+"/**\n"
+" * A bean producing random prices every 5 seconds and sending them to the prices JMS queue.\n"
+" */\n"
+"@ApplicationScoped\n"
+"public class PriceProducer implements Runnable {\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/jms.adoc:118
@@ -207,6 +227,8 @@ msgid ""
 "    @Inject\n"
 "    ConnectionFactory connectionFactory;\n"
 msgstr ""
+"    @Inject\n"
+"    ConnectionFactory connectionFactory;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/jms.adoc:121
@@ -215,6 +237,8 @@ msgid ""
 "    private final Random random = new Random();\n"
 "    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();\n"
 msgstr ""
+"    private final Random random = new Random();\n"
+"    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/jms.adoc:125
@@ -224,6 +248,9 @@ msgid ""
 "        scheduler.scheduleWithFixedDelay(this, 0L, 5L, TimeUnit.SECONDS);\n"
 "    }\n"
 msgstr ""
+"    void onStart(@Observes StartupEvent ev) {\n"
+"        scheduler.scheduleWithFixedDelay(this, 0L, 5L, TimeUnit.SECONDS);\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/jms.adoc:129
@@ -234,6 +261,9 @@ msgid ""
 "        scheduler.shutdown();\n"
 "    }\n"
 msgstr ""
+"    void onStop(@Observes ShutdownEvent ev) {\n"
+"        scheduler.shutdown();\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/jms.adoc:137
@@ -247,6 +277,13 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    @Override\n"
+"    public void run() {\n"
+"        try (JMSContext context = connectionFactory.createContext(JMSContext.AUTO_ACKNOWLEDGE)) {\n"
+"            context.createProducer().send(context.createQueue(\"prices\"), Integer.toString(random.nextInt(100)));\n"
+"        }\n"
+"    }\n"
+"}\n"
 
 #. type: Title ===
 #: upstream/_versions/3.0/guides/jms.adoc:139
@@ -266,6 +303,8 @@ msgid ""
 "import java.util.concurrent.ExecutorService;\n"
 "import java.util.concurrent.Executors;\n"
 msgstr ""
+"import java.util.concurrent.ExecutorService;\n"
+"import java.util.concurrent.Executors;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/jms.adoc:159
@@ -280,6 +319,14 @@ msgid ""
 "import jakarta.jms.JMSException;\n"
 "import jakarta.jms.Message;\n"
 msgstr ""
+"import jakarta.enterprise.context.ApplicationScoped;\n"
+"import jakarta.enterprise.event.Observes;\n"
+"import jakarta.inject.Inject;\n"
+"import jakarta.jms.ConnectionFactory;\n"
+"import jakarta.jms.JMSConsumer;\n"
+"import jakarta.jms.JMSContext;\n"
+"import jakarta.jms.JMSException;\n"
+"import jakarta.jms.Message;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/jms.adoc:168
@@ -291,18 +338,23 @@ msgid ""
 "@ApplicationScoped\n"
 "public class PriceConsumer implements Runnable {\n"
 msgstr ""
+"/**\n"
+" * A bean consuming prices from the JMS queue.\n"
+" */\n"
+"@ApplicationScoped\n"
+"public class PriceConsumer implements Runnable {\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/jms.adoc:173
 #, no-wrap
 msgid "    private final ExecutorService scheduler = Executors.newSingleThreadExecutor();\n"
-msgstr ""
+msgstr "    private final ExecutorService scheduler = Executors.newSingleThreadExecutor();\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/jms.adoc:175
 #, no-wrap
 msgid "    private volatile String lastPrice;\n"
-msgstr ""
+msgstr "    private volatile String lastPrice;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/jms.adoc:179
@@ -312,6 +364,9 @@ msgid ""
 "        return lastPrice;\n"
 "    }\n"
 msgstr ""
+"    public String getLastPrice() {\n"
+"        return lastPrice;\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/jms.adoc:183
@@ -321,6 +376,9 @@ msgid ""
 "        scheduler.submit(this);\n"
 "    }\n"
 msgstr ""
+"    void onStart(@Observes StartupEvent ev) {\n"
+"        scheduler.submit(this);\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/jms.adoc:202
@@ -341,6 +399,20 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    @Override\n"
+"    public void run() {\n"
+"        try (JMSContext context = connectionFactory.createContext(JMSContext.AUTO_ACKNOWLEDGE)) {\n"
+"            JMSConsumer consumer = context.createConsumer(context.createQueue(\"prices\"));\n"
+"            while (true) {\n"
+"                Message message = consumer.receive();\n"
+"                if (message == null) return;\n"
+"                lastPrice = message.getBody(String.class);\n"
+"            }\n"
+"        } catch (JMSException e) {\n"
+"            throw new RuntimeException(e);\n"
+"        }\n"
+"    }\n"
+"}\n"
 
 #. type: Title ===
 #: upstream/_versions/3.0/guides/jms.adoc:204
@@ -363,6 +435,11 @@ msgid ""
 "import jakarta.ws.rs.Produces;\n"
 "import jakarta.ws.rs.core.MediaType;\n"
 msgstr ""
+"import jakarta.inject.Inject;\n"
+"import jakarta.ws.rs.GET;\n"
+"import jakarta.ws.rs.Path;\n"
+"import jakarta.ws.rs.Produces;\n"
+"import jakarta.ws.rs.core.MediaType;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/jms.adoc:224
@@ -374,6 +451,11 @@ msgid ""
 "@Path(\"/prices\")\n"
 "public class PriceResource {\n"
 msgstr ""
+"/**\n"
+" * A simple resource showing the last price.\n"
+" */\n"
+"@Path(\"/prices\")\n"
+"public class PriceResource {\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/jms.adoc:227
@@ -382,6 +464,8 @@ msgid ""
 "    @Inject\n"
 "    PriceConsumer consumer;\n"
 msgstr ""
+"    @Inject\n"
+"    PriceConsumer consumer;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/jms.adoc:235
@@ -395,6 +479,13 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    @GET\n"
+"    @Path(\"last\")\n"
+"    @Produces(MediaType.TEXT_PLAIN)\n"
+"    public String last() {\n"
+"        return consumer.getLastPrice();\n"
+"    }\n"
+"}\n"
 
 #. type: Title ===
 #: upstream/_versions/3.0/guides/jms.adoc:237
@@ -422,6 +513,11 @@ msgid ""
 "    <meta charset=\"UTF-8\">\n"
 "    <title>Prices</title>\n"
 msgstr ""
+"<!DOCTYPE html>\n"
+"<html lang=\"en\">\n"
+"<head>\n"
+"    <meta charset=\"UTF-8\">\n"
+"    <title>Prices</title>\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/jms.adoc:258
@@ -435,6 +531,13 @@ msgid ""
 "<body>\n"
 "<div class=\"container\">\n"
 msgstr ""
+"    <link rel=\"stylesheet\" type=\"text/css\"\n"
+"          href=\"https://cdnjs.cloudflare.com/ajax/libs/patternfly/3.24.0/css/patternfly.min.css\">\n"
+"    <link rel=\"stylesheet\" type=\"text/css\"\n"
+"          href=\"https://cdnjs.cloudflare.com/ajax/libs/patternfly/3.24.0/css/patternfly-additions.min.css\">\n"
+"</head>\n"
+"<body>\n"
+"<div class=\"container\">\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/jms.adoc:275
@@ -457,6 +560,22 @@ msgid ""
 "</script>\n"
 "</html>\n"
 msgstr ""
+"    <h2>Last price</h2>\n"
+"    <div class=\"row\">\n"
+"    <p class=\"col-md-12\"><button id=\"fetch\">Fetch</button>The last price is <strong><span id=\"content\">N/A</span>&nbsp;&euro;</strong>.</p>\n"
+"    </div>\n"
+"</div>\n"
+"</body>\n"
+"<script>\n"
+"    document.getElementById(\"fetch\").addEventListener(\"click\", function() {\n"
+"        fetch(\"/prices/last\").then(function (response) {\n"
+"            response.text().then(function (text) {\n"
+"                document.getElementById(\"content\").textContent = text;\n"
+"            })\n"
+"        })\n"
+"    })\n"
+"</script>\n"
+"</html>\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/jms.adoc:278
@@ -488,6 +607,10 @@ msgid ""
 "quarkus.qpid-jms.username=quarkus\n"
 "quarkus.qpid-jms.password=quarkus\n"
 msgstr ""
+"# Configures the Qpid JMS properties.\n"
+"quarkus.qpid-jms.url=amqp://localhost:5672\n"
+"quarkus.qpid-jms.username=quarkus\n"
+"quarkus.qpid-jms.password=quarkus\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/jms.adoc:295
@@ -536,7 +659,7 @@ msgstr "次に、以下を実行してください。"
 #: upstream/_versions/3.0/guides/jms.adoc:321
 #, no-wrap
 msgid "./target/jms-quickstart-1.0.0-SNAPSHOT-runner\n"
-msgstr ""
+msgstr "./target/jms-quickstart-1.0.0-SNAPSHOT-runner\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/jms.adoc:326
@@ -588,12 +711,16 @@ msgid ""
 "    <artifactId>quarkus-artemis-jms</artifactId>\n"
 "</dependency>\n"
 msgstr ""
+"<dependency>\n"
+"    <groupId>io.quarkiverse.artemis</groupId>\n"
+"    <artifactId>quarkus-artemis-jms</artifactId>\n"
+"</dependency>\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/jms.adoc:369
 #, no-wrap
 msgid "implementation(\"io.quarkiverse.artemis:quarkus-artemis-jms\")\n"
-msgstr ""
+msgstr "implementation(\"io.quarkiverse.artemis:quarkus-artemis-jms\")\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/jms.adoc:374
@@ -620,6 +747,10 @@ msgid ""
 "quarkus.artemis.username=quarkus\n"
 "quarkus.artemis.password=quarkus\n"
 msgstr ""
+"# Configures the Artemis properties.\n"
+"quarkus.artemis.url=tcp://localhost:61616\n"
+"quarkus.artemis.username=quarkus\n"
+"quarkus.artemis.password=quarkus\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/jms.adoc:389

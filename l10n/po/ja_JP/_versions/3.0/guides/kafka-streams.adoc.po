@@ -50,7 +50,7 @@ msgstr "最高の開発環境を実現するために、Kafkaブローカーに�
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:34
 #, no-wrap
 msgid "group.min.session.timeout.ms=250\n"
-msgstr ""
+msgstr "group.min.session.timeout.ms=250\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:37
@@ -64,6 +64,8 @@ msgid ""
 "kafka-streams.consumer.session.timeout.ms=250\n"
 "kafka-streams.consumer.heartbeat.interval.ms=200\n"
 msgstr ""
+"kafka-streams.consumer.session.timeout.ms=250\n"
+"kafka-streams.consumer.heartbeat.interval.ms=200\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:45
@@ -122,7 +124,7 @@ msgstr "アーキテクチャ"
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:65
 #, no-wrap
 msgid "kafka-streams-guide-architecture.png"
-msgstr ""
+msgstr "kafka-streams-guide-architecture.png"
 
 #. type: Title ==
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:67
@@ -187,6 +189,10 @@ msgid ""
 "    <artifactId>quarkus-smallrye-reactive-messaging-kafka</artifactId>\n"
 "</dependency>\n"
 msgstr ""
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-smallrye-reactive-messaging-kafka</artifactId>\n"
+"</dependency>\n"
 
 #. type: Block title
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:106
@@ -199,7 +205,7 @@ msgstr "build.gradle"
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:109
 #, no-wrap
 msgid "implementation(\"io.quarkus:quarkus-smallrye-reactive-messaging-kafka\")\n"
-msgstr ""
+msgstr "implementation(\"io.quarkus:quarkus-smallrye-reactive-messaging-kafka\")\n"
 
 #. type: Title ===
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:111
@@ -216,7 +222,7 @@ msgstr "以下の内容の `producer/src/main/java/org/acme/kafka/streams/produc
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:119
 #, no-wrap
 msgid "package org.acme.kafka.streams.producer.generator;\n"
-msgstr ""
+msgstr "package org.acme.kafka.streams.producer.generator;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:128
@@ -231,12 +237,20 @@ msgid ""
 "import java.util.List;\n"
 "import java.util.Random;\n"
 msgstr ""
+"import java.math.BigDecimal;\n"
+"import java.math.RoundingMode;\n"
+"import java.time.Duration;\n"
+"import java.time.Instant;\n"
+"import java.util.Arrays;\n"
+"import java.util.Collections;\n"
+"import java.util.List;\n"
+"import java.util.Random;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:130
 #, no-wrap
 msgid "import jakarta.enterprise.context.ApplicationScoped;\n"
-msgstr ""
+msgstr "import jakarta.enterprise.context.ApplicationScoped;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:135
@@ -247,6 +261,10 @@ msgid ""
 "import org.eclipse.microprofile.reactive.messaging.Outgoing;\n"
 "import org.jboss.logging.Logger;\n"
 msgstr ""
+"import io.smallrye.mutiny.Multi;\n"
+"import io.smallrye.reactive.messaging.kafka.Record;\n"
+"import org.eclipse.microprofile.reactive.messaging.Outgoing;\n"
+"import org.jboss.logging.Logger;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:144
@@ -261,18 +279,26 @@ msgid ""
 "@ApplicationScoped\n"
 "public class ValuesGenerator {\n"
 msgstr ""
+"/**\n"
+" * A bean producing random temperature data every second.\n"
+" * The values are written to a Kafka topic (temperature-values).\n"
+" * Another topic contains the name of weather stations (weather-stations).\n"
+" * The Kafka configuration is specified in the application configuration.\n"
+" */\n"
+"@ApplicationScoped\n"
+"public class ValuesGenerator {\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:146
 #, no-wrap
 msgid "    private static final Logger LOG = Logger.getLogger(ValuesGenerator.class);\n"
-msgstr ""
+msgstr "    private static final Logger LOG = Logger.getLogger(ValuesGenerator.class);\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:148
 #, no-wrap
 msgid "    private Random random = new Random();\n"
-msgstr ""
+msgstr "    private Random random = new Random();\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:159
@@ -289,6 +315,16 @@ msgid ""
 "                        new WeatherStation(8, \"Oslo\", 7),\n"
 "                        new WeatherStation(9, \"Marrakesh\", 20));\n"
 msgstr ""
+"    private List<WeatherStation> stations = List.of(\n"
+"                        new WeatherStation(1, \"Hamburg\", 13),\n"
+"                        new WeatherStation(2, \"Snowdonia\", 5),\n"
+"                        new WeatherStation(3, \"Boston\", 11),\n"
+"                        new WeatherStation(4, \"Tokio\", 16),\n"
+"                        new WeatherStation(5, \"Cusco\", 12),\n"
+"                        new WeatherStation(6, \"Svalbard\", -7),\n"
+"                        new WeatherStation(7, \"Porthsmouth\", 11),\n"
+"                        new WeatherStation(8, \"Oslo\", 7),\n"
+"                        new WeatherStation(9, \"Marrakesh\", 20));\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:169
@@ -304,6 +340,15 @@ msgid ""
 "                            .setScale(1, RoundingMode.HALF_UP)\n"
 "                            .doubleValue();\n"
 msgstr ""
+"    @Outgoing(\"temperature-values\")                                        // <1>\n"
+"    public Multi<Record<Integer, String>> generate() {\n"
+"        return Multi.createFrom().ticks().every(Duration.ofMillis(500))    // <2>\n"
+"                .onOverflow().drop()\n"
+"                .map(tick -> {\n"
+"                    WeatherStation station = stations.get(random.nextInt(stations.size()));\n"
+"                    double temperature = BigDecimal.valueOf(random.nextGaussian() * 15 + station.averageTemperature)\n"
+"                            .setScale(1, RoundingMode.HALF_UP)\n"
+"                            .doubleValue();\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:174
@@ -314,6 +359,10 @@ msgid ""
 "                });\n"
 "    }\n"
 msgstr ""
+"                    LOG.infov(\"station: {0}, temperature: {1}\", station.name, temperature);\n"
+"                    return Record.of(station.id, Instant.now() + \";\" + temperature);\n"
+"                });\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:184
@@ -329,12 +378,21 @@ msgid ""
 "        );\n"
 "    }\n"
 msgstr ""
+"    @Outgoing(\"weather-stations\")                                          // <3>\n"
+"    public Multi<Record<Integer, String>> weatherStations() {\n"
+"        return Multi.createFrom().items(stations.stream()\n"
+"            .map(s -> Record.of(\n"
+"                    s.id,\n"
+"                    \"{ \\\"id\\\" : \" + s.id +\n"
+"                    \", \\\"name\\\" : \\\"\" + s.name + \"\\\" }\"))\n"
+"        );\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:186
 #, no-wrap
 msgid "    private static class WeatherStation {\n"
-msgstr ""
+msgstr "    private static class WeatherStation {\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:190
@@ -344,6 +402,9 @@ msgid ""
 "        String name;\n"
 "        int averageTemperature;\n"
 msgstr ""
+"        int id;\n"
+"        String name;\n"
+"        int averageTemperature;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:198
@@ -357,6 +418,13 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"        public WeatherStation(int id, String name, int averageTemperature) {\n"
+"            this.id = id;\n"
+"            this.name = name;\n"
+"            this.averageTemperature = averageTemperature;\n"
+"        }\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:200
@@ -396,6 +464,8 @@ msgid ""
 "# Configure the Kafka broker location\n"
 "kafka.bootstrap.servers=localhost:9092\n"
 msgstr ""
+"# Configure the Kafka broker location\n"
+"kafka.bootstrap.servers=localhost:9092\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:218
@@ -405,6 +475,9 @@ msgid ""
 "mp.messaging.outgoing.temperature-values.key.serializer=org.apache.kafka.common.serialization.IntegerSerializer\n"
 "mp.messaging.outgoing.temperature-values.value.serializer=org.apache.kafka.common.serialization.StringSerializer\n"
 msgstr ""
+"mp.messaging.outgoing.temperature-values.connector=smallrye-kafka\n"
+"mp.messaging.outgoing.temperature-values.key.serializer=org.apache.kafka.common.serialization.IntegerSerializer\n"
+"mp.messaging.outgoing.temperature-values.value.serializer=org.apache.kafka.common.serialization.StringSerializer\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:222
@@ -414,6 +487,9 @@ msgid ""
 "mp.messaging.outgoing.weather-stations.key.serializer=org.apache.kafka.common.serialization.IntegerSerializer\n"
 "mp.messaging.outgoing.weather-stations.value.serializer=org.apache.kafka.common.serialization.StringSerializer\n"
 msgstr ""
+"mp.messaging.outgoing.weather-stations.connector=smallrye-kafka\n"
+"mp.messaging.outgoing.weather-stations.key.serializer=org.apache.kafka.common.serialization.IntegerSerializer\n"
+"mp.messaging.outgoing.weather-stations.value.serializer=org.apache.kafka.common.serialization.StringSerializer\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:226
@@ -455,12 +531,16 @@ msgid ""
 "    <artifactId>quarkus-kafka-streams</artifactId>\n"
 "</dependency>\n"
 msgstr ""
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-kafka-streams</artifactId>\n"
+"</dependency>\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:261
 #, no-wrap
 msgid "implementation(\"io.quarkus:quarkus-kafka-streams\")\n"
-msgstr ""
+msgstr "implementation(\"io.quarkus:quarkus-kafka-streams\")\n"
 
 #. type: Title ===
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:263
@@ -485,7 +565,7 @@ msgstr "まず、気象観測所を表すファイル `aggregator/src/main/java/
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:680
 #, no-wrap
 msgid "package org.acme.kafka.streams.aggregator.model;\n"
-msgstr ""
+msgstr "package org.acme.kafka.streams.aggregator.model;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:276
@@ -493,7 +573,7 @@ msgstr ""
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:682
 #, no-wrap
 msgid "import io.quarkus.runtime.annotations.RegisterForReflection;\n"
-msgstr ""
+msgstr "import io.quarkus.runtime.annotations.RegisterForReflection;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:279
@@ -502,6 +582,8 @@ msgid ""
 "@RegisterForReflection // <1>\n"
 "public class WeatherStation {\n"
 msgstr ""
+"@RegisterForReflection // <1>\n"
+"public class WeatherStation {\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:283
@@ -511,6 +593,9 @@ msgid ""
 "    public String name;\n"
 "}\n"
 msgstr ""
+"    public int id;\n"
+"    public String name;\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:285
@@ -527,13 +612,13 @@ msgstr "次に、与えられたステーションの温度測定値を表すフ
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:361
 #, no-wrap
 msgid "import java.time.Instant;\n"
-msgstr ""
+msgstr "import java.time.Instant;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:296
 #, no-wrap
 msgid "public class TemperatureMeasurement {\n"
-msgstr ""
+msgstr "public class TemperatureMeasurement {\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:301
@@ -544,6 +629,10 @@ msgid ""
 "    public Instant timestamp;\n"
 "    public double value;\n"
 msgstr ""
+"    public int stationId;\n"
+"    public String stationName;\n"
+"    public Instant timestamp;\n"
+"    public double value;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:310
@@ -558,6 +647,14 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    public TemperatureMeasurement(int stationId, String stationName, Instant timestamp,\n"
+"            double value) {\n"
+"        this.stationId = stationId;\n"
+"        this.stationName = stationName;\n"
+"        this.timestamp = timestamp;\n"
+"        this.value = value;\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:314
@@ -571,6 +668,8 @@ msgid ""
 "import java.math.BigDecimal;\n"
 "import java.math.RoundingMode;\n"
 msgstr ""
+"import java.math.BigDecimal;\n"
+"import java.math.RoundingMode;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:326
@@ -579,6 +678,8 @@ msgid ""
 "@RegisterForReflection\n"
 "public class Aggregation {\n"
 msgstr ""
+"@RegisterForReflection\n"
+"public class Aggregation {\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:334
@@ -592,6 +693,13 @@ msgid ""
 "    public double sum;\n"
 "    public double avg;\n"
 msgstr ""
+"    public int stationId;\n"
+"    public String stationName;\n"
+"    public double min = Double.MAX_VALUE;\n"
+"    public double max = Double.MIN_VALUE;\n"
+"    public int count;\n"
+"    public double sum;\n"
+"    public double avg;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:338
@@ -601,6 +709,9 @@ msgid ""
 "        stationId = measurement.stationId;\n"
 "        stationName = measurement.stationName;\n"
 msgstr ""
+"    public Aggregation updateFrom(TemperatureMeasurement measurement) {\n"
+"        stationId = measurement.stationId;\n"
+"        stationName = measurement.stationName;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:343
@@ -611,6 +722,10 @@ msgid ""
 "        avg = BigDecimal.valueOf(sum / count)\n"
 "                .setScale(1, RoundingMode.HALF_UP).doubleValue();\n"
 msgstr ""
+"        count++;\n"
+"        sum += measurement.value;\n"
+"        avg = BigDecimal.valueOf(sum / count)\n"
+"                .setScale(1, RoundingMode.HALF_UP).doubleValue();\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:346
@@ -619,6 +734,8 @@ msgid ""
 "        min = Math.min(min, measurement.value);\n"
 "        max = Math.max(max, measurement.value);\n"
 msgstr ""
+"        min = Math.min(min, measurement.value);\n"
+"        max = Math.max(max, measurement.value);\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:350
@@ -628,6 +745,9 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"        return this;\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:355
@@ -642,7 +762,7 @@ msgstr "次に、実際のストリーミングクエリの実装自体を `aggr
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:920
 #, no-wrap
 msgid "package org.acme.kafka.streams.aggregator.streams;\n"
-msgstr ""
+msgstr "package org.acme.kafka.streams.aggregator.streams;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:364
@@ -651,6 +771,8 @@ msgid ""
 "import jakarta.enterprise.context.ApplicationScoped;\n"
 "import jakarta.enterprise.inject.Produces;\n"
 msgstr ""
+"import jakarta.enterprise.context.ApplicationScoped;\n"
+"import jakarta.enterprise.inject.Produces;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:377
@@ -669,12 +791,24 @@ msgid ""
 "import org.apache.kafka.streams.state.KeyValueBytesStoreSupplier;\n"
 "import org.apache.kafka.streams.state.Stores;\n"
 msgstr ""
+"import org.acme.kafka.streams.aggregator.model.Aggregation;\n"
+"import org.acme.kafka.streams.aggregator.model.TemperatureMeasurement;\n"
+"import org.acme.kafka.streams.aggregator.model.WeatherStation;\n"
+"import org.apache.kafka.common.serialization.Serdes;\n"
+"import org.apache.kafka.streams.StreamsBuilder;\n"
+"import org.apache.kafka.streams.Topology;\n"
+"import org.apache.kafka.streams.kstream.Consumed;\n"
+"import org.apache.kafka.streams.kstream.GlobalKTable;\n"
+"import org.apache.kafka.streams.kstream.Materialized;\n"
+"import org.apache.kafka.streams.kstream.Produced;\n"
+"import org.apache.kafka.streams.state.KeyValueBytesStoreSupplier;\n"
+"import org.apache.kafka.streams.state.Stores;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:379
 #, no-wrap
 msgid "import io.quarkus.kafka.client.serialization.ObjectMapperSerde;\n"
-msgstr ""
+msgstr "import io.quarkus.kafka.client.serialization.ObjectMapperSerde;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:382
@@ -683,12 +817,14 @@ msgid ""
 "@ApplicationScoped\n"
 "public class TopologyProducer {\n"
 msgstr ""
+"@ApplicationScoped\n"
+"public class TopologyProducer {\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:384
 #, no-wrap
 msgid "    static final String WEATHER_STATIONS_STORE = \"weather-stations-store\";\n"
-msgstr ""
+msgstr "    static final String WEATHER_STATIONS_STORE = \"weather-stations-store\";\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:388
@@ -698,6 +834,9 @@ msgid ""
 "    private static final String TEMPERATURE_VALUES_TOPIC = \"temperature-values\";\n"
 "    private static final String TEMPERATURES_AGGREGATED_TOPIC = \"temperatures-aggregated\";\n"
 msgstr ""
+"    private static final String WEATHER_STATIONS_TOPIC = \"weather-stations\";\n"
+"    private static final String TEMPERATURE_VALUES_TOPIC = \"temperature-values\";\n"
+"    private static final String TEMPERATURES_AGGREGATED_TOPIC = \"temperatures-aggregated\";\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:392
@@ -707,6 +846,9 @@ msgid ""
 "    public Topology buildTopology() {\n"
 "        StreamsBuilder builder = new StreamsBuilder();\n"
 msgstr ""
+"    @Produces\n"
+"    public Topology buildTopology() {\n"
+"        StreamsBuilder builder = new StreamsBuilder();\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:396
@@ -716,6 +858,9 @@ msgid ""
 "                WeatherStation.class);\n"
 "        ObjectMapperSerde<Aggregation> aggregationSerde = new ObjectMapperSerde<>(Aggregation.class);\n"
 msgstr ""
+"        ObjectMapperSerde<WeatherStation> weatherStationSerde = new ObjectMapperSerde<>(\n"
+"                WeatherStation.class);\n"
+"        ObjectMapperSerde<Aggregation> aggregationSerde = new ObjectMapperSerde<>(Aggregation.class);\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:399
@@ -724,6 +869,8 @@ msgid ""
 "        KeyValueBytesStoreSupplier storeSupplier = Stores.persistentKeyValueStore(\n"
 "                WEATHER_STATIONS_STORE);\n"
 msgstr ""
+"        KeyValueBytesStoreSupplier storeSupplier = Stores.persistentKeyValueStore(\n"
+"                WEATHER_STATIONS_STORE);\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:403
@@ -733,6 +880,9 @@ msgid ""
 "                WEATHER_STATIONS_TOPIC,\n"
 "                Consumed.with(Serdes.Integer(), weatherStationSerde));\n"
 msgstr ""
+"        GlobalKTable<Integer, WeatherStation> stations = builder.globalTable( // <1>\n"
+"                WEATHER_STATIONS_TOPIC,\n"
+"                Consumed.with(Serdes.Integer(), weatherStationSerde));\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:430
@@ -765,6 +915,32 @@ msgid ""
 "                        Produced.with(Serdes.Integer(), aggregationSerde)\n"
 "                );\n"
 msgstr ""
+"        builder.stream(                                                       // <2>\n"
+"                        TEMPERATURE_VALUES_TOPIC,\n"
+"                        Consumed.with(Serdes.Integer(), Serdes.String())\n"
+"                )\n"
+"                .join(                                                        // <3>\n"
+"                        stations,\n"
+"                        (stationId, timestampAndValue) -> stationId,\n"
+"                        (timestampAndValue, station) -> {\n"
+"                            String[] parts = timestampAndValue.split(\";\");\n"
+"                            return new TemperatureMeasurement(station.id, station.name,\n"
+"                                    Instant.parse(parts[0]), Double.valueOf(parts[1]));\n"
+"                        }\n"
+"                )\n"
+"                .groupByKey()                                                 // <4>\n"
+"                .aggregate(                                                   // <5>\n"
+"                        Aggregation::new,\n"
+"                        (stationId, value, aggregation) -> aggregation.updateFrom(value),\n"
+"                        Materialized.<Integer, Aggregation> as(storeSupplier)\n"
+"                            .withKeySerde(Serdes.Integer())\n"
+"                            .withValueSerde(aggregationSerde)\n"
+"                )\n"
+"                .toStream()\n"
+"                .to(                                                          // <6>\n"
+"                        TEMPERATURES_AGGREGATED_TOPIC,\n"
+"                        Produced.with(Serdes.Integer(), aggregationSerde)\n"
+"                );\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:434
@@ -774,6 +950,9 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"        return builder.build();\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:436
@@ -818,6 +997,9 @@ msgid ""
 "quarkus.kafka-streams.application-server=${hostname}:8080\n"
 "quarkus.kafka-streams.topics=weather-stations,temperature-values\n"
 msgstr ""
+"quarkus.kafka-streams.bootstrap-servers=localhost:9092\n"
+"quarkus.kafka-streams.application-server=${hostname}:8080\n"
+"quarkus.kafka-streams.topics=weather-stations,temperature-values\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:457
@@ -830,6 +1012,12 @@ msgid ""
 "kafka-streams.auto.offset.reset=earliest\n"
 "kafka-streams.metrics.recording.level=DEBUG\n"
 msgstr ""
+"# pass-through options\n"
+"kafka-streams.cache.max.bytes.buffering=10240\n"
+"kafka-streams.commit.interval.ms=1000\n"
+"kafka-streams.metadata.max.age.ms=500\n"
+"kafka-streams.auto.offset.reset=earliest\n"
+"kafka-streams.metrics.recording.level=DEBUG\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:464
@@ -864,6 +1052,8 @@ msgid ""
 "./mvnw clean package -f producer/pom.xml\n"
 "./mvnw clean package -f aggregator/pom.xml\n"
 msgstr ""
+"./mvnw clean package -f producer/pom.xml\n"
+"./mvnw clean package -f aggregator/pom.xml\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:483
@@ -884,7 +1074,7 @@ msgstr "次に、2 つのアプリケーションを起動するための Docker
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:492
 #, no-wrap
 msgid "version: '3.5'\n"
-msgstr ""
+msgstr "version: '3.5'\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:524
@@ -922,6 +1112,37 @@ msgid ""
 "    networks:\n"
 "      - kafkastreams-network\n"
 msgstr ""
+"services:\n"
+"  zookeeper:\n"
+"    image: strimzi/kafka:0.19.0-kafka-2.5.0\n"
+"    command: [\n"
+"      \"sh\", \"-c\",\n"
+"      \"bin/zookeeper-server-start.sh config/zookeeper.properties\"\n"
+"    ]\n"
+"    ports:\n"
+"      - \"2181:2181\"\n"
+"    environment:\n"
+"      LOG_DIR: /tmp/logs\n"
+"    networks:\n"
+"      - kafkastreams-network\n"
+"  kafka:\n"
+"    image: strimzi/kafka:0.19.0-kafka-2.5.0\n"
+"    command: [\n"
+"      \"sh\", \"-c\",\n"
+"      \"bin/kafka-server-start.sh config/server.properties --override listeners=$${KAFKA_LISTENERS} --override advertised.listeners=$${KAFKA_ADVERTISED_LISTENERS} --override zookeeper.connect=$${KAFKA_ZOOKEEPER_CONNECT} --override num.partitions=$${KAFKA_NUM_PARTITIONS}\"\n"
+"    ]\n"
+"    depends_on:\n"
+"      - zookeeper\n"
+"    ports:\n"
+"      - \"9092:9092\"\n"
+"    environment:\n"
+"      LOG_DIR: \"/tmp/logs\"\n"
+"      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092\n"
+"      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092\n"
+"      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181\n"
+"      KAFKA_NUM_PARTITIONS: 3\n"
+"    networks:\n"
+"      - kafkastreams-network\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:534
@@ -937,6 +1158,15 @@ msgid ""
 "    networks:\n"
 "      - kafkastreams-network\n"
 msgstr ""
+"  producer:\n"
+"    image: quarkus-quickstarts/kafka-streams-producer:1.0\n"
+"    build:\n"
+"      context: producer\n"
+"      dockerfile: src/main/docker/Dockerfile.${QUARKUS_MODE:-jvm}\n"
+"    environment:\n"
+"      KAFKA_BOOTSTRAP_SERVERS: kafka:9092\n"
+"    networks:\n"
+"      - kafkastreams-network\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:544
@@ -952,6 +1182,15 @@ msgid ""
 "    networks:\n"
 "      - kafkastreams-network\n"
 msgstr ""
+"  aggregator:\n"
+"    image: quarkus-quickstarts/kafka-streams-aggregator:1.0\n"
+"    build:\n"
+"      context: aggregator\n"
+"      dockerfile: src/main/docker/Dockerfile.${QUARKUS_MODE:-jvm}\n"
+"    environment:\n"
+"      QUARKUS_KAFKA_STREAMS_BOOTSTRAP_SERVERS: kafka:9092\n"
+"    networks:\n"
+"      - kafkastreams-network\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:548
@@ -961,6 +1200,9 @@ msgid ""
 "  kafkastreams-network:\n"
 "    name: ks\n"
 msgstr ""
+"networks:\n"
+"  kafkastreams-network:\n"
+"    name: ks\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:552
@@ -986,7 +1228,7 @@ msgstr "ここで _debezium/tooling_ イメージのインスタンスを実行�
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:563
 #, no-wrap
 msgid "docker run --tty --rm -i --network ks debezium/tooling:1.1\n"
-msgstr ""
+msgstr "docker run --tty --rm -i --network ks debezium/tooling:1.1\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:566
@@ -997,7 +1239,7 @@ msgstr "ツールコンテナー内で、 _kafkacatを_ 実行して、ストリ
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:570
 #, no-wrap
 msgid "kafkacat -b kafka:9092 -C -o beginning -q -t temperatures-aggregated\n"
-msgstr ""
+msgstr "kafkacat -b kafka:9092 -C -o beginning -q -t temperatures-aggregated\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:575
@@ -1008,6 +1250,10 @@ msgid ""
 "{\"avg\":12.8,\"count\":7,\"max\":25.5,\"min\":-13.8,\"stationId\":7,\"stationName\":\"Porthsmouth\",\"sum\":89.7}\n"
 "...\n"
 msgstr ""
+"{\"avg\":34.7,\"count\":4,\"max\":49.4,\"min\":16.8,\"stationId\":9,\"stationName\":\"Marrakesh\",\"sum\":138.8}\n"
+"{\"avg\":15.7,\"count\":1,\"max\":15.7,\"min\":15.7,\"stationId\":2,\"stationName\":\"Snowdonia\",\"sum\":15.7}\n"
+"{\"avg\":12.8,\"count\":7,\"max\":25.5,\"min\":-13.8,\"stationId\":7,\"stationName\":\"Porthsmouth\",\"sum\":89.7}\n"
+"...\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:579
@@ -1042,6 +1288,8 @@ msgid ""
 "import jakarta.enterprise.context.ApplicationScoped;\n"
 "import jakarta.inject.Inject;\n"
 msgstr ""
+"import jakarta.enterprise.context.ApplicationScoped;\n"
+"import jakarta.inject.Inject;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:606
@@ -1054,6 +1302,12 @@ msgid ""
 "import org.apache.kafka.streams.state.QueryableStoreTypes;\n"
 "import org.apache.kafka.streams.state.ReadOnlyKeyValueStore;\n"
 msgstr ""
+"import org.acme.kafka.streams.aggregator.model.Aggregation;\n"
+"import org.acme.kafka.streams.aggregator.model.WeatherStationData;\n"
+"import org.apache.kafka.streams.KafkaStreams;\n"
+"import org.apache.kafka.streams.errors.InvalidStateStoreException;\n"
+"import org.apache.kafka.streams.state.QueryableStoreTypes;\n"
+"import org.apache.kafka.streams.state.ReadOnlyKeyValueStore;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:609
@@ -1062,6 +1316,8 @@ msgid ""
 "@ApplicationScoped\n"
 "public class InteractiveQueries {\n"
 msgstr ""
+"@ApplicationScoped\n"
+"public class InteractiveQueries {\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:612
@@ -1070,6 +1326,8 @@ msgid ""
 "    @Inject\n"
 "    KafkaStreams streams;\n"
 msgstr ""
+"    @Inject\n"
+"    KafkaStreams streams;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:615
@@ -1078,6 +1336,8 @@ msgid ""
 "    public GetWeatherStationDataResult getWeatherStationData(int id) {\n"
 "        Aggregation result = getWeatherStationStore().get(id);\n"
 msgstr ""
+"    public GetWeatherStationDataResult getWeatherStationData(int id) {\n"
+"        Aggregation result = getWeatherStationStore().get(id);\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:623
@@ -1091,6 +1351,13 @@ msgid ""
 "        }\n"
 "    }\n"
 msgstr ""
+"        if (result != null) {\n"
+"            return GetWeatherStationDataResult.found(WeatherStationData.from(result)); // <1>\n"
+"        }\n"
+"        else {\n"
+"            return GetWeatherStationDataResult.notFound();                             // <2>\n"
+"        }\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:634
@@ -1107,6 +1374,16 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    private ReadOnlyKeyValueStore<Integer, Aggregation> getWeatherStationStore() {\n"
+"        while (true) {\n"
+"            try {\n"
+"                return streams.store(TopologyProducer.WEATHER_STATIONS_STORE, QueryableStoreTypes.keyValueStore());\n"
+"            } catch (InvalidStateStoreException e) {\n"
+"                // ignore, store not ready yet\n"
+"            }\n"
+"        }\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:636
@@ -1131,20 +1408,22 @@ msgid ""
 "import java.util.Optional;\n"
 "import java.util.OptionalInt;\n"
 msgstr ""
+"import java.util.Optional;\n"
+"import java.util.OptionalInt;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:648
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:871
 #, no-wrap
 msgid "import org.acme.kafka.streams.aggregator.model.WeatherStationData;\n"
-msgstr ""
+msgstr "import org.acme.kafka.streams.aggregator.model.WeatherStationData;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:650
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:873
 #, no-wrap
 msgid "public class GetWeatherStationDataResult {\n"
-msgstr ""
+msgstr "public class GetWeatherStationDataResult {\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:653
@@ -1153,12 +1432,14 @@ msgid ""
 "    private static GetWeatherStationDataResult NOT_FOUND =\n"
 "            new GetWeatherStationDataResult(null);\n"
 msgstr ""
+"    private static GetWeatherStationDataResult NOT_FOUND =\n"
+"            new GetWeatherStationDataResult(null);\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:655
 #, no-wrap
 msgid "    private final WeatherStationData result;\n"
-msgstr ""
+msgstr "    private final WeatherStationData result;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:659
@@ -1168,6 +1449,9 @@ msgid ""
 "        this.result = result;\n"
 "    }\n"
 msgstr ""
+"    private GetWeatherStationDataResult(WeatherStationData result) {\n"
+"        this.result = result;\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:663
@@ -1177,6 +1461,9 @@ msgid ""
 "        return new GetWeatherStationDataResult(data);\n"
 "    }\n"
 msgstr ""
+"    public static GetWeatherStationDataResult found(WeatherStationData data) {\n"
+"        return new GetWeatherStationDataResult(data);\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:667
@@ -1187,6 +1474,9 @@ msgid ""
 "        return NOT_FOUND;\n"
 "    }\n"
 msgstr ""
+"    public static GetWeatherStationDataResult notFound() {\n"
+"        return NOT_FOUND;\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:672
@@ -1197,6 +1487,10 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    public Optional<WeatherStationData> getResult() {\n"
+"        return Optional.ofNullable(result);\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:676
@@ -1210,6 +1504,8 @@ msgid ""
 "@RegisterForReflection\n"
 "public class WeatherStationData {\n"
 msgstr ""
+"@RegisterForReflection\n"
+"public class WeatherStationData {\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:692
@@ -1222,6 +1518,12 @@ msgid ""
 "    public int count;\n"
 "    public double avg;\n"
 msgstr ""
+"    public int stationId;\n"
+"    public String stationName;\n"
+"    public double min = Double.MAX_VALUE;\n"
+"    public double max = Double.MIN_VALUE;\n"
+"    public int count;\n"
+"    public double avg;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:702
@@ -1237,6 +1539,15 @@ msgid ""
 "        this.avg = avg;\n"
 "    }\n"
 msgstr ""
+"    private WeatherStationData(int stationId, String stationName, double min, double max,\n"
+"            int count, double avg) {\n"
+"        this.stationId = stationId;\n"
+"        this.stationName = stationName;\n"
+"        this.min = min;\n"
+"        this.max = max;\n"
+"        this.count = count;\n"
+"        this.avg = avg;\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:713
@@ -1253,6 +1564,16 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    public static WeatherStationData from(Aggregation aggregation) {\n"
+"        return new WeatherStationData(\n"
+"                aggregation.stationId,\n"
+"                aggregation.stationName,\n"
+"                aggregation.min,\n"
+"                aggregation.max,\n"
+"                aggregation.count,\n"
+"                aggregation.avg);\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:717
@@ -1264,7 +1585,7 @@ msgstr "これで、 `getWeatherStationData()` を呼び出してクライアン
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:940
 #, no-wrap
 msgid "package org.acme.kafka.streams.aggregator.rest;\n"
-msgstr ""
+msgstr "package org.acme.kafka.streams.aggregator.rest;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:725
@@ -1275,6 +1596,9 @@ msgid ""
 "import java.net.URISyntaxException;\n"
 "import java.util.List;\n"
 msgstr ""
+"import java.net.URI;\n"
+"import java.net.URISyntaxException;\n"
+"import java.util.List;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:733
@@ -1288,6 +1612,13 @@ msgid ""
 "import jakarta.ws.rs.core.Response;\n"
 "import jakarta.ws.rs.core.Response.Status;\n"
 msgstr ""
+"import jakarta.enterprise.context.ApplicationScoped;\n"
+"import jakarta.inject.Inject;\n"
+"import jakarta.ws.rs.GET;\n"
+"import jakarta.ws.rs.Path;\n"
+"import jakarta.ws.rs.core.MediaType;\n"
+"import jakarta.ws.rs.core.Response;\n"
+"import jakarta.ws.rs.core.Response.Status;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:736
@@ -1296,6 +1627,8 @@ msgid ""
 "import org.acme.kafka.streams.aggregator.streams.GetWeatherStationDataResult;\n"
 "import org.acme.kafka.streams.aggregator.streams.KafkaStreamsPipeline;\n"
 msgstr ""
+"import org.acme.kafka.streams.aggregator.streams.GetWeatherStationDataResult;\n"
+"import org.acme.kafka.streams.aggregator.streams.KafkaStreamsPipeline;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:740
@@ -1306,6 +1639,9 @@ msgid ""
 "@Path(\"/weather-stations\")\n"
 "public class WeatherStationEndpoint {\n"
 msgstr ""
+"@ApplicationScoped\n"
+"@Path(\"/weather-stations\")\n"
+"public class WeatherStationEndpoint {\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:743
@@ -1315,6 +1651,8 @@ msgid ""
 "    @Inject\n"
 "    InteractiveQueries interactiveQueries;\n"
 msgstr ""
+"    @Inject\n"
+"    InteractiveQueries interactiveQueries;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:748
@@ -1325,6 +1663,10 @@ msgid ""
 "    public Response getWeatherStationData(int id) {\n"
 "        GetWeatherStationDataResult result = interactiveQueries.getWeatherStationData(id);\n"
 msgstr ""
+"    @GET\n"
+"    @Path(\"/data/{id}\")\n"
+"    public Response getWeatherStationData(int id) {\n"
+"        GetWeatherStationDataResult result = interactiveQueries.getWeatherStationData(id);\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:758
@@ -1340,6 +1682,15 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"        if (result.getResult().isPresent()) {  // <1>\n"
+"            return Response.ok(result.getResult().get()).build();\n"
+"        }\n"
+"        else {\n"
+"            return Response.status(Status.NOT_FOUND.getStatusCode(),\n"
+"                    \"No data found for weather station \" + id).build();\n"
+"        }\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:760
@@ -1359,6 +1710,9 @@ msgid ""
 "docker-compose stop aggregator\n"
 "docker-compose up --build -d\n"
 msgstr ""
+"./mvnw clean package -f aggregator/pom.xml\n"
+"docker-compose stop aggregator\n"
+"docker-compose up --build -d\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:773
@@ -1369,7 +1723,7 @@ msgstr "これにより、 `aggregator` コンテナーが再構築され、サ�
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:777
 #, no-wrap
 msgid "http aggregator:8080/weather-stations/data/1\n"
-msgstr ""
+msgstr "http aggregator:8080/weather-stations/data/1\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:783
@@ -1381,6 +1735,11 @@ msgid ""
 "Content-Type: application/json\n"
 "Date: Tue, 18 Jun 2019 19:29:16 GMT\n"
 msgstr ""
+"HTTP/1.1 200 OK\n"
+"Connection: keep-alive\n"
+"Content-Length: 85\n"
+"Content-Type: application/json\n"
+"Date: Tue, 18 Jun 2019 19:29:16 GMT\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:792
@@ -1395,6 +1754,14 @@ msgid ""
 "    \"stationName\": \"Hamburg\"\n"
 "}\n"
 msgstr ""
+"{\n"
+"    \"avg\": 12.9,\n"
+"    \"count\": 146,\n"
+"    \"max\": 41.0,\n"
+"    \"min\": -25.6,\n"
+"    \"stationId\": 1,\n"
+"    \"stationName\": \"Hamburg\"\n"
+"}\n"
 
 #. type: Title ==
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:794
@@ -1416,7 +1783,7 @@ msgstr "`aggregator` アプリケーションの複数のインスタンスを�
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:804
 #, no-wrap
 msgid "kafka-streams-guide-architecture-distributed.png"
-msgstr ""
+msgstr "kafka-streams-guide-architecture-distributed.png"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:807
@@ -1434,6 +1801,12 @@ msgid ""
 "            Serdes.Integer().serializer()\n"
 "    );\n"
 msgstr ""
+"public GetWeatherStationDataResult getWeatherStationData(int id) {\n"
+"    StreamsMetadata metadata = streams.metadataForKey(                  // <1>\n"
+"            TopologyProducer.WEATHER_STATIONS_STORE,\n"
+"            id,\n"
+"            Serdes.Integer().serializer()\n"
+"    );\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:824
@@ -1447,6 +1820,13 @@ msgid ""
 "        LOG.info(\"Found data for key {} locally\", id);\n"
 "        Aggregation result = getWeatherStationStore().get(id);\n"
 msgstr ""
+"    if (metadata == null || metadata == StreamsMetadata.NOT_AVAILABLE) {\n"
+"        LOG.warn(\"Found no metadata for key {}\", id);\n"
+"        return GetWeatherStationDataResult.notFound();\n"
+"    }\n"
+"    else if (metadata.host().equals(host)) {                            // <2>\n"
+"        LOG.info(\"Found data for key {} locally\", id);\n"
+"        Aggregation result = getWeatherStationStore().get(id);\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:842
@@ -1470,6 +1850,23 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"        if (result != null) {\n"
+"            return GetWeatherStationDataResult.found(WeatherStationData.from(result));\n"
+"        }\n"
+"        else {\n"
+"            return GetWeatherStationDataResult.notFound();\n"
+"        }\n"
+"    }\n"
+"    else {                                                              // <3>\n"
+"        LOG.info(\n"
+"            \"Found data for key {} on remote host {}:{}\",\n"
+"            id,\n"
+"            metadata.host(),\n"
+"            metadata.port()\n"
+"        );\n"
+"        return GetWeatherStationDataResult.foundRemotely(metadata.host(), metadata.port());\n"
+"    }\n"
+"}\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:855
@@ -1488,6 +1885,18 @@ msgid ""
 "            .collect(Collectors.toList());\n"
 "}\n"
 msgstr ""
+"public List<PipelineMetadata> getMetaData() {                           // <4>\n"
+"    return streams.allMetadataForStore(TopologyProducer.WEATHER_STATIONS_STORE)\n"
+"            .stream()\n"
+"            .map(m -> new PipelineMetadata(\n"
+"                    m.hostInfo().host() + \":\" + m.hostInfo().port(),\n"
+"                    m.topicPartitions()\n"
+"                        .stream()\n"
+"                        .map(TopicPartition::toString)\n"
+"                        .collect(Collectors.toSet()))\n"
+"            )\n"
+"            .collect(Collectors.toList());\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:857
@@ -1521,6 +1930,8 @@ msgid ""
 "    private static GetWeatherStationDataResult NOT_FOUND =\n"
 "            new GetWeatherStationDataResult(null, null, null);\n"
 msgstr ""
+"    private static GetWeatherStationDataResult NOT_FOUND =\n"
+"            new GetWeatherStationDataResult(null, null, null);\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:880
@@ -1530,6 +1941,9 @@ msgid ""
 "    private final String host;\n"
 "    private final Integer port;\n"
 msgstr ""
+"    private final WeatherStationData result;\n"
+"    private final String host;\n"
+"    private final Integer port;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:887
@@ -1542,6 +1956,12 @@ msgid ""
 "        this.port = port;\n"
 "    }\n"
 msgstr ""
+"    private GetWeatherStationDataResult(WeatherStationData result, String host,\n"
+"            Integer port) {\n"
+"        this.result = result;\n"
+"        this.host = host;\n"
+"        this.port = port;\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:891
@@ -1551,6 +1971,9 @@ msgid ""
 "        return new GetWeatherStationDataResult(data, null, null);\n"
 "    }\n"
 msgstr ""
+"    public static GetWeatherStationDataResult found(WeatherStationData data) {\n"
+"        return new GetWeatherStationDataResult(data, null, null);\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:895
@@ -1560,6 +1983,9 @@ msgid ""
 "        return new GetWeatherStationDataResult(null, host, port);\n"
 "    }\n"
 msgstr ""
+"    public static GetWeatherStationDataResult foundRemotely(String host, int port) {\n"
+"        return new GetWeatherStationDataResult(null, host, port);\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:903
@@ -1569,6 +1995,9 @@ msgid ""
 "        return Optional.ofNullable(result);\n"
 "    }\n"
 msgstr ""
+"    public Optional<WeatherStationData> getResult() {\n"
+"        return Optional.ofNullable(result);\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:907
@@ -1578,6 +2007,9 @@ msgid ""
 "        return Optional.ofNullable(host);\n"
 "    }\n"
 msgstr ""
+"    public Optional<String> getHost() {\n"
+"        return Optional.ofNullable(host);\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:912
@@ -1588,6 +2020,10 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    public OptionalInt getPort() {\n"
+"        return port != null ? OptionalInt.of(port) : OptionalInt.empty();\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:916
@@ -1598,13 +2034,13 @@ msgstr "また、`getMetaData()` の戻り値の型を定義する必要があ�
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:922
 #, no-wrap
 msgid "import java.util.Set;\n"
-msgstr ""
+msgstr "import java.util.Set;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:924
 #, no-wrap
 msgid "public class PipelineMetadata {\n"
-msgstr ""
+msgstr "public class PipelineMetadata {\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:927
@@ -1613,6 +2049,8 @@ msgid ""
 "    public String host;\n"
 "    public Set<String> partitions;\n"
 msgstr ""
+"    public String host;\n"
+"    public Set<String> partitions;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:933
@@ -1624,6 +2062,11 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    public PipelineMetadata(String host, Set<String> partitions) {\n"
+"        this.host = host;\n"
+"        this.partitions = partitions;\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:936
@@ -1644,6 +2087,15 @@ msgid ""
 "import jakarta.ws.rs.core.Response;\n"
 "import jakarta.ws.rs.core.Response.Status;\n"
 msgstr ""
+"import jakarta.enterprise.context.ApplicationScoped;\n"
+"import jakarta.inject.Inject;\n"
+"import jakarta.ws.rs.Consumes;\n"
+"import jakarta.ws.rs.GET;\n"
+"import jakarta.ws.rs.Path;\n"
+"import jakarta.ws.rs.Produces;\n"
+"import jakarta.ws.rs.core.MediaType;\n"
+"import jakarta.ws.rs.core.Response;\n"
+"import jakarta.ws.rs.core.Response.Status;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:958
@@ -1653,6 +2105,9 @@ msgid ""
 "import org.acme.kafka.streams.aggregator.streams.KafkaStreamsPipeline;\n"
 "import org.acme.kafka.streams.aggregator.streams.PipelineMetadata;\n"
 msgstr ""
+"import org.acme.kafka.streams.aggregator.streams.GetWeatherStationDataResult;\n"
+"import org.acme.kafka.streams.aggregator.streams.KafkaStreamsPipeline;\n"
+"import org.acme.kafka.streams.aggregator.streams.PipelineMetadata;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:972
@@ -1665,6 +2120,12 @@ msgid ""
 "    public Response getWeatherStationData(int id) {\n"
 "        GetWeatherStationDataResult result = interactiveQueries.getWeatherStationData(id);\n"
 msgstr ""
+"    @GET\n"
+"    @Path(\"/data/{id}\")\n"
+"    @Consumes(MediaType.APPLICATION_JSON)\n"
+"    @Produces(MediaType.APPLICATION_JSON)\n"
+"    public Response getWeatherStationData(int id) {\n"
+"        GetWeatherStationDataResult result = interactiveQueries.getWeatherStationData(id);\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:986
@@ -1684,6 +2145,19 @@ msgid ""
 "        }\n"
 "    }\n"
 msgstr ""
+"        if (result.getResult().isPresent()) {                     // <1>\n"
+"            return Response.ok(result.getResult().get()).build();\n"
+"        }\n"
+"        else if (result.getHost().isPresent()) {                  // <2>\n"
+"            URI otherUri = getOtherUri(result.getHost().get(), result.getPort().getAsInt(),\n"
+"                    id);\n"
+"            return Response.seeOther(otherUri).build();\n"
+"        }\n"
+"        else {                                                    // <3>\n"
+"            return Response.status(Status.NOT_FOUND.getStatusCode(),\n"
+"                    \"No data found for weather station \" + id).build();\n"
+"        }\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:993
@@ -1696,6 +2170,12 @@ msgid ""
 "        return interactiveQueries.getMetaData();\n"
 "    }\n"
 msgstr ""
+"    @GET\n"
+"    @Path(\"/meta-data\")\n"
+"    @Produces(MediaType.APPLICATION_JSON)\n"
+"    public List<PipelineMetadata> getMetaData() {                 // <4>\n"
+"        return interactiveQueries.getMetaData();\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:1003
@@ -1711,6 +2191,15 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    private URI getOtherUri(String host, int port, int id) {\n"
+"        try {\n"
+"            return new URI(\"http://\" + host + \":\" + port + \"/weather-stations/data/\" + id);\n"
+"        }\n"
+"        catch (URISyntaxException e) {\n"
+"            throw new RuntimeException(e);\n"
+"        }\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:1005
@@ -1745,6 +2234,9 @@ msgid ""
 "docker-compose stop aggregator\n"
 "docker-compose up --build -d --scale aggregator=3\n"
 msgstr ""
+"./mvnw clean package -f aggregator/pom.xml\n"
+"docker-compose stop aggregator\n"
+"docker-compose up --build -d --scale aggregator=3\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:1022
@@ -1760,7 +2252,7 @@ msgstr "Docker Composeのロードバランサーはラウンドロビン方式�
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:1030
 #, no-wrap
 msgid "http aggregator:8080/weather-stations/meta-data\n"
-msgstr ""
+msgstr "http aggregator:8080/weather-stations/meta-data\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:1036
@@ -1772,6 +2264,11 @@ msgid ""
 "Content-Type: application/json\n"
 "Date: Tue, 18 Jun 2019 20:00:23 GMT\n"
 msgstr ""
+"HTTP/1.1 200 OK\n"
+"Connection: keep-alive\n"
+"Content-Length: 202\n"
+"Content-Type: application/json\n"
+"Date: Tue, 18 Jun 2019 20:00:23 GMT\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:1057
@@ -1798,6 +2295,26 @@ msgid ""
 "    }\n"
 "]\n"
 msgstr ""
+"[\n"
+"    {\n"
+"        \"host\": \"2af13fe516a9:8080\",\n"
+"        \"partitions\": [\n"
+"            \"temperature-values-2\"\n"
+"        ]\n"
+"    },\n"
+"    {\n"
+"        \"host\": \"32cc8309611b:8080\",\n"
+"        \"partitions\": [\n"
+"            \"temperature-values-1\"\n"
+"        ]\n"
+"    },\n"
+"    {\n"
+"        \"host\": \"1eb39af8d587:8080\",\n"
+"        \"partitions\": [\n"
+"            \"temperature-values-0\"\n"
+"        ]\n"
+"    }\n"
+"]\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:1061
@@ -1808,7 +2325,7 @@ msgstr "レスポンスに表示された3つのホストのいずれかから�
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:1065
 #, no-wrap
 msgid "http 2af13fe516a9:8080/weather-stations/data/1\n"
-msgstr ""
+msgstr "http 2af13fe516a9:8080/weather-stations/data/1\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:1068
@@ -1825,6 +2342,11 @@ msgid ""
 "Content-Type: application/json\n"
 "Date: Tue, 11 Jun 2019 19:16:31 GMT\n"
 msgstr ""
+"HTTP/1.1 200 OK\n"
+"Connection: keep-alive\n"
+"Content-Length: 74\n"
+"Content-Type: application/json\n"
+"Date: Tue, 11 Jun 2019 19:16:31 GMT\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:1085
@@ -1839,6 +2361,14 @@ msgid ""
 "  \"stationName\": \"Hamburg\"\n"
 "}\n"
 msgstr ""
+"{\n"
+"  \"avg\": 11.9,\n"
+"  \"count\": 259,\n"
+"  \"max\": 50.0,\n"
+"  \"min\": -30.1,\n"
+"  \"stationId\": 1,\n"
+"  \"stationName\": \"Hamburg\"\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:1088
@@ -1855,6 +2385,11 @@ msgid ""
 "Date: Tue, 18 Jun 2019 20:01:03 GMT\n"
 "Location: http://1eb39af8d587:8080/weather-stations/data/1\n"
 msgstr ""
+"HTTP/1.1 303 See Other\n"
+"Connection: keep-alive\n"
+"Content-Length: 0\n"
+"Date: Tue, 18 Jun 2019 20:01:03 GMT\n"
+"Location: http://1eb39af8d587:8080/weather-stations/data/1\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:1099
@@ -1865,7 +2400,7 @@ msgstr "また、 `--follow option` を渡すことで _httpie_ が自動的に�
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:1103
 #, no-wrap
 msgid "http --follow 2af13fe516a9:8080/weather-stations/data/1\n"
-msgstr ""
+msgstr "http --follow 2af13fe516a9:8080/weather-stations/data/1\n"
 
 #. type: Title ==
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:1105
@@ -1890,6 +2425,8 @@ msgid ""
 "./mvnw clean package -f producer/pom.xml -Dnative -Dnative-image.container-runtime=docker\n"
 "./mvnw clean package -f aggregator/pom.xml -Dnative -Dnative-image.container-runtime=docker\n"
 msgstr ""
+"./mvnw clean package -f producer/pom.xml -Dnative -Dnative-image.container-runtime=docker\n"
+"./mvnw clean package -f aggregator/pom.xml -Dnative -Dnative-image.container-runtime=docker\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:1120
@@ -1900,7 +2437,7 @@ msgstr "ここで、 `QUARKUS_MODE` という名前の環境変数を作成し�
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:1124
 #, no-wrap
 msgid "export QUARKUS_MODE=native\n"
-msgstr ""
+msgstr "export QUARKUS_MODE=native\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:1129
@@ -1911,7 +2448,7 @@ msgstr "これは Docker Compose ファイルで、`producer` と `aggregator` �
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:1133
 #, no-wrap
 msgid "CMD [\"./application\", \"-Dquarkus.http.host=0.0.0.0\", \"-Xmx32m\"]\n"
-msgstr ""
+msgstr "CMD [\"./application\", \"-Dquarkus.http.host=0.0.0.0\", \"-Xmx32m\"]\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:1137
@@ -1953,7 +2490,7 @@ msgstr "これは、ステータスが `DOWN` になった場合の例です:"
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:1151
 #, no-wrap
 msgid "curl -i http://aggregator:8080/q/health\n"
-msgstr ""
+msgstr "curl -i http://aggregator:8080/q/health\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:1155
@@ -1963,6 +2500,9 @@ msgid ""
 "content-type: application/json; charset=UTF-8\n"
 "content-length: 454\n"
 msgstr ""
+"HTTP/1.1 503 Service Unavailable\n"
+"content-type: application/json; charset=UTF-8\n"
+"content-length: 454\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:1176
@@ -1989,6 +2529,26 @@ msgid ""
 "    ]\n"
 "}\n"
 msgstr ""
+"{\n"
+"    \"status\": \"DOWN\",\n"
+"    \"checks\": [\n"
+"        {\n"
+"            \"name\": \"Kafka Streams state health check\",  <1>\n"
+"            \"status\": \"DOWN\",\n"
+"            \"data\": {\n"
+"                \"state\": \"CREATED\"\n"
+"            }\n"
+"        },\n"
+"        {\n"
+"            \"name\": \"Kafka Streams topics health check\",  <2>\n"
+"            \"status\": \"DOWN\",\n"
+"            \"data\": {\n"
+"                \"available_topics\": \"weather-stations,temperature-values\",\n"
+"                \"missing_topics\": \"hygrometry-values\"\n"
+"            }\n"
+"        }\n"
+"    ]\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:1178
@@ -2035,7 +2595,7 @@ msgstr "Liveness チェックの一例をご紹介します。"
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:1196
 #, no-wrap
 msgid "curl -i http://aggregator:8080/q/health/live\n"
-msgstr ""
+msgstr "curl -i http://aggregator:8080/q/health/live\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:1200
@@ -2045,6 +2605,9 @@ msgid ""
 "content-type: application/json; charset=UTF-8\n"
 "content-length: 225\n"
 msgstr ""
+"HTTP/1.1 503 Service Unavailable\n"
+"content-type: application/json; charset=UTF-8\n"
+"content-length: 225\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:1213
@@ -2063,6 +2626,18 @@ msgid ""
 "    ]\n"
 "}\n"
 msgstr ""
+"{\n"
+"    \"status\": \"DOWN\",\n"
+"    \"checks\": [\n"
+"        {\n"
+"            \"name\": \"Kafka Streams state health check\",\n"
+"            \"status\": \"DOWN\",\n"
+"            \"data\": {\n"
+"                \"state\": \"CREATED\"\n"
+"            }\n"
+"        }\n"
+"    ]\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:1215
@@ -2084,7 +2659,7 @@ msgstr "ここでは、Rediness チェックの一例をご紹介します:"
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:1223
 #, no-wrap
 msgid "curl -i http://aggregator:8080/q/health/ready\n"
-msgstr ""
+msgstr "curl -i http://aggregator:8080/q/health/ready\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:1227
@@ -2094,6 +2669,9 @@ msgid ""
 "content-type: application/json; charset=UTF-8\n"
 "content-length: 265\n"
 msgstr ""
+"HTTP/1.1 503 Service Unavailable\n"
+"content-type: application/json; charset=UTF-8\n"
+"content-length: 265\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:1240
@@ -2112,6 +2690,18 @@ msgid ""
 "    ]\n"
 "}\n"
 msgstr ""
+"{\n"
+"    \"status\": \"DOWN\",\n"
+"    \"checks\": [\n"
+"        {\n"
+"            \"name\": \"Kafka Streams topics health check\",\n"
+"            \"status\": \"DOWN\",\n"
+"            \"data\": {\n"
+"                \"missing_topics\": \"weather-stations,temperature-values\"\n"
+"            }\n"
+"        }\n"
+"    ]\n"
+"}\n"
 
 #. type: Title ==
 #: upstream/_versions/3.0/guides/kafka-streams.adoc:1242

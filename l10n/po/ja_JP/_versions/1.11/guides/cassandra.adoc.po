@@ -115,6 +115,11 @@ msgid ""
 "    <version>${quarkus.version}</version>\n"
 "</dependency>\n"
 msgstr ""
+"<dependency>\n"
+"    <groupId>com.datastax.oss.quarkus</groupId>\n"
+"    <artifactId>cassandra-quarkus-client</artifactId>\n"
+"    <version>${quarkus.version}</version>\n"
+"</dependency>\n"
 
 #. type: Plain text
 #: upstream/_versions/1.11/guides/cassandra.adoc:73
@@ -144,6 +149,8 @@ msgid ""
 "@Entity\n"
 "public class Fruit {\n"
 msgstr ""
+"@Entity\n"
+"public class Fruit {\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.11/guides/cassandra.adoc:88
@@ -153,12 +160,15 @@ msgid ""
 "    @ClusteringColumn private String name;\n"
 "    private String description;\n"
 msgstr ""
+"    @PartitionKey private String storeId;\n"
+"    @ClusteringColumn private String name;\n"
+"    private String description;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.11/guides/cassandra.adoc:90
 #, no-wrap
 msgid "    public Fruit() {}\n"
-msgstr ""
+msgstr "    public Fruit() {}\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.11/guides/cassandra.adoc:96
@@ -170,6 +180,11 @@ msgid ""
 "      this.description = description;\n"
 "    }\n"
 msgstr ""
+"    public Fruit(String storeId, String name, String description) {\n"
+"      this.storeId = storeId;\n"
+"      this.name = name;\n"
+"      this.description = description;\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.11/guides/cassandra.adoc:99
@@ -178,6 +193,8 @@ msgid ""
 "    // getters, setters, hashCode and equals omitted for brevity\n"
 "}\n"
 msgstr ""
+"    // getters, setters, hashCode and equals omitted for brevity\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/1.11/guides/cassandra.adoc:105
@@ -203,6 +220,10 @@ msgid ""
 "  @Update\n"
 "  void update(Fruit fruit);\n"
 msgstr ""
+"@Dao\n"
+"public interface FruitDao {\n"
+"  @Update\n"
+"  void update(Fruit fruit);\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.11/guides/cassandra.adoc:120
@@ -212,6 +233,9 @@ msgid ""
 "  PagingIterable<Fruit> findById(String id);\n"
 "}\n"
 msgstr ""
+"  @Select\n"
+"  PagingIterable<Fruit> findById(String id);\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/1.11/guides/cassandra.adoc:123
@@ -233,6 +257,11 @@ msgid ""
 "  FruitDao fruitDao();\n"
 "}\n"
 msgstr ""
+"@Mapper\n"
+"public interface FruitMapper {\n"
+"  @DaoFactory\n"
+"  FruitDao fruitDao();\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/1.11/guides/cassandra.adoc:138
@@ -260,12 +289,18 @@ msgid ""
 "import javax.enterprise.inject.Produces;\n"
 "import javax.inject.Inject;\n"
 msgstr ""
+"import com.datastax.oss.driver.api.core.CqlIdentifier;\n"
+"import com.datastax.oss.quarkus.runtime.api.config.CassandraClientConfig;\n"
+"import com.datastax.oss.quarkus.runtime.api.session.QuarkusCqlSession;\n"
+"import javax.enterprise.context.ApplicationScoped;\n"
+"import javax.enterprise.inject.Produces;\n"
+"import javax.inject.Inject;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.11/guides/cassandra.adoc:157
 #, no-wrap
 msgid "public class FruitDaoProducer {\n"
-msgstr ""
+msgstr "public class FruitDaoProducer {\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.11/guides/cassandra.adoc:160
@@ -274,6 +309,8 @@ msgid ""
 "  private final FruitDao fruitDao;\n"
 "  private final FruitDaoReactive fruitDaoReactive;\n"
 msgstr ""
+"  private final FruitDao fruitDao;\n"
+"  private final FruitDaoReactive fruitDaoReactive;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.11/guides/cassandra.adoc:169
@@ -288,6 +325,14 @@ msgid ""
 "    fruitDaoReactive = mapper.fruitDaoReactive();\n"
 "  }\n"
 msgstr ""
+"  @Inject\n"
+"  public FruitDaoProducer(QuarkusCqlSession session) {\n"
+"    // create a mapper\n"
+"    FruitMapper mapper = new FruitMapperBuilder(session).build();\n"
+"    // instantiate our Daos\n"
+"    fruitDao = mapper.fruitDao();\n"
+"    fruitDaoReactive = mapper.fruitDaoReactive();\n"
+"  }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.11/guides/cassandra.adoc:175
@@ -299,6 +344,11 @@ msgid ""
 "    return fruitDao;\n"
 "  }\n"
 msgstr ""
+"  @Produces\n"
+"  @ApplicationScoped\n"
+"  FruitDao produceFruitDao() {\n"
+"    return fruitDao;\n"
+"  }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.11/guides/cassandra.adoc:182
@@ -311,6 +361,12 @@ msgid ""
 "  }\n"
 "}\n"
 msgstr ""
+"  @Produces\n"
+"  @ApplicationScoped\n"
+"  FruitDaoReactive produceFruitDaoReactive() {\n"
+"    return fruitDaoReactive;\n"
+"  }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/1.11/guides/cassandra.adoc:186
@@ -334,12 +390,14 @@ msgid ""
 "@ApplicationScoped\n"
 "public class FruitService {\n"
 msgstr ""
+"@ApplicationScoped\n"
+"public class FruitService {\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.11/guides/cassandra.adoc:199
 #, no-wrap
 msgid "  private final FruitDao dao;\n"
-msgstr ""
+msgstr "  private final FruitDao dao;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.11/guides/cassandra.adoc:204
@@ -350,6 +408,10 @@ msgid ""
 "    this.dao = dao;\n"
 "  }\n"
 msgstr ""
+"  @Inject\n"
+"  public FruitService(FruitDao dao) {\n"
+"    this.dao = dao;\n"
+"  }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.11/guides/cassandra.adoc:208
@@ -359,6 +421,9 @@ msgid ""
 "    dao.update(fruit);\n"
 "  }\n"
 msgstr ""
+"  public void save(Fruit fruit) {\n"
+"    dao.update(fruit);\n"
+"  }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.11/guides/cassandra.adoc:213
@@ -369,6 +434,10 @@ msgid ""
 "  }\n"
 "}\n"
 msgstr ""
+"  public List<Fruit> get(String id) {\n"
+"    return dao.findById(id).all();\n"
+"  }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/1.11/guides/cassandra.adoc:217
@@ -387,18 +456,20 @@ msgid ""
 "@Path(\"/fruits\")\n"
 "public class FruitResource {\n"
 msgstr ""
+"@Path(\"/fruits\")\n"
+"public class FruitResource {\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.11/guides/cassandra.adoc:226
 #, no-wrap
 msgid "  private static final String STORE_NAME = \"acme\";\n"
-msgstr ""
+msgstr "  private static final String STORE_NAME = \"acme\";\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.11/guides/cassandra.adoc:228
 #, no-wrap
 msgid "  @Inject FruitService fruitService;\n"
-msgstr ""
+msgstr "  @Inject FruitService fruitService;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.11/guides/cassandra.adoc:235
@@ -411,6 +482,12 @@ msgid ""
 "        .collect(Collectors.toList());\n"
 "  }\n"
 msgstr ""
+"  @GET\n"
+"  public List<FruitDto> list() {\n"
+"    return fruitService.get(STORE_NAME).stream()\n"
+"        .map(fruit -> new FruitDto(fruit.getName(), fruit.getDescription()))\n"
+"        .collect(Collectors.toList());\n"
+"  }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.11/guides/cassandra.adoc:240
@@ -421,6 +498,10 @@ msgid ""
 "    fruitService.save(covertFromDto(fruit));\n"
 "  }\n"
 msgstr ""
+"  @POST\n"
+"  public void add(FruitDto fruit) {\n"
+"    fruitService.save(covertFromDto(fruit));\n"
+"  }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.11/guides/cassandra.adoc:245
@@ -432,6 +513,10 @@ msgid ""
 "  }\n"
 "}\n"
 msgstr ""
+"  private Fruit covertFromDto(FruitDto fruitDto) {\n"
+"    return new Fruit(fruitDto.getName(), fruitDto.getDescription(), STORE_NAME);\n"
+"  }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/1.11/guides/cassandra.adoc:251
@@ -447,7 +532,7 @@ msgstr "REST APIを作成する際には、REST APIとデータアクセス層�
 #: upstream/_versions/1.11/guides/cassandra.adoc:261
 #, no-wrap
 msgid "public class FruitDto {\n"
-msgstr ""
+msgstr "public class FruitDto {\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.11/guides/cassandra.adoc:264
@@ -456,12 +541,14 @@ msgid ""
 "  private String name;\n"
 "  private String description;\n"
 msgstr ""
+"  private String name;\n"
+"  private String description;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.11/guides/cassandra.adoc:266
 #, no-wrap
 msgid "  public FruitDto() {}\n"
-msgstr ""
+msgstr "  public FruitDto() {}\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.11/guides/cassandra.adoc:273
@@ -474,6 +561,12 @@ msgid ""
 "  // getters and setters omitted for brevity\n"
 "}\n"
 msgstr ""
+"  public FruitDto(String name, String description) {\n"
+"    this.name = name;\n"
+"    this.description = description;\n"
+"  }\n"
+"  // getters and setters omitted for brevity\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/1.11/guides/cassandra.adoc:277
@@ -504,6 +597,9 @@ msgid ""
 "quarkus.cassandra.local-datacenter={dc_name}\n"
 "quarkus.cassandra.keyspace={keyspace}\n"
 msgstr ""
+"quarkus.cassandra.contact-points={cassandra_ip}:9042\n"
+"quarkus.cassandra.local-datacenter={dc_name}\n"
+"quarkus.cassandra.keyspace={keyspace}\n"
 
 #. type: Plain text
 #: upstream/_versions/1.11/guides/cassandra.adoc:296
@@ -518,6 +614,9 @@ msgid ""
 "quarkus.cassandra.local-datacenter=datacenter1\n"
 "quarkus.cassandra.keyspace=k1\n"
 msgstr ""
+"quarkus.cassandra.contact-points=127.0.0.1:9042\n"
+"quarkus.cassandra.local-datacenter=datacenter1\n"
+"quarkus.cassandra.keyspace=k1\n"
 
 #. type: Plain text
 #: upstream/_versions/1.11/guides/cassandra.adoc:306
@@ -531,6 +630,8 @@ msgid ""
 "quarkus.cassandra.auth.username=john\n"
 "quarkus.cassandra.auth.password=s3cr3t\n"
 msgstr ""
+"quarkus.cassandra.auth.username=john\n"
+"quarkus.cassandra.auth.password=s3cr3t\n"
 
 #. type: Title ===
 #: upstream/_versions/1.11/guides/cassandra.adoc:313
@@ -557,6 +658,10 @@ msgid ""
 "quarkus.cassandra.auth.password=s3cr3t\n"
 "quarkus.cassandra.keyspace=k1\n"
 msgstr ""
+"quarkus.cassandra.cloud.secure-connect-bundle=/path/to/secure-connect-bundle.zip\n"
+"quarkus.cassandra.auth.username=john\n"
+"quarkus.cassandra.auth.password=s3cr3t\n"
+"quarkus.cassandra.keyspace=k1\n"
 
 #. type: Title ===
 #: upstream/_versions/1.11/guides/cassandra.adoc:329
@@ -609,6 +714,16 @@ msgid ""
 "   -d \\\n"
 "   launcher.gcr.io/google/cassandra3\n"
 msgstr ""
+"docker run \\\n"
+"   --name local-cassandra-instance \\\n"
+"   -p 7000:7000 \\\n"
+"   -p 7001:7001 \\\n"
+"   -p 7199:7199 \\\n"
+"   -p 9042:9042 \\\n"
+"   -p 9160:9160 \\\n"
+"   -p 9404:9404 \\\n"
+"   -d \\\n"
+"   launcher.gcr.io/google/cassandra3\n"
 
 #. type: Plain text
 #: upstream/_versions/1.11/guides/cassandra.adoc:370
@@ -627,6 +742,8 @@ msgid ""
 "docker exec -it local-cassandra-instance cqlsh -e \"CREATE KEYSPACE IF NOT EXISTS k1 WITH replication = {'class':'SimpleStrategy', 'replication_factor':1}\"\n"
 "docker exec -it local-cassandra-instance cqlsh -e \"CREATE TABLE IF NOT EXISTS k1.fruit(store_id text, name text, description text, PRIMARY KEY((store_id), name))\"\n"
 msgstr ""
+"docker exec -it local-cassandra-instance cqlsh -e \"CREATE KEYSPACE IF NOT EXISTS k1 WITH replication = {'class':'SimpleStrategy', 'replication_factor':1}\"\n"
+"docker exec -it local-cassandra-instance cqlsh -e \"CREATE TABLE IF NOT EXISTS k1.fruit(store_id text, name text, description text, PRIMARY KEY((store_id), name))\"\n"
 
 #. type: Plain text
 #: upstream/_versions/1.11/guides/cassandra.adoc:381
@@ -640,6 +757,8 @@ msgid ""
 "cqlsh -e \"CREATE KEYSPACE IF NOT EXISTS k1 WITH replication = {'class':'SimpleStrategy', 'replication_factor':1}\n"
 "cqlsh -e \"CREATE TABLE IF NOT EXISTS k1.fruit(store_id text, name text, description text, PRIMARY KEY((store_id), name))\n"
 msgstr ""
+"cqlsh -e \"CREATE KEYSPACE IF NOT EXISTS k1 WITH replication = {'class':'SimpleStrategy', 'replication_factor':1}\n"
+"cqlsh -e \"CREATE TABLE IF NOT EXISTS k1.fruit(store_id text, name text, description text, PRIMARY KEY((store_id), name))\n"
 
 #. type: Title ==
 #: upstream/_versions/1.11/guides/cassandra.adoc:388
@@ -707,6 +826,8 @@ msgid ""
 "@Dao\n"
 "public interface FruitDaoReactive {\n"
 msgstr ""
+"@Dao\n"
+"public interface FruitDaoReactive {\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.11/guides/cassandra.adoc:422
@@ -715,6 +836,8 @@ msgid ""
 "  @Update\n"
 "  Uni<Void> updateAsync(Fruit fruitDao);\n"
 msgstr ""
+"  @Update\n"
+"  Uni<Void> updateAsync(Fruit fruitDao);\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.11/guides/cassandra.adoc:426
@@ -724,6 +847,9 @@ msgid ""
 "  MutinyMappedReactiveResultSet<Fruit> findByIdAsync(String id);\n"
 "}\n"
 msgstr ""
+"  @Select\n"
+"  MutinyMappedReactiveResultSet<Fruit> findByIdAsync(String id);\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/1.11/guides/cassandra.adoc:433
@@ -753,6 +879,9 @@ msgid ""
 "public interface FruitMapper {\n"
 "  // the existing method omitted\n"
 msgstr ""
+"@Mapper\n"
+"public interface FruitMapper {\n"
+"  // the existing method omitted\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.11/guides/cassandra.adoc:456
@@ -762,6 +891,9 @@ msgid ""
 "  FruitDaoReactive fruitDaoReactive();\n"
 "}\n"
 msgstr ""
+"  @DaoFactory\n"
+"  FruitDaoReactive fruitDaoReactive();\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/1.11/guides/cassandra.adoc:460
@@ -775,12 +907,14 @@ msgid ""
 "@ApplicationScoped\n"
 "public class FruitReactiveService {\n"
 msgstr ""
+"@ApplicationScoped\n"
+"public class FruitReactiveService {\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.11/guides/cassandra.adoc:467
 #, no-wrap
 msgid "  private final FruitDaoReactive fruitDao;\n"
-msgstr ""
+msgstr "  private final FruitDaoReactive fruitDao;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.11/guides/cassandra.adoc:472
@@ -791,6 +925,10 @@ msgid ""
 "    this.fruitDao = fruitDao;\n"
 "  }\n"
 msgstr ""
+"  @Inject\n"
+"  public FruitReactiveService(FruitDaoReactive fruitDao) {\n"
+"    this.fruitDao = fruitDao;\n"
+"  }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.11/guides/cassandra.adoc:476
@@ -800,6 +938,9 @@ msgid ""
 "    return fruitDao.update(fruit);\n"
 "  }\n"
 msgstr ""
+"  public Uni<Void> add(Fruit fruit) {\n"
+"    return fruitDao.update(fruit);\n"
+"  }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.11/guides/cassandra.adoc:481
@@ -810,6 +951,10 @@ msgid ""
 "  }\n"
 "}\n"
 msgstr ""
+"  public Multi<Fruit> get(String id) {\n"
+"    return fruitDao.findById(id);\n"
+"  }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/1.11/guides/cassandra.adoc:485
@@ -830,6 +975,10 @@ msgid ""
 "  <artifactId>quarkus-resteasy-mutiny</artifactId>\n"
 "</dependency>\n"
 msgstr ""
+"<dependency>\n"
+"  <groupId>io.quarkus</groupId>\n"
+"  <artifactId>quarkus-resteasy-mutiny</artifactId>\n"
+"</dependency>\n"
 
 #. type: Plain text
 #: upstream/_versions/1.11/guides/cassandra.adoc:498
@@ -852,6 +1001,12 @@ msgid ""
 "  private static final String STORE_NAME = \"acme\";\n"
 "  @Inject FruitReactiveService service;\n"
 msgstr ""
+"@Path(\"/reactive-fruits\")\n"
+"@Produces(MediaType.APPLICATION_JSON)\n"
+"@Consumes(MediaType.APPLICATION_JSON)\n"
+"public class FruitReactiveResource {\n"
+"  private static final String STORE_NAME = \"acme\";\n"
+"  @Inject FruitReactiveService service;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.11/guides/cassandra.adoc:516
@@ -864,6 +1019,12 @@ msgid ""
 "        .map(fruit -> new FruitDto(fruit.getName(), fruit.getDescription()));\n"
 "  }\n"
 msgstr ""
+"  @GET\n"
+"  public Multi<FruitDto> getAll() {\n"
+"    return service\n"
+"        .get(STORE_NAME)\n"
+"        .map(fruit -> new FruitDto(fruit.getName(), fruit.getDescription()));\n"
+"  }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.11/guides/cassandra.adoc:522
@@ -875,6 +1036,11 @@ msgid ""
 "    return service.add(fruit).then(ignored -> getAll());\n"
 "  }\n"
 msgstr ""
+"  @POST\n"
+"  public Multi<FruitDto> add(FruitDto fruitDto) {\n"
+"    Fruit fruit = covertFromDto(fruitDto);\n"
+"    return service.add(fruit).then(ignored -> getAll());\n"
+"  }\n"
 
 #. type: Plain text
 #: upstream/_versions/1.11/guides/cassandra.adoc:530
@@ -957,6 +1123,9 @@ msgid ""
 "quarkus.cassandra.metrics.session-enabled=connected-nodes,bytes-sent\n"
 "quarkus.cassandra.metrics.node-enabled=pool.open-connections\n"
 msgstr ""
+"quarkus.cassandra.metrics.enabled=true\n"
+"quarkus.cassandra.metrics.session-enabled=connected-nodes,bytes-sent\n"
+"quarkus.cassandra.metrics.node-enabled=pool.open-connections\n"
 
 #. type: Plain text
 #: upstream/_versions/1.11/guides/cassandra.adoc:585

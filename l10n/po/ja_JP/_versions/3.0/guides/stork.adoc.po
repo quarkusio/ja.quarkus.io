@@ -87,7 +87,7 @@ msgstr "アプリケーションのアーキテクチャ"
 #: upstream/_versions/3.0/guides/stork.adoc:39
 #, no-wrap
 msgid "stork-getting-started-architecture.png"
-msgstr ""
+msgstr "stork-getting-started-architecture.png"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/stork.adoc:43
@@ -151,7 +151,7 @@ msgstr "ディスカバリーとセレクション"
 #: upstream/_versions/3.0/guides/stork.adoc:67
 #, no-wrap
 msgid "stork-process.png"
-msgstr ""
+msgstr "stork-process.png"
 
 #. type: Title ==
 #: upstream/_versions/3.0/guides/stork.adoc:69
@@ -188,6 +188,14 @@ msgid ""
 "  <artifactId>smallrye-mutiny-vertx-consul-client</artifactId>\n"
 "</dependency>\n"
 msgstr ""
+"<dependency>\n"
+"  <groupId>io.smallrye.stork</groupId>\n"
+"  <artifactId>stork-service-discovery-consul</artifactId>\n"
+"</dependency>\n"
+"<dependency>\n"
+"  <groupId>io.smallrye.reactive</groupId>\n"
+"  <artifactId>smallrye-mutiny-vertx-consul-client</artifactId>\n"
+"</dependency>\n"
 
 #. type: Block title
 #: upstream/_versions/3.0/guides/stork.adoc:93
@@ -202,6 +210,8 @@ msgid ""
 "implementation(\"io.smallrye.stork:stork-service-discovery-consul\")\n"
 "implementation(\"io.smallrye.reactive:smallrye-mutiny-vertx-consul-client\")\n"
 msgstr ""
+"implementation(\"io.smallrye.stork:stork-service-discovery-consul\")\n"
+"implementation(\"io.smallrye.reactive:smallrye-mutiny-vertx-consul-client\")\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/stork.adoc:101
@@ -230,7 +240,7 @@ msgstr "以下の内容で `src/main/java/org/acme/services/BlueService.java` �
 #: upstream/_versions/3.0/guides/stork.adoc:185
 #, no-wrap
 msgid "package org.acme.services;\n"
-msgstr ""
+msgstr "package org.acme.services;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/stork.adoc:115
@@ -241,6 +251,9 @@ msgid ""
 "import io.vertx.mutiny.core.Vertx;\n"
 "import org.eclipse.microprofile.config.inject.ConfigProperty;\n"
 msgstr ""
+"import io.quarkus.runtime.StartupEvent;\n"
+"import io.vertx.mutiny.core.Vertx;\n"
+"import org.eclipse.microprofile.config.inject.ConfigProperty;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/stork.adoc:118
@@ -251,6 +264,8 @@ msgid ""
 "import jakarta.enterprise.context.ApplicationScoped;\n"
 "import jakarta.enterprise.event.Observes;\n"
 msgstr ""
+"import jakarta.enterprise.context.ApplicationScoped;\n"
+"import jakarta.enterprise.event.Observes;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/stork.adoc:121
@@ -259,12 +274,14 @@ msgid ""
 "@ApplicationScoped\n"
 "public class BlueService {\n"
 msgstr ""
+"@ApplicationScoped\n"
+"public class BlueService {\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/stork.adoc:123
 #, no-wrap
 msgid "    @ConfigProperty(name = \"blue-service-port\", defaultValue = \"9000\") int port;\n"
-msgstr ""
+msgstr "    @ConfigProperty(name = \"blue-service-port\", defaultValue = \"9000\") int port;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/stork.adoc:135
@@ -282,6 +299,17 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    /**\n"
+"     * Start an HTTP server for the blue service.\n"
+"     *\n"
+"     * Note: this method is called on a worker thread, and so it is allowed to block.\n"
+"     */\n"
+"    public void init(@Observes StartupEvent ev, Vertx vertx) {\n"
+"        vertx.createHttpServer()\n"
+"                .requestHandler(req -> req.response().endAndForget(\"Hello from Blue!\"))\n"
+"                .listenAndAwait(port);\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/stork.adoc:139
@@ -301,6 +329,9 @@ msgid ""
 "public class RedService {\n"
 "    @ConfigProperty(name = \"red-service-port\", defaultValue = \"9001\") int port;\n"
 msgstr ""
+"@ApplicationScoped\n"
+"public class RedService {\n"
+"    @ConfigProperty(name = \"red-service-port\", defaultValue = \"9001\") int port;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/stork.adoc:168
@@ -317,13 +348,23 @@ msgid ""
 "                .listenAndAwait(port);\n"
 "    }\n"
 msgstr ""
+"    /**\n"
+"     * Start an HTTP server for the red service.\n"
+"     *\n"
+"     * Note: this method is called on a worker thread, and so it is allowed to block.\n"
+"     */\n"
+"    public void init(@Observes StartupEvent ev, Vertx vertx) {\n"
+"        vertx.createHttpServer()\n"
+"                .requestHandler(req -> req.response().endAndForget(\"Hello from Red!\"))\n"
+"                .listenAndAwait(port);\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/stork.adoc:170
 #: upstream/_versions/3.0/guides/stork.adoc:292
 #, no-wrap
 msgid "}\n"
-msgstr ""
+msgstr "}\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/stork.adoc:173
@@ -362,6 +403,12 @@ msgid ""
 "import io.vertx.mutiny.core.Vertx;\n"
 "import org.eclipse.microprofile.config.inject.ConfigProperty;\n"
 msgstr ""
+"import io.quarkus.runtime.StartupEvent;\n"
+"import io.vertx.ext.consul.ServiceOptions;\n"
+"import io.vertx.mutiny.ext.consul.ConsulClient;\n"
+"import io.vertx.ext.consul.ConsulClientOptions;\n"
+"import io.vertx.mutiny.core.Vertx;\n"
+"import org.eclipse.microprofile.config.inject.ConfigProperty;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/stork.adoc:198
@@ -370,6 +417,8 @@ msgid ""
 "@ApplicationScoped\n"
 "public class Registration {\n"
 msgstr ""
+"@ApplicationScoped\n"
+"public class Registration {\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/stork.adoc:201
@@ -378,6 +427,8 @@ msgid ""
 "    @ConfigProperty(name = \"consul.host\") String host;\n"
 "    @ConfigProperty(name = \"consul.port\") int port;\n"
 msgstr ""
+"    @ConfigProperty(name = \"consul.host\") String host;\n"
+"    @ConfigProperty(name = \"consul.port\") int port;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/stork.adoc:204
@@ -386,6 +437,8 @@ msgid ""
 "    @ConfigProperty(name = \"red-service-port\", defaultValue = \"9000\") int red;\n"
 "    @ConfigProperty(name = \"blue-service-port\", defaultValue = \"9001\") int blue;\n"
 msgstr ""
+"    @ConfigProperty(name = \"red-service-port\", defaultValue = \"9000\") int red;\n"
+"    @ConfigProperty(name = \"blue-service-port\", defaultValue = \"9001\") int blue;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/stork.adoc:212
@@ -399,6 +452,13 @@ msgid ""
 "    public void init(@Observes StartupEvent ev, Vertx vertx) {\n"
 "        ConsulClient client = ConsulClient.create(vertx, new ConsulClientOptions().setHost(host).setPort(port));\n"
 msgstr ""
+"    /**\n"
+"     * Register our two services in Consul.\n"
+"     *\n"
+"     * Note: this method is called on a worker thread, and so it is allowed to block.\n"
+"     */\n"
+"    public void init(@Observes StartupEvent ev, Vertx vertx) {\n"
+"        ConsulClient client = ConsulClient.create(vertx, new ConsulClientOptions().setHost(host).setPort(port));\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/stork.adoc:219
@@ -411,6 +471,12 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"        client.registerServiceAndAwait(\n"
+"                new ServiceOptions().setPort(red).setAddress(\"localhost\").setName(\"my-service\").setId(\"red\"));\n"
+"        client.registerServiceAndAwait(\n"
+"                new ServiceOptions().setPort(blue).setAddress(\"localhost\").setName(\"my-service\").setId(\"blue\"));\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/stork.adoc:223
@@ -439,13 +505,13 @@ msgstr "Reactive REST Clientを使ってサービスを呼び出すことにし�
 #: upstream/_versions/3.0/guides/stork.adoc:304
 #, no-wrap
 msgid "package org.acme;\n"
-msgstr ""
+msgstr "package org.acme;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/stork.adoc:236
 #, no-wrap
 msgid "import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;\n"
-msgstr ""
+msgstr "import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/stork.adoc:240
@@ -455,6 +521,9 @@ msgid ""
 "import jakarta.ws.rs.Produces;\n"
 "import jakarta.ws.rs.core.MediaType;\n"
 msgstr ""
+"import jakarta.ws.rs.GET;\n"
+"import jakarta.ws.rs.Produces;\n"
+"import jakarta.ws.rs.core.MediaType;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/stork.adoc:250
@@ -470,6 +539,15 @@ msgid ""
 "@RegisterRestClient(baseUri = \"stork://my-service\")\n"
 "public interface MyService {\n"
 msgstr ""
+"/**\n"
+" * The REST Client interface.\n"
+" *\n"
+" * Notice the `baseUri`. It uses `stork://` as URL scheme indicating that the called service uses Stork to locate and\n"
+" * select the service instance. The `my-service` part is the service name. This is used to configure Stork discovery\n"
+" * and selection in the `application.properties` file.\n"
+" */\n"
+"@RegisterRestClient(baseUri = \"stork://my-service\")\n"
+"public interface MyService {\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/stork.adoc:255
@@ -480,6 +558,10 @@ msgid ""
 "    String get();\n"
 "}\n"
 msgstr ""
+"    @GET\n"
+"    @Produces(MediaType.TEXT_PLAIN)\n"
+"    String get();\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/stork.adoc:262
@@ -495,7 +577,7 @@ msgstr "RESTクライアントの使用方法を変更するものではあり�
 #: upstream/_versions/3.0/guides/stork.adoc:271
 #, no-wrap
 msgid "import org.eclipse.microprofile.rest.client.inject.RestClient;\n"
-msgstr ""
+msgstr "import org.eclipse.microprofile.rest.client.inject.RestClient;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/stork.adoc:276
@@ -506,6 +588,10 @@ msgid ""
 "import jakarta.ws.rs.Produces;\n"
 "import jakarta.ws.rs.core.MediaType;\n"
 msgstr ""
+"import jakarta.ws.rs.GET;\n"
+"import jakarta.ws.rs.Path;\n"
+"import jakarta.ws.rs.Produces;\n"
+"import jakarta.ws.rs.core.MediaType;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/stork.adoc:282
@@ -517,12 +603,17 @@ msgid ""
 "@Path(\"/api\")\n"
 "public class FrontendApi {\n"
 msgstr ""
+"/**\n"
+" * A frontend API using our REST Client (which uses Stork to locate and select the service instance on each call).\n"
+" */\n"
+"@Path(\"/api\")\n"
+"public class FrontendApi {\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/stork.adoc:284
 #, no-wrap
 msgid "    @RestClient MyService service;\n"
-msgstr ""
+msgstr "    @RestClient MyService service;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/stork.adoc:290
@@ -534,6 +625,11 @@ msgid ""
 "        return service.get();\n"
 "    }\n"
 msgstr ""
+"    @GET\n"
+"    @Produces(MediaType.TEXT_PLAIN)\n"
+"    public String invoke() {\n"
+"        return service.get();\n"
+"    }\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/stork.adoc:295
@@ -560,12 +656,16 @@ msgid ""
 "import org.jboss.resteasy.reactive.client.spi.ResteasyReactiveClientRequestContext;\n"
 "import org.jboss.resteasy.reactive.client.spi.ResteasyReactiveClientRequestFilter;\n"
 msgstr ""
+"import io.vertx.core.http.HttpServerRequest;\n"
+"import org.jboss.logging.Logger;\n"
+"import org.jboss.resteasy.reactive.client.spi.ResteasyReactiveClientRequestContext;\n"
+"import org.jboss.resteasy.reactive.client.spi.ResteasyReactiveClientRequestFilter;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/stork.adoc:311
 #, no-wrap
 msgid "import jakarta.ws.rs.ext.Provider;\n"
-msgstr ""
+msgstr "import jakarta.ws.rs.ext.Provider;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/stork.adoc:314
@@ -574,12 +674,14 @@ msgid ""
 "@Provider\n"
 "public class CustomLoggingFilter implements ResteasyReactiveClientRequestFilter {\n"
 msgstr ""
+"@Provider\n"
+"public class CustomLoggingFilter implements ResteasyReactiveClientRequestFilter {\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/stork.adoc:316
 #, no-wrap
 msgid "    private static final Logger LOG = Logger.getLogger(CustomLoggingFilter.class);\n"
-msgstr ""
+msgstr "    private static final Logger LOG = Logger.getLogger(CustomLoggingFilter.class);\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/stork.adoc:322
@@ -591,6 +693,11 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    @Override\n"
+"    public void filter(ResteasyReactiveClientRequestContext requestContext) {\n"
+"        LOG.infof(\"Resolved address by Stork: %s\",requestContext.getUri().toString());\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/stork.adoc:327
@@ -620,6 +727,8 @@ msgid ""
 "consul.host=localhost\n"
 "consul.port=8500\n"
 msgstr ""
+"consul.host=localhost\n"
+"consul.port=8500\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/stork.adoc:344
@@ -630,6 +739,10 @@ msgid ""
 "quarkus.stork.my-service.service-discovery.consul-port=8500\n"
 "quarkus.stork.my-service.load-balancer.type=round-robin\n"
 msgstr ""
+"quarkus.stork.my-service.service-discovery.type=consul\n"
+"quarkus.stork.my-service.service-discovery.consul-host=localhost\n"
+"quarkus.stork.my-service.service-discovery.consul-port=8500\n"
+"quarkus.stork.my-service.load-balancer.type=round-robin\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/stork.adoc:347
@@ -661,7 +774,7 @@ msgstr "まず、Consulを起動します:"
 #: upstream/_versions/3.0/guides/stork.adoc:365
 #, no-wrap
 msgid "docker run --rm --name consul -p 8500:8500 -p 8501:8501 consul:1.7 agent -dev -ui -client=0.0.0.0 -bind=0.0.0.0 --https-port=8501\n"
-msgstr ""
+msgstr "docker run --rm --name consul -p 8500:8500 -p 8501:8501 consul:1.7 agent -dev -ui -client=0.0.0.0 -bind=0.0.0.0 --https-port=8501\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/stork.adoc:368
@@ -682,7 +795,7 @@ msgstr "そして実行します:"
 #: upstream/_versions/3.0/guides/stork.adoc:378
 #, no-wrap
 msgid "> java -jar target/quarkus-app/quarkus-run.jar\n"
-msgstr ""
+msgstr "> java -jar target/quarkus-app/quarkus-run.jar\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/stork.adoc:381
@@ -700,6 +813,12 @@ msgid ""
 "> curl http://localhost:8080/api\n"
 "...\n"
 msgstr ""
+"> curl http://localhost:8080/api\n"
+"...\n"
+"> curl http://localhost:8080/api\n"
+"...\n"
+"> curl http://localhost:8080/api\n"
+"...\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/stork.adoc:393
@@ -720,7 +839,7 @@ msgstr "次のように起動します:"
 #: upstream/_versions/3.0/guides/stork.adoc:403
 #, no-wrap
 msgid "> ./target/stork-getting-started-1.0.0-SNAPSHOT-runner\n"
-msgstr ""
+msgstr "> ./target/stork-getting-started-1.0.0-SNAPSHOT-runner\n"
 
 #. type: Title ==
 #: upstream/_versions/3.0/guides/stork.adoc:405

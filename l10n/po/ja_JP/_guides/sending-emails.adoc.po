@@ -92,6 +92,10 @@ msgid ""
 "    -DprojectArtifactId=sending-email-quickstart \\\n"
 "    -Dextensions=\"mailer\"\n"
 msgstr ""
+"mvn io.quarkus:quarkus-maven-plugin:{quarkus-version}:create \\\n"
+"    -DprojectGroupId=org.acme \\\n"
+"    -DprojectArtifactId=sending-email-quickstart \\\n"
+"    -Dextensions=\"mailer\"\n"
 
 #. type: Plain text
 #: upstream/_guides/sending-emails.adoc:41
@@ -102,7 +106,7 @@ msgstr "既存のプロジェクトがある場合は、 `mailer` エクステ�
 #: upstream/_guides/sending-emails.adoc:45
 #, no-wrap
 msgid "./mvnw quarkus:add-extensions -Dextensions=\"mailer\"\n"
-msgstr ""
+msgstr "./mvnw quarkus:add-extensions -Dextensions=\"mailer\"\n"
 
 #. type: Title ==
 #: upstream/_guides/sending-emails.adoc:47
@@ -131,6 +135,12 @@ msgid ""
 "quarkus.mailer.username=....\n"
 "quarkus.mailer.password=....\n"
 msgstr ""
+"quarkus.mailer.from=test@quarkus.io\n"
+"quarkus.mailer.host=smtp.sendgrid.net\n"
+"quarkus.mailer.port=465\n"
+"quarkus.mailer.ssl=true\n"
+"quarkus.mailer.username=....\n"
+"quarkus.mailer.password=....\n"
 
 #. type: Plain text
 #: upstream/_guides/sending-emails.adoc:66
@@ -155,6 +165,8 @@ msgid ""
 "@Inject\n"
 "Mailer mailer;\n"
 msgstr ""
+"@Inject\n"
+"Mailer mailer;\n"
 
 #. type: delimited block -
 #: upstream/_guides/sending-emails.adoc:78
@@ -163,6 +175,8 @@ msgid ""
 "@Inject\n"
 "ReactiveMailer reactiveMailer;\n"
 msgstr ""
+"@Inject\n"
+"ReactiveMailer reactiveMailer;\n"
 
 #. type: Plain text
 #: upstream/_guides/sending-emails.adoc:81
@@ -198,6 +212,10 @@ msgid ""
 "// Reactive API:\n"
 "CompletionStage<Void> stage = reactiveMailer.send(Mail.withText(\"to@acme.org\", \"A reactive email from quarkus\", \"This is my body.\"));\n"
 msgstr ""
+"// Imperative API:\n"
+"mailer.send(Mail.withText(\"to@acme.org\", \"A simple email from quarkus\", \"This is my body.\"));\n"
+"// Reactive API:\n"
+"CompletionStage<Void> stage = reactiveMailer.send(Mail.withText(\"to@acme.org\", \"A reactive email from quarkus\", \"This is my body.\"));\n"
 
 #. type: Plain text
 #: upstream/_guides/sending-emails.adoc:98
@@ -215,6 +233,12 @@ msgid ""
 "    return Response.accepted().build();\n"
 "}\n"
 msgstr ""
+"@GET\n"
+"@Path(\"/simple\")\n"
+"public Response sendASimpleEmail() {\n"
+"    mailer.send(Mail.withText(\"to@acme.org\", \"A simple email from quarkus\", \"This is my body\"));\n"
+"    return Response.accepted().build();\n"
+"}\n"
 
 #. type: delimited block -
 #: upstream/_guides/sending-emails.adoc:115
@@ -228,6 +252,13 @@ msgid ""
 "            .thenApply(x -> Response.accepted().build());\n"
 "}\n"
 msgstr ""
+"@GET\n"
+"@Path(\"/async\")\n"
+"public CompletionStage<Response> sendASimpleEmailAsync() {\n"
+"    return reactiveMailer.send(\n"
+"            Mail.withText(\"to@acme.org\", \"A reactive email from quarkus\", \"This is my body\"))\n"
+"            .thenApply(x -> Response.accepted().build());\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_guides/sending-emails.adoc:118
@@ -241,6 +272,8 @@ msgid ""
 "curl http://localhost:8080/simple\n"
 "curl http://localhost:8080/async\n"
 msgstr ""
+"curl http://localhost:8080/simple\n"
+"curl http://localhost:8080/async\n"
 
 #. type: Plain text
 #: upstream/_guides/sending-emails.adoc:128
@@ -256,7 +289,7 @@ msgstr "一度の呼び出しで複数の `Mail` オブジェクトを送信す�
 #: upstream/_guides/sending-emails.adoc:134
 #, no-wrap
 msgid "mailer.send(mail1, mail2, mail3);\n"
-msgstr ""
+msgstr "mailer.send(mail1, mail2, mail3);\n"
 
 #. type: Title ==
 #: upstream/_guides/sending-emails.adoc:136
@@ -283,6 +316,15 @@ msgid ""
 "    return Response.accepted().build();\n"
 "}\n"
 msgstr ""
+"@GET\n"
+"@Path(\"/attachment\")\n"
+"public Response sendEmailWithAttachment() {\n"
+"    mailer.send(Mail.withText(\"to@acme.org\", \"An email from quarkus with attachment\",\n"
+"            \"This is my body\")\n"
+"            .addAttachment(\"my-file.txt\",\n"
+"                \"content of my file\".getBytes(), \"text/plain\"));\n"
+"    return Response.accepted().build();\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_guides/sending-emails.adoc:154
@@ -317,6 +359,18 @@ msgid ""
 "    return Response.accepted().build();\n"
 "}\n"
 msgstr ""
+"@GET\n"
+"@Path(\"/html\")\n"
+"public Response sendingHTML() {\n"
+"    String body = \"<strong>Hello!</strong>\" + \"\\n\" +\n"
+"        \"<p>Here is an image for you: <img src=\\\"cid:my-image@quarkus.io\\\"/></p>\" +\n"
+"        \"<p>Regards</p>\";\n"
+"    mailer.send(Mail.withHtml(\"to@acme.org\", \"An email in HTML\", body)\n"
+"        .addInlineAttachment(\"quarkus-logo.png\",\n"
+"            new File(\"quarkus-logo.png\"),\n"
+"            \"image/png\", \"<my-image@quarkus.io>\"));\n"
+"    return Response.accepted().build();\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_guides/sending-emails.adoc:180
@@ -346,12 +400,14 @@ msgid ""
 "@QuarkusTest\n"
 "class MailTest {\n"
 msgstr ""
+"@QuarkusTest\n"
+"class MailTest {\n"
 
 #. type: delimited block -
 #: upstream/_guides/sending-emails.adoc:195
 #, no-wrap
 msgid "    private static final String TO = \"foo@quarkus.io\";\n"
-msgstr ""
+msgstr "    private static final String TO = \"foo@quarkus.io\";\n"
 
 #. type: delimited block -
 #: upstream/_guides/sending-emails.adoc:198
@@ -360,6 +416,8 @@ msgid ""
 "    @Inject\n"
 "    MockMailbox mailbox;\n"
 msgstr ""
+"    @Inject\n"
+"    MockMailbox mailbox;\n"
 
 #. type: delimited block -
 #: upstream/_guides/sending-emails.adoc:203
@@ -370,6 +428,10 @@ msgid ""
 "        mailbox.clear();\n"
 "    }\n"
 msgstr ""
+"    @BeforeEach\n"
+"    void init() {\n"
+"        mailbox.clear();\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_guides/sending-emails.adoc:213
@@ -385,6 +447,15 @@ msgid ""
 "           .statusCode(202)\n"
 "           .body(is(\"OK\"));\n"
 msgstr ""
+"    @Test\n"
+"    void testTextMail() throws MessagingException, IOException {\n"
+"        // call a REST endpoint that sends email\n"
+"        given()\n"
+"        .when()\n"
+"        .get(\"/send-email\")\n"
+"        .then()\n"
+"           .statusCode(202)\n"
+"           .body(is(\"OK\"));\n"
 
 #. type: delimited block -
 #: upstream/_guides/sending-emails.adoc:220
@@ -397,6 +468,12 @@ msgid ""
 "        assertThat(actual.getText()).contains(\"Wake up!\");\n"
 "        assertThat(actual.getSubject()).isEqualTo(\"Alarm!\");\n"
 msgstr ""
+"        // verify that it was sent\n"
+"        List<Mail> sent = mailbox.getMessagesSentTo(TO);\n"
+"        assertThat(sent).hasSize(1);\n"
+"        Mail actual = sent.get(0);\n"
+"        assertThat(actual.getText()).contains(\"Wake up!\");\n"
+"        assertThat(actual.getSubject()).isEqualTo(\"Alarm!\");\n"
 
 #. type: delimited block -
 #: upstream/_guides/sending-emails.adoc:224
@@ -406,6 +483,9 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"        assertThat(mailbox.getTotalMessagesSent()).isEqualTo(6);\n"
+"    }\n"
+"}\n"
 
 #. type: Title ==
 #: upstream/_guides/sending-emails.adoc:226
@@ -439,6 +519,12 @@ msgid ""
 "quarkus.mailer.username=YOUREMAIL@gmail.com\n"
 "quarkus.mailer.password=YOURGENERATEDAPPLICATIONPASSWORD\n"
 msgstr ""
+"quarkus.mailer.from=YOUREMAIL@gmail.com\n"
+"quarkus.mailer.host=smtp.gmail.com\n"
+"quarkus.mailer.port=587\n"
+"quarkus.mailer.start-tls=REQUIRED\n"
+"quarkus.mailer.username=YOUREMAIL@gmail.com\n"
+"quarkus.mailer.password=YOURGENERATEDAPPLICATIONPASSWORD\n"
 
 #. type: Plain text
 #: upstream/_guides/sending-emails.adoc:245
@@ -456,6 +542,12 @@ msgid ""
 "quarkus.mailer.username=YOUREMAIL@gmail.com\n"
 "quarkus.mailer.password=YOURGENERATEDAPPLICATIONPASSWORD\n"
 msgstr ""
+"quarkus.mailer.from=YOUREMAIL@gmail.com\n"
+"quarkus.mailer.host=smtp.gmail.com\n"
+"quarkus.mailer.port=465\n"
+"quarkus.mailer.ssl=true\n"
+"quarkus.mailer.username=YOUREMAIL@gmail.com\n"
+"quarkus.mailer.password=YOURGENERATEDAPPLICATIONPASSWORD\n"
 
 #. type: Title ==
 #: upstream/_guides/sending-emails.adoc:256
@@ -483,7 +575,7 @@ msgstr "Quarkus Mailerは、 link:https://vertx.io/docs/vertx-mail-client/java/[
 #: upstream/_guides/sending-emails.adoc:269
 #, no-wrap
 msgid "@Inject MailClient client;\n"
-msgstr ""
+msgstr "@Inject MailClient client;\n"
 
 #. type: Plain text
 #: upstream/_guides/sending-emails.adoc:272

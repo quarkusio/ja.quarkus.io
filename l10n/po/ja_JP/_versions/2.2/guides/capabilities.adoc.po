@@ -51,6 +51,16 @@ msgid ""
 "    </configuration>\n"
 "</plugin>\n"
 msgstr ""
+"<plugin>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-bootstrap-maven-plugin</artifactId>\n"
+"    <configuration>\n"
+"        <capabilities>\n"
+"            <provides>io.quarkus.rest</provides>\n"
+"            <provides>io.quarkus.resteasy</provides>\n"
+"        </capabilities>\n"
+"    </configuration>\n"
+"</plugin>\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/capabilities.adoc:34
@@ -85,6 +95,18 @@ msgid ""
 "    </configuration>\n"
 "</plugin>\n"
 msgstr ""
+"<plugin>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-bootstrap-maven-plugin</artifactId>\n"
+"    <configuration>\n"
+"        <capabilities>\n"
+"            <providesIf> <1>\n"
+"                <positive>io.quarkus.container.image.openshift.deployment.OpenshiftBuild</positive> <2>\n"
+"                <name>io.quarkus.container.image.openshift</name> <3>\n"
+"            </providesIf>\n"
+"        </capabilities>\n"
+"    </configuration>\n"
+"</plugin>\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/capabilities.adoc:54
@@ -120,25 +142,25 @@ msgstr "`OpenshiftBuild` の実装は以下のようになります。"
 #: upstream/_versions/2.2/guides/capabilities.adoc:65
 #, no-wrap
 msgid "import java.util.function.BooleanSupplier;\n"
-msgstr ""
+msgstr "import java.util.function.BooleanSupplier;\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/capabilities.adoc:67
 #, no-wrap
 msgid "import io.quarkus.container.image.deployment.ContainerImageConfig;\n"
-msgstr ""
+msgstr "import io.quarkus.container.image.deployment.ContainerImageConfig;\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/capabilities.adoc:69
 #, no-wrap
 msgid "public class OpenshiftBuild implements BooleanSupplier {\n"
-msgstr ""
+msgstr "public class OpenshiftBuild implements BooleanSupplier {\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/capabilities.adoc:71
 #, no-wrap
 msgid "    private ContainerImageConfig containerImageConfig;\n"
-msgstr ""
+msgstr "    private ContainerImageConfig containerImageConfig;\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/capabilities.adoc:75
@@ -148,6 +170,9 @@ msgid ""
 "        this.containerImageConfig = containerImageConfig;\n"
 "    }\n"
 msgstr ""
+"    OpenshiftBuild(ContainerImageConfig containerImageConfig) {\n"
+"        this.containerImageConfig = containerImageConfig;\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/capabilities.adoc:81
@@ -159,6 +184,11 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    @Override\n"
+"    public boolean getAsBoolean() {\n"
+"        return containerImageConfig.builder.map(b -> b.equals(OpenshiftProcessor.OPENSHIFT)).orElse(true);\n"
+"    }\n"
+"}\n"
 
 #. type: Title ==
 #: upstream/_versions/2.2/guides/capabilities.adoc:83
@@ -201,6 +231,15 @@ msgid ""
 "        }\n"
 "    }\n"
 msgstr ""
+"    @BuildStep\n"
+"    HealthBuildItem addHealthCheck(Capabilities capabilities, DataSourcesBuildTimeConfig dataSourcesBuildTimeConfig) {\n"
+"        if (capabilities.isPresent(Capability.SMALLRYE_HEALTH)) {\n"
+"            return new HealthBuildItem(\"io.quarkus.agroal.runtime.health.DataSourceHealthCheck\",\n"
+"                    dataSourcesBuildTimeConfig.healthEnabled);\n"
+"        } else {\n"
+"            return null;\n"
+"        }\n"
+"    }\n"
 
 #. type: Title ===
 #: upstream/_versions/2.2/guides/capabilities.adoc:106

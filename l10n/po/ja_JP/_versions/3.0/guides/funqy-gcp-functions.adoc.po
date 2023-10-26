@@ -51,7 +51,7 @@ msgstr "アプリケーションのデプロイにはGoogle Cloudへのログイ
 #: upstream/_versions/3.0/guides/funqy-gcp-functions.adoc:31
 #, no-wrap
 msgid "gcloud auth login\n"
-msgstr ""
+msgstr "gcloud auth login\n"
 
 #. type: Title ==
 #: upstream/_versions/3.0/guides/funqy-gcp-functions.adoc:33
@@ -106,7 +106,7 @@ msgstr "Google Cloud Functions のデプロイごとにエクスポートでき�
 #: upstream/_versions/3.0/guides/funqy-gcp-functions.adoc:63
 #, no-wrap
 msgid "quarkus.funqy.export=greet\n"
-msgstr ""
+msgstr "quarkus.funqy.export=greet\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/funqy-gcp-functions.adoc:66
@@ -149,7 +149,7 @@ msgstr "Quarkusは、Cloud Functionsの第1世代と第2世代をサポートし
 #: upstream/_versions/3.0/guides/funqy-gcp-functions.adoc:87
 #, no-wrap
 msgid "import jakarta.inject.Inject;\n"
-msgstr ""
+msgstr "import jakarta.inject.Inject;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/funqy-gcp-functions.adoc:92
@@ -160,18 +160,22 @@ msgid ""
 "import io.quarkus.funqy.gcp.functions.event.PubsubMessage;\n"
 "import io.quarkus.funqy.gcp.functions.event.StorageEvent;\n"
 msgstr ""
+"import io.cloudevents.CloudEvent;\n"
+"import io.quarkus.funqy.Funq;\n"
+"import io.quarkus.funqy.gcp.functions.event.PubsubMessage;\n"
+"import io.quarkus.funqy.gcp.functions.event.StorageEvent;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/funqy-gcp-functions.adoc:94
 #, no-wrap
 msgid "public class GreetingFunctions {\n"
-msgstr ""
+msgstr "public class GreetingFunctions {\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/funqy-gcp-functions.adoc:96
 #, no-wrap
 msgid "    @Inject GreetingService service; // <1>\n"
-msgstr ""
+msgstr "    @Inject GreetingService service; // <1>\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/funqy-gcp-functions.adoc:102
@@ -183,6 +187,11 @@ msgid ""
 "        System.out.println(pubSubEvent.messageId + \" - \" + message);\n"
 "    }\n"
 msgstr ""
+"    @Funq // <2>\n"
+"    public void helloPubSubWorld(PubsubMessage pubSubEvent) {\n"
+"        String message = service.hello(pubSubEvent.data);\n"
+"        System.out.println(pubSubEvent.messageId + \" - \" + message);\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/funqy-gcp-functions.adoc:108
@@ -194,6 +203,11 @@ msgid ""
 "        System.out.println(storageEvent.name + \" - \" + message);\n"
 "    }\n"
 msgstr ""
+"    @Funq // <3>\n"
+"    public void helloGCSWorld(StorageEvent storageEvent) {\n"
+"        String message = service.hello(\"world\");\n"
+"        System.out.println(storageEvent.name + \" - \" + message);\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/funqy-gcp-functions.adoc:118
@@ -209,6 +223,15 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    @Funq // <4>\n"
+"    public void helloCloudEvent(CloudEvent cloudEvent) {\n"
+"        System.out.println(\"Receive event Id: \" + cloudEvent.getId());\n"
+"        System.out.println(\"Receive event Subject: \" + cloudEvent.getSubject());\n"
+"        System.out.println(\"Receive event Type: \" + cloudEvent.getType());\n"
+"        System.out.println(\"Receive event Data: \" + new String(cloudEvent.getData().toBytes()));\n"
+"        System.out.println(\"Be polite, say \" + service.hello(\"world\"));\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/funqy-gcp-functions.adoc:121
@@ -249,7 +272,7 @@ msgstr "プロジェクトには複数の関数が含まれているので、ど
 #: upstream/_versions/3.0/guides/funqy-gcp-functions.adoc:138
 #, no-wrap
 msgid "quarkus.funqy.export=helloPubSubWorld\n"
-msgstr ""
+msgstr "quarkus.funqy.export=helloPubSubWorld\n"
 
 #. type: Title ==
 #: upstream/_versions/3.0/guides/funqy-gcp-functions.adoc:140
@@ -281,7 +304,7 @@ msgstr "初めて `gcloud beta functions deploy` を実行すると、以下の�
 #: upstream/_versions/3.0/guides/funqy-gcp-functions.adoc:157
 #, no-wrap
 msgid "ERROR: (gcloud.functions.deploy) OperationError: code=7, message=Build Failed: Cloud Build has not been used in project <project_name> before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/cloudbuild.googleapis.com/overview?project=<my-project> then retry.\n"
-msgstr ""
+msgstr "ERROR: (gcloud.functions.deploy) OperationError: code=7, message=Build Failed: Cloud Build has not been used in project <project_name> before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/cloudbuild.googleapis.com/overview?project=<my-project> then retry.\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/funqy-gcp-functions.adoc:159
@@ -310,6 +333,10 @@ msgid ""
 "  --runtime=java17 --trigger-resource hello_topic --trigger-event google.pubsub.topic.publish \\\n"
 "  --source=target/deployment\n"
 msgstr ""
+"gcloud functions deploy quarkus-example-funky-pubsub \\\n"
+"  --entry-point=io.quarkus.funqy.gcp.functions.FunqyBackgroundFunction \\\n"
+"  --runtime=java17 --trigger-resource hello_topic --trigger-event google.pubsub.topic.publish \\\n"
+"  --source=target/deployment\n"
 
 #. type: delimited block =
 #: upstream/_versions/3.0/guides/funqy-gcp-functions.adoc:177
@@ -332,7 +359,7 @@ msgstr "この関数にイベントをトリガーするには、 `gcloud functi
 #: upstream/_versions/3.0/guides/funqy-gcp-functions.adoc:187
 #, no-wrap
 msgid "gcloud functions call quarkus-example-funky-pubsub --data '{\"data\":\"Pub/Sub\"}'\n"
-msgstr ""
+msgstr "gcloud functions call quarkus-example-funky-pubsub --data '{\"data\":\"Pub/Sub\"}'\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/funqy-gcp-functions.adoc:190
@@ -358,7 +385,7 @@ msgstr "関数をデプロイする前に、バケットを作成する必要が
 #: upstream/_versions/3.0/guides/funqy-gcp-functions.adoc:239
 #, no-wrap
 msgid "gsutil mb gs://quarkus-hello\n"
-msgstr ""
+msgstr "gsutil mb gs://quarkus-hello\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/funqy-gcp-functions.adoc:201
@@ -375,6 +402,10 @@ msgid ""
 "  --runtime=java17 --trigger-resource quarkus-hello --trigger-event google.storage.object.finalize \\\n"
 "  --source=target/deployment\n"
 msgstr ""
+"gcloud functions deploy quarkus-example-funky-storage \\\n"
+"  --entry-point=io.quarkus.funqy.gcp.functions.FunqyBackgroundFunction \\\n"
+"  --runtime=java17 --trigger-resource quarkus-hello --trigger-event google.storage.object.finalize \\\n"
+"  --source=target/deployment\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/funqy-gcp-functions.adoc:218
@@ -385,7 +416,7 @@ msgstr "`--trigger-resource` オプションは Cloud Storage のバケット名
 #: upstream/_versions/3.0/guides/funqy-gcp-functions.adoc:224
 #, no-wrap
 msgid "gcloud functions call quarkus-example-funky-storage --data '{\"name\":\"test.txt\"}'\n"
-msgstr ""
+msgstr "gcloud functions call quarkus-example-funky-storage --data '{\"name\":\"test.txt\"}'\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/funqy-gcp-functions.adoc:227
@@ -420,6 +451,9 @@ msgid ""
 "  --entry-point=io.quarkus.funqy.gcp.functions.FunqyCloudEventsFunction \\\n"
 "  --runtime=java17 --trigger-bucket=example-cloud-event --source=target/deployment\n"
 msgstr ""
+"gcloud functions deploy quarkus-example-cloud-event --gen2 \\\n"
+"  --entry-point=io.quarkus.funqy.gcp.functions.FunqyCloudEventsFunction \\\n"
+"  --runtime=java17 --trigger-bucket=example-cloud-event --source=target/deployment\n"
 
 #. type: delimited block =
 #: upstream/_versions/3.0/guides/funqy-gcp-functions.adoc:254
@@ -460,6 +494,9 @@ msgid ""
 "    -Dartifact='com.google.cloud.functions.invoker:java-function-invoker:{gcf-invoker-version}' \\\n"
 "    -DoutputDirectory=.\n"
 msgstr ""
+"mvn dependency:copy \\\n"
+"    -Dartifact='com.google.cloud.functions.invoker:java-function-invoker:{gcf-invoker-version}' \\\n"
+"    -DoutputDirectory=.\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/funqy-gcp-functions.adoc:274
@@ -486,6 +523,9 @@ msgid ""
 "  --classpath target/funqy-google-cloud-functions-1.0.0-SNAPSHOT-runner.jar \\\n"
 "  --target io.quarkus.funqy.gcp.functions.FunqyBackgroundFunction\n"
 msgstr ""
+"java -jar java-function-invoker-{gcf-invoker-version}.jar \\\n"
+"  --classpath target/funqy-google-cloud-functions-1.0.0-SNAPSHOT-runner.jar \\\n"
+"  --target io.quarkus.funqy.gcp.functions.FunqyBackgroundFunction\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/funqy-gcp-functions.adoc:291
@@ -505,7 +545,7 @@ msgstr "起動後、HTTP 呼び出しにイベントを含むペイロードを�
 #: upstream/_versions/3.0/guides/funqy-gcp-functions.adoc:297
 #, no-wrap
 msgid "curl localhost:8080 -d '{\"data\":{\"data\":\"world\"}}'\n"
-msgstr ""
+msgstr "curl localhost:8080 -d '{\"data\":{\"data\":\"world\"}}'\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/funqy-gcp-functions.adoc:300
@@ -516,7 +556,7 @@ msgstr "これは、PubSub のバックグラウンド関数を PubSubMessage �
 #: upstream/_versions/3.0/guides/funqy-gcp-functions.adoc:319
 #, no-wrap
 msgid "curl localhost:8080 -d '{\"data\":{\"name\":\"text\"}}'\n"
-msgstr ""
+msgstr "curl localhost:8080 -d '{\"data\":{\"name\":\"text\"}}'\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/funqy-gcp-functions.adoc:322
@@ -536,6 +576,9 @@ msgid ""
 "  --classpath target/funqy-google-cloud-functions-1.0.0-SNAPSHOT-runner.jar \\\n"
 "  --target io.quarkus.funqy.gcp.functions.FunqyCloudEventsFunction\n"
 msgstr ""
+"java -jar java-function-invoker-{gcf-invoker-version}.jar \\\n"
+"  --classpath target/funqy-google-cloud-functions-1.0.0-SNAPSHOT-runner.jar \\\n"
+"  --target io.quarkus.funqy.gcp.functions.FunqyCloudEventsFunction\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/funqy-gcp-functions.adoc:364
@@ -564,6 +607,28 @@ msgid ""
 "        \"updated\": \"2020-04-23T07:38:57.230Z\"\n"
 "      }'\n"
 msgstr ""
+"curl localhost:8080 \\\n"
+"  -X POST \\\n"
+"  -H \"Content-Type: application/json\" \\\n"
+"  -H \"ce-id: 123451234512345\" \\\n"
+"  -H \"ce-specversion: 1.0\" \\\n"
+"  -H \"ce-time: 2020-01-02T12:34:56.789Z\" \\\n"
+"  -H \"ce-type: google.cloud.storage.object.v1.finalized\" \\\n"
+"  -H \"ce-source: //storage.googleapis.com/projects/_/buckets/MY-BUCKET-NAME\" \\\n"
+"  -H \"ce-subject: objects/MY_FILE.txt\" \\\n"
+"  -d '{\n"
+"        \"bucket\": \"MY_BUCKET\",\n"
+"        \"contentType\": \"text/plain\",\n"
+"        \"kind\": \"storage#object\",\n"
+"        \"md5Hash\": \"...\",\n"
+"        \"metageneration\": \"1\",\n"
+"        \"name\": \"MY_FILE.txt\",\n"
+"        \"size\": \"352\",\n"
+"        \"storageClass\": \"MULTI_REGIONAL\",\n"
+"        \"timeCreated\": \"2020-04-23T07:38:57.230Z\",\n"
+"        \"timeStorageClassUpdated\": \"2020-04-23T07:38:57.230Z\",\n"
+"        \"updated\": \"2020-04-23T07:38:57.230Z\"\n"
+"      }'\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/funqy-gcp-functions.adoc:367
@@ -596,6 +661,11 @@ msgid ""
 "    <scope>test</scope>\n"
 "</dependency>\n"
 msgstr ""
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-test-google-cloud-functions</artifactId>\n"
+"    <scope>test</scope>\n"
+"</dependency>\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/funqy-gcp-functions.adoc:391
@@ -603,7 +673,7 @@ msgstr ""
 #: upstream/_versions/3.0/guides/funqy-gcp-functions.adoc:456
 #, no-wrap
 msgid "import static io.restassured.RestAssured.given;\n"
-msgstr ""
+msgstr "import static io.restassured.RestAssured.given;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/funqy-gcp-functions.adoc:393
@@ -611,7 +681,7 @@ msgstr ""
 #: upstream/_versions/3.0/guides/funqy-gcp-functions.adoc:458
 #, no-wrap
 msgid "import org.junit.jupiter.api.Test;\n"
-msgstr ""
+msgstr "import org.junit.jupiter.api.Test;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/funqy-gcp-functions.adoc:397
@@ -623,6 +693,9 @@ msgid ""
 "import io.quarkus.google.cloud.functions.test.WithFunction;\n"
 "import io.quarkus.test.junit.QuarkusTest;\n"
 msgstr ""
+"import io.quarkus.google.cloud.functions.test.FunctionType;\n"
+"import io.quarkus.google.cloud.functions.test.WithFunction;\n"
+"import io.quarkus.test.junit.QuarkusTest;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/funqy-gcp-functions.adoc:411
@@ -642,6 +715,19 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"@QuarkusTest // <1>\n"
+"@WithFunction(FunctionType.FUNQY_BACKGROUND) // <2>\n"
+"class GreetingFunctionsPubsubTest {\n"
+"    @Test\n"
+"    public void test() {\n"
+"        given()\n"
+"                .body(\"{\\\"data\\\":{\\\"data\\\":\\\"world\\\"}}\") // <3>\n"
+"                .when()\n"
+"                .post()\n"
+"                .then()\n"
+"                .statusCode(200);\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/funqy-gcp-functions.adoc:415
@@ -668,6 +754,19 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"@QuarkusTest // <1>\n"
+"@WithFunction(FunctionType.FUNQY_BACKGROUND) // <2>\n"
+"class GreetingFunctionsStorageTest {\n"
+"    @Test\n"
+"    public void test() {\n"
+"        given()\n"
+"                .body(\"{\\\"data\\\":{\\\"name\\\":\\\"hello.txt\\\"}}\") // <2>\n"
+"                .when()\n"
+"                .post()\n"
+"                .then()\n"
+"                .statusCode(200);\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/funqy-gcp-functions.adoc:448
@@ -710,6 +809,37 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"@QuarkusTest // <1>\n"
+"@WithFunction(FunctionType.FUNQY_CLOUD_EVENTS) // <2>\n"
+"class GreetingFunctionsCloudEventTest {\n"
+"    @Test\n"
+"    public void test() {\n"
+"        given()\n"
+"                .body(\"{\\n\" + // <3>\n"
+"                        \"        \\\"bucket\\\": \\\"MY_BUCKET\\\",\\n\" +\n"
+"                        \"        \\\"contentType\\\": \\\"text/plain\\\",\\n\" +\n"
+"                        \"        \\\"kind\\\": \\\"storage#object\\\",\\n\" +\n"
+"                        \"        \\\"md5Hash\\\": \\\"...\\\",\\n\" +\n"
+"                        \"        \\\"metageneration\\\": \\\"1\\\",\\n\" +\n"
+"                        \"        \\\"name\\\": \\\"MY_FILE.txt\\\",\\n\" +\n"
+"                        \"        \\\"size\\\": \\\"352\\\",\\n\" +\n"
+"                        \"        \\\"storageClass\\\": \\\"MULTI_REGIONAL\\\",\\n\" +\n"
+"                        \"        \\\"timeCreated\\\": \\\"2020-04-23T07:38:57.230Z\\\",\\n\" +\n"
+"                        \"        \\\"timeStorageClassUpdated\\\": \\\"2020-04-23T07:38:57.230Z\\\",\\n\" +\n"
+"                        \"        \\\"updated\\\": \\\"2020-04-23T07:38:57.230Z\\\"\\n\" +\n"
+"                        \"      }\")\n"
+"                .header(\"ce-id\", \"123451234512345\") // <4>\n"
+"                .header(\"ce-specversion\", \"1.0\")\n"
+"                .header(\"ce-time\", \"2020-01-02T12:34:56.789Z\")\n"
+"                .header(\"ce-type\", \"google.cloud.storage.object.v1.finalized\")\n"
+"                .header(\"ce-source\", \"//storage.googleapis.com/projects/_/buckets/MY-BUCKET-NAME\")\n"
+"                .header(\"ce-subject\", \"objects/MY_FILE.txt\")\n"
+"                .when()\n"
+"                .post()\n"
+"                .then()\n"
+"                .statusCode(200);\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/funqy-gcp-functions.adoc:499

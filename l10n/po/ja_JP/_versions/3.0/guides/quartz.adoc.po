@@ -129,6 +129,10 @@ msgid ""
 "    <artifactId>quarkus-quartz</artifactId>\n"
 "</dependency>\n"
 msgstr ""
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-quartz</artifactId>\n"
+"</dependency>\n"
 
 #. type: Block title
 #: upstream/_versions/3.0/guides/quartz.adoc:72
@@ -140,7 +144,7 @@ msgstr "build.gradle"
 #: upstream/_versions/3.0/guides/quartz.adoc:75
 #, no-wrap
 msgid "implementation(\"io.quarkus:quarkus-quartz\")\n"
-msgstr ""
+msgstr "implementation(\"io.quarkus:quarkus-quartz\")\n"
 
 #. type: delimited block =
 #: upstream/_versions/3.0/guides/quartz.adoc:80
@@ -166,7 +170,7 @@ msgstr "`org.acme.quartz` パッケージで、以下の内容の `Task` クラ�
 #: upstream/_versions/3.0/guides/quartz.adoc:264
 #, no-wrap
 msgid "package org.acme.quartz;\n"
-msgstr ""
+msgstr "package org.acme.quartz;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/quartz.adoc:93
@@ -176,12 +180,15 @@ msgid ""
 "import java.time.Instant;\n"
 "import jakarta.persistence.Table;\n"
 msgstr ""
+"import jakarta.persistence.Entity;\n"
+"import java.time.Instant;\n"
+"import jakarta.persistence.Table;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/quartz.adoc:95
 #, no-wrap
 msgid "import io.quarkus.hibernate.orm.panache.PanacheEntity;\n"
-msgstr ""
+msgstr "import io.quarkus.hibernate.orm.panache.PanacheEntity;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/quartz.adoc:100
@@ -192,6 +199,10 @@ msgid ""
 "public class Task extends PanacheEntity { <1>\n"
 "    public Instant createdAt;\n"
 msgstr ""
+"@Entity\n"
+"@Table(name=\"TASKS\")\n"
+"public class Task extends PanacheEntity { <1>\n"
+"    public Instant createdAt;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/quartz.adoc:104
@@ -201,6 +212,9 @@ msgid ""
 "        createdAt = Instant.now();\n"
 "    }\n"
 msgstr ""
+"    public Task() {\n"
+"        createdAt = Instant.now();\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/quartz.adoc:109
@@ -211,6 +225,10 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    public Task(Instant time) {\n"
+"        this.createdAt = time;\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/quartz.adoc:111
@@ -232,19 +250,19 @@ msgstr "`org.acme.quartz` パッケージで、以下の内容の `TaskBean` ク
 #: upstream/_versions/3.0/guides/quartz.adoc:121
 #, no-wrap
 msgid "import jakarta.enterprise.context.ApplicationScoped;\n"
-msgstr ""
+msgstr "import jakarta.enterprise.context.ApplicationScoped;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/quartz.adoc:123
 #, no-wrap
 msgid "import jakarta.transaction.Transactional;\n"
-msgstr ""
+msgstr "import jakarta.transaction.Transactional;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/quartz.adoc:125
 #, no-wrap
 msgid "import io.quarkus.scheduler.Scheduled;\n"
-msgstr ""
+msgstr "import io.quarkus.scheduler.Scheduled;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/quartz.adoc:128
@@ -253,6 +271,8 @@ msgid ""
 "@ApplicationScoped <1>\n"
 "public class TaskBean {\n"
 msgstr ""
+"@ApplicationScoped <1>\n"
+"public class TaskBean {\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/quartz.adoc:136
@@ -266,6 +286,13 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    @Transactional\n"
+"    @Scheduled(every = \"10s\", identity = \"task-job\") <2>\n"
+"    void schedule() {\n"
+"        Task task = new Task(); <3>\n"
+"        task.persist(); <4>\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/quartz.adoc:138
@@ -305,6 +332,8 @@ msgid ""
 "@ApplicationScoped\n"
 "public class TaskBean {\n"
 msgstr ""
+"@ApplicationScoped\n"
+"public class TaskBean {\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/quartz.adoc:156
@@ -313,6 +342,8 @@ msgid ""
 "    @Inject\n"
 "    org.quartz.Scheduler quartz; <1>\n"
 msgstr ""
+"    @Inject\n"
+"    org.quartz.Scheduler quartz; <1>\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/quartz.adoc:171
@@ -333,6 +364,20 @@ msgid ""
 "       quartz.scheduleJob(job, trigger); <2>\n"
 "    }\n"
 msgstr ""
+"    void onStart(@Observes StartupEvent event) throws SchedulerException {\n"
+"       JobDetail job = JobBuilder.newJob(MyJob.class)\n"
+"                         .withIdentity(\"myJob\", \"myGroup\")\n"
+"                         .build();\n"
+"       Trigger trigger = TriggerBuilder.newTrigger()\n"
+"                            .withIdentity(\"myTrigger\", \"myGroup\")\n"
+"                            .startNow()\n"
+"                            .withSchedule(\n"
+"                               SimpleScheduleBuilder.simpleSchedule()\n"
+"                                  .withIntervalInSeconds(10)\n"
+"                                  .repeatForever())\n"
+"                            .build();\n"
+"       quartz.scheduleJob(job, trigger); <2>\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/quartz.adoc:177
@@ -344,6 +389,11 @@ msgid ""
 "        task.persist();\n"
 "    }\n"
 msgstr ""
+"    @Transactional\n"
+"    void performTask() {\n"
+"        Task task = new Task();\n"
+"        task.persist();\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/quartz.adoc:180
@@ -352,6 +402,8 @@ msgid ""
 "    // A new instance of MyJob is created by Quartz for every job execution\n"
 "    public static class MyJob implements Job {\n"
 msgstr ""
+"    // A new instance of MyJob is created by Quartz for every job execution\n"
+"    public static class MyJob implements Job {\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/quartz.adoc:183
@@ -360,6 +412,8 @@ msgid ""
 "       @Inject\n"
 "       TaskBean taskBean;\n"
 msgstr ""
+"       @Inject\n"
+"       TaskBean taskBean;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/quartz.adoc:187
@@ -369,6 +423,9 @@ msgid ""
 "          taskBean.performTask(); <3>\n"
 "       }\n"
 msgstr ""
+"       public void execute(JobExecutionContext context) throws JobExecutionException {\n"
+"          taskBean.performTask(); <3>\n"
+"       }\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/quartz.adoc:190
@@ -377,6 +434,8 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/quartz.adoc:192
@@ -418,6 +477,10 @@ msgid ""
 "quarkus.quartz.store-type=jdbc-cmt <2>\n"
 "quarkus.quartz.misfire-policy.task-job=ignore-misfire-policy <3>\n"
 msgstr ""
+"# Quartz configuration\n"
+"quarkus.quartz.clustered=true <1>\n"
+"quarkus.quartz.store-type=jdbc-cmt <2>\n"
+"quarkus.quartz.misfire-policy.task-job=ignore-misfire-policy <3>\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/quartz.adoc:212
@@ -429,6 +492,11 @@ msgid ""
 "quarkus.datasource.password=quarkus_test\n"
 "quarkus.datasource.jdbc.url=jdbc:postgresql://localhost/quarkus_test\n"
 msgstr ""
+"# Datasource configuration.\n"
+"quarkus.datasource.db-kind=postgresql\n"
+"quarkus.datasource.username=quarkus_test\n"
+"quarkus.datasource.password=quarkus_test\n"
+"quarkus.datasource.jdbc.url=jdbc:postgresql://localhost/quarkus_test\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/quartz.adoc:217
@@ -439,6 +507,10 @@ msgid ""
 "quarkus.hibernate-orm.log.sql=true\n"
 "quarkus.hibernate-orm.sql-load-script=no-file\n"
 msgstr ""
+"# Hibernate configuration\n"
+"quarkus.hibernate-orm.database.generation=none\n"
+"quarkus.hibernate-orm.log.sql=true\n"
+"quarkus.hibernate-orm.sql-load-script=no-file\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/quartz.adoc:225
@@ -452,6 +524,13 @@ msgid ""
 "quarkus.flyway.baseline-version=1.0\n"
 "quarkus.flyway.baseline-description=Quartz\n"
 msgstr ""
+"# flyway configuration\n"
+"quarkus.flyway.connect-retries=10\n"
+"quarkus.flyway.table=flyway_quarkus_history\n"
+"quarkus.flyway.migrate-at-start=true\n"
+"quarkus.flyway.baseline-on-migrate=true\n"
+"quarkus.flyway.baseline-version=1.0\n"
+"quarkus.flyway.baseline-description=Quartz\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/quartz.adoc:227
@@ -488,7 +567,7 @@ msgstr "`org.acme.quartz.TaskResource` クラスを以下の内容で作成し�
 #: upstream/_versions/3.0/guides/quartz.adoc:242
 #, no-wrap
 msgid "import java.util.List;\n"
-msgstr ""
+msgstr "import java.util.List;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/quartz.adoc:247
@@ -499,6 +578,10 @@ msgid ""
 "import jakarta.ws.rs.Produces;\n"
 "import jakarta.ws.rs.core.MediaType;\n"
 msgstr ""
+"import jakarta.ws.rs.GET;\n"
+"import jakarta.ws.rs.Path;\n"
+"import jakarta.ws.rs.Produces;\n"
+"import jakarta.ws.rs.core.MediaType;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/quartz.adoc:250
@@ -507,6 +590,8 @@ msgid ""
 "@Path(\"/tasks\")\n"
 "public class TaskResource {\n"
 msgstr ""
+"@Path(\"/tasks\")\n"
+"public class TaskResource {\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/quartz.adoc:256
@@ -518,6 +603,11 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    @GET\n"
+"    public List<Task> listAll() {\n"
+"        return Task.listAll(); <1>\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/quartz.adoc:258
@@ -533,19 +623,19 @@ msgstr "また、以下の内容で `org.acme.quartz.TaskResourceTest` テスト
 #: upstream/_versions/3.0/guides/quartz.adoc:266
 #, no-wrap
 msgid "import io.quarkus.test.junit.QuarkusTest;\n"
-msgstr ""
+msgstr "import io.quarkus.test.junit.QuarkusTest;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/quartz.adoc:268
 #, no-wrap
 msgid "import static org.hamcrest.Matchers.greaterThanOrEqualTo;\n"
-msgstr ""
+msgstr "import static org.hamcrest.Matchers.greaterThanOrEqualTo;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/quartz.adoc:270
 #, no-wrap
 msgid "import org.junit.jupiter.api.Test;\n"
-msgstr ""
+msgstr "import org.junit.jupiter.api.Test;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/quartz.adoc:273
@@ -554,6 +644,8 @@ msgid ""
 "import static io.restassured.RestAssured.given;\n"
 "import static org.hamcrest.CoreMatchers.is;\n"
 msgstr ""
+"import static io.restassured.RestAssured.given;\n"
+"import static org.hamcrest.CoreMatchers.is;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/quartz.adoc:276
@@ -562,6 +654,8 @@ msgid ""
 "@QuarkusTest\n"
 "public class TaskResourceTest {\n"
 msgstr ""
+"@QuarkusTest\n"
+"public class TaskResourceTest {\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/quartz.adoc:287
@@ -578,6 +672,16 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    @Test\n"
+"    public void tasks() throws InterruptedException {\n"
+"        Thread.sleep(1000); // wait at least a second to have the first task created\n"
+"        given()\n"
+"                .when().get(\"/tasks\")\n"
+"                .then()\n"
+"                .statusCode(200)\n"
+"                .body(\"size()\", is(greaterThanOrEqualTo(1))); <1>\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/quartz.adoc:289
@@ -610,7 +714,7 @@ msgstr "ルートディレクトリーに、以下の内容の `nginx.conf` フ�
 #: upstream/_versions/3.0/guides/quartz.adoc:302
 #, no-wrap
 msgid "user  nginx;\n"
-msgstr ""
+msgstr "user  nginx;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/quartz.adoc:306
@@ -620,6 +724,9 @@ msgid ""
 "    worker_connections   1000;\n"
 "}\n"
 msgstr ""
+"events {\n"
+"    worker_connections   1000;\n"
+"}\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/quartz.adoc:315
@@ -634,6 +741,14 @@ msgid ""
 "        }\n"
 "}\n"
 msgstr ""
+"http {\n"
+"        server {\n"
+"              listen 8080;\n"
+"              location / {\n"
+"                proxy_pass http://tasks:8080; <1>\n"
+"              }\n"
+"        }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/quartz.adoc:317
@@ -655,7 +770,7 @@ msgstr "ルートディレクトリーに、以下の内容の `docker-compose.y
 #: upstream/_versions/3.0/guides/quartz.adoc:325
 #, no-wrap
 msgid "version: '3'\n"
-msgstr ""
+msgstr "version: '3'\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/quartz.adoc:338
@@ -674,6 +789,18 @@ msgid ""
 "    depends_on:\n"
 "      - postgres\n"
 msgstr ""
+"services:\n"
+"  tasks: <1>\n"
+"    image: quarkus-quickstarts/quartz:1.0\n"
+"    build:\n"
+"      context: ./\n"
+"      dockerfile: src/main/docker/Dockerfile.${QUARKUS_MODE:-jvm}\n"
+"    environment:\n"
+"      QUARKUS_DATASOURCE_URL: jdbc:postgresql://postgres/quarkus_test\n"
+"    networks:\n"
+"      - tasks-network\n"
+"    depends_on:\n"
+"      - postgres\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/quartz.adoc:349
@@ -690,6 +817,16 @@ msgid ""
 "    networks:\n"
 "      - tasks-network\n"
 msgstr ""
+"  nginx: <2>\n"
+"    image: nginx:1.17.6\n"
+"    volumes:\n"
+"      - ./nginx.conf:/etc/nginx/nginx.conf:ro\n"
+"    depends_on:\n"
+"      - tasks\n"
+"    ports:\n"
+"      - 8080:8080\n"
+"    networks:\n"
+"      - tasks-network\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/quartz.adoc:361
@@ -707,6 +844,17 @@ msgid ""
 "    networks:\n"
 "      - tasks-network\n"
 msgstr ""
+"  postgres: <3>\n"
+"    image: postgres:14.1\n"
+"    container_name: quarkus_test\n"
+"    environment:\n"
+"      - POSTGRES_USER=quarkus_test\n"
+"      - POSTGRES_PASSWORD=quarkus_test\n"
+"      - POSTGRES_DB=quarkus_test\n"
+"    ports:\n"
+"      - 5432:5432\n"
+"    networks:\n"
+"      - tasks-network\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/quartz.adoc:365
@@ -716,6 +864,9 @@ msgid ""
 "  tasks-network:\n"
 "    driver: bridge\n"
 msgstr ""
+"networks:\n"
+"  tasks-network:\n"
+"    driver: bridge\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/quartz.adoc:367
@@ -747,7 +898,7 @@ msgstr "別のターミナルで以下のコマンドを実行します:"
 #: upstream/_versions/3.0/guides/quartz.adoc:377
 #, no-wrap
 msgid "docker-compose up postgres <1>\n"
-msgstr ""
+msgstr "docker-compose up postgres <1>\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/quartz.adoc:379
@@ -806,7 +957,7 @@ msgstr "ビルドに成功したら、以下のコマンドを実行します:"
 #: upstream/_versions/3.0/guides/quartz.adoc:409
 #, no-wrap
 msgid "docker-compose up --scale tasks=2 --scale nginx=1 <1>\n"
-msgstr ""
+msgstr "docker-compose up --scale tasks=2 --scale nginx=1 <1>\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/quartz.adoc:411
@@ -838,7 +989,7 @@ msgstr "デフォルトでは、スケジューラはマシンホスト名と現
 #: upstream/_versions/3.0/guides/quartz.adoc:428
 #, no-wrap
 msgid "quarkus.quartz.instance-id=${HOST:AUTO} <1>\n"
-msgstr ""
+msgstr "quarkus.quartz.instance-id=${HOST:AUTO} <1>\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/quartz.adoc:430
@@ -857,6 +1008,8 @@ msgid ""
 "quarkus.quartz.instance-id=hostname\n"
 "quarkus.quartz.instance-id-generators.hostname.class=org.quartz.simpl.HostnameInstanceIdGenerator\n"
 msgstr ""
+"quarkus.quartz.instance-id=hostname\n"
+"quarkus.quartz.instance-id-generators.hostname.class=org.quartz.simpl.HostnameInstanceIdGenerator\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/quartz.adoc:440
@@ -886,6 +1039,8 @@ msgid ""
 "quarkus.quartz.plugins.jobHistory.class=org.quartz.plugins.history.LoggingJobHistoryPlugin\n"
 "quarkus.quartz.plugins.jobHistory.properties.jobSuccessMessage=Job [{1}.{0}] execution complete and reports: {8}\n"
 msgstr ""
+"quarkus.quartz.plugins.jobHistory.class=org.quartz.plugins.history.LoggingJobHistoryPlugin\n"
+"quarkus.quartz.plugins.jobHistory.properties.jobSuccessMessage=Job [{1}.{0}] execution complete and reports: {8}\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/quartz.adoc:455
@@ -903,6 +1058,12 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"public class MyListenerManager {\n"
+"    void onStart(@Observes StartupEvent event, org.quartz.Scheduler scheduler) throws SchedulerException {\n"
+"        scheduler.getListenerManager().addJobListener(new MyJogListener());\n"
+"        scheduler.getListenerManager().addTriggerListener(new MyTriggerListener());\n"
+"    }\n"
+"}\n"
 
 #. type: Title ==
 #: upstream/_versions/3.0/guides/quartz.adoc:467

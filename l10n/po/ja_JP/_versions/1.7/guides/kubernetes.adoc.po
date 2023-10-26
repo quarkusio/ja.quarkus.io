@@ -50,6 +50,13 @@ msgid ""
 "    -Dextensions=\"kubernetes, jib\"\n"
 "cd kubernetes-quickstart\n"
 msgstr ""
+"mvn io.quarkus:quarkus-maven-plugin:{quarkus-version}:create \\\n"
+"    -DprojectGroupId=org.acme \\\n"
+"    -DprojectArtifactId=kubernetes-quickstart \\\n"
+"    -DclassName=\"org.acme.rest.GreetingResource\" \\\n"
+"    -Dpath=\"/greeting\" \\\n"
+"    -Dextensions=\"kubernetes, jib\"\n"
+"cd kubernetes-quickstart\n"
 
 #. type: Block title
 #: upstream/_versions/1.7/guides/kubernetes.adoc:39
@@ -71,6 +78,14 @@ msgid ""
 "      <artifactId>quarkus-container-image-jib</artifactId>\n"
 "    </dependency>\n"
 msgstr ""
+"    <dependency>\n"
+"      <groupId>io.quarkus</groupId>\n"
+"      <artifactId>quarkus-kubernetes</artifactId>\n"
+"    </dependency>\n"
+"    <dependency>\n"
+"      <groupId>io.quarkus</groupId>\n"
+"      <artifactId>quarkus-container-image-jib</artifactId>\n"
+"    </dependency>\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/kubernetes.adoc:66
@@ -163,6 +178,82 @@ msgid ""
 " }\n"
 "}\n"
 msgstr ""
+"{\n"
+"  {\n"
+"    \"apiVersion\" : \"apps/v1\",\n"
+"    \"kind\" : \"Deployment\",\n"
+"    \"metadata\" : {\n"
+"      \"annotations\": {\n"
+"       \"app.quarkus.io/vcs-url\" : \"<some url>\",\n"
+"       \"app.quarkus.io/commit-id\" : \"<some git SHA>\",\n"
+"      },\n"
+"      \"labels\" : {\n"
+"        \"app.kubernetes.io/name\" : \"test-quarkus-app\",\n"
+"        \"app.kubernetes.io/version\" : \"1.0-SNAPSHOT\",\n"
+"      },\n"
+"      \"name\" : \"test-quarkus-app\"\n"
+"    },\n"
+"    \"spec\" : {\n"
+"      \"replicas\" : 1,\n"
+"      \"selector\" : {\n"
+"        \"matchLabels\" : {\n"
+"          \"app.kubernetes.io/name\" : \"test-quarkus-app\",\n"
+"          \"app.kubernetes.io/version\" : \"1.0-SNAPSHOT\",\n"
+"        }\n"
+"      },\n"
+"      \"template\" : {\n"
+"        \"metadata\" : {\n"
+"          \"labels\" : {\n"
+"            \"app.kubernetes.io/name\" : \"test-quarkus-app\",\n"
+"            \"app.kubernetes.io/version\" : \"1.0-SNAPSHOT\"\n"
+"          }\n"
+"        },\n"
+"        \"spec\" : {\n"
+"          \"containers\" : [ {\n"
+"            \"env\" : [ {\n"
+"              \"name\" : \"KUBERNETES_NAMESPACE\",\n"
+"              \"valueFrom\" : {\n"
+"                \"fieldRef\" : {\n"
+"                  \"fieldPath\" : \"metadata.namespace\"\n"
+"                }\n"
+"              }\n"
+"            } ],\n"
+"            \"image\" : \"yourDockerUsername/test-quarkus-app:1.0-SNAPSHOT\",\n"
+"            \"imagePullPolicy\" : \"IfNotPresent\",\n"
+"            \"name\" : \"test-quarkus-app\"\n"
+"          } ]\n"
+"        }\n"
+"      }\n"
+"    }\n"
+"  },\n"
+"  {\n"
+"  \"apiVersion\" : \"v1\",\n"
+"  \"kind\" : \"Service\",\n"
+"    \"metadata\" : {\n"
+"      \"annotations\": {\n"
+"       \"app.quarkus.io/vcs-url\" : \"<some url>\",\n"
+"       \"app.quarkus.io/commit-id\" : \"<some git SHA>\",\n"
+"      },\n"
+"      \"labels\" : {\n"
+"        \"app.kubernetes.io/name\" : \"test-quarkus-app\",\n"
+"        \"app.kubernetes.io/version\" : \"1.0-SNAPSHOT\",\n"
+"      },\n"
+"      \"name\" : \"test-quarkus-app\"\n"
+"    },\n"
+"  \"spec\" : {\n"
+"    \"ports\" : [ {\n"
+"      \"name\" : \"http\",\n"
+"      \"port\" : 8080,\n"
+"      \"targetPort\" : 8080\n"
+"    } ],\n"
+"    \"selector\" : {\n"
+"      \"app.kubernetes.io/name\" : \"test-quarkus-app\",\n"
+"      \"app.kubernetes.io/version\" : \"1.0-SNAPSHOT\"\n"
+"    },\n"
+"    \"type\" : \"ClusterIP\"\n"
+"  }\n"
+" }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/kubernetes.adoc:153
@@ -177,6 +268,9 @@ msgid ""
 "quarkus.container-image.name=demo-app #optional, defaults to the application name\n"
 "quarkus.container-image.tag=1.0       #optional, defaults to the application version\n"
 msgstr ""
+"quarkus.container-image.group=quarkus #optional, default to the system user name\n"
+"quarkus.container-image.name=demo-app #optional, defaults to the application name\n"
+"quarkus.container-image.tag=1.0       #optional, defaults to the application version\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/kubernetes.adoc:162
@@ -198,7 +292,7 @@ msgstr "Docker レジストリーは、以下のプロパティーで指定で�
 #: upstream/_versions/1.7/guides/kubernetes.adoc:170
 #, no-wrap
 msgid "quarkus.container-image.registry=http://my.docker-registry.net\n"
-msgstr ""
+msgstr "quarkus.container-image.registry=http://my.docker-registry.net\n"
 
 #. type: Title ===
 #: upstream/_versions/1.7/guides/kubernetes.adoc:175
@@ -225,6 +319,9 @@ msgid ""
 "quarkus.kubernetes.name=todo-rest\n"
 "quarkus.kubernetes.version=1.0-rc.1\n"
 msgstr ""
+"quarkus.kubernetes.part-of=todo-app\n"
+"quarkus.kubernetes.name=todo-rest\n"
+"quarkus.kubernetes.version=1.0-rc.1\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/kubernetes.adoc:191
@@ -241,6 +338,11 @@ msgid ""
 "    \"app.kubernetes.io/version\" : \"1.0-rc.1\"\n"
 "  }\n"
 msgstr ""
+"  \"labels\" : {\n"
+"    \"app.kubernetes.io/part-of\" : \"todo-app\",\n"
+"    \"app.kubernetes.io/name\" : \"todo-rest\",\n"
+"    \"app.kubernetes.io/version\" : \"1.0-rc.1\"\n"
+"  }\n"
 
 #. type: Title ====
 #: upstream/_versions/1.7/guides/kubernetes.adoc:201
@@ -257,7 +359,7 @@ msgstr "追加のカスタムラベルを追加するには、例えば `foo=bar
 #: upstream/_versions/1.7/guides/kubernetes.adoc:208
 #, no-wrap
 msgid "quarkus.kubernetes.labels.foo=bar\n"
-msgstr ""
+msgstr "quarkus.kubernetes.labels.foo=bar\n"
 
 #. type: Title ====
 #: upstream/_versions/1.7/guides/kubernetes.adoc:210
@@ -279,6 +381,10 @@ msgid ""
 "    \"app.quarkus.io/commit-id\" : \"<some git SHA>\",\n"
 "   }\n"
 msgstr ""
+"  \"annotations\": {\n"
+"    \"app.quarkus.io/vcs-url\" : \"<some url>\",\n"
+"    \"app.quarkus.io/commit-id\" : \"<some git SHA>\",\n"
+"   }\n"
 
 #. type: Title ====
 #: upstream/_versions/1.7/guides/kubernetes.adoc:222
@@ -290,7 +396,7 @@ msgstr "カスタムアノテーション"
 #: upstream/_versions/1.7/guides/kubernetes.adoc:230
 #, no-wrap
 msgid "quarkus.kubernetes.annotations.foo=bar\n"
-msgstr ""
+msgstr "quarkus.kubernetes.annotations.foo=bar\n"
 
 #. type: Title ====
 #: upstream/_versions/1.7/guides/kubernetes.adoc:232
@@ -317,7 +423,7 @@ msgstr "生成されたリソースに環境変数としてキーとバリュー
 #: upstream/_versions/1.7/guides/kubernetes.adoc:246
 #, no-wrap
 msgid "quarkus.kubernetes.env-vars.my-env-var.value=foobar\n"
-msgstr ""
+msgstr "quarkus.kubernetes.env-vars.my-env-var.value=foobar\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/kubernetes.adoc:250
@@ -334,7 +440,7 @@ msgstr "シークレットからの環境変数"
 #: upstream/_versions/1.7/guides/kubernetes.adoc:261
 #, no-wrap
 msgid "quarkus.kubernetes.env-vars.my-env-var.secret=my-secret\n"
-msgstr ""
+msgstr "quarkus.kubernetes.env-vars.my-env-var.secret=my-secret\n"
 
 #. type: Title =====
 #: upstream/_versions/1.7/guides/kubernetes.adoc:263
@@ -346,7 +452,7 @@ msgstr "ConfigMap から環境変数を取得"
 #: upstream/_versions/1.7/guides/kubernetes.adoc:270
 #, no-wrap
 msgid "quarkus.kubernetes.env-vars.my-env-var.configmap=my-secret\n"
-msgstr ""
+msgstr "quarkus.kubernetes.env-vars.my-env-var.configmap=my-secret\n"
 
 #. type: Title ====
 #: upstream/_versions/1.7/guides/kubernetes.adoc:273
@@ -363,7 +469,7 @@ msgstr "Kubernetes エクステンションを使用すると、アプリケー�
 #: upstream/_versions/1.7/guides/kubernetes.adoc:281
 #, no-wrap
 msgid "quarkus.kubernetes.mounts.my-volume.path=/where/to/mount\n"
-msgstr ""
+msgstr "quarkus.kubernetes.mounts.my-volume.path=/where/to/mount\n"
 
 #. type: Title =====
 #: upstream/_versions/1.7/guides/kubernetes.adoc:286
@@ -375,7 +481,7 @@ msgstr "シークレットのボリューム"
 #: upstream/_versions/1.7/guides/kubernetes.adoc:291
 #, no-wrap
 msgid "quarkus.kubernetes.secret-volumes.my-volume.secret-name=my-secret\n"
-msgstr ""
+msgstr "quarkus.kubernetes.secret-volumes.my-volume.secret-name=my-secret\n"
 
 #. type: Title =====
 #: upstream/_versions/1.7/guides/kubernetes.adoc:293
@@ -387,7 +493,7 @@ msgstr "ConfigMap ボリューム"
 #: upstream/_versions/1.7/guides/kubernetes.adoc:298
 #, no-wrap
 msgid "quarkus.kubernetes.config-map-volumes.my-volume.config-map-name=my-secret\n"
-msgstr ""
+msgstr "quarkus.kubernetes.config-map-volumes.my-volume.config-map-name=my-secret\n"
 
 #. type: Title ===
 #: upstream/_versions/1.7/guides/kubernetes.adoc:300
@@ -404,7 +510,7 @@ msgstr "レプリカ数を1から3に変更するためには次のようにし�
 #: upstream/_versions/1.7/guides/kubernetes.adoc:307
 #, no-wrap
 msgid "quarkus.kubernetes.replicas=3\n"
-msgstr ""
+msgstr "quarkus.kubernetes.replicas=3\n"
 
 #. type: Title ===
 #: upstream/_versions/1.7/guides/kubernetes.adoc:309
@@ -421,6 +527,10 @@ msgid ""
 "      <artifactId>quarkus-smallrye-health</artifactId>\n"
 "    </dependency>\n"
 msgstr ""
+"    <dependency>\n"
+"      <groupId>io.quarkus</groupId>\n"
+"      <artifactId>quarkus-smallrye-health</artifactId>\n"
+"    </dependency>\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/kubernetes.adoc:323
@@ -446,6 +556,8 @@ msgid ""
 "quarkus.kubernetes.readiness-probe.initial-delay=20s\n"
 "quarkus.kubernetes.readiness-probe.period=45s\n"
 msgstr ""
+"quarkus.kubernetes.readiness-probe.initial-delay=20s\n"
+"quarkus.kubernetes.readiness-probe.period=45s\n"
 
 #. type: Title ===
 #: upstream/_versions/1.7/guides/kubernetes.adoc:333
@@ -467,6 +579,10 @@ msgid ""
 "      <artifactId>quarkus-kubernetes-client</artifactId>\n"
 "    </dependency>\n"
 msgstr ""
+"    <dependency>\n"
+"      <groupId>io.quarkus</groupId>\n"
+"      <artifactId>quarkus-kubernetes-client</artifactId>\n"
+"    </dependency>\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/kubernetes.adoc:348
@@ -1445,7 +1561,7 @@ msgstr "OpenShift リソースの生成を有効にするには、ターゲッ�
 #: upstream/_versions/1.7/guides/kubernetes.adoc:531
 #, no-wrap
 msgid "quarkus.kubernetes.deployment-target=openshift\n"
-msgstr ""
+msgstr "quarkus.kubernetes.deployment-target=openshift\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/kubernetes.adoc:534
@@ -1456,7 +1572,7 @@ msgstr "両方のプラットフォーム(バニラKubernetesとOpenShift)のリ
 #: upstream/_versions/1.7/guides/kubernetes.adoc:538
 #, no-wrap
 msgid "quarkus.kubernetes.deployment-target=kubernetes, openshift\n"
-msgstr ""
+msgstr "quarkus.kubernetes.deployment-target=kubernetes, openshift\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/kubernetes.adoc:544
@@ -1642,7 +1758,7 @@ msgstr "Knative"
 #: upstream/_versions/1.7/guides/kubernetes.adoc:588
 #, no-wrap
 msgid "quarkus.kubernetes.deployment-target=knative\n"
-msgstr ""
+msgstr "quarkus.kubernetes.deployment-target=knative\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/kubernetes.adoc:630
@@ -1680,6 +1796,37 @@ msgid ""
 "  }\n"
 "}\n"
 msgstr ""
+"{\n"
+"  {\n"
+"    \"apiVersion\" : \"serving.quarkus.knative.dev/v1alpha1\",\n"
+"    \"kind\" : \"Service\",\n"
+"    \"metadata\" : {\n"
+"      \"annotations\": {\n"
+"       \"app.quarkus.io/vcs-url\" : \"<some url>\",\n"
+"       \"app.quarkus.io/commit-id\" : \"<some git SHA>\"\n"
+"      },\n"
+"      \"labels\" : {\n"
+"        \"app.kubernetes.io/name\" : \"test-quarkus-app\",\n"
+"        \"app.kubernetes.io/version\" : \"1.0-SNAPSHOT\"\n"
+"      },\n"
+"      \"name\" : \"quarkus.knative.\n"
+"    },\n"
+"    \"spec\" : {\n"
+"      \"runLatest\" : {\n"
+"        \"configuration\" : {\n"
+"          \"revisionTemplate\" : {\n"
+"            \"spec\" : {\n"
+"              \"container\" : {\n"
+"                \"image\" : \"dev.local/yourDockerUsername/test-quarkus-app:1.0-SNAPSHOT\",\n"
+"                \"imagePullPolicy\" : \"IfNotPresent\"\n"
+"              }\n"
+"            }\n"
+"          }\n"
+"        }\n"
+"      }\n"
+"    }\n"
+"  }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/kubernetes.adoc:633
@@ -1911,6 +2058,9 @@ msgid ""
 "kubernetes.labels[0].name=foo\n"
 "kubernetes.labels[0].value=bar\n"
 msgstr ""
+"# Old labels config:\n"
+"kubernetes.labels[0].name=foo\n"
+"kubernetes.labels[0].value=bar\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/kubernetes.adoc:694
@@ -1919,6 +2069,8 @@ msgid ""
 "# New labels\n"
 "quarkus.kubernetes.labels.foo=bar\n"
 msgstr ""
+"# New labels\n"
+"quarkus.kubernetes.labels.foo=bar\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/kubernetes.adoc:697
@@ -1933,6 +2085,9 @@ msgid ""
 "kubernetes.env-vars[0].name=foo\n"
 "kubernetes.env-vars[0].configmap=my-configmap\n"
 msgstr ""
+"# Old env-vars config:\n"
+"kubernetes.env-vars[0].name=foo\n"
+"kubernetes.env-vars[0].configmap=my-configmap\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/kubernetes.adoc:706
@@ -1941,6 +2096,8 @@ msgid ""
 "# New env-vars\n"
 "quarkus.kubernetes.env-vars.foo.configmap=myconfigmap\n"
 msgstr ""
+"# New env-vars\n"
+"quarkus.kubernetes.env-vars.foo.configmap=myconfigmap\n"
 
 #. type: Title ==
 #: upstream/_versions/1.7/guides/kubernetes.adoc:709
@@ -1957,7 +2114,7 @@ msgstr "コンテナーイメージをビルドしてデプロイするには、
 #: upstream/_versions/1.7/guides/kubernetes.adoc:717
 #, no-wrap
 msgid "./mvnw clean package -Dquarkus.kubernetes.deploy=true\n"
-msgstr ""
+msgstr "./mvnw clean package -Dquarkus.kubernetes.deploy=true\n"
 
 #. type: Title ===
 #: upstream/_versions/1.7/guides/kubernetes.adoc:719

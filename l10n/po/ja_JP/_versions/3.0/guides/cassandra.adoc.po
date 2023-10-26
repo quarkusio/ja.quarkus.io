@@ -113,6 +113,9 @@ msgid ""
 "@PropertyStrategy(mutable = false)\n"
 "public class Fruit {\n"
 msgstr ""
+"@Entity\n"
+"@PropertyStrategy(mutable = false)\n"
+"public class Fruit {\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/cassandra.adoc:73
@@ -121,12 +124,14 @@ msgid ""
 "    @PartitionKey\n"
 "    private final String name;\n"
 msgstr ""
+"    @PartitionKey\n"
+"    private final String name;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/cassandra.adoc:75
 #, no-wrap
 msgid "    private final String description;\n"
-msgstr ""
+msgstr "    private final String description;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/cassandra.adoc:82
@@ -139,6 +144,12 @@ msgid ""
 "  // getters, hashCode, equals, toString methods omitted for brevity\n"
 "}\n"
 msgstr ""
+"    public Fruit(String name, String description) {\n"
+"      this.name = name;\n"
+"      this.description = description;\n"
+"    }\n"
+"  // getters, hashCode, equals, toString methods omitted for brevity\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/cassandra.adoc:87
@@ -174,6 +185,10 @@ msgid ""
 "  @Update\n"
 "  void update(Fruit fruit);\n"
 msgstr ""
+"@Dao\n"
+"public interface FruitDao {\n"
+"  @Update\n"
+"  void update(Fruit fruit);\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/cassandra.adoc:112
@@ -183,6 +198,9 @@ msgid ""
 "  PagingIterable<Fruit> findAll();\n"
 "}\n"
 msgstr ""
+"  @Select\n"
+"  PagingIterable<Fruit> findAll();\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/cassandra.adoc:117
@@ -204,6 +222,11 @@ msgid ""
 "  FruitDao fruitDao();\n"
 "}\n"
 msgstr ""
+"@Mapper\n"
+"public interface FruitMapper {\n"
+"  @DaoFactory\n"
+"  FruitDao fruitDao();\n"
+"}\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/cassandra.adoc:185
@@ -225,12 +248,27 @@ msgid ""
 "  </configuration>\n"
 "</plugin>\n"
 msgstr ""
+"<plugin>\n"
+"  <artifactId>maven-compiler-plugin</artifactId>\n"
+"  <version>3.10.1</version>\n"
+"  <configuration>\n"
+"    <source>${java.version}</source>\n"
+"    <target>${java.version}</target>\n"
+"    <annotationProcessorPaths>\n"
+"      <path>\n"
+"        <groupId>com.datastax.oss.quarkus</groupId>\n"
+"        <artifactId>cassandra-quarkus-mapper-processor</artifactId>\n"
+"        <version>${cassandra-quarkus.version}</version>\n"
+"      </path>\n"
+"    </annotationProcessorPaths>\n"
+"  </configuration>\n"
+"</plugin>\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/cassandra.adoc:192
 #, no-wrap
 msgid "annotationProcessor \"com.datastax.oss.quarkus:cassandra-quarkus-mapper-processor:${cassandra-quarkus.version}\"\n"
-msgstr ""
+msgstr "annotationProcessor \"com.datastax.oss.quarkus:cassandra-quarkus-mapper-processor:${cassandra-quarkus.version}\"\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/cassandra.adoc:211
@@ -241,6 +279,10 @@ msgid ""
 "  <artifactId>java-driver-mapper-runtime</artifactId>\n"
 "</dependency>\n"
 msgstr ""
+"<dependency>\n"
+"  <groupId>com.datastax.oss</groupId>\n"
+"  <artifactId>java-driver-mapper-runtime</artifactId>\n"
+"</dependency>\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/cassandra.adoc:224
@@ -254,12 +296,14 @@ msgid ""
 "@ApplicationScoped\n"
 "public class FruitService {\n"
 msgstr ""
+"@ApplicationScoped\n"
+"public class FruitService {\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/cassandra.adoc:231
 #, no-wrap
 msgid "  @Inject FruitDao dao;\n"
-msgstr ""
+msgstr "  @Inject FruitDao dao;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/cassandra.adoc:235
@@ -269,6 +313,9 @@ msgid ""
 "    dao.update(fruit);\n"
 "  }\n"
 msgstr ""
+"  public void save(Fruit fruit) {\n"
+"    dao.update(fruit);\n"
+"  }\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/cassandra.adoc:240
@@ -279,6 +326,10 @@ msgid ""
 "  }\n"
 "}\n"
 msgstr ""
+"  public List<Fruit> getAll() {\n"
+"    return dao.findAll().all();\n"
+"  }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/cassandra.adoc:247
@@ -314,12 +365,16 @@ msgid ""
 "@Consumes(MediaType.APPLICATION_JSON)\n"
 "public class FruitResource {\n"
 msgstr ""
+"@Path(\"/fruits\")\n"
+"@Produces(MediaType.APPLICATION_JSON)\n"
+"@Consumes(MediaType.APPLICATION_JSON)\n"
+"public class FruitResource {\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/cassandra.adoc:271
 #, no-wrap
 msgid "  @Inject FruitService fruitService;\n"
-msgstr ""
+msgstr "  @Inject FruitService fruitService;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/cassandra.adoc:276
@@ -330,6 +385,10 @@ msgid ""
 "    return fruitService.getAll().stream().map(this::convertToDto).collect(Collectors.toList());\n"
 "  }\n"
 msgstr ""
+"  @GET\n"
+"  public List<FruitDto> getAll() {\n"
+"    return fruitService.getAll().stream().map(this::convertToDto).collect(Collectors.toList());\n"
+"  }\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/cassandra.adoc:281
@@ -340,6 +399,10 @@ msgid ""
 "    fruitService.save(convertFromDto(fruit));\n"
 "  }\n"
 msgstr ""
+"  @POST\n"
+"  public void add(FruitDto fruit) {\n"
+"    fruitService.save(convertFromDto(fruit));\n"
+"  }\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/cassandra.adoc:285
@@ -350,6 +413,9 @@ msgid ""
 "    return new FruitDto(fruit.getName(), fruit.getDescription());\n"
 "  }\n"
 msgstr ""
+"  private FruitDto convertToDto(Fruit fruit) {\n"
+"    return new FruitDto(fruit.getName(), fruit.getDescription());\n"
+"  }\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/cassandra.adoc:290
@@ -361,6 +427,10 @@ msgid ""
 "  }\n"
 "}\n"
 msgstr ""
+"  private Fruit convertFromDto(FruitDto fruitDto) {\n"
+"    return new Fruit(fruitDto.getName(), fruitDto.getDescription());\n"
+"  }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/cassandra.adoc:293
@@ -376,7 +446,7 @@ msgstr "通常、REST API とデータアクセス層の間で同じエンティ
 #: upstream/_versions/3.0/guides/cassandra.adoc:303
 #, no-wrap
 msgid "public class FruitDto {\n"
-msgstr ""
+msgstr "public class FruitDto {\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/cassandra.adoc:306
@@ -385,12 +455,14 @@ msgid ""
 "  private String name;\n"
 "  private String description;\n"
 msgstr ""
+"  private String name;\n"
+"  private String description;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/cassandra.adoc:308
 #, no-wrap
 msgid "  public FruitDto() {}\n"
-msgstr ""
+msgstr "  public FruitDto() {}\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/cassandra.adoc:315
@@ -403,6 +475,12 @@ msgid ""
 "  // getters and setters omitted for brevity\n"
 "}\n"
 msgstr ""
+"  public FruitDto(String name, String description) {\n"
+"    this.name = name;\n"
+"    this.description = description;\n"
+"  }\n"
+"  // getters and setters omitted for brevity\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/cassandra.adoc:320
@@ -422,6 +500,14 @@ msgid ""
 "  <artifactId>quarkus-resteasy-reactive-jackson</artifactId>\n"
 "</dependency>\n"
 msgstr ""
+"<dependency>\n"
+"  <groupId>io.quarkus</groupId>\n"
+"  <artifactId>quarkus-resteasy-reactive</artifactId>\n"
+"</dependency>\n"
+"<dependency>\n"
+"  <groupId>io.quarkus</groupId>\n"
+"  <artifactId>quarkus-resteasy-reactive-jackson</artifactId>\n"
+"</dependency>\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/cassandra.adoc:335
@@ -468,6 +554,9 @@ msgid ""
 "quarkus.cassandra.local-datacenter={dc_name}\n"
 "quarkus.cassandra.keyspace={keyspace}\n"
 msgstr ""
+"quarkus.cassandra.contact-points={cassandra_ip}:9042\n"
+"quarkus.cassandra.local-datacenter={dc_name}\n"
+"quarkus.cassandra.keyspace={keyspace}\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/cassandra.adoc:362
@@ -482,6 +571,9 @@ msgid ""
 "quarkus.cassandra.local-datacenter=datacenter1\n"
 "quarkus.cassandra.keyspace=k1\n"
 msgstr ""
+"quarkus.cassandra.contact-points=127.0.0.1:9042\n"
+"quarkus.cassandra.local-datacenter=datacenter1\n"
+"quarkus.cassandra.keyspace=k1\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/cassandra.adoc:372
@@ -495,6 +587,8 @@ msgid ""
 "quarkus.cassandra.auth.username=john\n"
 "quarkus.cassandra.auth.password=s3cr3t\n"
 msgstr ""
+"quarkus.cassandra.auth.username=john\n"
+"quarkus.cassandra.auth.password=s3cr3t\n"
 
 #. type: Title ===
 #: upstream/_versions/3.0/guides/cassandra.adoc:379
@@ -526,6 +620,10 @@ msgid ""
 "quarkus.cassandra.auth.password=s3cr3t\n"
 "quarkus.cassandra.keyspace=k1\n"
 msgstr ""
+"quarkus.cassandra.cloud.secure-connect-bundle=/path/to/secure-connect-bundle.zip\n"
+"quarkus.cassandra.auth.username=john\n"
+"quarkus.cassandra.auth.password=s3cr3t\n"
+"quarkus.cassandra.keyspace=k1\n"
 
 #. type: Title ===
 #: upstream/_versions/3.0/guides/cassandra.adoc:399
@@ -573,7 +671,7 @@ msgstr "Docker を使用して Cassandra データベースを実行する場合
 #: upstream/_versions/3.0/guides/cassandra.adoc:428
 #, no-wrap
 msgid "docker run --name local-cassandra-instance -p 9042:9042 -d cassandra\n"
-msgstr ""
+msgstr "docker run --name local-cassandra-instance -p 9042:9042 -d cassandra\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/cassandra.adoc:432
@@ -587,6 +685,8 @@ msgid ""
 "docker exec -it local-cassandra-instance cqlsh -e \"CREATE KEYSPACE IF NOT EXISTS k1 WITH replication = {'class':'SimpleStrategy', 'replication_factor':1}\"\n"
 "docker exec -it local-cassandra-instance cqlsh -e \"CREATE TABLE IF NOT EXISTS k1.fruit(name text PRIMARY KEY, description text)\"\n"
 msgstr ""
+"docker exec -it local-cassandra-instance cqlsh -e \"CREATE KEYSPACE IF NOT EXISTS k1 WITH replication = {'class':'SimpleStrategy', 'replication_factor':1}\"\n"
+"docker exec -it local-cassandra-instance cqlsh -e \"CREATE TABLE IF NOT EXISTS k1.fruit(name text PRIMARY KEY, description text)\"\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/cassandra.adoc:440
@@ -597,7 +697,7 @@ msgstr "CQLSH ユーティリティーを使用して、データベースに対
 #: upstream/_versions/3.0/guides/cassandra.adoc:444
 #, no-wrap
 msgid "docker exec -it local-cassandra-instance cqlsh\n"
-msgstr ""
+msgstr "docker exec -it local-cassandra-instance cqlsh\n"
 
 #. type: Title ==
 #: upstream/_versions/3.0/guides/cassandra.adoc:446
@@ -639,6 +739,10 @@ msgid ""
 "  --data '{\"name\":\"apple\",\"description\":\"red and tasty\"}' \\\n"
 "  http://localhost:8080/fruits\n"
 msgstr ""
+"curl --header \"Content-Type: application/json\" \\\n"
+"  --request POST \\\n"
+"  --data '{\"name\":\"apple\",\"description\":\"red and tasty\"}' \\\n"
+"  http://localhost:8080/fruits\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/cassandra.adoc:466
@@ -649,7 +753,7 @@ msgstr "Fruit を回収するには以下を実行します。"
 #: upstream/_versions/3.0/guides/cassandra.adoc:470
 #, no-wrap
 msgid "curl -X GET http://localhost:8080/fruits\n"
-msgstr ""
+msgstr "curl -X GET http://localhost:8080/fruits\n"
 
 #. type: Title ==
 #: upstream/_versions/3.0/guides/cassandra.adoc:472
@@ -722,6 +826,8 @@ msgid ""
 "@Dao\n"
 "public interface ReactiveFruitDao {\n"
 msgstr ""
+"@Dao\n"
+"public interface ReactiveFruitDao {\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/cassandra.adoc:507
@@ -730,6 +836,8 @@ msgid ""
 "  @Update\n"
 "  Uni<Void> updateAsync(Fruit fruit);\n"
 msgstr ""
+"  @Update\n"
+"  Uni<Void> updateAsync(Fruit fruit);\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/cassandra.adoc:511
@@ -739,6 +847,9 @@ msgid ""
 "  MutinyMappedReactiveResultSet<Fruit> findAll();\n"
 "}\n"
 msgstr ""
+"  @Select\n"
+"  MutinyMappedReactiveResultSet<Fruit> findAll();\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/cassandra.adoc:518
@@ -768,6 +879,9 @@ msgid ""
 "public interface FruitMapper {\n"
 "  // the existing method omitted\n"
 msgstr ""
+"@Mapper\n"
+"public interface FruitMapper {\n"
+"  // the existing method omitted\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/cassandra.adoc:541
@@ -777,6 +891,9 @@ msgid ""
 "  ReactiveFruitDao reactiveFruitDao();\n"
 "}\n"
 msgstr ""
+"  @DaoFactory\n"
+"  ReactiveFruitDao reactiveFruitDao();\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/cassandra.adoc:545
@@ -790,12 +907,14 @@ msgid ""
 "@ApplicationScoped\n"
 "public class ReactiveFruitService {\n"
 msgstr ""
+"@ApplicationScoped\n"
+"public class ReactiveFruitService {\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/cassandra.adoc:552
 #, no-wrap
 msgid "  @Inject ReactiveFruitDao fruitDao;\n"
-msgstr ""
+msgstr "  @Inject ReactiveFruitDao fruitDao;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/cassandra.adoc:556
@@ -805,6 +924,9 @@ msgid ""
 "    return fruitDao.update(fruit);\n"
 "  }\n"
 msgstr ""
+"  public Uni<Void> add(Fruit fruit) {\n"
+"    return fruitDao.update(fruit);\n"
+"  }\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/cassandra.adoc:561
@@ -815,6 +937,10 @@ msgid ""
 "  }\n"
 "}\n"
 msgstr ""
+"  public Multi<Fruit> getAll() {\n"
+"    return fruitDao.findAll();\n"
+"  }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/cassandra.adoc:564
@@ -830,12 +956,16 @@ msgid ""
 "@Consumes(MediaType.APPLICATION_JSON)\n"
 "public class ReactiveFruitResource {\n"
 msgstr ""
+"@Path(\"/reactive-fruits\")\n"
+"@Produces(MediaType.APPLICATION_JSON)\n"
+"@Consumes(MediaType.APPLICATION_JSON)\n"
+"public class ReactiveFruitResource {\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/cassandra.adoc:573
 #, no-wrap
 msgid "  @Inject ReactiveFruitService service;\n"
-msgstr ""
+msgstr "  @Inject ReactiveFruitService service;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/cassandra.adoc:578
@@ -846,6 +976,10 @@ msgid ""
 "    return service.getAll().map(this::convertToDto);\n"
 "  }\n"
 msgstr ""
+"  @GET\n"
+"  public Multi<FruitDto> getAll() {\n"
+"    return service.getAll().map(this::convertToDto);\n"
+"  }\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/cassandra.adoc:583
@@ -856,6 +990,10 @@ msgid ""
 "    return service.add(convertFromDto(fruitDto));\n"
 "  }\n"
 msgstr ""
+"  @POST\n"
+"  public Uni<Void> add(FruitDto fruitDto) {\n"
+"    return service.add(convertFromDto(fruitDto));\n"
+"  }\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/cassandra.adoc:597
@@ -902,6 +1040,10 @@ msgid ""
 "  --data '{\"name\":\"banana\",\"description\":\"yellow and sweet\"}' \\\n"
 "  http://localhost:8080/reactive-fruits\n"
 msgstr ""
+"curl --header \"Content-Type: application/json\" \\\n"
+"  --request POST \\\n"
+"  --data '{\"name\":\"banana\",\"description\":\"yellow and sweet\"}' \\\n"
+"  http://localhost:8080/reactive-fruits\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/cassandra.adoc:623
@@ -912,7 +1054,7 @@ msgstr "リアクティブ REST エンドポイントを使用して fruit を�
 #: upstream/_versions/3.0/guides/cassandra.adoc:627
 #, no-wrap
 msgid "curl -X GET http://localhost:8080/reactive-fruits\n"
-msgstr ""
+msgstr "curl -X GET http://localhost:8080/reactive-fruits\n"
 
 #. type: Title ==
 #: upstream/_versions/3.0/guides/cassandra.adoc:629
@@ -955,6 +1097,10 @@ msgid ""
 "  <artifactId>quarkus-smallrye-health</artifactId>\n"
 "</dependency>\n"
 msgstr ""
+"<dependency>\n"
+"  <groupId>io.quarkus</groupId>\n"
+"  <artifactId>quarkus-smallrye-health</artifactId>\n"
+"</dependency>\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/cassandra.adoc:658
@@ -987,6 +1133,22 @@ msgid ""
 "    ]\n"
 "}\n"
 msgstr ""
+"{\n"
+"    \"status\": \"UP\",\n"
+"    \"checks\": [\n"
+"        {\n"
+"            \"name\": \"DataStax Apache Cassandra Driver health check\",\n"
+"            \"status\": \"UP\",\n"
+"            \"data\": {\n"
+"                \"cqlVersion\": \"3.4.4\",\n"
+"                \"releaseVersion\": \"3.11.7\",\n"
+"                \"clusterName\": \"Test Cluster\",\n"
+"                \"datacenter\": \"datacenter1\",\n"
+"                \"numberOfNodes\": 1\n"
+"            }\n"
+"        }\n"
+"    ]\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/cassandra.adoc:685
@@ -1038,6 +1200,14 @@ msgid ""
 "  <artifactId>quarkus-micrometer-registry-prometheus</artifactId>\n"
 "</dependency>\n"
 msgstr ""
+"<dependency>\n"
+"  <groupId>com.datastax.oss</groupId>\n"
+"  <artifactId>java-driver-metrics-micrometer</artifactId>\n"
+"</dependency>\n"
+"<dependency>\n"
+"  <groupId>io.quarkus</groupId>\n"
+"  <artifactId>quarkus-micrometer-registry-prometheus</artifactId>\n"
+"</dependency>\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/cassandra.adoc:713
@@ -1068,6 +1238,14 @@ msgid ""
 "  <artifactId>quarkus-smallrye-metrics</artifactId>\n"
 "</dependency>\n"
 msgstr ""
+"<dependency>\n"
+"  <groupId>com.datastax.oss</groupId>\n"
+"  <artifactId>java-driver-metrics-microprofile</artifactId>\n"
+"</dependency>\n"
+"<dependency>\n"
+"  <groupId>io.quarkus</groupId>\n"
+"  <artifactId>quarkus-smallrye-metrics</artifactId>\n"
+"</dependency>\n"
 
 #. type: Title ===
 #: upstream/_versions/3.0/guides/cassandra.adoc:730
@@ -1084,7 +1262,7 @@ msgstr "アプリケーションでメトリクスが有効になっている場
 #: upstream/_versions/3.0/guides/cassandra.adoc:739
 #, no-wrap
 msgid "quarkus.cassandra.metrics.enabled=true\n"
-msgstr ""
+msgstr "quarkus.cassandra.metrics.enabled=true\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/cassandra.adoc:742
@@ -1149,6 +1327,9 @@ msgid ""
 "quarkus.cassandra.metrics.session.enabled=connected-nodes,bytes-sent\n"
 "quarkus.cassandra.metrics.node.enabled=pool.open-connections\n"
 msgstr ""
+"quarkus.cassandra.metrics.enabled=true\n"
+"quarkus.cassandra.metrics.session.enabled=connected-nodes,bytes-sent\n"
+"quarkus.cassandra.metrics.node.enabled=pool.open-connections\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/cassandra.adoc:778
@@ -1185,7 +1366,7 @@ msgstr "GraalVM をインストールした場合は、以下を使用して、 
 #: upstream/_versions/3.0/guides/cassandra.adoc:798
 #, no-wrap
 msgid "mvn clean package -Dnative\n"
-msgstr ""
+msgstr "mvn clean package -Dnative\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/cassandra.adoc:802
@@ -1196,7 +1377,7 @@ msgstr "ネイティブコンパイルにはかなりの時間がかかる可能
 #: upstream/_versions/3.0/guides/cassandra.adoc:806
 #, no-wrap
 msgid "./target/cassandra-quarkus-quickstart-*-runner\n"
-msgstr ""
+msgstr "./target/cassandra-quarkus-quickstart-*-runner\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/cassandra.adoc:809

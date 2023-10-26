@@ -96,6 +96,14 @@ msgid ""
 "    </dependency>\n"
 "</dependencies>\n"
 msgstr ""
+"<dependencies>\n"
+"    <!-- STM extension -->\n"
+"    <dependency>\n"
+"      <groupId>io.quarkus</groupId>\n"
+"      <artifactId>quarkus-narayana-stm</artifactId>\n"
+"      <version>${quarkus.version}</version>\n"
+"    </dependency>\n"
+"</dependencies>\n"
 
 #. type: Title ==
 #: upstream/_versions/2.2/guides/software-transactional-memory.adoc:103
@@ -123,6 +131,11 @@ msgid ""
 "    void makeBooking(String details);\n"
 "}\n"
 msgstr ""
+"@Transactional\n"
+"public interface FlightService {\n"
+"    int getNumberOfBookings();\n"
+"    void makeBooking(String details);\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/software-transactional-memory.adoc:129
@@ -138,6 +151,10 @@ msgid ""
 "    public int getNumberOfBookings() { ... }\n"
 "    public void makeBooking(String details) {...}\n"
 msgstr ""
+"public class FlightServiceImpl implements FlightService {\n"
+"    @ReadLock\n"
+"    public int getNumberOfBookings() { ... }\n"
+"    public void makeBooking(String details) {...}\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/software-transactional-memory.adoc:140
@@ -147,6 +164,9 @@ msgid ""
 "    private int timesCalled;\n"
 "}\n"
 msgstr ""
+"    @NotState\n"
+"    private int timesCalled;\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/software-transactional-memory.adoc:146
@@ -183,13 +203,13 @@ msgstr "デフォルトの STM コンテナー (`org.jboss.stm.Container`) は�
 #: upstream/_versions/2.2/guides/software-transactional-memory.adoc:170
 #, no-wrap
 msgid "    import org.jboss.stm.Container;\n"
-msgstr ""
+msgstr "    import org.jboss.stm.Container;\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/software-transactional-memory.adoc:172
 #, no-wrap
 msgid "    ...\n"
-msgstr ""
+msgstr "    ...\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/software-transactional-memory.adoc:176
@@ -199,6 +219,9 @@ msgid ""
 "    FlightServiceImpl instance = new FlightServiceImpl(); <2>\n"
 "    FlightService flightServiceProxy = container.create(instance); <3>\n"
 msgstr ""
+"    Container<FlightService> container = new Container<>(); <1>\n"
+"    FlightServiceImpl instance = new FlightServiceImpl(); <2>\n"
+"    FlightService flightServiceProxy = container.create(instance); <3>\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/software-transactional-memory.adoc:180
@@ -252,7 +275,7 @@ msgstr "アプリケーションは、STM オブジェクトのメソッドに�
 #: upstream/_versions/2.2/guides/software-transactional-memory.adoc:208
 #, no-wrap
 msgid "AtomicAction aa = new AtomicAction(); <1>\n"
-msgstr ""
+msgstr "AtomicAction aa = new AtomicAction(); <1>\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/software-transactional-memory.adoc:221
@@ -271,6 +294,18 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"aa.begin(); <2>\n"
+"{\n"
+"    try {\n"
+"        flightService.makeBooking(\"BA123 ...\");\n"
+"        taxiService.makeBooking(\"East Coast Taxis ...\"); <3>\n"
+"        <4>\n"
+"        aa.commit();\n"
+"        <5>\n"
+"    } catch (Exception e) {\n"
+"        aa.abort(); <6>\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/software-transactional-memory.adoc:226

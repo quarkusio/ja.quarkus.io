@@ -77,7 +77,7 @@ msgstr "Gitリポジトリのクローンを作成します:"
 #: upstream/_versions/3.0/guides/smallrye-metrics.adoc:46
 #, no-wrap
 msgid "git clone {quickstarts-clone-url}\n"
-msgstr ""
+msgstr "git clone {quickstarts-clone-url}\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/smallrye-metrics.adoc:49
@@ -125,6 +125,10 @@ msgid ""
 "    <artifactId>quarkus-smallrye-metrics</artifactId>\n"
 "</dependency>\n"
 msgstr ""
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-smallrye-metrics</artifactId>\n"
+"</dependency>\n"
 
 #. type: Block title
 #: upstream/_versions/3.0/guides/smallrye-metrics.adoc:78
@@ -136,7 +140,7 @@ msgstr "build.gradle"
 #: upstream/_versions/3.0/guides/smallrye-metrics.adoc:81
 #, no-wrap
 msgid "implementation(\"io.quarkus:quarkus-smallrye-metrics\")\n"
-msgstr ""
+msgstr "implementation(\"io.quarkus:quarkus-smallrye-metrics\")\n"
 
 #. type: Title ==
 #: upstream/_versions/3.0/guides/smallrye-metrics.adoc:84
@@ -178,7 +182,7 @@ msgstr "ソースコードの全文は以下の通りです:"
 #: upstream/_versions/3.0/guides/smallrye-metrics.adoc:98
 #, no-wrap
 msgid "package org.acme.microprofile.metrics;\n"
-msgstr ""
+msgstr "package org.acme.microprofile.metrics;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/smallrye-metrics.adoc:103
@@ -189,6 +193,10 @@ msgid ""
 "import org.eclipse.microprofile.metrics.annotation.Gauge;\n"
 "import org.eclipse.microprofile.metrics.annotation.Timed;\n"
 msgstr ""
+"import org.eclipse.microprofile.metrics.MetricUnits;\n"
+"import org.eclipse.microprofile.metrics.annotation.Counted;\n"
+"import org.eclipse.microprofile.metrics.annotation.Gauge;\n"
+"import org.eclipse.microprofile.metrics.annotation.Timed;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/smallrye-metrics.adoc:108
@@ -199,6 +207,10 @@ msgid ""
 "import jakarta.ws.rs.Produces;\n"
 "import jakarta.ws.rs.core.MediaType;\n"
 msgstr ""
+"import jakarta.ws.rs.GET;\n"
+"import jakarta.ws.rs.Path;\n"
+"import jakarta.ws.rs.Produces;\n"
+"import jakarta.ws.rs.core.MediaType;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/smallrye-metrics.adoc:111
@@ -207,12 +219,14 @@ msgid ""
 "@Path(\"/\")\n"
 "public class PrimeNumberChecker {\n"
 msgstr ""
+"@Path(\"/\")\n"
+"public class PrimeNumberChecker {\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/smallrye-metrics.adoc:113
 #, no-wrap
 msgid "    private long highestPrimeNumberSoFar = 2;\n"
-msgstr ""
+msgstr "    private long highestPrimeNumberSoFar = 2;\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/smallrye-metrics.adoc:142
@@ -247,6 +261,34 @@ msgid ""
 "        return number + \" is prime.\";\n"
 "    }\n"
 msgstr ""
+"    @GET\n"
+"    @Path(\"/{number}\")\n"
+"    @Produces(MediaType.TEXT_PLAIN)\n"
+"    @Counted(name = \"performedChecks\", description = \"How many primality checks have been performed.\")\n"
+"    @Timed(name = \"checksTimer\", description = \"A measure of how long it takes to perform the primality test.\", unit = MetricUnits.MILLISECONDS)\n"
+"    public String checkIfPrime(long number) {\n"
+"        if (number < 1) {\n"
+"            return \"Only natural numbers can be prime numbers.\";\n"
+"        }\n"
+"        if (number == 1) {\n"
+"            return \"1 is not prime.\";\n"
+"        }\n"
+"        if (number == 2) {\n"
+"            return \"2 is prime.\";\n"
+"        }\n"
+"        if (number % 2 == 0) {\n"
+"            return number + \" is not prime, it is divisible by 2.\";\n"
+"        }\n"
+"        for (int i = 3; i < Math.floor(Math.sqrt(number)) + 1; i = i + 2) {\n"
+"            if (number % i == 0) {\n"
+"                return number + \" is not prime, is divisible by \" + i + \".\";\n"
+"            }\n"
+"        }\n"
+"        if (number > highestPrimeNumberSoFar) {\n"
+"            highestPrimeNumberSoFar = number;\n"
+"        }\n"
+"        return number + \" is prime.\";\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/smallrye-metrics.adoc:147
@@ -257,12 +299,16 @@ msgid ""
 "        return highestPrimeNumberSoFar;\n"
 "    }\n"
 msgstr ""
+"    @Gauge(name = \"highestPrimeNumberSoFar\", unit = MetricUnits.NONE, description = \"Highest prime number so far.\")\n"
+"    public Long highestPrimeNumberSoFar() {\n"
+"        return highestPrimeNumberSoFar;\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/3.0/guides/smallrye-metrics.adoc:149
 #, no-wrap
 msgid "}\n"
-msgstr ""
+msgstr "}\n"
 
 #. type: Title ==
 #: upstream/_versions/3.0/guides/smallrye-metrics.adoc:152
@@ -294,7 +340,7 @@ msgstr "ある数字が素数であるかどうかをエンドポイントに問
 #: upstream/_versions/3.0/guides/smallrye-metrics.adoc:169
 #, no-wrap
 msgid "curl localhost:8080/350\n"
-msgstr ""
+msgstr "curl localhost:8080/350\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/smallrye-metrics.adoc:172
@@ -310,7 +356,7 @@ msgstr "大きな素数の場合は、テストに時間がかかります。"
 #: upstream/_versions/3.0/guides/smallrye-metrics.adoc:178
 #, no-wrap
 msgid "curl localhost:8080/629521085409773\n"
-msgstr ""
+msgstr "curl localhost:8080/629521085409773\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/smallrye-metrics.adoc:181
@@ -331,7 +377,7 @@ msgstr "生成されたメトリクスを確認します:"
 #: upstream/_versions/3.0/guides/smallrye-metrics.adoc:189
 #, no-wrap
 msgid "curl -H\"Accept: application/json\" localhost:8080/q/metrics/application\n"
-msgstr ""
+msgstr "curl -H\"Accept: application/json\" localhost:8080/q/metrics/application\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/smallrye-metrics.adoc:192
@@ -364,6 +410,27 @@ msgid ""
 "  \"org.acme.microprofile.metrics.PrimeNumberChecker.highestPrimeNumberSoFar\" : 629521085409773\t\t<10>\n"
 "}\n"
 msgstr ""
+"{\n"
+"  \"org.acme.microprofile.metrics.PrimeNumberChecker.checksTimer\" : {\t\t\t                    <1>\n"
+"    \"p50\": 217.231273,\t\t\t\t\t\t\t\t\t\t                                        <2>\n"
+"    \"p75\": 217.231273,\n"
+"    \"p95\": 217.231273,\n"
+"    \"p98\": 217.231273,\n"
+"    \"p99\": 217.231273,\n"
+"    \"p999\": 217.231273,\n"
+"    \"min\": 0.58961,\t\t\t\t\t\t\t\t\t\t                                            <3>\n"
+"    \"mean\": 112.15909190834819,\t\t\t\t\t\t\t\t                                        <4>\n"
+"    \"max\": 217.231273,\t\t\t\t\t\t\t\t\t                                            <5>\n"
+"    \"stddev\": 108.2721053982776,\t\t\t\t\t\t\t    \t                                <6>\n"
+"    \"count\": 2,\t\t\t\t\t\t\t\t\t\t\t                                            <7>\n"
+"    \"meanRate\": 0.04943519091742238,\t\t\t\t\t\t\t                                    <8>\n"
+"    \"oneMinRate\": 0.2232140583080189,\n"
+"    \"fiveMinRate\": 0.3559527083952095,\n"
+"    \"fifteenMinRate\": 0.38474303050928976\n"
+"  },\n"
+"  \"org.acme.microprofile.metrics.PrimeNumberChecker.performedChecks\" : 2,\t\t                    <9>\n"
+"  \"org.acme.microprofile.metrics.PrimeNumberChecker.highestPrimeNumberSoFar\" : 629521085409773\t\t<10>\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/3.0/guides/smallrye-metrics.adoc:219

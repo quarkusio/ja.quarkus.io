@@ -95,6 +95,11 @@ msgid ""
 "    -Dextensions=\"undertow-websockets\"\n"
 "cd websockets-quickstart\n"
 msgstr ""
+"mvn io.quarkus:quarkus-maven-plugin:{quarkus-version}:create \\\n"
+"    -DprojectGroupId=org.acme \\\n"
+"    -DprojectArtifactId=websockets-quickstart \\\n"
+"    -Dextensions=\"undertow-websockets\"\n"
+"cd websockets-quickstart\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/websockets.adoc:53
@@ -110,7 +115,7 @@ msgstr "すでにQuarkusプロジェクトが設定されている場合は、�
 #: upstream/_versions/1.7/guides/websockets.adoc:60
 #, no-wrap
 msgid "./mvnw quarkus:add-extension -Dextensions=\"undertow-websockets\"\n"
-msgstr ""
+msgstr "./mvnw quarkus:add-extension -Dextensions=\"undertow-websockets\"\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/websockets.adoc:63
@@ -126,6 +131,10 @@ msgid ""
 "    <artifactId>quarkus-undertow-websockets</artifactId>\n"
 "</dependency>\n"
 msgstr ""
+"<dependency>\n"
+"    <groupId>io.quarkus</groupId>\n"
+"    <artifactId>quarkus-undertow-websockets</artifactId>\n"
+"</dependency>\n"
 
 #. type: Title ==
 #: upstream/_versions/1.7/guides/websockets.adoc:72
@@ -142,7 +151,7 @@ msgstr "このアプリケーションには、Web ソケットを処理する�
 #: upstream/_versions/1.7/guides/websockets.adoc:81
 #, no-wrap
 msgid "package org.acme.websockets;\n"
-msgstr ""
+msgstr "package org.acme.websockets;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/websockets.adoc:84
@@ -151,6 +160,8 @@ msgid ""
 "import java.util.Map;\n"
 "import java.util.concurrent.ConcurrentHashMap;\n"
 msgstr ""
+"import java.util.Map;\n"
+"import java.util.concurrent.ConcurrentHashMap;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/websockets.adoc:93
@@ -165,6 +176,14 @@ msgid ""
 "import javax.websocket.server.ServerEndpoint;\n"
 "import javax.websocket.Session;\n"
 msgstr ""
+"import javax.enterprise.context.ApplicationScoped;\n"
+"import javax.websocket.OnClose;\n"
+"import javax.websocket.OnError;\n"
+"import javax.websocket.OnMessage;\n"
+"import javax.websocket.OnOpen;\n"
+"import javax.websocket.server.PathParam;\n"
+"import javax.websocket.server.ServerEndpoint;\n"
+"import javax.websocket.Session;\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/websockets.adoc:97
@@ -174,12 +193,15 @@ msgid ""
 "@ApplicationScoped\n"
 "public class ChatSocket {\n"
 msgstr ""
+"@ServerEndpoint(\"/chat/{username}\")         // <1>\n"
+"@ApplicationScoped\n"
+"public class ChatSocket {\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/websockets.adoc:99
 #, no-wrap
 msgid "    Map<String, Session> sessions = new ConcurrentHashMap<>(); // <2>\n"
-msgstr ""
+msgstr "    Map<String, Session> sessions = new ConcurrentHashMap<>(); // <2>\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/websockets.adoc:105
@@ -191,6 +213,11 @@ msgid ""
 "        broadcast(\"User \" + username + \" joined\");\n"
 "    }\n"
 msgstr ""
+"    @OnOpen\n"
+"    public void onOpen(Session session, @PathParam(\"username\") String username) {\n"
+"        sessions.put(username, session);\n"
+"        broadcast(\"User \" + username + \" joined\");\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/websockets.adoc:111
@@ -202,6 +229,11 @@ msgid ""
 "        broadcast(\"User \" + username + \" left\");\n"
 "    }\n"
 msgstr ""
+"    @OnClose\n"
+"    public void onClose(Session session, @PathParam(\"username\") String username) {\n"
+"        sessions.remove(username);\n"
+"        broadcast(\"User \" + username + \" left\");\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/websockets.adoc:117
@@ -213,6 +245,11 @@ msgid ""
 "        broadcast(\"User \" + username + \" left on error: \" + throwable);\n"
 "    }\n"
 msgstr ""
+"    @OnError\n"
+"    public void onError(Session session, @PathParam(\"username\") String username, Throwable throwable) {\n"
+"        sessions.remove(username);\n"
+"        broadcast(\"User \" + username + \" left on error: \" + throwable);\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/websockets.adoc:122
@@ -223,6 +260,10 @@ msgid ""
 "        broadcast(\">> \" + username + \": \" + message);\n"
 "    }\n"
 msgstr ""
+"    @OnMessage\n"
+"    public void onMessage(String message, @PathParam(\"username\") String username) {\n"
+"        broadcast(\">> \" + username + \": \" + message);\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/websockets.adoc:132
@@ -238,12 +279,21 @@ msgid ""
 "        });\n"
 "    }\n"
 msgstr ""
+"    private void broadcast(String message) {\n"
+"        sessions.values().forEach(s -> {\n"
+"            s.getAsyncRemote().sendObject(message, result ->  {\n"
+"                if (result.getException() != null) {\n"
+"                    System.out.println(\"Unable to send message: \" + result.getException());\n"
+"                }\n"
+"            });\n"
+"        });\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/1.7/guides/websockets.adoc:134
 #, no-wrap
 msgid "}\n"
-msgstr ""
+msgstr "}\n"
 
 #. type: Plain text
 #: upstream/_versions/1.7/guides/websockets.adoc:136

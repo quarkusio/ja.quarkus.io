@@ -65,7 +65,7 @@ msgstr "例えば、以下の `proto` ファイルスニペットを使用した
 #: upstream/_versions/2.2/guides/grpc-service-implementation.adoc:29
 #, no-wrap
 msgid "option java_package = \"hello\"; <1>\n"
-msgstr ""
+msgstr "option java_package = \"hello\"; <1>\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/grpc-service-implementation.adoc:33
@@ -75,6 +75,9 @@ msgid ""
 "    rpc SayHello (HelloRequest) returns (HelloReply) {}\n"
 "}\n"
 msgstr ""
+"service Greeter { <2>\n"
+"    rpc SayHello (HelloRequest) returns (HelloReply) {}\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/grpc-service-implementation.adoc:35
@@ -114,6 +117,8 @@ msgid ""
 "import io.quarkus.grpc.GrpcService;\n"
 "import hello.Greeter;\n"
 msgstr ""
+"import io.quarkus.grpc.GrpcService;\n"
+"import hello.Greeter;\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/grpc-service-implementation.adoc:55
@@ -122,6 +127,8 @@ msgid ""
 "@GrpcService <1>\n"
 "public class HelloService implements Greeter { <2>\n"
 msgstr ""
+"@GrpcService <1>\n"
+"public class HelloService implements Greeter { <2>\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/grpc-service-implementation.adoc:63
@@ -135,6 +142,13 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    @Override\n"
+"    public Uni<HelloReply> sayHello(HelloRequest request) {\n"
+"        return Uni.createFrom().item(() ->\n"
+"                HelloReply.newBuilder().setMessage(\"Hello \" + request.getName()).build()\n"
+"        );\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/grpc-service-implementation.adoc:65
@@ -167,7 +181,7 @@ msgstr "デフォルトのgRPC APIを使ってgRPCサービスを実装するに
 #: upstream/_versions/2.2/guides/grpc-service-implementation.adoc:125
 #, no-wrap
 msgid "import io.quarkus.grpc.GrpcService;\n"
-msgstr ""
+msgstr "import io.quarkus.grpc.GrpcService;\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/grpc-service-implementation.adoc:81
@@ -176,6 +190,8 @@ msgid ""
 "@GrpcService\n"
 "public class HelloService extends GreeterGrpc.GreeterImplBase {\n"
 msgstr ""
+"@GrpcService\n"
+"public class HelloService extends GreeterGrpc.GreeterImplBase {\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/grpc-service-implementation.adoc:90
@@ -190,6 +206,14 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    @Override\n"
+"    public void sayHello(HelloRequest request, StreamObserver<HelloReply> responseObserver) {\n"
+"        String name = request.getName();\n"
+"        String message = \"Hello \" + name;\n"
+"        responseObserver.onNext(HelloReply.newBuilder().setMessage(message).build());\n"
+"        responseObserver.onCompleted();\n"
+"    }\n"
+"}\n"
 
 #. type: Title ==
 #: upstream/_versions/2.2/guides/grpc-service-implementation.adoc:92
@@ -212,6 +236,11 @@ msgid ""
 "    // Do something blocking before returning the Uni\n"
 "}\n"
 msgstr ""
+"@Override\n"
+"@Blocking\n"
+"public Uni<HelloReply> sayHelloBlocking(HelloRequest request) {\n"
+"    // Do something blocking before returning the Uni\n"
+"}\n"
 
 #. type: Title ==
 #: upstream/_versions/2.2/guides/grpc-service-implementation.adoc:107
@@ -234,6 +263,11 @@ msgid ""
 "    rpc Pipe(stream Item) returns (stream Item) {}  // Reads a streams and return a streams\n"
 "}\n"
 msgstr ""
+"service Streaming {\n"
+"    rpc Source(Empty) returns (stream Item) {} // Returns a stream\n"
+"    rpc Sink(stream Item) returns (Empty) {}   // Reads a stream\n"
+"    rpc Pipe(stream Item) returns (stream Item) {}  // Reads a streams and return a streams\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/grpc-service-implementation.adoc:121
@@ -247,6 +281,8 @@ msgid ""
 "@GrpcService\n"
 "public class StreamingService implements Streaming {\n"
 msgstr ""
+"@GrpcService\n"
+"public class StreamingService implements Streaming {\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/grpc-service-implementation.adoc:136
@@ -260,6 +296,13 @@ msgid ""
 "                .map(l -> Item.newBuilder().setValue(Long.toString(l)).build());\n"
 "    }\n"
 msgstr ""
+"    @Override\n"
+"    public Multi<Item> source(Empty request) {\n"
+"        // Just returns a stream emitting an item every 2ms and stopping after 10 items.\n"
+"        return Multi.createFrom().ticks().every(Duration.ofMillis(2))\n"
+"                .select().first(10)\n"
+"                .map(l -> Item.newBuilder().setValue(Long.toString(l)).build());\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/grpc-service-implementation.adoc:146
@@ -275,6 +318,15 @@ msgid ""
 "                .map(l -> Empty.newBuilder().build());\n"
 "    }\n"
 msgstr ""
+"    @Override\n"
+"    public Uni<Empty> sink(Multi<Item> request) {\n"
+"        // Reads the incoming streams, consume all the items.\n"
+"        return request\n"
+"                .map(Item::getValue)\n"
+"                .map(Long::parseLong)\n"
+"                .collect().last()\n"
+"                .map(l -> Empty.newBuilder().build());\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/grpc-service-implementation.adoc:158
@@ -292,6 +344,17 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    @Override\n"
+"    public Multi<Item> pipe(Multi<Item> request) {\n"
+"        // Reads the incoming stream, compute a sum and return the cumulative results\n"
+"        // in the outbound stream.\n"
+"        return request\n"
+"                .map(Item::getValue)\n"
+"                .map(Long::parseLong)\n"
+"                .onItem().scan(() -> 0L, Long::sum)\n"
+"                .onItem().transform(l -> Item.newBuilder().setValue(Long.toString(l)).build());\n"
+"    }\n"
+"}\n"
 
 #. type: Title ==
 #: upstream/_versions/2.2/guides/grpc-service-implementation.adoc:160
@@ -308,13 +371,13 @@ msgstr "実装されたサービスでは、Quarkus gRPCは以下の形式でヘ
 #: upstream/_versions/2.2/guides/grpc-service-implementation.adoc:165
 #, no-wrap
 msgid "syntax = \"proto3\";\n"
-msgstr ""
+msgstr "syntax = \"proto3\";\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/grpc-service-implementation.adoc:167
 #, no-wrap
 msgid "package grpc.health.v1;\n"
-msgstr ""
+msgstr "package grpc.health.v1;\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/grpc-service-implementation.adoc:171
@@ -324,6 +387,9 @@ msgid ""
 "  string service = 1;\n"
 "}\n"
 msgstr ""
+"message HealthCheckRequest {\n"
+"  string service = 1;\n"
+"}\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/grpc-service-implementation.adoc:180
@@ -338,6 +404,14 @@ msgid ""
 "  ServingStatus status = 1;\n"
 "}\n"
 msgstr ""
+"message HealthCheckResponse {\n"
+"  enum ServingStatus {\n"
+"    UNKNOWN = 0;\n"
+"    SERVING = 1;\n"
+"    NOT_SERVING = 2;\n"
+"  }\n"
+"  ServingStatus status = 1;\n"
+"}\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/grpc-service-implementation.adoc:183
@@ -346,6 +420,8 @@ msgid ""
 "service Health {\n"
 "  rpc Check(HealthCheckRequest) returns (HealthCheckResponse);\n"
 msgstr ""
+"service Health {\n"
+"  rpc Check(HealthCheckRequest) returns (HealthCheckResponse);\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/grpc-service-implementation.adoc:186
@@ -354,6 +430,8 @@ msgid ""
 "  rpc Watch(HealthCheckRequest) returns (stream HealthCheckResponse);\n"
 "}\n"
 msgstr ""
+"  rpc Watch(HealthCheckRequest) returns (stream HealthCheckResponse);\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/grpc-service-implementation.adoc:190
@@ -437,6 +515,8 @@ msgid ""
 "quarkus.grpc.server.ssl.certificate=tls/server.pem\n"
 "quarkus.grpc.server.ssl.key=tls/server.key\n"
 msgstr ""
+"quarkus.grpc.server.ssl.certificate=tls/server.pem\n"
+"quarkus.grpc.server.ssl.key=tls/server.key\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/grpc-service-implementation.adoc:230
@@ -464,6 +544,11 @@ msgid ""
 "quarkus.grpc.server.ssl.trust-store-password=*****\n"
 "quarkus.grpc.server.ssl.client-auth=REQUIRED\n"
 msgstr ""
+"quarkus.grpc.server.ssl.certificate=tls/server.pem\n"
+"quarkus.grpc.server.ssl.key=tls/server.key\n"
+"quarkus.grpc.server.ssl.trust-store=tls/ca.jks\n"
+"quarkus.grpc.server.ssl.trust-store-password=*****\n"
+"quarkus.grpc.server.ssl.client-auth=REQUIRED\n"
 
 #. type: Title ==
 #: upstream/_versions/2.2/guides/grpc-service-implementation.adoc:244
@@ -483,6 +568,8 @@ msgid ""
 "@ApplicationScoped\n"
 "public class MyInterceptor implements ServerInterceptor {\n"
 msgstr ""
+"@ApplicationScoped\n"
+"public class MyInterceptor implements ServerInterceptor {\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/grpc-service-implementation.adoc:259
@@ -495,6 +582,12 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    @Override\n"
+"    public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(ServerCall<ReqT, RespT> serverCall,\n"
+"            Metadata metadata, ServerCallHandler<ReqT, RespT> serverCallHandler) {\n"
+"        // ...\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/grpc-service-implementation.adoc:262
@@ -513,6 +606,8 @@ msgid ""
 "@ApplicationScoped\n"
 "public class MyInterceptor implements ServerInterceptor, Prioritized {\n"
 msgstr ""
+"@ApplicationScoped\n"
+"public class MyInterceptor implements ServerInterceptor, Prioritized {\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/grpc-service-implementation.adoc:275
@@ -524,6 +619,11 @@ msgid ""
 "        // ...\n"
 "    }\n"
 msgstr ""
+"    @Override\n"
+"    public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(ServerCall<ReqT, RespT> serverCall,\n"
+"            Metadata metadata, ServerCallHandler<ReqT, RespT> serverCallHandler) {\n"
+"        // ...\n"
+"    }\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/grpc-service-implementation.adoc:281
@@ -535,6 +635,11 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    @Override\n"
+"    public int getPriority() {\n"
+"        return 10;\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: upstream/_versions/2.2/guides/grpc-service-implementation.adoc:285
@@ -556,7 +661,7 @@ msgstr "なお、TLS を使用していない公開サービスのテストに�
 #: upstream/_versions/2.2/guides/grpc-service-implementation.adoc:299
 #, no-wrap
 msgid "public class HelloServiceTest implements Greeter {\n"
-msgstr ""
+msgstr "public class HelloServiceTest implements Greeter {\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/grpc-service-implementation.adoc:302
@@ -565,6 +670,8 @@ msgid ""
 "    @GrpcClient\n"
 "    Greeter client;\n"
 msgstr ""
+"    @GrpcClient\n"
+"    Greeter client;\n"
 
 #. type: delimited block -
 #: upstream/_versions/2.2/guides/grpc-service-implementation.adoc:311
@@ -579,3 +686,11 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    @Test\n"
+"    void shouldReturnHello() throws Exception {\n"
+"        CompletableFuture<String> message = new CompletableFuture<>();\n"
+"        client.sayHello(HelloRequest.newBuilder().setName(\"Quarkus\").build())\n"
+"                .subscribe().with(reply -> message.complete(reply.getMessage()));\n"
+"        assertThat(message.get(5, TimeUnit.SECONDS)).isEqualTo(\"Hello Quarkus\");\n"
+"    }\n"
+"}\n"
