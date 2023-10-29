@@ -1,0 +1,36 @@
+name: delete-glossary
+
+on:
+  workflow_dispatch:
+    inputs:
+      glossaryId:
+        description: 'glossaryId'
+        required: true
+
+jobs:
+  delete-glossary:
+    name: Delete glossary
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout
+        # Checkout target revision from git repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0 # all history (required for getting last modified time of files)
+      - name: Cache bundle directory
+        # Cache ruby bundle directory to speed up build
+        uses: actions/cache@v2
+        with:
+          path: vendor/bundle
+          key: ${{ runner.os }}-gem-${{ hashFiles('**/Gemfile.lock') }}
+      - name: Setup build env
+        # Setup build environment(install runtime, library, etc.)
+        run: |
+          bin/setup-build-env-on-ubuntu
+
+
+      - name: Delete glossary
+        # Delete a DeepL glossary
+        run: vendor/quarkus-l10n-utils/bin/delete-glossary --glossaryId=${{ github.event.inputs.glossaryId }}
+        env:
+          TRANSLATOR_DEEPL_APIKEY: ${{ secrets.TRANSLATOR_DEEPL_APIKEY }}
