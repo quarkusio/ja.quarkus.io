@@ -13,15 +13,16 @@ jobs:
     steps:
       - name: Checkout
         # Checkout target revision from git repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Setup build env
         # Setup build environment(install runtime, library, etc.)
         run: |
           bin/setup-build-env-on-ubuntu
       - name: Set up JDK 11
         # Setup JDK 11
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v3
         with:
+          distribution: 'temurin'
           java-version: 11
 
       - name: Sync submodule
@@ -41,7 +42,7 @@ jobs:
         run: vendor/quarkus-l10n-utils/bin/push-changes "Update .po files"
 
       - name: Update translation stats
-        # Update the translation stats .csv file, which is used as an simplified dashboard ( https://github.com/quarkusio/ja.quarkus.io/blob/main/l10n/stats/translation.csv )
+        # Update the translation stats .csv file, which is used as an simplified dashboard ( <L10N_HOME>/l10n/stats/translation.csv )
         run: vendor/quarkus-l10n-utils/bin/update-translation-stats
 
       - name: Push changes
@@ -51,8 +52,6 @@ jobs:
       - name: Apply tmx
         # Apply tmx file to .po files to fill known translations
         run: vendor/quarkus-l10n-utils/bin/translate-po-files-with-tmx
-        env: #TODO: remove this environment variable. This is a workaround. translate-po-files-with-tmx requests API key by mistake.
-          TRANSLATOR_DEEPL_APIKEY: ${{ secrets.TRANSLATOR_DEEPL_APIKEY }}
 
       - name: Push changes
         # Commit and Push the .po files updated by tmx
