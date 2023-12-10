@@ -1,0 +1,469 @@
+msgid ""
+msgstr ""
+"Language: ja_JP\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: jekyll-l10n\n"
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "Testing Quarkus with Citrus"
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "Explore how to verify Quarkus event-driven applications with the Citrus integration test framework."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid ""
+"This post shows how to combine Quarkus with the https://citrusframework.org[Citrus] test framework in order to write automated tests for event-driven applications.\n"
+"https://citrusframework.org[Citrus] is an Open Source Java test framework focusing on messaging and integration testing in general."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid ""
+"Developers can easily empower the *@QuarkusTest* with Citrus capabilities in order to produce and consume events during the test.\n"
+"As a result the test is able to interact with the Quarkus event-driven application by exchanging events and messages with real messaging communication."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "Introducing the demo application"
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid ""
+"In this post we use a Quarkus demo application called `food-market`.\n"
+"You can find the demo application code and all Citrus tests in https://github.com/citrusframework/citrus-samples/tree/main/demo/sample-quarkus[this GitHub code repository].\n"
+"The Quarkus application connects to Kafka streams as an event-driven application that produces and consumes various events (e.g. bookings, supplies, shipping events).\n"
+"The processed events and their individual status are stored in a PostgreSQL database."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "The food-market application matches incoming `booking` and `supply` events and produces `shipping` and `booking-completed` events accordingly."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "Each event references a product and specifies an amount as well as a price in a simple Json object structure."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid ""
+"Clients create the `booking` events and at the same time suppliers will add their individual `supply` events.\n"
+"The Quarkus food-market application consumes both event types and finds matching bookings and supplies.\n"
+"Once a booking and a supply do match in certain criteria the application produces `booking-completed` and `shipping` events as a result."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "Last but not least the booking client gets informed via email about the completed booking status."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "In a fully automated integration test we want to verify all events and their processing using real messaging communication with Kafka streams and database persistence."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "Testing the application with Citrus"
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid ""
+"The Quarkus application connects to different infrastructure (Kafka, PostgreSQL, Mail SMTP).\n"
+"The automated integration test should verify the message communication, the event processing and connectivity to all components.\n"
+"We will use the Citrus test framework as it provides the complete toolset for testing this kind of event-driven message-based solutions."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid ""
+"The first thing to do is to add Citrus to the Quarkus project.\n"
+"The most convenient way is to import the `citrus-bom`."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "Citrus BOM"
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid ""
+"The `citrus-quarkus` extension provides a special `@QuarkusTest` resource implementation that enables us to combine Citrus with a Quarkus test.\n"
+"So let's add this extension as a test scoped dependency."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "Citrus Quarkus extension"
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid ""
+"Also, we need to include some other Citrus modules because we want to exchange data via Kafka and connect to the PostgreSQL database as part of the test.\n"
+"Citrus is very modular. This means you can choose from a wide range of modules each of them adding specific testing capabilities to your project (e.g. `citrus-kafka`, `citrus-sql`, `citrus-validation-json`)."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "In this sample project we include the following Citrus modules as test scoped dependencies:"
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "citrus-quarkus"
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "citrus-kafka"
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "citrus-validation-json"
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "citrus-sql"
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "citrus-mail"
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid ""
+"This completes the setup of all required Citrus modules.\n"
+"Now we can move on to writing an automated integration test in order to verify the Quarkus event-driven application."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "Writing Citrus tests on top of QuarkusTest"
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "We want to write an automated test that makes sure that all inbound events (`booking` and `supply`) are being processed properly and that the resulting outbound  events (`booking-completed` and `shipping`) are being produced as expected."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid ""
+"Citrus as a test framework will act as all surrounding components producing client events and verifying resulting outbound events.\n"
+"Also, Citrus will have a look into the database in order to verify the persisted domain model objects.\n"
+"Later on in a more advanced test scenario Citrus will also receive and verify the mail message content that is sent by the food-market Quarkus application."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid ""
+"For now let's start with a normal Quarkus test.\n"
+"The test needs to start the Quarkus application and also needs to prepare some infrastructure such as the database and the Kafka streams message broker. Fortunately Quarkus dev services provides the awesome testing capability to automatically start Testcontainers that represent the required infrastructure."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid ""
+"The test is annotated with the `@QuarkusTest` annotation.\n"
+"It enables the Quarkus dev services test capabilities and takes care of setting everything up for you.\n"
+"The test itself is an arbitrary JUnit Jupiter unit test, so you can start this test from your Java IDE or as part of the Maven test lifecycle."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid ""
+"Now let's add Citrus to the picture.\n"
+"With the Citrus Quarkus extension that we have added to the Maven project in the previous section we can now enable the Citrus capabilities for the test.\n"
+"Just add the `@CitrusSupport` annotation to the test class."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid ""
+"This annotation enables the Citrus capabilities for the Quarkus test.\n"
+"Citrus will now participate in the Quarkus test lifecycle which enables you to inject specific Citrus resources such as endpoints as well as the Citrus test runner."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "Citrus enabled Quarkus test"
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid ""
+"The Citrus enabled test uses additional resources such as the `KafkaEndpoint` named bookings.\n"
+"The `KafkaEndpoint` component comes with the `citrus-kafka` module and allows us to interact with Kafka streams by sending and receiving events to a topic."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid ""
+"The Citrus `TestCaseRunner` resource represents the entrance to the Citrus Java domain specific testing language.\n"
+"This allows us to run any Citrus test action (e.g. send/receive messages, verify data in an SQL database) during the test."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "See this sample code to send a message to the Kafka streams topic."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "Send booking event"
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid ""
+"The injected Citrus `TestCaseRunner` is able to use a Gherkin `Given-When-Then` syntax and executes Citrus test operations.\n"
+"This first test activity references the KafkaEndpoint `bookings` in a send operation.\n"
+"The test is able to use domain model objects (`Product` and `Booking`) as message body.\n"
+"The send operation properly serializes the domain model objects to Json with the injected `ObjectMapper`."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "You can also use the `@QuarkusIntegrationTest` annotation in order to start the demo application in a separate JVM. This separates the test code from the application and usually binds the test to the integration-test phase in Maven. Please be aware that an integration test is not able to inject application resources such as ObjectMapper or DataSource. The good news is that you can use the very same Citrus extension also with the `@QuarkusIntegrationTest`."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "This is basically how you can combine Citrus capabilities with Quarkus test dev services in an automated integration test."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid ""
+"The rest of the story is quite easy.\n"
+"In the same way as sending the booking event we can now also send a matching `supply` event."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "Send supply event"
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid ""
+"The test now has produced a booking and a matching supply event.\n"
+"This should trigger the food-market application to produce respective `booking-completed` and `shipping` events.\n"
+"As a next step in the test we should receive and verify these events with Citrus."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "Receive and verify events"
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid ""
+"Citrus is able to perform powerful message validation when receiving the events.\n"
+"This is why we have added the `citrus-validation-json` module in the very beginning.\n"
+"The Json message validator in Citrus will compare the received Json object with an expected Json template and make sure that all fields and properties do match as expected."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid ""
+"The test creates the expected `shippingEvent` Json object which uses properties like the `client`, `product` and the `amount`.\n"
+"The received event must match these expected values in order to pass the test.\n"
+"Unfortunately we are not able to verify the `address` field because it has been generated by the Quarkus application.\n"
+"This is why the `address` gets ignored during the validation by using the `@ignored@` Citrus validation expression as an expected value."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid ""
+"The Citrus Json message validator is quite powerful and will now compare the received shipping event with the expected Json object.\n"
+"All given Json properties get verified and the test will fail when there is a mismatch."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "Received Json"
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "Control Json"
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "You can use ignore expressions, use validation matchers, functions and test variables in the expected template."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid ""
+"This completes the first test with many events being exchanged with the application under test.\n"
+"Now let's run the test."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "Running the Citrus tests"
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid ""
+"The Quarkus test framework in the example uses JUnit Jupiter as a test driver.\n"
+"This means you can run the tests just like any other JUnit test from your Java IDE or with Maven for instance."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid ""
+"The test is now run with the Maven test lifecycle.\n"
+"The `@QuarkusTest` dev services will start the application and prepare the infrastructure with Testcontainers.\n"
+"Then Citrus will produce the events and verify the outcome with powerful Json validation."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid ""
+"In this first test we made sure that the application is able to process the incoming events and that the resulting events are produced as expected.\n"
+"Now let's move on to more advanced tests including the database and a mail server SMTP communication."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "Verify stored data with SQL"
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid ""
+"When testing distributed event-driven applications the timing of events is an essential ingredient to success.\n"
+"Each test scenario is keen to verify a specific application behavior and the correct timing of events is key to triggering and verifying this behavior.\n"
+"Also timing is very important to avoid running into flaky tests where racing conditions may influence the test result on slower machines (e.g. CI jobs)."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid ""
+"As an example assume the test needs to create a new product first and then sends a new booking event referencing this newly added product.\n"
+"The test needs to wait for the product event to be processed completely before sending the booking event."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "In Citrus we are able to add this waiting state very easily."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "Wait for object to be created in persistence layer"
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid ""
+"After the product event has been sent we use the `repeatOnError()` test action.\n"
+"In combination with an `autoSleep` and a max retry count setting the action periodically polls the database for the created product.\n"
+"This makes sure that we do not continue with the test until the new product has been properly stored to the database."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "The database interaction in Citrus comes with the `citrus-sql` module and enables you to verify any SQL result set."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "Quarkus is able to inject the `dataSource` that is being used to connect to the PostgreSQL database. This also works when Quarkus uses the PostgreSQL Testcontainers infrastructure in the test. Just use the `@Inject` annotation in your test and reference the datasource in the Citrus `sql()` test action."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "You may introduce test behaviors for common Citrus test logic such as waiting for a domain model object to be persisted in the database. In general a test behavior encapsulates a set of Citrus test actions to a reusable entity that you can reference many times from your tests."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "Citrus test behavior"
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "In a test you can apply the test behavior."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "Apply test behaviors"
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid ""
+"The ability to look into the database in order to check on the persisted entities is quite powerful as it allows us to fully control the test workflow.\n"
+"We could also use the Citrus SQL result set verification in the test to verify a booking status."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "Verify booking status completed"
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid ""
+"This verifies that the booking with the given id has the status `COMPLETED`.\n"
+"The SQL result set validation in Citrus is able to handle complex column sets with multiple rows."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "Verify the mail server interaction"
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "The food-market Quarkus application under test may inform the client about a completed booking via email."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "Mail content"
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "The Citrus test is able to verify this particular mail content by starting an SMTP mail server that will receive that mail message and verify its content."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "In Quarkus we can use the `quarkus-mailer` extension to send mails via SMTP."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "Quarkus mail service"
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "For the test Citrus starts an SMTP mail server that is able to accept the mail messages sent by Quarkus."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "Citrus mail server component"
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "Let's tell Quarkus to connect to this Citrus mail server during the test."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "Quarkus mailer configuration"
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "With this setup we can now add a test action that receives and verifies the mail message sent."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "Verify mail message sent"
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid ""
+"The expected mail content uses some test variables `${client}` and `${product}`.\n"
+"You may set these test variables in Citrus accordingly so these placeholders get resolved before the validation is performed."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid ""
+"The mail server responds with a code and a text according to the SMTP protocol.\n"
+"In the success case this is a `250` `Ok` response."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid ""
+"Again you can introduce a Citrus test behavior that covers the booking completed mail message verification.\n"
+"Many tests may apply this behavior in their test logic then."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "Another interesting point about the mail server interaction is that the Citrus mail server component is also able to simulate a mail server error."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "Simulate mail server error"
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid ""
+"This time the Citrus mail server explicitly responds with a `443` `Failed!` error and the Quarkus application needs to handle this error accordingly.\n"
+"Verifying error scenarios in automated integration tests is very important and helps us to develop robust applications.\n"
+"It is great to have the opportunity to trigger these error scenarios with Citrus in an automated test."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid "Summary"
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid ""
+"In this post we have seen how to combine the Citrus test framework with Quarkus test dev services in order to perform automated integration testing of event-driven applications.\n"
+"The test is able to produce/consume events on Kafka streams and verifies the Quarkus application accordingly by verifying the Json data and the persisted entities in the database."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid ""
+"Citrus as a framework provides many modules each of them providing endpoints (client and server) for straight forward messaging interaction during an integration test (e.g. Kafka, JMS, FTP, Http, SOAP, Mail, ...).\n"
+"The message validation capabilities allow us to verify the exchanged message content with different formats (e.g. Json, XML, plaintext)."
+msgstr ""
+
+#: _posts/2023-12-04-testing-quarkus-with-citrus.adoc
+msgid ""
+"While the Citrus project has been around for quite some time the Citrus Quarkus extension is a new addition in the most recent Citrus version 4.0.\n"
+"As always, your feedback is much appreciated!\n"
+"Please give it a try and let us know what you think about this approach of automated integration testing with the combination of Citrus and Quarkus testing."
+msgstr ""
