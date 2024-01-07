@@ -627,10 +627,23 @@ msgstr "*コンシューマーグループ内の複数のコンシューマー�
 
 #: _versions/main/guides/kafka.adoc
 msgid ""
-"For a given application instance, the number of consumers inside the consumer group can be configured using `mp.messaging.incoming.$channel.partitions` property.\n"
+"For a given application instance, the number of consumers inside the consumer group can be configured using `mp.messaging.incoming.$channel.concurrency` property.\n"
 "The partitions of the subscribed topic will be divided among the consumer threads.\n"
-"Note that if the `partitions` value exceed the number of partitions of the topic, some consumer threads won't be assigned any partitions."
-msgstr "特定のアプリケーションインスタンスの場合、コンシューマーグループ内のコンシューマーの数は、`mp.messaging.incoming.$channel.partitions` プロパティーを使用して設定できます。サブスクライブされたトピックのパーティションは、コンシューマースレッド間で分割されます。`partitions` の値がトピックのパーティションの数を超える場合、一部のコンシューマスレッドにはパーティションが割り当てられないことに注意してください。"
+"Note that if the `concurrency` value exceed the number of partitions of the topic, some consumer threads won't be assigned any partitions."
+msgstr ""
+
+#. type: Block title
+#: _versions/main/guides/kafka.adoc
+#, no-wrap
+msgid "Deprecation"
+msgstr "非推奨"
+
+#: _versions/main/guides/kafka.adoc
+msgid ""
+"The https://smallrye.io/smallrye-reactive-messaging/latest/concepts/incoming-concurrency/[concurrency attribute]\n"
+"provides a connector agnostic way for non-blocking concurrent channels and replaces the Kafka connector specific `partitions` attribute.\n"
+"The `partitions` attribute is therefore deprecated and will be removed in future releases."
+msgstr ""
 
 #: _versions/main/guides/kafka.adoc
 msgid "*Multiple consumer applications inside a consumer group*"
@@ -782,6 +795,59 @@ msgstr "その生成された UUID をコンシューマーグループとして
 #: _versions/main/guides/kafka.adoc
 msgid "If the `group.id` attribute is not set, it defaults the `quarkus.application.name` configuration property."
 msgstr "`group.id` 属性が設定されていない場合、`quarkus.application.name` 設定プロパティーがデフォルトになります。"
+
+#: _versions/main/guides/kafka.adoc
+msgid "Manual topic-partition assignment"
+msgstr ""
+
+#: _versions/main/guides/kafka.adoc
+msgid ""
+"The `assign-seek` channel attribute allows manually assigning topic-partitions to a Kafka incoming channel,\n"
+"and optionally seek to a specified offset in the partition to start consuming records.\n"
+"If `assign-seek` is used, the consumer will not be dynamically subscribed to topics,\n"
+"but instead will statically assign the described partitions.\n"
+"In manual topic-partition rebalancing doesn't happen and therefore rebalance listeners are never called."
+msgstr ""
+
+#: _versions/main/guides/kafka.adoc
+msgid "The attribute takes a list of triplets separated by commas: `<topic>:<partition>:<offset>`."
+msgstr ""
+
+#: _versions/main/guides/kafka.adoc
+msgid "For example, the configuration"
+msgstr ""
+
+#: _versions/main/guides/kafka.adoc
+msgid "assigns the consumer to:"
+msgstr ""
+
+#: _versions/main/guides/kafka.adoc
+msgid "Partition 0 of topic 'topic1', setting the initial position at offset 10."
+msgstr ""
+
+#: _versions/main/guides/kafka.adoc
+msgid "Partition 1 of topic 'topic2', setting the initial position at offset 20."
+msgstr ""
+
+#: _versions/main/guides/kafka.adoc
+msgid "The topic, partition, and offset in each triplet can have the following variations:"
+msgstr ""
+
+#: _versions/main/guides/kafka.adoc
+msgid "If the topic is omitted, the configured topic will be used."
+msgstr ""
+
+#: _versions/main/guides/kafka.adoc
+msgid "If the offset is omitted, partitions are assigned to the consumer but won't be sought to offset."
+msgstr ""
+
+#: _versions/main/guides/kafka.adoc
+msgid "If offset is 0, it seeks to the beginning of the topic-partition."
+msgstr ""
+
+#: _versions/main/guides/kafka.adoc
+msgid "If offset is -1, it seeks to the end of the topic-partition."
+msgstr ""
 
 #. type: Title ===
 #: _versions/main/guides/kafka.adoc
@@ -1075,12 +1141,6 @@ msgid ""
 "It will only return from the method when the event is acked or nacked by the receiver."
 msgstr "`sendAndAwait` メソッドを使用して、イベントをエミッターに送信することをブロックすることもできます。受信者がイベントを ack または nack したときのみ、このメソッドから戻ります。"
 
-#. type: Block title
-#: _versions/main/guides/kafka.adoc
-#, no-wrap
-msgid "Deprecation"
-msgstr "非推奨"
-
 #. type: delimited block =
 #: _versions/main/guides/kafka.adoc
 msgid "The `io.smallrye.reactive.messaging.annotations.Emitter`, `io.smallrye.reactive.messaging.annotations.Channel` and `io.smallrye.reactive.messaging.annotations.OnOverflow` classes are now deprecated and replaced by:"
@@ -1105,12 +1165,6 @@ msgstr "`org.eclipse.microprofile.reactive.messaging.OnOverflow`"
 #: _versions/main/guides/kafka.adoc
 msgid "The new `Emitter.send` method returns a `CompletionStage` completed when the produced message is acknowledged."
 msgstr "新しい `Emitter.send` メソッドは、生成されたメッセージが確認されると、`CompletionStage` の完了を返します。"
-
-#. type: Block title
-#: _versions/main/guides/kafka.adoc
-#, no-wrap
-msgid "Depreciation"
-msgstr "非推奨"
 
 #. type: delimited block =
 #: _versions/main/guides/kafka.adoc
@@ -1378,6 +1432,39 @@ msgstr "トランザクションを意識したコンシューマー"
 #: _versions/main/guides/kafka.adoc
 msgid "If you'd like to consume records only written and committed inside a Kafka transaction you need to configure the `isolation.level` property on the incoming channel as such:"
 msgstr "Kafka トランザクション内で書き込まれ、コミットされたレコードのみを使用する場合は、着信チャネルの `isolation.level` プロパティーを以下のように設定する必要があります。"
+
+#: _versions/main/guides/kafka.adoc
+msgid "Kafka Request-Reply"
+msgstr ""
+
+#: _versions/main/guides/kafka.adoc
+msgid ""
+"The Kafka Request-Reply pattern allows to publish a request record to a Kafka topic and then await for a reply record that responds to the initial request.\n"
+"The Kafka connector provides the `KafkaRequestReply` custom emitter that implements the requestor (or the client) of the request-reply pattern for Kafka outbound channels:"
+msgstr ""
+
+#: _versions/main/guides/kafka.adoc
+msgid "It can be injected as a regular emitter `@Channel`:"
+msgstr ""
+
+#: _versions/main/guides/kafka.adoc
+msgid ""
+"The request method publishes the record to the configured target topic of the outgoing channel,\n"
+"and polls a reply topic (by default, the target topic with `-replies` suffix) for a reply record.\n"
+"When the reply is received the returned `Uni` is completed with the record value.\n"
+"The request send operation generates a **correlation id** and sets a header (by default `REPLY_CORRELATION_ID`),\n"
+"which it expects to be sent back in the reply record."
+msgstr ""
+
+#: _versions/main/guides/kafka.adoc
+msgid "The replier can be implemented using a Reactive Messaging processor (see xref:processing-messages[Processing Messages])."
+msgstr ""
+
+#: _versions/main/guides/kafka.adoc
+msgid ""
+"For more information on Kafka Request Reply feature and advanced configuration options,\n"
+"see the https://smallrye.io/smallrye-reactive-messaging/latest/kafka/request-reply/[Smallrye Reactive Messaging Documentation]."
+msgstr ""
 
 #. type: Title ==
 #: _versions/main/guides/kafka.adoc
@@ -1986,6 +2073,38 @@ msgid ""
 "You can adjust the timeout for topic verification calls to the broker using the `health-topic-verification-timeout` configuration."
 msgstr "これを行うには、_admin connection_ が必要です。`health-topic-verification-timeout` 設定を使用して、ブローカーへのトピック検証呼び出しのタイムアウトを調整することができます。"
 
+#: _versions/main/guides/kafka.adoc
+msgid "Observability"
+msgstr ""
+
+#: _versions/main/guides/kafka.adoc
+msgid ""
+"If the xref:opentelemetry.adoc[OpenTelemetry extension] is present,\n"
+"then the Kafka connector channels work out-of-the-box with the OpenTelemetry Tracing.\n"
+"Messages written to Kafka topics propagate the current tracing span.\n"
+"On incoming channels, if a consumed Kafka record contains tracing information the message processing inherits the message span as parent."
+msgstr ""
+
+#: _versions/main/guides/kafka.adoc
+msgid "Tracing can be disabled explicitly per channel:"
+msgstr ""
+
+#: _versions/main/guides/kafka.adoc
+msgid ""
+"If the xref:telemetry-micrometer.adoc[Micrometer extension] is present,\n"
+"then Kafka producer and consumer clients metrics are exposed as Micrometer meters."
+msgstr ""
+
+#: _versions/main/guides/kafka.adoc
+msgid ""
+"Per channel metrics are also exposed as Micrometer meters.\n"
+"The number of messages produced or received per channel, acknowledgments and duration of processing are exposed."
+msgstr ""
+
+#: _versions/main/guides/kafka.adoc
+msgid "The messaging meters can be disabled:"
+msgstr ""
+
 #. type: Title ==
 #: _versions/main/guides/kafka.adoc
 #, no-wrap
@@ -2178,6 +2297,32 @@ msgid ""
 "With in-memory channels we were able to test application code processing messages without starting a Kafka broker.\n"
 "Note that different in-memory channels are independent, and switching channel connector to in-memory does not simulate message delivery between channels configured to the same Kafka topic."
 msgstr "インメモリーチャネルを使用すると、Kafka ブローカーを開始せずにメッセージ処理のアプリケーションコードをテストできました。異なるインメモリーチャネルは独立しており、チャネルコネクターをインメモリーに切り替えても、同じ Kafka トピックに設定されたチャネル間でメッセージ配信をシミュレートしないことに注意してください。"
+
+#: _versions/main/guides/kafka.adoc
+msgid "Context propagation with InMemoryConnector"
+msgstr ""
+
+#: _versions/main/guides/kafka.adoc
+msgid "By default, in-memory channels dispatch messages on the caller thread, which would be the main thread in unit tests."
+msgstr ""
+
+#: _versions/main/guides/kafka.adoc
+msgid ""
+"The `quarkus-test-vertx` dependency provides the `@io.quarkus.test.vertx.RunOnVertxContext` annotation,\n"
+"which when used on a test method, executes the test on a Vert.x context."
+msgstr ""
+
+#: _versions/main/guides/kafka.adoc
+msgid "However, most of the other connectors handle context propagation dispatching messages on separate duplicated Vert.x contexts."
+msgstr ""
+
+#: _versions/main/guides/kafka.adoc
+msgid ""
+"If your tests are dependent on context propagation,\n"
+"you can configure the in-memory connector channels with the `run-on-vertx-context` attribute to dispatch events,\n"
+"including messages and acknowledgements, on a Vert.x context.\n"
+"Alternatively you can switch this behaviour using the `InMemorySource#runOnVertxContext` method."
+msgstr ""
 
 #. type: Title ===
 #: _versions/main/guides/kafka.adoc
