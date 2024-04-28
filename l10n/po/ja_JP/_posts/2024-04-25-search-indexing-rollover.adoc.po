@@ -1,0 +1,403 @@
+msgid ""
+msgstr ""
+"Language: ja_JP\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: jekyll-l10n\n"
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid "Indexing rollover with Quarkus and Hibernate Search"
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid "This is the first post in the series that dives into the implementation details of the search.quarkus.io application. Are you interested in near zero-downtime reindexing? Then this one is for you!"
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid ""
+"This is the first post in the series diving into the implementation details of the\n"
+"link:https://github.com/quarkusio/search.quarkus.io[application] backing the guide search of\n"
+"link:https://quarkus.io/guides/[quarkus.io]."
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid ""
+"Does your application need full-text search capabilities? Do you need to keep your application running\n"
+"and producing search results without any downtime, even when reindexing all your data?\n"
+"Look no further. In this post, we'll cover how you can approach this problem\n"
+"and solve it in practice with a few low-level APIs, provided you use Hibernate Search,\n"
+"be it link:{quarkus-hibernate-search-docs-url}[on top of Hibernate ORM]\n"
+"or https://quarkus.io/version/main/guides/hibernate-search-standalone-elasticsearch[in standalone mode]."
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid ""
+"The approach suggested in this post is based on the fact that Hibernate Search uses\n"
+"link:{hibernate-search-docs-url}#backend-elasticsearch-indexlayout[aliased indexes],\n"
+"and communicates with the actual index through a read/write alias, depending on the operation it needs to perform.\n"
+"For example, a search operation will be routed to a read index alias,\n"
+"while an indexing operation will be sent to a write index alias."
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid ""
+"This approach is implemented and successfully used in our Quarkus application that backs the guides'\n"
+"search of https://quarkus.io/guides/[quarkus.io/guides/].\n"
+"You can see the complete implementation here:\n"
+"link:https://github.com/quarkusio/search.quarkus.io/blob/d956b6a1341d8693fa1d6b7881f3840f48bdaacd/src/main/java/io/quarkus/search/app/indexing/Rollover.java#L44-L331[rollover implementation]\n"
+"and link:https://github.com/quarkusio/search.quarkus.io/blob/d956b6a1341d8693fa1d6b7881f3840f48bdaacd/src/main/java/io/quarkus/search/app/indexing/IndexingService.java#L226-L244[rollover usage]."
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid ""
+"Applications using Hibernate Search can keep their search indexes up-to-date by updating the index gradually,\n"
+"as the data on which the index documents are based is modified, providing a near real-time index synchronisation."
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid ""
+"On the other hand, if the search requirements allow for a delay in synchronisation\n"
+"or the data is updated only at certain times of day, the option of mass indexing can effectively keep the indexes up-to-date.\n"
+"The link:{hibernate-search-docs-url}[Hibernate Search documentation] provides more information about these approaches\n"
+"and other Hibernate Search capabilities."
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid ""
+"The application discussed in this post is using the mass indexing approach.\n"
+"This means that at certain events, e.g., when a new version of the application is deployed or a scheduled time is reached,\n"
+"the application has to process the documentation guides and create search index documents from them."
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid ""
+"Now, since we want our application to keep  providing results to any search requests while we add/update documents to the indexes,\n"
+"we cannot perform a simple reindexing operation\n"
+"using a link:{hibernate-search-docs-url}#search-batchindex-massindexer[mass indexer],\n"
+"or the recently added link:{quarkus-hibernate-search-docs-url}#management[management endpoint in Quarkus],\n"
+"as these would drop all existing documents from the index before indexing them:\n"
+"search operations would not be able to match them anymore until reindexing finishes."
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid "Instead, we can create a new index with the same schema and route any write operations to it."
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid ""
+"Since Hibernate Search does not provide the rollover feature out of the box (https://hibernate.atlassian.net/browse/HSEARCH-3499[yet])\n"
+"we will need to resort to using the lower-level APIs to access the Elasticsearch client and perform the required operations ourselves.\n"
+"To do so, we need to follow a few simple steps:"
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid "Get the mapping information for the index we want to reindex using the schema manager."
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid ""
+"@Inject\n"
+"SearchMapping searchMapping; // <1>\n"
+"// ...\n"
+"\n"
+"searchMapping.scope(MyIndexedEntity.class).schemaManager() // <2>\n"
+"    .exportExpectedSchema((backendName, indexName, export) -> { // <3>\n"
+"        var createIndexRequestBody = export.extension(ElasticsearchExtension.get())\n"
+"                .bodyParts().get(0); // <4>\n"
+"        var mappings = createIndexRequestBody.getAsJsonObject(\"mappings\"); // <5>\n"
+"        var settings =createIndexRequestBody.getAsJsonObject(\"settings\"); // <6>\n"
+"    });"
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid "Inject `SearchMapping` somewhere in your app so that we can use it to access a schema manager."
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid ""
+"Get a schema manager for the indexed entity we are interested in (`MyIndexedEntity`).\n"
+"If all entities should be targeted, then `Object.class` can be used to create the scope."
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid "Use the export schema API to access the mapping information."
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid ""
+"Use the extension to get access to the Elasticsearch-specific `.bodyParts()` method that returns\n"
+"a JSON representing the JSON HTTP body needed to create the indexes."
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid "Get the mapping information for the particular index."
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid "Get the settings for the particular index."
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid "Get the reference to the Elasticsearch client, so we can perform API calls to the search backend cluster:"
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid ""
+"@Inject\n"
+"SearchMapping searchMapping; // <1>\n"
+"// ...\n"
+"RestClient client = searchMapping.backend() // <2>\n"
+"    .unwrap(ElasticsearchBackend.class) // <3>\n"
+"    .client(RestClient.class); // <4>"
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid "Access the backend from a search mapping instance."
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid "Unwrap the backend to the `ElasticsearchBackend`, so that we can access backend-specific APIs."
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid "Get a reference to the Elasticsearch's rest client."
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid ""
+"Create a new index using the OpenSearch/Elasticsearch rollover API\n"
+"that would allow us to keep using the existing index for read operations,\n"
+"while write operations will be sent to the new index:"
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid ""
+"@Inject\n"
+"SearchMapping searchMapping; // <1>\n"
+"// ...\n"
+"\n"
+"SearchIndexedEntity<?> entity = searchMapping.indexedEntity(MyIndexedEntity.class);\n"
+"var index = entity.indexManager().unwrap(ElasticsearchIndexManager.class).descriptor(); // <2>\n"
+"\n"
+"var request = new Request(\"POST\", \"/\" + index.writeName() + \"/_rollover\"); // <3>\n"
+"var body = new JsonObject();\n"
+"body.add(\"mappings\", mappings);\n"
+"body.add(\"settings\", settings);\n"
+"body.add(\"aliases\", new JsonObject()); // <4>\n"
+"request.setEntity(new StringEntity(gson.toJson(body), ContentType.APPLICATION_JSON));\n"
+"\n"
+"var response = client.performRequest(request); // <5>\n"
+"//..."
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid "Get the index descriptor to get the aliases from it."
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid "Start building the rollover request body using the write index alias from the index descriptor."
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid ""
+"Note that we are including an empty \"aliases\" so that the aliases are not copied over to the new index,\n"
+"except for the write alias (which is implicitly updated since the rollover request is targeting it directly).\n"
+"We don't want the read alias to start pointing to the new index immediately."
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid "Perform the rollover API request using the Elasticsearch REST client obtained in the previous step."
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid "With this successfully completed, indexes are in the state we wanted:"
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid "We can start populating our write index without affecting search requests."
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid "Once we are done with indexing, we can either commit or rollback depending on the results:"
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid ""
+"Committing the index rollover means that we are happy with the results and ready to switch to the new index\n"
+"for both reading and writing operations while removing the old one. To do that, we need to send a request to the cluster:"
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid ""
+"var client = ... <1>\n"
+"\n"
+"var request = new Request(\"POST\", \"_aliases\"); // <2>\n"
+"request.setEntity(new StringEntity(\"\"\"\n"
+"        {\n"
+"            \"actions\": [\n"
+"                {\n"
+"                    \"add\": {  // <3>\n"
+"                        \"index\": \"%s\",\n"
+"                        \"alias\": \"%s\",\n"
+"                        \"is_write_index\": false\n"
+"                    },\n"
+"                    \"remove_index\": {  // <4>\n"
+"                        \"index\": \"%s\"\n"
+"                    }\n"
+"                }\n"
+"            ]\n"
+"        }\n"
+"        \"\"\".formatted( newIndexName, readAliasName, oldIndexName ) // <5>\n"
+"    , ContentType.APPLICATION_JSON));\n"
+"\n"
+"var response = client.performRequest(request); // <5>\n"
+"//..."
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid "Get access to the Elasticsearch REST client as described above."
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid "Start creating an `_aliases` API request."
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid ""
+"Add an action to update the index aliases to use the new index for both read and write operations.\n"
+"Here, we must make the read alias point to the new index."
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid "Add an action to remove the old index."
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid ""
+"The names of the new/old index can be retrieved from the response of the initial `_rollover` API request,\n"
+"while the aliases can be retrieved from the index descriptor."
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid ""
+"Otherwise, if we have encountered an error or decided for any other reason to stop the rollover, we can roll back to using\n"
+"the initial index:"
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid ""
+"var client = ... <1>\n"
+"\n"
+"var request = new Request(\"POST\", \"_aliases\"); // <2>\n"
+"request.setEntity(new StringEntity(\"\"\"\n"
+"        {\n"
+"            \"actions\": [\n"
+"                {\n"
+"                    \"add\": {  // <3>\n"
+"                        \"index\": \"%s\",\n"
+"                        \"alias\": \"%s\",\n"
+"                        \"is_write_index\": true\n"
+"                    },\n"
+"                    \"remove_index\": {  // <4>\n"
+"                        \"index\": \"%s\"\n"
+"                    }\n"
+"                }\n"
+"            ]\n"
+"        }\n"
+"        \"\"\".formatted( oldIndexName, writeAliasName, newIndexName ) // <5>\n"
+"    , ContentType.APPLICATION_JSON));\n"
+"\n"
+"var response = client.performRequest(request); // <5>\n"
+"//..."
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid ""
+"Add an action to update the index aliases to use the old index for both read and write operations.\n"
+"Here, we must make the write alias point back to the old index."
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid "Add an action to remove the new index."
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid ""
+"Keep in mind that in case of a rollback, your initial index may be out of sync if any write operations were performed\n"
+"while the write alias was pointing to the new index."
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid "With this knowledge, we can organize the rollover process as follows:"
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid ""
+"try (Rollover rollover = Rollover.start(searchMapping)) {\n"
+"    // Perform the indexing operations ...\n"
+"    rollover.commit();\n"
+"}"
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid "Where the `Rollover` class will look as follows:"
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid ""
+"class Rollover implements Closeable {\n"
+"    public static Rollover start(SearchMapping searchMapping) {\n"
+"        // initiate the rollover process by sending the _rollover request ...\n"
+"        // ...\n"
+"        return new Rollover( client, rolloverResponse );  // <1>\n"
+"    }\n"
+"\n"
+"    @Override\n"
+"    public void close() {\n"
+"        if ( !done ) { // <2>\n"
+"            rollback();\n"
+"        }\n"
+"    }\n"
+"\n"
+"    public void commit() {\n"
+"        // send the `_aliases` request to switch to the *new* index\n"
+"        // ...\n"
+"        done = true;\n"
+"    }\n"
+"\n"
+"    public void rollback() {\n"
+"        // send the `_aliases` request to switch to the *old* index\n"
+"        // ...\n"
+"        done = true;\n"
+"    }\n"
+"}"
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid "Keep the reference to the Elasticsearch REST client to perform API calls."
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid "If we haven't successfully committed the rollover, it'll be rolled back on close."
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid ""
+"Once again, for a complete working example of this rollover implementation, check out the\n"
+"link:https://github.com/quarkusio/search.quarkus.io[search.quarkus.io on GitHub]."
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid ""
+"If you find this feature useful and would like to have it built-in into your Hibernate Search and Quarkus apps\n"
+"feel free to reach out to us on the https://hibernate.atlassian.net/browse/HSEARCH-3499[pending feature requests]\n"
+"to discuss your ideas and suggestions."
+msgstr ""
+
+#: _posts/2024-04-25-search-indexing-rollover.adoc
+msgid ""
+"Stay tuned for more details in the coming weeks as we publish more blog posts\n"
+"diving into other interesting implementation aspects of this application.\n"
+"Happy searching and rolling over!"
+msgstr ""
