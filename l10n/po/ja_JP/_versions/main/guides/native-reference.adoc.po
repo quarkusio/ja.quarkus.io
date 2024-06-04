@@ -533,6 +533,229 @@ msgid ""
 "For example:"
 msgstr "`stackcount` で生成されたスタックは、flamegraph に変換する前に折りたたむ必要があります。例えば、以下のような感じです:"
 
+#: _versions/main/guides/native-reference.adoc
+msgid "Native Image Tracing Agent Integration"
+msgstr ""
+
+#: _versions/main/guides/native-reference.adoc
+msgid ""
+"Quarkus users that want to integrate new libraries/components into native image process\n"
+"(e.g. link:https://github.com/hierynomus/smbj[smbj]),\n"
+"or want to use JDK APIs that require extensive native image configuration to work (e.g. graphical user interfaces),\n"
+"face a considerable challenge coming up with the native image configuration to make their use cases work.\n"
+"These users can tweak their applications to run in JVM mode with the native image agent in order to\n"
+"auto-generate native image configuration that will help them get a head start getting applications to work as native executables."
+msgstr ""
+
+#: _versions/main/guides/native-reference.adoc
+msgid ""
+"The native image tracing agent is a JVM tool interface (JVMTI) agent available within both GraalVM and Mandrel that\n"
+"tracks all usages of dynamic features such as reflection, JNI, dynamic proxies, access classpath resources...etc,\n"
+"during an application's regular JVM execution.\n"
+"When the JVM stops, it dumps the information on the dynamic features used during the run\n"
+"onto a collection of native image configuration files that can be used in subsequent native image builds."
+msgstr ""
+
+#: _versions/main/guides/native-reference.adoc
+msgid ""
+"Using the agent and applying the generated data can be difficult for Quarkus users.\n"
+"First, the agent can be cumbersome because it requires the JVM arguments to be modified,\n"
+"and the generated configuration needs to be placed in a specific location such that the subsequent native image builds picks them up.\n"
+"Secondly, the native image configuration produced contains a lot of superfluous configuration that the Quarkus integration takes care of."
+msgstr ""
+
+#: _versions/main/guides/native-reference.adoc
+msgid ""
+"Native image tracing agent integration is included in Quarkus to make the agent easier to consume.\n"
+"In this section you will learn about the integration and how to apply it to your Quarkus application."
+msgstr ""
+
+#: _versions/main/guides/native-reference.adoc
+msgid ""
+"The integration is currently only available for Maven applications.\n"
+"link:https://github.com/quarkusio/quarkus/issues/40361[Gradle integration] will follow up."
+msgstr ""
+
+#: _versions/main/guides/native-reference.adoc
+msgid "Integration Testing with the Tracing Agent"
+msgstr ""
+
+#: _versions/main/guides/native-reference.adoc
+msgid ""
+"Quarkus users can now run JVM mode integration tests on Quarkus Maven applications transparently with the native image tracing agent.\n"
+"To do this make sure a container runtime is available,\n"
+"because JVM mode integration tests will run using the JVM within the default Mandrel builder container image.\n"
+"This image contains the agent libraries required to produce native image configuration,\n"
+"hence avoiding the need for a local Mandrel or GraalVM installation."
+msgstr ""
+
+#: _versions/main/guides/native-reference.adoc
+msgid ""
+"It is highly recommended to align the Mandrel version used in integration testing\n"
+"with the Mandrel version used to build native executables.\n"
+"Doing in-container native builds with the default Mandrel builder image,\n"
+"is the safest way to keep both versions aligned."
+msgstr ""
+
+#: _versions/main/guides/native-reference.adoc
+msgid "Additionally make sure that the `native-image-agent` goal is present in the `quarkus-maven-plugin` configuration:"
+msgstr ""
+
+#: _versions/main/guides/native-reference.adoc
+msgid ""
+"With a container runtime running,\n"
+"invoke Maven's `verify` goal with `-DskipITs=false -Dquarkus.test.integration-test-profile=test-with-native-agent` to run the JVM mode integration tests and\n"
+"generate the native image configuration.\n"
+"For example:"
+msgstr ""
+
+#: _versions/main/guides/native-reference.adoc
+msgid ""
+"When the Maven invocation completes,\n"
+"you can inspect the generated configuration in the `target/native-image-agent-final-config` folder:"
+msgstr ""
+
+#: _versions/main/guides/native-reference.adoc
+msgid "Informative By Default"
+msgstr ""
+
+#: _versions/main/guides/native-reference.adoc
+msgid ""
+"By default the generated native image configuration files are not used by subsequent native image building processes.\n"
+"This precaution is taken to avoid situations where seemingly unrelated actions have unintended consequences on the native executable produced,\n"
+"e.g. disabling randomly failing tests."
+msgstr ""
+
+#: _versions/main/guides/native-reference.adoc
+msgid ""
+"Quarkus users are free to copy the files from the folder reported in the build,\n"
+"store them under source control and evolve as needed.\n"
+"Ideally these files should be stored under the `src/main/resources/META-INF/native-image/<group-id>/<artifact-id>`` folder,\n"
+"in which case the native image process will automatically pick them up."
+msgstr ""
+
+#: _versions/main/guides/native-reference.adoc
+msgid ""
+"If managing native image agent configuration files manually,\n"
+"it is highly recommended to regenerate them each time a Mandrel version update occurs,\n"
+"because the configuration necessary to make the application work might have varied due to internal Mandrel changes."
+msgstr ""
+
+#: _versions/main/guides/native-reference.adoc
+msgid ""
+"It is possible to instruct Quarkus to optionally apply the generated native image configuration files into subsequent native image processes,\n"
+"by setting the -Dquarkus.native.agent-configuration-apply` property.\n"
+"This can be useful to verify that the native integration tests work as expected,\n"
+"assuming that the JVM unit tests have generated the correct native image configuration.\n"
+"The typical workflow here would be to first run the integration tests with the native image agent as shown in the previous section:"
+msgstr ""
+
+#: _versions/main/guides/native-reference.adoc
+msgid ""
+"And then request a native build passing in the configuration apply flag.\n"
+"A message during the native build process will indicate that the native image agent generated configuration files are being applied:"
+msgstr ""
+
+#: _versions/main/guides/native-reference.adoc
+msgid "Debugging the Tracing Agent Integration"
+msgstr ""
+
+#: _versions/main/guides/native-reference.adoc
+msgid ""
+"If the generated native image agent configuration is not satisfactory,\n"
+"more information can be obtained using any of the following techniques:"
+msgstr ""
+
+#: _versions/main/guides/native-reference.adoc
+msgid "Debugging Filters"
+msgstr ""
+
+#: _versions/main/guides/native-reference.adoc
+msgid ""
+"Quarkus generates native image tracing agent configuration filters.\n"
+"These filters exclude commonly used packages for which Quarkus already applies the necessary configuration."
+msgstr ""
+
+#: _versions/main/guides/native-reference.adoc
+msgid ""
+"If native image agent is generating a configuration that it’s not working as expected,\n"
+"you should check that the configuration files include the expected information.\n"
+"For example, if some method happens to be accessed via reflection at runtime and you get an error,\n"
+"you want to verify that the configuration file contains a reflection entry for that method."
+msgstr ""
+
+#: _versions/main/guides/native-reference.adoc
+msgid ""
+"If the entry is missing, it could be that some call path is being filtered that maybe shouldn’t have been.\n"
+"To verify that, inspect the contents of `target/quarkus-caller-filter.json` and `target/quarkus-access-filter.json` files,\n"
+"and confirm that the class and/or package making the call or being accessed is not being filtered out."
+msgstr ""
+
+#: _versions/main/guides/native-reference.adoc
+msgid ""
+"If the missing entry is related to some resource,\n"
+"you should inspect the Quarkus build debug output and verify which resource patterns are being discarded, e.g."
+msgstr ""
+
+#: _versions/main/guides/native-reference.adoc
+msgid "Tracing Agent Logging"
+msgstr ""
+
+#: _versions/main/guides/native-reference.adoc
+msgid ""
+"The native image tracing agent can log the method invocations that result in the generated configuration to a JSON file.\n"
+"This can help understand why a configuration entry is generated.\n"
+"To enable this logging,\n"
+"`-Dquarkus.test.native.agent.output.property.name=trace-output` and\n"
+"`-Dquarkus.test.native.agent.output.property.value=native-image-agent-trace-file.json`\n"
+"system properties need to be added.\n"
+"For example:"
+msgstr ""
+
+#: _versions/main/guides/native-reference.adoc
+msgid ""
+"When trace output is configured, no native image configuration is generated,\n"
+"and instead a `target/native-image-agent-trace-file.json` file is generated that contains trace information.\n"
+"For example:"
+msgstr ""
+
+#: _versions/main/guides/native-reference.adoc
+msgid ""
+"Unfortunately the trace output does not take into account the applied configuration filters,\n"
+"so the output contains all configuration decisions made by the agent.\n"
+"This is unlikely to change in the near future\n"
+"(see link:https://github.com/oracle/graal/issues/7635[oracle/graal#7635])."
+msgstr ""
+
+#: _versions/main/guides/native-reference.adoc
+msgid "Configuration With Origins (Experimental)"
+msgstr ""
+
+#: _versions/main/guides/native-reference.adoc
+msgid ""
+"Alternative to the trace output,\n"
+"it is possible to configure the native image agent with an experimental flag that shows the origins of the configuration entries.\n"
+"You can enable that with the following additional system property:"
+msgstr ""
+
+#: _versions/main/guides/native-reference.adoc
+msgid ""
+"The origins of the configuration entries can be found in text files inside the `target/native-image-agent-base-config` folder.\n"
+"For example:"
+msgstr ""
+
+#: _versions/main/guides/native-reference.adoc
+msgid "Debugging With GDB"
+msgstr ""
+
+#: _versions/main/guides/native-reference.adoc
+msgid ""
+"The native image agent itself is a native executable produced with GraalVM that uses JVMTI to intercept the calls that require native image configuration.\n"
+"As a last resort, it is possible to debug the native image agent with GDB,\n"
+"see link:https://github.com/oracle/graal/blob/master/substratevm/src/com.oracle.svm.agent/README.md[here]\n"
+"for instructions on how to do that."
+msgstr ""
+
 #. type: Title ==
 #: _versions/main/guides/native-reference.adoc
 #, no-wrap
