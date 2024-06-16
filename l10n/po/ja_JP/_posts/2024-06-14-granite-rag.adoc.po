@@ -1,0 +1,352 @@
+msgid ""
+msgstr ""
+"Language: ja_JP\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: jekyll-l10n\n"
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid "Crafting a Local RAG application with Quarkus"
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid "How to build a RAG chatbot using the Granite LLM."
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid ""
+"This blog post demonstrate how to build an AI-infused chatbot application using Quarkus, LangChain4j, https://infinispan.org/[Infinispan], and the https://github.com/ibm-granite/granite-code-models[Granite LLM].\n"
+"In this post, we will create an **entirely** local solution, eliminating the need for any cloud services, including the LLM."
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid ""
+"Our chatbot leverages the Granite LLM, a language model that generates contextually relevant text based on user prompts.\n"
+"To run Granite locally, we'll be utilizing https://instructlab.ai/[InstructLab], though https://github.com/containers/podman-desktop-extension-ai-lab[Podman AI Studio] is another viable option."
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid ""
+"The core of our application is based on the RAG (Retrieval-Augmented Generation) pattern.\n"
+"This approach enhances the chatbot's responses by retrieving pertinent information from a vector database — in this case, Infinispan — before generating a response."
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid "Architecture"
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid "Our chatbot application is composed of four main components:"
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid ""
+"**Web Socket Endpoint**: This component serves as the communication bridge between the chatbot's backend and the frontend interface.\n"
+"This component uses the new Quarkus WebSocket-Next extension to handle WebSocket connections efficiently.\n"
+"It relies on the AI Service to interact with the LLM."
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid "**Ingestor**: The ingestor is responsible for populating the database with relevant data. It processes a set of local documents, split them into text segments, compute their vector representation and store them into Infinispan."
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid "**Retriever**: The retriever allows finding relevant text segments into Infinispan. When a user inputs a query, the retriever searches the vector database to find the most relevant pieces of information."
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid "**AI Service**: This is the core component of the chatbot, combining the capabilities of the retriever and the Granite LLM. The AI service takes the relevant information fetched by the retriever and uses the Granite LLM to generate the appropriate responses."
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid "The following picture illustrates the high-level architecture:"
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid "A simple explanation of the RAG pattern"
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid "The RAG (Retrieval-Augmented Generation) pattern is one of the most popular AI patterns, combining a retrieval mechanism with a generation mechanism to provide more accurate and relevant responses."
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid "The RAG pattern operates in two main steps:"
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid "**Ingestion**: The application ingests a set of documents, processes them, and stores them in a vector database."
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid "**Retrieval**: When a user inputs a query, the application retrieves the most relevant information from the vector database."
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid "The following image gives a high-level overview of the _traditional_ RAG pattern:"
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid "There are more advanced version of the RAG pattern, but let's stick to the basics for this application."
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid "Ingestion"
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid ""
+"Let's first look at the ingestion step.\n"
+"The ingestion process involves reading a set of documents, splitting them into text segments, computing their vector representations, and storing them in Infinispan."
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid ""
+"The secret of an effective RAG implementation lies in how the text segments are computed.\n"
+"In our application, we will follow a straightforward approach, but more advanced techniques are available and often required.\n"
+"Depending on the document, you can use a variety of techniques to split the text into segments, such as paragraph splitting, sentence splitting, or more advanced techniques like the `recursive` splitter.\n"
+"Also, if the document has a specific structure, you can use this structure to split the text into segments (like sections, chapters, etc.)."
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid ""
+"The embedding model is responsible for converting text into a vector representation.\n"
+"For simplicity, we use an in-process embedding model (`BGE-small`).\n"
+"Other options, like the Universal Angle Embedding, are available, but we'll stick with BGE-small for simplicity."
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid "Retrieval"
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid ""
+"The second step is the retrieval process.\n"
+"When a user inputs a query, the application searches the vector database to find the most relevant text segments."
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid ""
+"To achieve this, the application computes the vector representation of the user query using the **same** embedding model and compares it with the vector representations of the stored text segments in Infinispan.\n"
+"It selects the most relevant text segments based on the similarity between the query vector and the text segment vectors."
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid ""
+"Then, it augments the user query with the retrieved text segments and sends it to the LLM.\n"
+"Note that until this step, the LLM is not used."
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid "Implementing the chatbot"
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid ""
+"Enough theory—let's dive into the implementation.\n"
+"You can find the final version on https://github.com/cescoffier/quarkus-granite-rag-demo[GitHub]."
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid "Used extensions and dependencies"
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid "To implement our chatbot, we rely on the following Quarkus extensions:"
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid "`quarkus-langchain4j-openai`: Integrates LLM providers using the OpenAI API, suitable for both InstructLab and Podman AI Studio."
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid "`quarkus-websockets-next`: Provides support for WebSocket communication."
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid "`quarkus-langchain4j-infinispan`: Integrates Infinispan with LangChain4j, allowing us to store and retrieve vector representations of text segments."
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid "`quarkus-web-bundler`: Bundles frontend resources with the Quarkus application."
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid "We also need a specific dependency to use the BGE-small embedding model:"
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid "Configuration"
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid "We need a bit of configuration to ensure our application uses Granite and sets up the Infinispan database correctly:"
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid "Configure the dimension of the vectors stored in Infinispan, which depends on the embedding model (BGE-small in our case)."
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid ""
+"Configure the OpenAI service to use InstructLab.\n"
+"You can replace the base URL with the one for Podman AI Studio if you prefer.\n"
+"Indeed, InstructLab and Podman AI Studio expose an OpenAI-compatible API."
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid "Set the default embedding model to BGE-small."
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid "The Ingestor"
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid ""
+"With the configuration in place, let's implement the https://github.com/cescoffier/quarkus-granite-rag-demo/blob/main/src/main/java/me/escoffier/granite/rag/Ingestion.java[ingestion part (Ingestion.java)].\n"
+"The ingestor reads documents from the `documents` directory, splits them into text segments, computes their vector representations, and stores them in Infinispan:"
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid "The `@Startup` annotation ensures that the ingestion process starts when the application launches."
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid "The `Ingestion` class uses an (automatically injected) `EmbeddingStore<TextSegment>` (Infinispan) and an `EmbeddingModel` (BGE-small)."
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid ""
+"We use a simple document splitter (`recursive(1024, 0)`) to split the documents into text segments.\n"
+"More advanced techniques may be used to improve the accuracy of the RAG model."
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid "The retriever"
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid ""
+"Next, let's implement the https://github.com/cescoffier/quarkus-granite-rag-demo/blob/main/src/main/java/me/escoffier/granite/rag/Retriever.java[retriever (Retriever.java)].\n"
+"The retriever finds the most relevant text segments in Infinispan based on the user query:"
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid ""
+"To implement a retriever, expose a bean that implements the `Supplier<RetrievalAugmentor>` interface.\n"
+"The `Retriever` class uses `EmbeddingStore<TextSegment>` (Infinispan) and `EmbeddingModel` (BGE-small) to build the retriever."
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid ""
+"The `maxResults` method in the EmbeddingStoreContentRetriever builder specifies the number of text segments to retrieve.\n"
+"Since our segments are large, we retrieve only two segments."
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid "The AI Service"
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid "The https://github.com/cescoffier/quarkus-granite-rag-demo/blob/main/src/main/java/me/escoffier/granite/rag/ChatBot.java[AI Service (ChatBot.java)] is the core component of our chatbot, combining the capabilities of the retriever and the Granite LLM to generate appropriate responses."
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid "With Quarkus, implementing an AI service is straightforward:"
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid "The `@RegisterAiService` annotation specifies the retrieval augmentor to use, which in our case is the `Retriever` bean defined earlier."
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid "The `@SystemMessage` annotation provides the main instructions for the AI model."
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid "The `@SessionScoped` annotation ensures that the AI service is stateful, maintaining context between user interactions for more engaging conversations."
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid "The `ChatBot` interface defines a single method, `chat`, which takes a user question as input and returns the chatbot's response."
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid "The WebSocket endpoint"
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid "The final piece is the https://github.com/cescoffier/quarkus-granite-rag-demo/blob/main/src/main/java/me/escoffier/granite/rag/ChatWebSocket.java[WebSocket endpoint (ChatWebSocket.java)], which serves as the communication bridge between the chatbot's backend and the frontend interface:"
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid "The `@WebSocket` annotation specifies the WebSocket path."
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid "The `@OnOpen` method sends a welcome message when a user connects to the _WebSocket_."
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid "The `@OnTextMessage` method processes the user's messages and returns the chatbot's responses, using the injected AI service."
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid "That's it! Our chatbot is now ready to chat with users, providing contextually relevant responses based on the RAG pattern."
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid "Running the application"
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid ""
+"Let's run the application and see our chatbot in action.\n"
+"First, clone the https://github.com/cescoffier/quarkus-granite-rag-demo/tree/main[repository] and run the following command:"
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid ""
+"This command starts the Quarkus application in development mode.\n"
+"Ensure you have InstructLab or Podman AI Studio running to use the Granite LLM.\n"
+"You will also need Docker or Podman to automatically start Infinispan."
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid "Podman AI Studio or InstructLab?"
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid ""
+"You can use either Podman AI Studio or InstructLab to run the Granite LLM locally.\n"
+"Depending on the OS, Podman may not have GPU support. Thus, response time can be high.\n"
+"In this case, InstructLab is the preferred option for better response times.\n"
+"Typically, on a Mac, you would use InstructLab, while on Linux, Podman AI Studio shows great performances."
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid ""
+"Once the application is up and running, open your browser and navigate to http://localhost:8080.\n"
+"You should see the chatbot interface, where you can start chatting with Mona:"
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid "Summary"
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid ""
+"That's it!\n"
+"With just a few lines of code, we have implemented a chatbot using the RAG pattern, combining the capabilities of the Granite LLM, Infinispan, and Quarkus.\n"
+"This application runs entirely locally, eliminating the need for any cloud services and addressing privacy concerns."
+msgstr ""
+
+#: _posts/2024-06-14-granite-rag.adoc
+msgid ""
+"This is just an example of what you can achieve with the Quarkus LangChain4j extension.\n"
+"You can easily extend this application by adding more advanced features, such as sophisticated document splitters, embedding models, or retrieval mechanisms.\n"
+"Quarkus LangChain4J also provides support for https://docs.langchain4j.dev/tutorials/rag/#advanced-rag[_advanced_ RAG], many other LLM and embedding models and vector stores.\n"
+"Find out more on https://docs.quarkiverse.io/quarkus-langchain4j/dev/index.html[Quarkus LangChain4J]."
+msgstr ""
