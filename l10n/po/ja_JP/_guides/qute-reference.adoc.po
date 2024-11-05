@@ -603,17 +603,13 @@ msgstr "解決"
 
 #: _guides/qute-reference.adoc
 msgid ""
+"When evaluating expressions a list of registered <<value-resolvers,value resolvers>> is used.\n"
 "The first part of the expression is always resolved against the <<current_context_object,current context object>>.\n"
 "If no result is found for the first part, it's resolved against the parent context object (if available).\n"
 "For an expression that starts with a namespace the current context object is found using all the available ``NamespaceResolver``s.\n"
 "For an expression that does not start with a namespace the current context object is *derived from the position* of the tag.\n"
 "All other parts of an expression are resolved using all ``ValueResolver``s against the result of the previous resolution."
 msgstr ""
-"式の最初のパーツは、常に <<current_context_object,current context object>> に対して解決されます。\n"
-"最初のパーツの結果が見つからない場合、(利用可能な場合は) 親コンテキストオブジェクトに対して解決されます。\n"
-"名前空間で始まる式の場合、現在のコンテキストオブジェクトは、利用可能なすべての ``NamespaceResolver`` を使用して検出されます。\n"
-"名前空間で始まらない式の場合、現在のコンテキストオブジェクトはタグの *位置から導出* されます。\n"
-"式の他のすべてのパーツは、前の解決結果に対してすべての ``ValueResolver`` を使用して解決されます。"
 
 #: _guides/qute-reference.adoc
 msgid ""
@@ -2330,14 +2326,29 @@ msgstr "値リゾルバ"
 #: _guides/qute-reference.adoc
 msgid ""
 "Value resolvers are used when evaluating expressions.\n"
-"A custom `io.quarkus.qute.ValueResolver` can be registered programmatically via `EngineBuilder.addValueResolver()`."
-msgstr "式を評価する際に値リゾルバを使用します。カスタム `io.quarkus.qute.ValueResolver` は `EngineBuilder.addValueResolver()` からプログラムで登録することができます。"
+"First the resolvers that apply to the given `EvalContext` are filtered.\n"
+"Then the resolver with _highest priority_ is used to resolve the data.\n"
+"If a `io.quarkus.qute.Results.NotFound` object is returned then the next available resolver is used instead.\n"
+"However, `null` return value is considered a valid result."
+msgstr ""
+
+#: _guides/qute-reference.adoc
+msgid "A custom `io.quarkus.qute.ValueResolver` can be registered programmatically via `EngineBuilder.addValueResolver()`."
+msgstr ""
 
 #. type: Block title
 #: _guides/qute-reference.adoc
 #, no-wrap
 msgid "`ValueResolver` Builder Example"
 msgstr "`ValueResolver` ビルダー例"
+
+#: _guides/qute-reference.adoc
+msgid "In Quarkus, the <<engine-customization,`@EngineConfiguration`>> annotation can be used to register a `ValueResolver` implemented as a CDI bean."
+msgstr ""
+
+#: _guides/qute-reference.adoc
+msgid "Keep in mind that the reflection-based value resolver has priority `-1` and the max priority value for resolvers generated from <<template_data,`@TemplateData`>> and <<typesafe_expressions,type-safe expressions>> is `10`."
+msgstr ""
 
 #. type: Title ====
 #: _guides/qute-reference.adoc
@@ -2582,18 +2593,12 @@ msgstr "まず、 `foo` という名前のBeanを見つけ、それをベース�
 msgid "`@Named @Dependent` beans are shared across all expressions in a template for a single rendering operation, and destroyed after the rendering finished."
 msgstr "`@Named @Dependent` Bean は、1 つのレンダリング操作用にテンプレート内のすべての式で共有され、レンダリングが終了した後に破棄されます。"
 
-#. type: Plain text
 #: _guides/qute-reference.adoc
-msgid "All expressions with `cdi` and `inject` namespaces are validated during build."
-msgstr "`cdi` および `inject` の名前空間を持つすべての式は、ビルド時に検証されます。"
-
-#: _guides/qute-reference.adoc
-msgid "For the expression `cdi:personService.findPerson(10).name`, the implementation class of the injected bean must either declare the `findPerson` method or a matching <<template_extension_methods,template extension method>> must exist."
-msgstr "`cdi:personService.findPerson(10).name` 式では、注入された Bean の実装クラスは `findPerson` メソッドを宣言するか、一致する <<template_extension_methods,template extension method>> が存在する必要があります。"
-
-#: _guides/qute-reference.adoc
-msgid "For the expression `inject:foo.price`, the implementation class of the injected bean must either have the `price` property (e.g. a `getPrice()` method) or a matching <<template_extension_methods,template extension method>> must exist."
-msgstr "`inject:foo.price` 式では、注入された Bean の実装クラスに `price` プロパティー (例: `getPrice()` メソッド) があるか、一致する<<template_extension_methods,template extension method>> が存在する必要があります。"
+msgid ""
+"All expressions with `cdi` and `inject` namespaces are validated during build.\n"
+"For the expression `cdi:personService.findPerson(10).name`, the implementation class of the injected bean must either declare the `findPerson` method or a matching <<template_extension_methods,template extension method>> must exist.\n"
+"For the expression `inject:foo.price`, the implementation class of the injected bean must either have the `price` property (e.g. a `getPrice()` method) or a matching <<template_extension_methods,template extension method>> must exist."
+msgstr ""
 
 #. type: Plain text
 #: _guides/qute-reference.adoc
@@ -2604,6 +2609,31 @@ msgstr "`@Named` でアノテーションされたすべてのBeanに対して `
 #: _guides/qute-reference.adoc
 msgid "If your application serves xref:http-reference.adoc[HTTP requests] you can also inject the current `io.vertx.core.http.HttpServerRequest` via the `inject` namespace, e.g. `{inject:vertxRequest.getParam('foo')}`."
 msgstr "アプリケーションが xref:http-reference.adoc[HTTP リクエスト] を提供する場合、`inject` 名前空間を介して現在の `io.vertx.core.http.HttpServerRequest` を注入することもできます (例: `{inject:vertxRequest.getParam('foo')}`)。"
+
+#: _guides/qute-reference.adoc
+msgid ""
+"Sometimes it may be necessary to access public methods and properties of a CDI bean that is not annotated with `@Named`.\n"
+"However, if you don't control the source of the bean it is not possible to add the `@Named` annotation.\n"
+"Nevertheless, it is possible to create an intermediate CDI bean annotated with `@Named`.\n"
+"This intermediate bean can inject the bean in question and make it accessible.\n"
+"A Java record is a very convenient way to define such an intermediate CDI bean."
+msgstr ""
+
+#: _guides/qute-reference.adoc
+msgid "If no name is explicitly specified by the `value` member the https://jakarta.ee/specifications/cdi/4.1/jakarta-cdi-spec-4.1#default_name[default name is assigned] - the simple name of the bean class, after converting the first character to lower case. In this particular case, the default name is `userData`."
+msgstr ""
+
+#: _guides/qute-reference.adoc
+msgid "The `@Singleton` scope is added automatically."
+msgstr ""
+
+#: _guides/qute-reference.adoc
+msgid "All parameters of the canonical constructor are injection points. The accessor methods can be used to obtain the injected bean."
+msgstr ""
+
+#: _guides/qute-reference.adoc
+msgid "And then in a template you can simply use `{cdi:userData.info}` or `{cdi:userData.username}`."
+msgstr ""
 
 #. type: Title ===
 #: _guides/qute-reference.adoc
