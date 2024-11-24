@@ -461,11 +461,19 @@ msgid "The message object represents the data sent and can be accessed as either
 msgstr "メッセージ・オブジェクトは送信されたデータを表し、生のコンテンツ（ `String` , `JsonObject` , `JsonArray` , `Buffer` , `byte[]` ）またはデシリアライズされた高レベル・オブジェクトとしてアクセスできます。"
 
 #: _versions/main/guides/websockets-next-reference.adoc
-#, fuzzy
 msgid ""
 "When receiving a `Multi`, the method is invoked once per connection, and the provided `Multi` receives the items transmitted by this connection.\n"
-"The method must subscribe to the `Multi` to receive these items (or return a Multi)."
-msgstr "`Multi` を受信するとき、このメソッドは接続ごとに 1 回呼び出され、提供された `Multi` はこの接続によって送信されたアイテムを受信します。メソッドは、これらのアイテムを受信するために `Multi` をサブスクライブする必要があります (または Multi を返します)。"
+"If the method returns a `Multi` (constructed from the received one), Quarkus will automatically subscribe to it and write the emitted items until completion, failure, or cancellation.\n"
+"However, if your method does not return a `Multi`, you must subscribe to the incoming `Multi` to consume the data."
+msgstr ""
+
+#: _versions/main/guides/websockets-next-reference.adoc
+msgid "Here are two examples:"
+msgstr ""
+
+#: _versions/main/guides/websockets-next-reference.adoc
+msgid "See <<subscribe-or-not-subscribe>> to learn more about subscribing to the incoming `Multi`."
+msgstr ""
 
 #: _versions/main/guides/websockets-next-reference.adoc
 #, fuzzy
@@ -518,9 +526,11 @@ msgid "Here are some examples of these methods:"
 msgstr "以下はその方法の例です："
 
 #: _versions/main/guides/websockets-next-reference.adoc
-#, fuzzy
-msgid "When returning a Multi, Quarkus subscribes to the returned Multi automatically and writes the emitted items until completion, failure, or cancellation. Failure or cancellation terminates the connection."
-msgstr "Multiを返すと、Quarkusは返されたMultiを自動的に購読し、完了、失敗、またはキャンセルされるまで、発行されたアイテムを書き込みます。失敗またはキャンセルすると、接続が終了します。"
+msgid ""
+"Methods returning `Uni` and `Multi` are considered non-blocking.\n"
+"In addition, Quarkus automatically subscribes to the returned `Multi` / `Uni` and writes the emitted items until completion, failure, or cancellation.\n"
+"Failure or cancellation terminates the connection."
+msgstr ""
 
 #: _versions/main/guides/websockets-next-reference.adoc
 #, fuzzy
@@ -548,9 +558,14 @@ msgid "This approach allows bi-directional streaming."
 msgstr "このアプローチは双方向ストリーミングを可能にします。"
 
 #: _versions/main/guides/websockets-next-reference.adoc
-#, fuzzy
-msgid "When the method returns `void`, it must subscribe to the incoming `Multi`:"
-msgstr "メソッドが `void` を返すとき、それは `Multi` を受信しなければなりません："
+msgid ""
+"When the method returns `void`, and so does not return a `Multi`, the code must subscribe to the incoming `Multi`.\n"
+"Otherwise, no data will be consumed, and the connection will not be closed:"
+msgstr ""
+
+#: _versions/main/guides/websockets-next-reference.adoc
+msgid "Also note that the `stream` method will complete before the `Multi` completes."
+msgstr ""
 
 #: _versions/main/guides/websockets-next-reference.adoc
 #, fuzzy
@@ -958,9 +973,15 @@ msgid "`sendTextAndAwait(String message)`: Sends a text message to the client an
 msgstr "`sendTextAndAwait(String message)` :テキスト・メッセージをクライアントに送信し、メッセージが送信されるのを待ちます。これはブロックされるので、実行スレッドからのみ呼び出されるべきです。"
 
 #: _versions/main/guides/websockets-next-reference.adoc
-#, fuzzy
-msgid "`sendText(String message)`: Sends a text message to the client. It returns a `Uni`. It's non-blocking, but you must subscribe to it."
-msgstr "`sendText(String message)` :テキストメッセージをクライアントに送信します。 `Uni` を返します。 ノンブロッキングですが、サブスクライブする必要があります。"
+msgid ""
+"`sendText(String message)`: Sends a text message to the client. It returns a `Uni`. It's non-blocking. Make sure you or Quarkus subscribes to the returned `Uni` to send the message.\n"
+"If you return the `Uni` from a method invoked by Quarkus (like with Quarkus REST, Quarkus WebSocket Next or Quarkus Messaging), it will subscribe to it and send the message.\n"
+"For example:"
+msgstr ""
+
+#: _versions/main/guides/websockets-next-reference.adoc
+msgid "See <<subscribe-or-not-subscribe>> to learn more about subscribing to the `Uni`."
+msgstr ""
 
 #: _versions/main/guides/websockets-next-reference.adoc
 #, fuzzy
@@ -1410,6 +1431,30 @@ msgid "Enable `DEBUG` level is for the logger `io.quarkus.websockets.next.traffi
 msgstr "有効 `DEBUG` レベルは、ロガー `io.quarkus.websockets.next.traffic` 用です。"
 
 #: _versions/main/guides/websockets-next-reference.adoc
+msgid "When to subscribe to a `Uni` or `Multi`"
+msgstr ""
+
+#: _versions/main/guides/websockets-next-reference.adoc
+msgid "`Uni` and `Multi` are lazy types, which means that they do not start processing until they are subscribed to."
+msgstr ""
+
+#: _versions/main/guides/websockets-next-reference.adoc
+msgid "When you get (from a parameter or from a method you called) a `Uni` or a `Multi`, whether you should subscribe to it depends on the context:"
+msgstr ""
+
+#: _versions/main/guides/websockets-next-reference.adoc
+msgid "if you return the `Uni` or `Multi` in a method invoked by Quarkus (like with Quarkus REST, Quarkus WebSocket Next or Quarkus Messaging), Quarkus subscribes to it and processes the items emitted by the `Multi` or the item emitted by the `Uni`:"
+msgstr ""
+
+#: _versions/main/guides/websockets-next-reference.adoc
+msgid "When a `Uni` or `Multi` is returned from a method annotated with `@OnOpen`, `@OnTextMessage`, `@OnBinaryMessage`, or `@OnClose`, Quarkus subscribes to it automatically."
+msgstr ""
+
+#: _versions/main/guides/websockets-next-reference.adoc
+msgid "if you do not return the `Uni` or `Multi` in a method invoked by Quarkus, you should subscribe to it:"
+msgstr ""
+
+#: _versions/main/guides/websockets-next-reference.adoc
 msgid "Telemetry"
 msgstr ""
 
@@ -1417,6 +1462,12 @@ msgstr ""
 msgid ""
 "When the OpenTelemetry extension is present, traces for opened and closed WebSocket connections are collected by default.\n"
 "If you do not require WebSocket traces, you can disable collecting of traces like in the example below:"
+msgstr ""
+
+#: _versions/main/guides/websockets-next-reference.adoc
+msgid ""
+"When the Micrometer extension is present, Quarkus can collect metrics for messages, errors and bytes transferred.\n"
+"If you require a WebSocket metrics, you can enable the metrics like in the example below:"
 msgstr ""
 
 #: _versions/main/guides/websockets-next-reference.adoc
