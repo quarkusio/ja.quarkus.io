@@ -1,0 +1,266 @@
+msgid ""
+msgstr ""
+"Language: ja_JP\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: jekyll-l10n\n"
+
+#: _posts/2025-01-08-quarkus-langchain4j-mcp.adoc
+msgid "Using the Model Context Protocol with Quarkus+LangChain4j"
+msgstr ""
+
+#: _posts/2025-01-08-quarkus-langchain4j-mcp.adoc
+msgid "Executing tools via the Model Context Protocol with Quarkus+LangChain4j"
+msgstr ""
+
+#: _posts/2025-01-08-quarkus-langchain4j-mcp.adoc
+msgid ""
+"We are thrilled to announce that starting with version 0.23.0, the Quarkus\n"
+"LangChain4j project integrates calling tools using the\n"
+"https://modelcontextprotocol.io[Model Context Protocol (MCP)]."
+msgstr ""
+
+#: _posts/2025-01-08-quarkus-langchain4j-mcp.adoc
+msgid "What is the Model Context Protocol?"
+msgstr ""
+
+#: _posts/2025-01-08-quarkus-langchain4j-mcp.adoc
+msgid ""
+"MCP is an open protocol that standardizes how applications provide context\n"
+"to LLMs. An MCP server is an application that can provide tools, resources\n"
+"(be it a set of static documents or dynamically accessed data, for example\n"
+"from a database), or pre-defined prompts that your AI-infused application\n"
+"can use when talking to LLMs. When you package such functionality into an\n"
+"MCP server, it can be plugged into and used by any LLM client toolkit that\n"
+"supports MCP, including Quarkus and LangChain4j. There is also already a\n"
+"growing ecosystem of reusable MCP servers that you can use out of the box,\n"
+"and Quarkus also offers the\n"
+"https://github.com/quarkiverse/quarkus-mcp-server[quarkus-mcp-server extension] that allows you\n"
+"to create MCP servers, but in this article, we will focus on the client\n"
+"side. More on creating MCP servers later."
+msgstr ""
+
+#: _posts/2025-01-08-quarkus-langchain4j-mcp.adoc
+msgid ""
+"In version 0.23.x,\n"
+"https://github.com/quarkiverse/quarkus-langchain4j[Quarkus LangChain4j]\n"
+"implements the client side of the MCP protocol to allow tool execution.\n"
+"Support for resources and prompts is planned for future releases."
+msgstr ""
+
+#: _posts/2025-01-08-quarkus-langchain4j-mcp.adoc
+msgid ""
+"In this article, we will show you how to use Quarkus and LangChain4j to\n"
+"easily create an application that connects to an MCP server providing\n"
+"filesystem-related tools and exposes a chatbot that a user can use to\n"
+"interact with the local filesystem, that means read and write files as\n"
+"instructed by the user."
+msgstr ""
+
+#: _posts/2025-01-08-quarkus-langchain4j-mcp.adoc
+msgid ""
+"There is no need to set up an MCP server separately, we will configure\n"
+"Quarkus to run one as a subprocess. As you will see, setting up MCP with\n"
+"Quarkus is extremely easy."
+msgstr ""
+
+#: _posts/2025-01-08-quarkus-langchain4j-mcp.adoc
+msgid ""
+"To download the final project, visit the\n"
+"https://github.com/quarkiverse/quarkus-langchain4j/tree/0.23.0/samples/mcp-tools[\n"
+"quarkus-langchain4j samples]. That sample contains the final functionality\n"
+"developed in this article, plus some stuff on top, like a JavaScript-based\n"
+"UI. In this article, for simplicity, we will skip the creation of that UI,\n"
+"and we will only use the Dev UI chat page that comes bundled in Quarkus out\n"
+"of the box."
+msgstr ""
+
+#: _posts/2025-01-08-quarkus-langchain4j-mcp.adoc
+msgid "Prerequisites"
+msgstr ""
+
+#: _posts/2025-01-08-quarkus-langchain4j-mcp.adoc
+msgid "Apache Maven 3.9+"
+msgstr ""
+
+#: _posts/2025-01-08-quarkus-langchain4j-mcp.adoc
+msgid "The `npm` package manager installed on your machine"
+msgstr ""
+
+#: _posts/2025-01-08-quarkus-langchain4j-mcp.adoc
+msgid "Creating a Filesystem assistant project"
+msgstr ""
+
+#: _posts/2025-01-08-quarkus-langchain4j-mcp.adoc
+msgid ""
+"We will assume that you are using OpenAI as the LLM provider. If you are\n"
+"using a different provider, you will need to swap out the\n"
+"`quarkus-langchain4j-openai` extension and use something else."
+msgstr ""
+
+#: _posts/2025-01-08-quarkus-langchain4j-mcp.adoc
+msgid "Start by generating a Quarkus project. If you are using the Quarkus CLI, you can do it like this:"
+msgstr ""
+
+#: _posts/2025-01-08-quarkus-langchain4j-mcp.adoc
+msgid ""
+"If you prefer to use the web-based project generator, go to\n"
+"https://code.quarkus.io/[code.quarkus.io] and select the same extensions."
+msgstr ""
+
+#: _posts/2025-01-08-quarkus-langchain4j-mcp.adoc
+msgid ""
+"Whenever you run the application, make sure the\n"
+"`QUARKUS_LANGCHAIN4J_OPENAI_API_KEY` environment variable is set to your\n"
+"OpenAI API key."
+msgstr ""
+
+#: _posts/2025-01-08-quarkus-langchain4j-mcp.adoc
+msgid "Create the directory to be used by the agent"
+msgstr ""
+
+#: _posts/2025-01-08-quarkus-langchain4j-mcp.adoc
+msgid ""
+"Under the root directory of the Maven project, create a directory named `playground`.\n"
+"This will be the only directory that the agent will be allowed to interact with."
+msgstr ""
+
+#: _posts/2025-01-08-quarkus-langchain4j-mcp.adoc
+msgid ""
+"Inside that directory, create any files that you want for testing. For\n"
+"example, create a file named `playground/hello.txt` with the following\n"
+"contents:"
+msgstr ""
+
+#: _posts/2025-01-08-quarkus-langchain4j-mcp.adoc
+msgid "Hello, world!"
+msgstr ""
+
+#: _posts/2025-01-08-quarkus-langchain4j-mcp.adoc
+msgid "Create the AI service"
+msgstr ""
+
+#: _posts/2025-01-08-quarkus-langchain4j-mcp.adoc
+msgid ""
+"Next, we need to define an AI service that will define how the bot should\n"
+"behave. The interface will look like this:"
+msgstr ""
+
+#: _posts/2025-01-08-quarkus-langchain4j-mcp.adoc
+msgid ""
+"Feel free to adjust the system message to your liking, but this one should\n"
+"be suitable to get the application working as expected."
+msgstr ""
+
+#: _posts/2025-01-08-quarkus-langchain4j-mcp.adoc
+msgid "Configure the MCP server and the connection to it"
+msgstr ""
+
+#: _posts/2025-01-08-quarkus-langchain4j-mcp.adoc
+msgid ""
+"We will use\n"
+"https://www.npmjs.com/package/@modelcontextprotocol/server-filesystem[server-filesystem]\n"
+"MCP server that comes as an NPM package, this is why you need to have `npm`\n"
+"installed on your machine. It is assumed that you have the `npm` binary\n"
+"available on your `PATH` (the `PATH` variable that the Quarkus process\n"
+"sees)."
+msgstr ""
+
+#: _posts/2025-01-08-quarkus-langchain4j-mcp.adoc
+msgid ""
+"Starting the server and configuring the connection to it is extremely easy.\n"
+"We will simply tell Quarkus to start up a `server-filesystem` MCP server as\n"
+"a subprocess and then communicate with it over the `stdio` transport. All\n"
+"you need to do is to add two lines into your `application.properties`:"
+msgstr ""
+
+#: _posts/2025-01-08-quarkus-langchain4j-mcp.adoc
+msgid ""
+"With this configuration, Quarkus will know that it should create a MCP\n"
+"client that will be backed by a server that will be started by executing\n"
+"`npm exec @modelcontextprotocol/server-filesystem@0.6.2 playground` as a\n"
+"subprocess. The `playground` argument denotes the path to the directory that\n"
+"the agent will be allowed to interact with. The `stdio` transport means that\n"
+"the client will communicate with the server over standard input and output."
+msgstr ""
+
+#: _posts/2025-01-08-quarkus-langchain4j-mcp.adoc
+msgid ""
+"When you configure one or more MCP connections this way, Quarkus also\n"
+"automatically generates a `ToolProvider`. Any AI service that does not\n"
+"explicitly specify a tool provider will be automatically wired up to this\n"
+"generated one, so you don't need to do anything else to make the MCP\n"
+"functionality available to the AI service."
+msgstr ""
+
+#: _posts/2025-01-08-quarkus-langchain4j-mcp.adoc
+msgid ""
+"Optionally, if you want to see the actual traffic between the application\n"
+"and the MCP server, add these three additional lines to your\n"
+"`application.properties`:"
+msgstr ""
+
+#: _posts/2025-01-08-quarkus-langchain4j-mcp.adoc
+msgid "And that's all! Now, let's test it."
+msgstr ""
+
+#: _posts/2025-01-08-quarkus-langchain4j-mcp.adoc
+msgid "Try it out"
+msgstr ""
+
+#: _posts/2025-01-08-quarkus-langchain4j-mcp.adoc
+msgid ""
+"Since we didn't create any UI for our application that a user could use,\n"
+"let's use the Dev UI that comes with Quarkus out of the box. With the\n"
+"application running in development mode, access\n"
+"http://localhost:8080/q/dev-ui in your browser and click the `Chat` link in\n"
+"the `LangChain4j` card (either that, or go to\n"
+"http://localhost:8080/q/dev-ui/io.quarkiverse.langchain4j.quarkus-langchain4j-core/chat\n"
+"directly)."
+msgstr ""
+
+#: _posts/2025-01-08-quarkus-langchain4j-mcp.adoc
+msgid "Try a prompt to ask the agent to read a file that you created previously, such as:"
+msgstr ""
+
+#: _posts/2025-01-08-quarkus-langchain4j-mcp.adoc
+msgid "Read the contents of the file hello.txt."
+msgstr ""
+
+#: _posts/2025-01-08-quarkus-langchain4j-mcp.adoc
+msgid ""
+"If all is set up correctly, the agent will respond with the contents of the\n"
+"file, like in this screenshot:"
+msgstr ""
+
+#: _posts/2025-01-08-quarkus-langchain4j-mcp.adoc
+msgid "The bot can also write files, so try a prompt such as:"
+msgstr ""
+
+#: _posts/2025-01-08-quarkus-langchain4j-mcp.adoc
+msgid "Write a Python script that prints \"Hello, world!\" and save it as hello.py."
+msgstr ""
+
+#: _posts/2025-01-08-quarkus-langchain4j-mcp.adoc
+msgid "Then have a look into your `playground` directory, and you should see the new Python file there!"
+msgstr ""
+
+#: _posts/2025-01-08-quarkus-langchain4j-mcp.adoc
+msgid "Conclusion"
+msgstr ""
+
+#: _posts/2025-01-08-quarkus-langchain4j-mcp.adoc
+msgid ""
+"The Model Context Protocol allows you to easily integrate reusable sets of\n"
+"tools and resources to AI-infused applications in a portable way. With the\n"
+"Quarkus LangChain4j extension, you can instruct Quarkus to run a server\n"
+"locally as a subprocess, and configuring application to use it is just a\n"
+"matter of adding a few configuration properties."
+msgstr ""
+
+#: _posts/2025-01-08-quarkus-langchain4j-mcp.adoc
+msgid ""
+"And that's not all. Stay tuned, because Quarkus also has an extension that\n"
+"allows you to create MCP servers! More about that soon."
+msgstr ""
