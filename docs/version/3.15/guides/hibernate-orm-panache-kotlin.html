@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+
+
+
+
+
+
+<head>
+  <title>シンプルになったHibernate ORM with PanacheとKotlin - 3.15 - Quarkus</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="
+  connect-src 'self' https://dpm.demdex.net https://adobedc.demdex.net https://analytics.ossupstream.org/ https://search.quarkus.io https://smetrics.redhat.com; 
+  script-src 'self' 'unsafe-inline' 'unsafe-eval'
+      
+      https://assets.adobedtm.com
+      js.bizographics.com
+      https://www.redhat.com
+      https://static.redhat.com
+      https://app.requestly.io/
+      jsonip.com
+      https://ajax.googleapis.com
+      https://use.fontawesome.com
+      http://www.youtube.com
+      http://www.googleadservices.com
+      https://googleads.g.doubleclick.net
+      https://giscus.app
+      https://analytics.ossupstream.org/
+      https://app.mailjet.com;
+
+  style-src 'self' https://fonts.googleapis.com https://use.fontawesome.com; 
+  img-src 'self' * data:; 
+  media-src 'self'; 
+  frame-src https://redhat.demdex.net https://www.youtube.com https://embed.restream.io https://app.mailjet.com http://xy0p2.mjt.lu https://mj.quarkus.io https://giscus.app; 
+  base-uri 'none'; 
+  object-src 'none'; 
+  form-action 'none'; 
+  font-src 'self' https://use.fontawesome.com https://fonts.gstatic.com;" />
+  <script id="adobe_dtm" src="https://www.redhat.com/dtm.js" type="text/javascript"></script>
+  <script src="/assets/javascript/highlight.pack.js" type="text/javascript"></script>
+  <META HTTP-EQUIV='X-XSS-Protection' CONTENT="1; mode=block">
+  <META HTTP-EQUIV='X-Content-Type-Options' CONTENT="nosniff">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Quarkus: Supersonic Subatomic Java">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@QuarkusIO"> 
+  <meta name="twitter:creator" content="@QuarkusIO">
+  <meta property="og:url" content="https://quarkus.io/version/3.15/guides/hibernate-orm-panache-kotlin" />
+  <meta property="og:title" content="シンプルになったHibernate ORM with PanacheとKotlin - 3.15" />
+  <meta property="og:description" content="Quarkus: Supersonic Subatomic Java" />
+  <meta property="og:image" content="https://quarkus.io/assets/images/quarkus_card.png" />
+  
+  <link rel="canonical" href="https://quarkus.io/guides/hibernate-orm-panache-kotlin">
+  <link rel="shortcut icon" type="image/png" href="/favicon.ico" >
+  <link rel="stylesheet" href="/guides/stylesheet/config.css" />
+  <link rel="stylesheet" href="/assets/css/main.css?2021-07-29" />
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.5.2/css/all.css" crossorigin="anonymous">
+  <link rel="alternate" type="application/rss+xml"  href="/feed.xml" title="Quarkus">
+  <script src="/assets/javascript/hl.js" type="text/javascript"></script>
+  
+  
+  
+  
+  <link rel="alternate" hreflang="x-default" href="https://quarkus.io/" />  
+  <script src="/assets/javascript/tracking.js"></script>
+  
+  <script src="/assets/javascript/colormode.js" type="text/javascript"></script>
+
+</head>
+
+<body class="guides">
+
+  
+
+
+<div class="grid-wrapper communitysite">
+  <div class="grid__item width-12-12">The <a href="https://quarkus.io/version/3.15/guides/hibernate-orm-panache-kotlin">English version of quarkus.io</a> is the official project site. Translated sites are community supported on a best-effort basis.</div>
+</div>
+
+
+  <div class="nav-wrapper">
+  <div class="grid-wrapper">
+    <div class="width-12-12">
+      <input type="checkbox" id="checkbox" />
+      <nav id="main-nav" class="main-nav">
+        <div class="logo-wrapper">
+           <a href="/"><img src="/assets/images/quarkus_logo_horizontal_rgb_600px_reverse.png" class="project-logo" title="Quarkus"></a>
+        </div>
+    <label class="nav-toggle" for="checkbox"> <i class="fa fa-bars"></i>
+</label>
+    <ul id="menu" class="menu">
+      <li class="dropdown">
+        <span href="/about/">Why<i class="fas
+fa-chevron-down"></i></span>
+        <ul class="submenu">
+          <li><a href="/about" class="">QUARKUSとは何か?</a></li>
+          <li><a href="/developer-joy" class="">開発者満足</a></li>
+          <li><a href="/performance" class="">PERFORMANCE</a></li>
+          <li><a href="/kubernetes-native" class="">KUBERNETES NATIVE</a></li>
+          <li><a href="/standards" class="">標準</a></li>
+          <li><a href="/versatility" class="">VERSATILITY</a></li>
+          <li><a href="/container-first" class="">コンテナ・ファースト</a></li>
+
+          
+        </ul>
+      </li>
+      <li class="dropdown">
+        <span href="/learn/">Learn<i class="fas
+fa-chevron-down"></i></span>
+        <ul class="submenu">
+          <li><a href="/get-started" class="">入門</a></li>
+          <li><a href="/guides" class="active">ドキュメント</a></li>
+          <li><a href="/qtips" class="">"Q" Tipsビデオ</a></li>          
+          <li><a href="/books" class="">書籍</a></li>
+          </ul>
+      </li>
+      <li class="dropdown">
+        <span href="https://quarkus.io/extensions/">Extensions<i class="fas
+fa-chevron-down"></i></span>
+        <ul class="submenu">
+          
+          <!-- Note that quarkus.io is hardcoded here, because it is the only url which supports extensions -->
+<li><a href="https://quarkus.io/extensions/" class="">エクステンションを探す</a></li>
+          <li><a href="/faq/#what-is-a-quarkus-extension" class="">エクステンションの使用</a></li>
+          <li><a href="/guides/writing-extensions" class="">エクステンションの作成</a></li>
+          <li><a href="https://hub.quarkiverse.io" class="">SHARE EXTENSIONS</a></li>
+        </ul>
+      </li>
+      <li class="dropdown">
+        <span href="/community/">Community<i class="fas
+fa-chevron-down"></i></span>
+        <ul class="submenu">
+          <li><a href="/support/" class="">サポート</a></li>
+          <li><a href="/blog" class="">ブログ</a></li>
+          <li><a href="/discussion" class="">ディスカッション</a></li>
+          <li><a href="/working-groups" class="">WORKING GROUPS</a></li>
+          <li><a href="/insights" class="">ポッドキャスト</a></li>
+          <li><a href="/events" class="">イベント</a></li>
+          <li><a href="/newsletter" class="">ニュースレター</a></li>
+          <li><a href="https://github.com/orgs/quarkusio/projects/13/views/1" class="">ロードマップ</a></li>
+          </ul>
+      </li>
+      <li>
+        <a href="https://code.quarkus.io" class="button-cta secondary
+white">コーディングを開始</a>
+      </li>
+      <li class="dropdown">
+        <span href="/language/"><div class="fas fa-globe langicon"></div><i class="fas fa-chevron-down"></i></span>
+        <ul class="submenu">
+          <li><a href="https://quarkus.io/version/3.15/guides/hibernate-orm-panache-kotlin" >OFFICIAL (ENGLISH)</a></li>
+          <li><a href="https://pt.quarkus.io/version/3.15/guides/hibernate-orm-panache-kotlin">PORTUGUÊS (BR)</a></li>
+          <li><a href="https://es.quarkus.io/version/3.15/guides/hibernate-orm-panache-kotlin">ESPAÑOL</a></li>
+          <li><a href="https://cn.quarkus.io/version/3.15/guides/hibernate-orm-panache-kotlin">简体中文</a></li>
+          <li><a href="https://ja.quarkus.io/version/3.15/guides/hibernate-orm-panache-kotlin">日本語</a></li>
+          </ul>
+      </li>
+      <li>
+        <span href="#" class="modeswitcher" id='theme-toggle'><i class="fas
+fa-sun"></i><i class="fas fa-moon"></i><i class="fas fa-cog"></i></span>
+      </li>
+    </ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+  <div class="content">
+    
+
+
+
+
+
+
+
+<section class="full-width-version-bg flexfilterbar guides">
+  <div class="guideflexcontainer">
+    <div class="docslink">
+      <a class="returnlink" href="/version/3.15/guides/"> Back to Guides</a>
+    </div>
+    <div class="flexlabel">
+      <label>バージョン:</label>
+    </div>
+    <div class="guidepulldown version">
+    <select id="guide-version-dropdown">
+      
+        
+        
+        <option value="main" >Main - SNAPSHOT</option>
+        
+        
+        
+        <option value="latest" >3.17.8 - Latest</option>
+        
+        
+        
+        <option value="3.15" selected>3.15</option>
+        
+        
+        
+        <option value="3.8" >3.8</option>
+        
+        
+        
+        <option value="3.2" >3.2</option>
+        
+        
+        
+        <option value="2.16" >2.16</option>
+        
+        
+        
+        <option value="2.13" >2.13</option>
+        </select>
+    </div>
+  </div>
+</section>
+
+<div class="guide">
+  <div class="grid-wrapper">
+    <div class="grid__item width-8-12 width-12-12-m">
+      
+      <h1 class="text-caps">シンプルになったHibernate ORM with PanacheとKotlin </h1>
+      <div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Hibernate ORMは、デファクトスタンダードであるJakarta Persistence（旧称JPA）実装であり、Javaエコシステムでよく知られています。Hibernate ORM with Panacheは、このおなじみのフレームワークの上に、新しいレイヤーを提供します。このガイドでは、 <a href="hibernate-orm-panache">Hibernate ORM with Panacheのガイド</a> ですでにカバーされているため、どちらの仕様にも深入りしません。このガイドでは、KotlinベースのQuarkusアプリケーションでHibernate ORM with Panacheを使用するために必要なKotlin固有の変更点を説明します。</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+KotlinバージョンのHibernate ORMをPanacheで使用する場合、 <code>PanacheEntity</code> 、 <code>PanacheQuery</code> 、 <code>PanacheRepository</code> は別のパッケージ: <code>io.quarkus.hibernate.orm.panache.kotlin</code> であることに注意してください。
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="first-an-example"><a class="anchor" href="#first-an-example"></a>最初に:例</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Hibernate ORM with Panacheガイドで見たように、Hibernate ORM with Panacheを使うと、エンティティーやリポジトリ(DAOとも呼ばれます)の機能を自動で提供される機能で拡張することができます。Kotlin を使用する場合のアプローチは Java 版と非常によく似ていますが、若干の変更点があります。エンティティーを Panache で有効にするには、次のように定義します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">@Entity
+class Person: PanacheEntity() {
+    lateinit var name: String
+    lateinit var birth: LocalDate
+    lateinit var status: Status
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ご覧のように、私たちのエンティティーはシンプルなままです。しかし、Java版とは少し違いがあります。Kotlin 言語は Java のように静的メソッドの概念をサポートしていません。その代わり、 <a href="https://kotlinlang.org/docs/tutorials/kotlin-for-py/objects-and-companion-objects.html#companion-objects">コンパニオンオブジェクト</a> を使わなければなりません。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">@Entity
+class Person : PanacheEntity() {
+    companion object: PanacheCompanion&lt;Person&gt; {  <i class="conum" data-value="1"></i><b>(1)</b>
+        fun findByName(name: String) = find("name", name).firstResult()
+        fun findAlive() = list("status", Status.Alive)
+        fun deleteStefs() = delete("name", "Stef")
+    }
+
+    lateinit var name: String  <i class="conum" data-value="2"></i><b>(2)</b>
+    lateinit var birth: LocalDate
+    lateinit var status: Status
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>コンパニオンオブジェクトは、特定のインスタンスに関連しないすべてのメソッドを保持し、特定の型にバインドされた一般的な管理とクエリを可能にします。</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>幾つか選択肢がありますが、ここでは <code>lateinit</code> のアプローチを選択しました。これにより、コンストラクタ(表示されていません)やHibernateがデータベースからデータをロードすることで適切に代入されることがわかっているので、これらのフィールドを非 null として宣言することができます。</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+これらの型は、それらのチュートリアルで言及されている Java のタイプとは異なります。Kotlin のサポートのために、すべての Panache の型は <code>io.quarkus.hibernate.orm.panache.kotlin</code> パッケージにあります。このサブパッケージは、Java と Kotlin の違いを区別し、単一のプロジェクトで両方を明確に使用することを可能にします。
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Kotlin版では、単純に <a href="https://www.martinfowler.com/eaaCatalog/activeRecord.html"><code>active record pattern</code></a> の機能を <code>companion object</code> に追加しました。このわずかな変更を別にすれば、私たちは、世界のJava側から簡単にマップする方法で私たちの型を使用して作業することができます。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="solution"><a class="anchor" href="#solution"></a>ソリューション</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>次の章で紹介する手順に沿って、ステップを踏んでアプリを作成することをお勧めします。ただし、完成した例にそのまま進んでも構いません。</p>
+</div>
+<div class="paragraph">
+<p>Gitレポジトリをクローンするか <code>git clone -b 3.15 <a href="https://github.com/quarkusio/quarkus-quickstarts.git" class="bare">https://github.com/quarkusio/quarkus-quickstarts.git</a></code> 、 <a href="https://github.com/quarkusio/quarkus-quickstarts/archive/3.15.zip">アーカイブ</a> をダウンロードします。</p>
+</div>
+<div class="paragraph">
+<p>ソリューションは <code>hibernate-orm-panache-kotlin-quickstart</code> <a href="https://github.com/quarkusio/quarkus-quickstarts/tree/3.15/hibernate-orm-panache-kotlin-quickstart">ディレクトリ</a> にあります。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="setting-up-and-configuring-hibernate-orm-with-panache-and-kotlin"><a class="anchor" href="#setting-up-and-configuring-hibernate-orm-with-panache-and-kotlin"></a>Hibernate ORM with PanacheとKotlinのセットアップと設定</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>KotlinでHibernate ORM with Panacheを使い始めるには、一般的には、Javaチュートリアルで説明されている手順に従います。プロジェクトを設定する上で最も大きな変更点は、インクルードするQuarkusのアーティファクトです。もちろん、必要であればJavaバージョンのままでも構いませんが、KotlinのAPIだけが必要な場合は、代わりに以下の依存関係をインクルードしてください。</p>
+</div>
+<div class="listingblock primary asciidoc-tabs-target-sync-cli asciidoc-tabs-target-sync-maven">
+<div class="title">pom.xml</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;dependency&gt;
+    &lt;groupId&gt;io.quarkus&lt;/groupId&gt;
+    &lt;artifactId&gt;quarkus-hibernate-orm-panache-kotlin&lt;/artifactId&gt;  <i class="conum" data-value="1"></i><b>(1)</b>
+&lt;/dependency&gt;</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>最後に <code>-kotlin</code> が追加されていることに注意してください。通常はこのバージョンのみが必要ですが、プロジェクトでJavaとKotlinの両方のコードを使用する場合は、両方のアーティファクト含めても大丈夫です。</td>
+</tr>
+</table>
+</div>
+<div class="listingblock secondary asciidoc-tabs-target-sync-gradle">
+<div class="title">build.gradle</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-gradle hljs" data-lang="gradle">implementation("io.quarkus:quarkus-hibernate-orm-panache-kotlin") <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>最後に <code>-kotlin</code> が追加されていることに注意してください。通常はこのバージョンのみが必要ですが、プロジェクトでJavaとKotlinの両方のコードを使用する場合は、両方のアーティファクト含めても大丈夫です。</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="using-the-repository-pattern"><a class="anchor" href="#using-the-repository-pattern"></a>リポジトリパターンの使用</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="defining-your-entity"><a class="anchor" href="#defining-your-entity"></a>エンティティの定義</h3>
+<div class="paragraph">
+<p>リポジトリパターンを使用する場合、エンティティを通常のJakarta Persistenceエンティティとして定義することができます。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">@Entity
+class Person {
+    @Id
+    @GeneratedValue
+    var id: Long? = null;
+    lateinit var name: String
+    lateinit var birth: LocalDate
+    lateinit var status: Status
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="defining-your-repository"><a class="anchor" href="#defining-your-repository"></a>リポジトリの定義</h3>
+<div class="paragraph">
+<p>リポジトリを使用する場合、<code>PanacheRepository</code> を実装することでアクティブレコードパターンをリポジトリに注入した場合と全く同じ便利なメソッドを得ることができます。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">@ApplicationScoped
+class PersonRepository: PanacheRepository&lt;Person&gt; {
+     fun findByName(name: String) = find("name", name).firstResult()
+     fun findAlive() = list("status", Status.Alive)
+     fun deleteStefs() = delete("name", "Stef")
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>PanacheEntityBase</code> で定義されている操作はすべてリポジトリ上で利用可能なので、これを使用することはアクティブレコードパターンを使用するのと全く同じですが、それを注入する必要があります。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">@Inject
+lateinit var personRepository: PersonRepository
+
+@GET
+fun count() = personRepository.count()</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="most-useful-operations"><a class="anchor" href="#most-useful-operations"></a>最も便利な操作</h3>
+<div class="paragraph">
+<p>リポジトリを書くことで実行可能な最も一般的な操作は以下の通りです。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">// creating a person
+var person = Person()
+person.name = "Stef"
+person.birth = LocalDate.of(1910, Month.FEBRUARY, 1)
+person.status = Status.Alive
+
+// persist it
+personRepository.persist(person)
+
+// note that once persisted, you don't need to explicitly save your entity: all
+// modifications are automatically persisted on transaction commit.
+
+// check if it's persistent
+if(personRepository.isPersistent(person)){
+    // delete it
+    personRepository.delete(person)
+}
+
+// getting a list of all Person entities
+val allPersons = personRepository.listAll()
+
+// finding a specific person by ID
+person = personRepository.findById(personId) ?: throw Exception("No person with that ID")
+
+// finding all living persons
+val livingPersons = personRepository.list("status", Status.Alive)
+
+// counting all persons
+val countAll = personRepository.count()
+
+// counting all living persons
+val countAlive = personRepository.count("status", Status.Alive)
+
+// delete all living persons
+personRepository.delete("status", Status.Alive)
+
+// delete all persons
+personRepository.deleteAll()
+
+// delete by id
+val deleted = personRepository.deleteById(personId)
+
+// set the name of all living persons to 'Mortal'
+personRepository.update("name = 'Mortal' where status = ?1", Status.Alive)</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>すべての <code>list</code> メソッドは、同等の <code>stream</code> バージョンがあります。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">val persons = personRepository.streamAll();
+val namesButEmmanuels = persons
+    .map { it.name.toLowerCase() }
+    .filter { it != "emmanuel" }</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<code>stream</code> メソッドが動作するにはトランザクションが必要です。
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>更なるサンプルについては、 <a href="hibernate-orm-panache">Java 版</a> を参照してください。どちらの API も同じで、Kotlin 開発者がより自然に感じられるように Kotlin 固有の調整が行われている点を除いては同じように動作します。これらの調整には、nullability の使用方法の改善や、API メソッドの <code>Optional</code> がないことなどが含まれます。</p>
+</div>
+</div>
+</div>
+</div>
+    </div>
+    <div class="grid__item width-4-12 width-12-12-m tocwrapper">
+      <div class="hide-mobile toc"><ul class="sectlevel1">
+<li><a href="#first-an-example">最初に:例</a></li>
+<li><a href="#solution">ソリューション</a></li>
+<li><a href="#setting-up-and-configuring-hibernate-orm-with-panache-and-kotlin">Hibernate ORM with PanacheとKotlinのセットアップと設定</a></li>
+<li><a href="#using-the-repository-pattern">リポジトリパターンの使用</a>
+<ul class="sectlevel2">
+<li><a href="#defining-your-entity">エンティティの定義</a></li>
+<li><a href="#defining-your-repository">リポジトリの定義</a></li>
+<li><a href="#most-useful-operations">最も便利な操作</a></li>
+</ul>
+</li>
+</ul></div>
+    </div>
+  </div>
+  <h2>関連コンテンツ</h2>
+  <div class="grid-wrapper relations">
+    <div class="grid__item width-6-12 width-12-12-m">
+      <h3>On the same extensions</h3>
+      <ul class="related-content">
+      
+        
+        <li class="guide"><a href="/version/3.15/guides/hibernate-orm-panache">シンプルになったHibernate ORM with Panache</a></li>
+      
+        
+        <li class="guide"><a href="/version/3.15/guides/hibernate-orm">Hibernate ORMとJakarta Persistenceの使用</a></li>
+      </ul>
+    </div>
+    <div class="grid__item width-6-12 width-12-12-m">
+      <h3>On the same topics</h3>
+      <ul class="related-content">
+      
+        
+        <li class="guide"><a href="/version/3.15/guides/hibernate-orm-panache">シンプルになったHibernate ORM with Panache</a></li>
+      
+        
+        <li class="guide"><a href="/version/3.15/guides/rest-data-panache">PanacheでJakarta RESTリソースを生成する</a></li>
+      
+        
+        <li class="guide"><a href="/version/3.15/guides/hibernate-orm">Hibernate ORMとJakarta Persistenceの使用</a></li>
+      
+        
+        <li class="reference"><a href="/version/3.15/guides/datasource">Quarkusでデータソースを設定</a></li>
+      
+        
+        <li class="guide"><a href="/version/3.15/guides/hibernate-reactive-panache">シンプルなHibernate Reactive with Panache</a></li>
+      
+        
+        <li class="guide"><a href="/version/3.15/guides/mongodb-panache">シンプルになったMongoDB with Panache</a></li>
+      
+        
+        <li class="guide"><a href="/version/3.15/guides/mongodb-panache-kotlin">シンプルになったMongoDB with PanacheとKotlin</a></li>
+      
+        
+        <li class="howto"><a href="/version/3.15/guides/security-jpa">Quarkus SecurityとJakarta Persistence</a></li>
+      
+        
+        <li class="guide"><a href="/version/3.15/guides/reactive-sql-clients">リアクティブ SQL クライアント</a></li>
+      
+        
+        <li class="guide"><a href="/version/3.15/guides/hibernate-search-orm-elasticsearch">Hibernate ORMとElasticsearch/OpenSearchでHibernate Searchを使用</a></li>
+      
+        
+        <li class="guide"><a href="/version/3.15/guides/hibernate-reactive">Hibernate Reactiveの使用</a></li>
+      
+        
+        <li class="guide"><a href="/version/3.15/guides/security-jdbc">JDBCと共にSecurityを使用</a></li>
+      
+        
+        <li class="guide"><a href="/version/3.15/guides/cache">アプリケーションデータのキャッシング</a></li>
+      
+        
+        <li class="guide"><a href="/version/3.15/guides/elasticsearch">Elasticsearchクラスターの実行</a></li>
+      
+        
+        <li class="guide"><a href="/version/3.15/guides/databases-dev-services">Dev Services for Databases</a></li>
+      
+        
+        <li class="guide"><a href="/version/3.15/guides/elasticsearch-dev-services">Dev Services for Elasticsearch</a></li>
+      
+        
+        <li class="guide"><a href="/version/3.15/guides/infinispan-dev-services">Infinispanの開発サービス</a></li>
+      
+        
+        <li class="guide"><a href="/version/3.15/guides/redis-dev-services">Dev Services for Redis</a></li>
+      
+        
+        <li class="reference"><a href="/version/3.15/guides/cache-infinispan-reference">Infinispan Cache</a></li>
+      
+        
+        <li class="reference"><a href="/version/3.15/guides/infinispan-client-reference">Infinispanクライアントエクステンションリファレンスガイド</a></li>
+      </ul>
+    </div>
+    </div>
+  </div>
+
+  </div>
+
+  <div class="content project-footer">
+  <div class="footer-section">
+    <div class="logo-wrapper">
+      <a href="/"><img src="/assets/images/quarkus_logo_horizontal_rgb_reverse.svg" class="project-logo" title="Quarkus"></a>
+    </div>
+  </div>
+  <div class="grid-wrapper">
+    <p class="grid__item width-3-12">Quarkusはオープンです。このプロジェクトのすべての依存関係は、<a href='https://www.apache.org/licenses/LICENSE-2.0' target='_blank'>Apache Software License 2.0</a> または互換性のあるライセンスのもとで利用可能です。<br /><br />このウェブサイトは<a href='https://jekyllrb.com/' target='_blank'>Jekyll</a> で構築され、<a href='https://pages.github.com/' target='_blank'>GitHub Pages</a> にホストされ、完全にオープンソースです。改善したい場合は、<a href='https://github.com/quarkusio/quarkusio.github.io' target='_blank'>ウェブサイトをフォーク</a>し、修正してみせてください。</p>
+
+    
+      <div class="width-1-12 project-links">
+        <span>ナビゲーション</span>
+        <ul class="footer-links">
+          
+          
+            <li><a href="/" target="_blank">ホーム</a></li>
+          
+          
+          
+            <li><a href="/about" target="_blank">Quarkusについて</a></li>
+          
+          
+          
+            <li><a href="/blog" target="_blank">ブログ</a></li>
+          
+          
+          
+            <li><a href="/insights" target="_blank">ポッドキャスト</a></li>
+          
+          
+          
+            <li><a href="/events" target="_blank">イベント</a></li>
+          
+          
+          
+            <li><a href="/newsletter" target="_blank">ニュースレター</a></li>
+          
+          
+          
+            <li><a href="https://github.com/orgs/quarkusio/projects/13/views/1" target="_blank">ロードマップ</a></li>
+          
+          
+          
+            <li><a href="/security" target="_blank">セキュリティ&nbsp;ポリシー</a></li>
+          
+          
+          
+            <li><a href="/usage" target="_blank">使用方法</a></li>
+          
+          
+          
+            <li><a href="/brand" target="_blank">Brand</a></li>
+          
+          
+          
+            <li><a href="/desktopwallpapers" target="_blank">Wallpapers</a></li>
+          
+          
+        </ul>
+      </div>
+    
+      <div class="width-1-12 project-links">
+        <span>フォローする</span>
+        <ul class="footer-links">
+          
+          
+            <li><a href="https://x.com/quarkusio" target="_blank">X</a></li>
+          
+          
+          
+            <li><a href="https://bsky.app/profile/quarkus.io" target="_blank">Bluesky</a></li>
+          
+          
+          
+            <li><a rel="me" href="https://fosstodon.org/@quarkusio" target="_blank">Mastodon</a></li>
+            
+          
+          
+            <li><a href="https://www.facebook.com/quarkusio" target="_blank">Facebook</a></li>
+          
+          
+          
+            <li><a href="https://www.linkedin.com/company/quarkusio/" target="_blank">Linkedin</a></li>
+          
+          
+          
+            <li><a href="https://www.youtube.com/channel/UCaW8QG_QoIk_FnjLgr5eOqg" target="_blank">Youtube</a></li>
+          
+          
+          
+            <li><a href="https://github.com/quarkusio" target="_blank">GitHub</a></li>
+          
+          
+        </ul>
+      </div>
+    
+      <div class="width-2-12 project-links">
+        <span>ヘルプ</span>
+        <ul class="footer-links">
+          
+          
+            <li><a href="/support" target="_blank">サポート</a></li>
+          
+          
+          
+            <li><a href="/guides" target="_blank">ガイド</a></li>
+          
+          
+          
+            <li><a href="/faq" target="_blank">FAQ</a></li>
+          
+          
+          
+            <li><a href="/get-started" target="_blank">入門</a></li>
+          
+          
+          
+            <li><a href="https://stackoverflow.com/questions/tagged/quarkus" target="_blank">Stack Overflow</a></li>
+          
+          
+          
+            <li><a href="https://github.com/quarkusio/quarkus/discussions" target="_blank">ディスカッション</a></li>
+          
+          
+          
+            <li><a href="https://groups.google.com/forum/#!forum/quarkus-dev" target="_blank">開発メーリングリスト</a></li>
+          
+          
+        </ul>
+      </div>
+    
+      <div class="width-1-12 project-links">
+        <span>言語</span>
+        <ul class="footer-links">
+          
+          
+            <li><a href=" https://quarkus.io/ " target="_blank">English</a></li>
+          
+          
+          
+            <li><a href="https://pt.quarkus.io/" target="_blank">Português&nbsp;(Brasileiro)</a></li>
+          
+          
+          
+            <li><a href=" https://es.quarkus.io/ " target="_blank">Español</a></li>
+          
+          
+          
+            <li><a href="https://cn.quarkus.io/" target="_blank">简体中文</a></li>
+          
+          
+          
+            <li><a href=" https://ja.quarkus.io/ " target="_blank">日本語</a></li>
+          
+          
+        </ul>
+      </div>
+    
+
+    
+      <div class="width-4-12 more-links">
+        <span>Quarkusはコミュニティプロジェクトで構成されています</span>
+        <ul class="footer-links">
+          
+            <li><a blah href="https://vertx.io/" target="_blank">Eclipse Vert.x</a></li>
+          
+            <li><a blah href="https://smallrye.io" target="_blank">SmallRye</a></li>
+          
+            <li><a blah href="https://hibernate.org" target="_blank">Hibernate ORM</a></li>
+          
+            <li><a blah href="https://netty.io" target="_blank">Netty</a></li>
+          
+            <li><a blah href="https://resteasy.github.io" target="_blank">RESTEasy</a></li>
+          
+            <li><a blah href="https://camel.apache.org" target="_blank">Apache Camel</a></li>
+          
+            <li><a blah href="https://microprofile.io" target="_blank">Eclipse MicroProfile</a></li>
+          
+            <li><a blah href="https://code.quarkus.io/" target="_blank">その他多数...</a></li>
+          
+        </ul>
+      </div>
+    
+  </div>
+</div>
+
+  <div class="content redhat-footer">
+  <div class="grid-wrapper">
+    <span class="licence">
+      <i class="fab fa-creative-commons"></i><i class="fab fa-creative-commons-by"></i> <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank">CC by 3.0</a> | <a href="https://www.redhat.com/en/about/privacy-policy">Privacy Policy</a>
+    </span>
+    <span class="redhat">
+      Sponsored by
+    </span>
+    <span class="redhat-logo">
+      <a href="https://www.redhat.com/" target="_blank"><img src="/assets/images/redhat_reversed.svg"></a>
+    </span>
+  </div>
+</div>
+
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js" integrity="sha384-8gBf6Y4YYq7Jx97PIqmTwLPin4hxIzQw5aDmUg/DDhul9fFpbbLcLh3nTIIDJKhx" crossorigin="anonymous"></script>
+  <script type="text/javascript" src="/assets/javascript/mobile-nav.js"></script>
+  <script type="text/javascript" src="/assets/javascript/scroll-down.js"></script>
+  <script src="/assets/javascript/satellite.js" type="text/javascript"></script>
+  <script src="/guides/javascript/config.js" type="text/javascript"></script>
+  <script src="/assets/javascript/guides-version-dropdown.js" type="text/javascript"></script>
+  <script src="/assets/javascript/back-to-top.js" type="text/javascript"></script>
+  <script src="/assets/javascript/clipboard.min.js" type="text/javascript"></script>
+  <script src="/assets/javascript/copy.js" type="text/javascript"></script>
+  <script src="/assets/javascript/asciidoc-tabs.js" type="text/javascript"></script>
+  <script src="/assets/javascript/future-date.js" type="text/javascript"></script>
+</body>
+
+</html>
