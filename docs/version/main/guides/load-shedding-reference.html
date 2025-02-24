@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+
+
+
+
+
+
+<head>
+  <title>負荷制限リファレンスガイド - main - Quarkus</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="
+  connect-src 'self' https://dpm.demdex.net https://adobedc.demdex.net https://analytics.ossupstream.org/ https://search.quarkus.io https://smetrics.redhat.com; 
+  script-src 'self' 'unsafe-inline' 'unsafe-eval'
+      
+      https://assets.adobedtm.com
+      js.bizographics.com
+      https://www.redhat.com
+      https://static.redhat.com
+      https://app.requestly.io/
+      jsonip.com
+      https://ajax.googleapis.com
+      https://use.fontawesome.com
+      http://www.youtube.com
+      http://www.googleadservices.com
+      https://googleads.g.doubleclick.net
+      https://giscus.app
+      https://analytics.ossupstream.org/
+      https://app.mailjet.com;
+
+  style-src 'self' https://fonts.googleapis.com https://use.fontawesome.com; 
+  img-src 'self' * data:; 
+  media-src 'self'; 
+  frame-src https://redhat.demdex.net https://www.youtube.com https://embed.restream.io https://app.mailjet.com http://xy0p2.mjt.lu https://mj.quarkus.io https://giscus.app; 
+  base-uri 'none'; 
+  object-src 'none'; 
+  form-action 'none'; 
+  font-src 'self' https://use.fontawesome.com https://fonts.gstatic.com;" />
+  <script id="adobe_dtm" src="https://www.redhat.com/dtm.js" type="text/javascript"></script>
+  <script src="/assets/javascript/highlight.pack.js" type="text/javascript"></script>
+  <META HTTP-EQUIV='X-XSS-Protection' CONTENT="1; mode=block">
+  <META HTTP-EQUIV='X-Content-Type-Options' CONTENT="nosniff">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Quarkus: Supersonic Subatomic Java">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@QuarkusIO"> 
+  <meta name="twitter:creator" content="@QuarkusIO">
+  <meta property="og:url" content="https://quarkus.io/version/main/guides/load-shedding-reference" />
+  <meta property="og:title" content="負荷制限リファレンスガイド - main" />
+  <meta property="og:description" content="Quarkus: Supersonic Subatomic Java" />
+  <meta property="og:image" content="https://quarkus.io/assets/images/quarkus_card.png" />
+  
+  <link rel="canonical" href="https://quarkus.io/guides/load-shedding-reference">
+  <link rel="shortcut icon" type="image/png" href="/favicon.ico" >
+  <link rel="stylesheet" href="/guides/stylesheet/config.css" />
+  <link rel="stylesheet" href="/assets/css/main.css?2021-07-29" />
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.5.2/css/all.css" crossorigin="anonymous">
+  <link rel="alternate" type="application/rss+xml"  href="/feed.xml" title="Quarkus">
+  <script src="/assets/javascript/hl.js" type="text/javascript"></script>
+  
+  
+  
+  
+  <link rel="alternate" hreflang="x-default" href="https://quarkus.io/" />  
+  <script src="/assets/javascript/tracking.js"></script>
+  
+  <script src="/assets/javascript/colormode.js" type="text/javascript"></script>
+
+</head>
+
+<body class="guides">
+
+  
+
+
+<div class="grid-wrapper communitysite">
+  <div class="grid__item width-12-12">The <a href="https://quarkus.io/version/main/guides/load-shedding-reference">English version of quarkus.io</a> is the official project site. Translated sites are community supported on a best-effort basis.</div>
+</div>
+
+
+  <div class="nav-wrapper">
+  <div class="grid-wrapper">
+    <div class="width-12-12">
+      <input type="checkbox" id="checkbox" />
+      <nav id="main-nav" class="main-nav">
+        <div class="logo-wrapper">
+           <a href="/"><img src="/assets/images/quarkus_logo_horizontal_rgb_600px_reverse.png" class="project-logo" title="Quarkus"></a>
+        </div>
+    <label class="nav-toggle" for="checkbox"> <i class="fa fa-bars"></i>
+</label>
+    <ul id="menu" class="menu">
+      <li class="dropdown">
+        <span href="/about/">Why<i class="fas
+fa-chevron-down"></i></span>
+        <ul class="submenu">
+          <li><a href="/about" class="">QUARKUSとは何か?</a></li>
+          <li><a href="/developer-joy" class="">開発者満足</a></li>
+          <li><a href="/performance" class="">PERFORMANCE</a></li>
+          <li><a href="/kubernetes-native" class="">KUBERNETES NATIVE</a></li>
+          <li><a href="/standards" class="">標準</a></li>
+          <li><a href="/versatility" class="">VERSATILITY</a></li>
+          <li><a href="/container-first" class="">コンテナ・ファースト</a></li>          
+        </ul>
+      </li>
+      <li class="dropdown">
+        <span href="/learn/">Learn<i class="fas
+fa-chevron-down"></i></span>
+        <ul class="submenu">
+          <li><a href="/get-started" class="">入門</a></li>
+          <li><a href="/guides" class="active">ドキュメント</a></li>
+          <li><a href="/userstories/" class="">USER STORIES</a></li>  
+          <li><a href="/qtips" class="">"Q" Tipsビデオ</a></li>          
+          <li><a href="/books" class="">書籍</a></li>
+          </ul>
+      </li>
+      <li class="dropdown">
+        <span href="https://quarkus.io/extensions/">Extensions<i class="fas
+fa-chevron-down"></i></span>
+        <ul class="submenu">
+          
+          <!-- Note that quarkus.io is hardcoded here, because it is the only url which supports extensions -->
+<li><a href="https://quarkus.io/extensions/" class="">エクステンションを探す</a></li>
+          <li><a href="/faq/#what-is-a-quarkus-extension" class="">エクステンションの使用</a></li>
+          <li><a href="/guides/writing-extensions" class="">エクステンションの作成</a></li>
+          <li><a href="https://hub.quarkiverse.io" class="">SHARE EXTENSIONS</a></li>
+        </ul>
+      </li>
+      <li class="dropdown">
+        <span href="/community/">Community<i class="fas
+fa-chevron-down"></i></span>
+        <ul class="submenu">
+          <li><a href="/support/" class="">サポート</a></li>
+          <li><a href="/blog" class="">ブログ</a></li>
+          <li><a href="/discussion" class="">ディスカッション</a></li>
+          <li><a href="/working-groups" class="">WORKING GROUPS</a></li>
+          <li><a href="/insights" class="">ポッドキャスト</a></li>
+          <li><a href="/events" class="">イベント</a></li>
+          <li><a href="/newsletter" class="">ニュースレター</a></li>
+          <li><a href="https://github.com/orgs/quarkusio/projects/13/views/1" class="">ロードマップ</a></li>
+          </ul>
+      </li>
+      <li>
+        <a href="https://code.quarkus.io" class="button-cta secondary
+white">コーディングを開始</a>
+      </li>
+      <li class="dropdown">
+        <span href="/language/"><div class="fas fa-globe langicon"></div><i class="fas fa-chevron-down"></i></span>
+        <ul class="submenu">
+          <li><a href="https://quarkus.io/version/main/guides/load-shedding-reference" >OFFICIAL (ENGLISH)</a></li>
+          <li><a href="https://pt.quarkus.io/version/main/guides/load-shedding-reference">PORTUGUÊS (BR)</a></li>
+          <li><a href="https://es.quarkus.io/version/main/guides/load-shedding-reference">ESPAÑOL</a></li>
+          <li><a href="https://cn.quarkus.io/version/main/guides/load-shedding-reference">简体中文</a></li>
+          <li><a href="https://ja.quarkus.io/version/main/guides/load-shedding-reference">日本語</a></li>
+          </ul>
+      </li>
+      <li>
+        <span href="#" class="modeswitcher" id='theme-toggle'><i class="fas
+fa-sun"></i><i class="fas fa-moon"></i><i class="fas fa-cog"></i></span>
+      </li>
+    </ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+  <div class="content">
+    
+
+
+
+
+
+
+
+<section class="full-width-version-bg flexfilterbar guides">
+  <div class="guideflexcontainer">
+    <div class="docslink">
+      <a class="returnlink" href="/version/main/guides/"> Back to Guides</a>
+    </div>
+    <div class="flexlabel">
+      <label>バージョン:</label>
+    </div>
+    <div class="guidepulldown version">
+    <select id="guide-version-dropdown">
+      
+        
+        
+        <option value="main" selected>Main - SNAPSHOT</option>
+        
+        
+        
+        <option value="latest" >3.18.3 - Latest</option>
+        
+        
+        
+        <option value="3.15" >3.15</option>
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        </select>
+    </div>
+  </div>
+</section>
+
+<div class="guide">
+  <div class="grid-wrapper">
+    <div class="grid__item width-8-12 width-12-12-m">
+      
+      <a class="editlink" href="https://github.com/quarkusio/quarkus/edit/main/docs/src/main/asciidoc/load-shedding-reference.adoc">このページを編集</a>
+      
+      <h1 class="text-caps">負荷制限リファレンスガイド </h1>
+      <div id="preamble">
+<div class="sectionbody">
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>この技術は、experimentalと考えられています。</p>
+</div>
+<div class="paragraph">
+<p><em>experimental</em> モードでは、アイデアを成熟させるために早期のフィードバックが求められます。ソリューションが成熟するまでの間、プラットフォームの安定性や長期的な存在を保証するものではありません。フィードバックは <a href="https://groups.google.com/d/forum/quarkus-dev">メーリングリスト</a> や <a href="https://github.com/quarkusio/quarkus/issues">GitHubの課題管理</a> で受け付けています。</p>
+</div>
+<div class="paragraph">
+<p>とりうるステータスの完全なリストについては、 <a href="https://quarkus.io/faq/#extension-status">FAQの項目</a> を参照してください。</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>負荷制限とは、サービスの過負荷を検出し、リクエストを拒否する処理のことです。</p>
+</div>
+<div class="paragraph">
+<p>Quarkus では、<code>quarkus-load-shedding</code> エクステンションによって負荷制限メカニズムが提供されます。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="use-the-load-shedding-extension"><a class="anchor" href="#use-the-load-shedding-extension"></a>1. 負荷制限エクステンションの使用</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>負荷制限エクステンションを使用するには、プロジェクトに <code>io.quarkus:quarkus-load-shedding</code> エクステンションを追加する必要があります。</p>
+</div>
+<div class="listingblock primary asciidoc-tabs-target-sync-cli asciidoc-tabs-target-sync-maven">
+<div class="title">pom.xml</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;dependency&gt;
+    &lt;groupId&gt;io.quarkus&lt;/groupId&gt;
+    &lt;artifactId&gt;quarkus-load-shedding&lt;/artifactId&gt;
+&lt;/dependency&gt;</code></pre>
+</div>
+</div>
+<div class="listingblock secondary asciidoc-tabs-target-sync-gradle">
+<div class="title">build.gradle</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-gradle hljs" data-lang="gradle">implementation("io.quarkus:quarkus-load-shedding")</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>設定は必要ありませんが、可能な設定オプションについては以下で説明します。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="the-load-shedding-algorithm"><a class="anchor" href="#the-load-shedding-algorithm"></a>2. 負荷制限アルゴリズム</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>負荷制限アルゴリズムには 2 つの部分があります。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>過負荷検出</p>
+</li>
+<li>
+<p>優先負荷制限 (オプション)</p>
+</li>
+</ul>
+</div>
+<div class="sect2">
+<h3 id="overload-detection"><a class="anchor" href="#overload-detection"></a>2.1. 過負荷検出</h3>
+<div class="paragraph">
+<p>現在のサービスが過負荷かどうかを検出するために、TCP Vegas を応用しています。</p>
+</div>
+<div class="paragraph">
+<p>アルゴリズムは、最初に 100 件の同時リクエストを許可します。
+各リクエストについて、現在のリクエスト数を許可された制限と比較し、制限を超えた場合は過負荷状態が通知されます。</p>
+</div>
+<div class="paragraph">
+<p>制限を超えていない場合、または優先負荷制限によりリクエストを拒否する必要がないと判断された場合 (以下を参照)、リクエストは許可されます。
+完了すると、その処理時間がこれまでの最短時間と比較され、キューサイズの推定に使用されます。
+キューサイズが <em>alpha</em> より小さい場合、現在の制限は増加しますが、指定された最大値 (デフォルトでは 1000) までしか増加されません。
+キューサイズが <em>beta</em> を超える場合、現在の制限は減少します。
+それ以外の場合、現在の制限は維持されます。</p>
+</div>
+<div class="paragraph">
+<p>アルファとベータは、設定可能な定数を現在の制限の底が 10 の対数 (10 進対数) と掛け合わせることで計算されます。</p>
+</div>
+<div class="paragraph">
+<p><em>probe</em> ファクターを設定することで変更可能な、一定数のリクエスト後に、最も短い処理時間は最後に確認されたリクエストの処理時間にリセットされます。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="priority-load-shedding"><a class="anchor" href="#priority-load-shedding"></a>2.2. 優先負荷制限</h3>
+<div class="paragraph">
+<p>過負荷状況が通知されると、優先負荷制限が呼び出されます。</p>
+</div>
+<div class="paragraph">
+<p>デフォルトでは、優先負荷制限が有効になっています。つまり、現在の CPU 負荷が十分に高い場合にのみ、リクエストが拒否されます。
+リクエストを拒否するかどうかを判断するには、次の 2 つの属性が考慮されます。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>リクエストの優先度</p>
+</li>
+<li>
+<p>リクエストコホート</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>静的に定義された優先度が 5 つ、コホートが 128 あり、合計で 640 のリクエストグループになります。</p>
+</div>
+<div class="paragraph">
+<p>優先度とコホートの両方がリクエストに割り当てられた後、リクエストグループ番号が計算されます: <code>group = priority * num_cohorts + cohort</code>。
+次に、グループ番号は現在の CPU 負荷の単純な 3 次関数と比較されます。ここで、<code>load</code> は 0 から 1 の間の数値です: <code>num_groups * (1 - load^3)</code>。
+グループ番号が大きい場合、リクエストは拒否されますが、それ以外の場合は過負荷の状況でも許可されます。</p>
+</div>
+<div class="paragraph">
+<p>優先負荷制限が無効になっている場合、過負荷状況ではすべてのリクエストが拒否されます。</p>
+</div>
+<div class="sect3">
+<h4 id="customizing-request-priority"><a class="anchor" href="#customizing-request-priority"></a>2.2.1. リクエストの優先度のカスタマイズ</h4>
+<div class="paragraph">
+<p>優先度は <code>io.quarkus.load.shedding.RequestPrioritizer</code> によって割り当てられます。
+<code>io.quarkus.load.shedding.RequestPriority</code> 列挙には、<code>CRITICAL</code>、<code>IMPORTANT</code>、<code>NORMAL</code>、<code>BACKGROUND</code>、<code>DEGRADED</code> の 5 つの静的に定義された優先度があります。
+デフォルトでは、リクエスト prioritizer が適用されない場合、優先度は <code>NORMAL</code> であると見なされます。</p>
+</div>
+<div class="paragraph">
+<p>デフォルトの prioritizer が 1 つあり、非アプリケーションエンドポイントへのリクエストには優先度 <code>CRITICAL</code> が割り当てられます。
+<code>@Priority</code> は宣言されていません。</p>
+</div>
+<div class="paragraph">
+<p><code>RequestPrioritizer</code> インターフェイスのカスタム実装を定義することが可能です。
+実装は CDI Bean である必要があり、そうでない場合は無視されます。
+typesafe な解決の CDI ルールに従う必要があります。
+つまり、異なる <code>@Priority</code> 値を持つ複数の実装が存在し、そのうちのいくつかが <code>@Alternative</code> である場合、最も高い優先度値を持つ代替実装のみが保持されます。
+代替実装となる実装がない場合、すべての実装が保持され、<code>@Priority</code> の降順で並べ替えられます (最も高い優先度の値が最初になります)。</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="customizing-request-cohort"><a class="anchor" href="#customizing-request-cohort"></a>2.2.2. リクエストコホートのカスタマイズ</h4>
+<div class="paragraph">
+<p>コホートは <code>io.quarkus.load.shedding.RequestClassifier</code> によって割り当てられます。
+静的に定義されたコホートは 128 あり、最小番号は 1、最大番号は 128 です。
+分類子はこの範囲内の番号を返す必要があります。返さない場合、番号が自動的に調整されます。</p>
+</div>
+<div class="paragraph">
+<p>リモート IP アドレスと現在の時刻のハッシュに基づいてコホートを割り当てるデフォルトの分類子が 1 つあり、IP アドレスのコホートはおよそ 1 時間ごとに変更されます。
+<code>@Priority</code> は宣言されていません。</p>
+</div>
+<div class="paragraph">
+<p><code>RequestClassifier</code> インターフェイスのカスタム実装を定義することが可能です。
+実装は CDI Bean である必要があり、そうでない場合は無視されます。
+typesafe な解決の CDI ルールに従う必要があります。
+つまり、異なる <code>@Priority</code> 値を持つ複数の実装が存在し、そのうちのいくつかが <code>@Alternative</code> である場合、最も高い優先度値を持つ代替実装のみが保持されます。
+代替実装となる実装がない場合、すべての実装が保持され、<code>@Priority</code> の降順で並べ替えられます (最も高い優先度の値が最初になります)。</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="limitations"><a class="anchor" href="#limitations"></a>3. 制約事項</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>負荷制限エクステンションは現在、HTTP リクエストにのみ適用され、リクエスト/レスポンスのネットワークインタラクションに大きく偏っています。
+そのため、gRPC、WebSocket、その他の HTTP 経由のストリーミングはサポートされていません。
+メッセージングなどの Quarkus アプリケーションへの他の「エントリーポイント」もサポートされていません。</p>
+</div>
+<div class="paragraph">
+<p>さらに、負荷制限の実装は現時点ではかなり基本的なものであり、実稼働環境で十分にテストされていません。
+改善が必要になる可能性があります。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="configuration-reference"><a class="anchor" href="#configuration-reference"></a>4. 設定リファレンス</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><span class="icon"><i class="fa fa-lock" title="ビルド時に固定"></i></span>ビルド時に固定される構成プロパティ - 他のすべての構成プロパティは実行時にオーバーライド可能 <input type="search" id="config-search-0" placeholder="FILTER CONFIGURATION" disabled></p>
+</div>
+<table class="tableblock frame-all grid-all stretch configuration-reference searchable configuration-reference-all-rows">
+<colgroup>
+<col style="width: 80%;">
+<col style="width: 10%;">
+<col style="width: 10%;">
+</colgroup>
+<tbody>
+<tr>
+<th class="tableblock halign-left valign-top"><p class="tableblock"><span class="header-title">Configuration property</span></p></th>
+<th class="tableblock halign-left valign-middle"><p class="tableblock">タイプ</p></th>
+<th class="tableblock halign-left valign-middle"><p class="tableblock">デフォルト</p></th>
+</tr>
+<tr class="row-collapsible row-collapsed row-with-desc odd">
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><a id="quarkus-load-shedding_quarkus-load-shedding-enabled"></a> <span class="property-path"><a href="#quarkus-load-shedding_quarkus-load-shedding-enabled"><code>quarkus.load-shedding.enabled</code></a></span>
+<button class="btn-copy fa fa-clipboard inline-btn-copy" data-clipboard-action="copy" data-clipboard-text='quarkus.load-shedding.enabled' title="Copy to clipboard" do-not-collapse="true"></button></p>
+</div>
+<div id="conf-collapsible-desc-1" class="openblock description description-collapsed">
+<div class="content">
+<div class="paragraph">
+<p>Whether load shedding should be enabled. Currently, this only applies to incoming HTTP requests.</p>
+</div>
+<div class="paragraph">
+<p>Environment variable: <code id="env-var-54117">QUARKUS_LOAD_SHEDDING_ENABLED</code><button class="btn-copy fa fa-clipboard inline-btn-copy" data-clipboard-action="copy" data-clipboard-target="#env-var-54117" title="Copy to clipboard" do-not-collapse="true"></button></p>
+</div>
+</div>
+</div>
+<div class="paragraph description-decoration">
+<p><i class="fa fa-chevron-down"></i><span>Show more</span></p>
+</div></div></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock">ブーリアン</p></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock"><code>true</code></p></td>
+</tr>
+<tr class="row-collapsible row-collapsed row-with-desc">
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><a id="quarkus-load-shedding_quarkus-load-shedding-max-limit"></a> <span class="property-path"><a href="#quarkus-load-shedding_quarkus-load-shedding-max-limit"><code>quarkus.load-shedding.max-limit</code></a></span>
+<button class="btn-copy fa fa-clipboard inline-btn-copy" data-clipboard-action="copy" data-clipboard-text='quarkus.load-shedding.max-limit' title="Copy to clipboard" do-not-collapse="true"></button></p>
+</div>
+<div id="conf-collapsible-desc-2" class="openblock description description-collapsed">
+<div class="content">
+<div class="paragraph">
+<p>The maximum number of concurrent requests allowed.</p>
+</div>
+<div class="paragraph">
+<p>Environment variable: <code id="env-var-54118">QUARKUS_LOAD_SHEDDING_MAX_LIMIT</code><button class="btn-copy fa fa-clipboard inline-btn-copy" data-clipboard-action="copy" data-clipboard-target="#env-var-54118" title="Copy to clipboard" do-not-collapse="true"></button></p>
+</div>
+</div>
+</div>
+<div class="paragraph description-decoration">
+<p><i class="fa fa-chevron-down"></i><span>Show more</span></p>
+</div></div></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock">int</p></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock"><code>1000</code></p></td>
+</tr>
+<tr class="row-collapsible row-collapsed row-with-desc odd">
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><a id="quarkus-load-shedding_quarkus-load-shedding-alpha-factor"></a> <span class="property-path"><a href="#quarkus-load-shedding_quarkus-load-shedding-alpha-factor"><code>quarkus.load-shedding.alpha-factor</code></a></span>
+<button class="btn-copy fa fa-clipboard inline-btn-copy" data-clipboard-action="copy" data-clipboard-text='quarkus.load-shedding.alpha-factor' title="Copy to clipboard" do-not-collapse="true"></button></p>
+</div>
+<div id="conf-collapsible-desc-3" class="openblock description description-collapsed">
+<div class="content">
+<div class="paragraph">
+<p>The <code>alpha</code> factor of the Vegas overload detection algorithm.</p>
+</div>
+<div class="paragraph">
+<p>Environment variable: <code id="env-var-54119">QUARKUS_LOAD_SHEDDING_ALPHA_FACTOR</code><button class="btn-copy fa fa-clipboard inline-btn-copy" data-clipboard-action="copy" data-clipboard-target="#env-var-54119" title="Copy to clipboard" do-not-collapse="true"></button></p>
+</div>
+</div>
+</div>
+<div class="paragraph description-decoration">
+<p><i class="fa fa-chevron-down"></i><span>Show more</span></p>
+</div></div></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock">int</p></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock"><code>3</code></p></td>
+</tr>
+<tr class="row-collapsible row-collapsed row-with-desc">
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><a id="quarkus-load-shedding_quarkus-load-shedding-beta-factor"></a> <span class="property-path"><a href="#quarkus-load-shedding_quarkus-load-shedding-beta-factor"><code>quarkus.load-shedding.beta-factor</code></a></span>
+<button class="btn-copy fa fa-clipboard inline-btn-copy" data-clipboard-action="copy" data-clipboard-text='quarkus.load-shedding.beta-factor' title="Copy to clipboard" do-not-collapse="true"></button></p>
+</div>
+<div id="conf-collapsible-desc-4" class="openblock description description-collapsed">
+<div class="content">
+<div class="paragraph">
+<p>The <code>beta</code> factor of the Vegas overload detection algorithm.</p>
+</div>
+<div class="paragraph">
+<p>Environment variable: <code id="env-var-54120">QUARKUS_LOAD_SHEDDING_BETA_FACTOR</code><button class="btn-copy fa fa-clipboard inline-btn-copy" data-clipboard-action="copy" data-clipboard-target="#env-var-54120" title="Copy to clipboard" do-not-collapse="true"></button></p>
+</div>
+</div>
+</div>
+<div class="paragraph description-decoration">
+<p><i class="fa fa-chevron-down"></i><span>Show more</span></p>
+</div></div></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock">int</p></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock"><code>6</code></p></td>
+</tr>
+<tr class="row-collapsible row-collapsed row-with-desc odd">
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><a id="quarkus-load-shedding_quarkus-load-shedding-probe-factor"></a> <span class="property-path"><a href="#quarkus-load-shedding_quarkus-load-shedding-probe-factor"><code>quarkus.load-shedding.probe-factor</code></a></span>
+<button class="btn-copy fa fa-clipboard inline-btn-copy" data-clipboard-action="copy" data-clipboard-text='quarkus.load-shedding.probe-factor' title="Copy to clipboard" do-not-collapse="true"></button></p>
+</div>
+<div id="conf-collapsible-desc-5" class="openblock description description-collapsed">
+<div class="content">
+<div class="paragraph">
+<p>The probe factor of the Vegas overload detection algorithm.</p>
+</div>
+<div class="paragraph">
+<p>Environment variable: <code id="env-var-54121">QUARKUS_LOAD_SHEDDING_PROBE_FACTOR</code><button class="btn-copy fa fa-clipboard inline-btn-copy" data-clipboard-action="copy" data-clipboard-target="#env-var-54121" title="Copy to clipboard" do-not-collapse="true"></button></p>
+</div>
+</div>
+</div>
+<div class="paragraph description-decoration">
+<p><i class="fa fa-chevron-down"></i><span>Show more</span></p>
+</div></div></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock">double</p></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock"><code>30.0</code></p></td>
+</tr>
+<tr class="row-collapsible row-collapsed row-with-desc">
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><a id="quarkus-load-shedding_quarkus-load-shedding-initial-limit"></a> <span class="property-path"><a href="#quarkus-load-shedding_quarkus-load-shedding-initial-limit"><code>quarkus.load-shedding.initial-limit</code></a></span>
+<button class="btn-copy fa fa-clipboard inline-btn-copy" data-clipboard-action="copy" data-clipboard-text='quarkus.load-shedding.initial-limit' title="Copy to clipboard" do-not-collapse="true"></button></p>
+</div>
+<div id="conf-collapsible-desc-6" class="openblock description description-collapsed">
+<div class="content">
+<div class="paragraph">
+<p>The initial limit of concurrent requests allowed.</p>
+</div>
+<div class="paragraph">
+<p>Environment variable: <code id="env-var-54122">QUARKUS_LOAD_SHEDDING_INITIAL_LIMIT</code><button class="btn-copy fa fa-clipboard inline-btn-copy" data-clipboard-action="copy" data-clipboard-target="#env-var-54122" title="Copy to clipboard" do-not-collapse="true"></button></p>
+</div>
+</div>
+</div>
+<div class="paragraph description-decoration">
+<p><i class="fa fa-chevron-down"></i><span>Show more</span></p>
+</div></div></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock">int</p></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock"><code>100</code></p></td>
+</tr>
+<tr class="row-collapsible row-collapsed row-with-desc odd">
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><a id="quarkus-load-shedding_quarkus-load-shedding-priority-enabled"></a> <span class="property-path"><a href="#quarkus-load-shedding_quarkus-load-shedding-priority-enabled"><code>quarkus.load-shedding.priority.enabled</code></a></span>
+<button class="btn-copy fa fa-clipboard inline-btn-copy" data-clipboard-action="copy" data-clipboard-text='quarkus.load-shedding.priority.enabled' title="Copy to clipboard" do-not-collapse="true"></button></p>
+</div>
+<div id="conf-collapsible-desc-7" class="openblock description description-collapsed">
+<div class="content">
+<div class="paragraph">
+<p>Whether priority load shedding should be enabled.</p>
+</div>
+<div class="paragraph">
+<p>Environment variable: <code id="env-var-54123">QUARKUS_LOAD_SHEDDING_PRIORITY_ENABLED</code><button class="btn-copy fa fa-clipboard inline-btn-copy" data-clipboard-action="copy" data-clipboard-target="#env-var-54123" title="Copy to clipboard" do-not-collapse="true"></button></p>
+</div>
+</div>
+</div>
+<div class="paragraph description-decoration">
+<p><i class="fa fa-chevron-down"></i><span>Show more</span></p>
+</div></div></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock">ブーリアン</p></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock"><code>true</code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="further-reading"><a class="anchor" href="#further-reading"></a>5. さらに詳しく</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Netflix Technology ブログ:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://netflixtechblog.medium.com/performance-under-load-3e6fa9a60581">Performance Under Load</a></p>
+</li>
+<li>
+<p><a href="https://netflixtechblog.com/keeping-netflix-reliable-using-prioritized-load-shedding-6cc827b02f94">Keeping Netflix Reliable Using Prioritized Load Shedding</a></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Uber Engineering ブログ:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://www.uber.com/blog/cinnamon-using-century-old-tech-to-build-a-mean-load-shedder/">Cinnamon: Using Century Old Tech to Build a Mean Load Shedder</a></p>
+</li>
+<li>
+<p><a href="https://www.uber.com/blog/pid-controller-for-cinnamon/">PID Controller for Cinnamon</a></p>
+</li>
+<li>
+<p><a href="https://www.uber.com/blog/cinnamon-auto-tuner-adaptive-concurrency-in-the-wild/">Cinnamon Auto-Tuner: Adaptive Concurrency in the Wild</a></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Amazon Builders' Library:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://aws.amazon.com/builders-library/using-load-shedding-to-avoid-overload/">Using load shedding to avoid overload</a></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Google Cloud ブログ:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://cloud.google.com/blog/products/gcp/using-load-shedding-to-survive-a-success-disaster-cre-life-lessons">Using load shedding to survive a success disaster</a></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>CodeReliant ブログ:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://www.codereliant.io/load-shedding/">Load Shedding for High Traffic Systems</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+    </div>
+    <div class="grid__item width-4-12 width-12-12-m tocwrapper">
+      <div class="hide-mobile toc"><ul class="sectlevel1">
+<li><a href="#use-the-load-shedding-extension">1. 負荷制限エクステンションの使用</a></li>
+<li><a href="#the-load-shedding-algorithm">2. 負荷制限アルゴリズム</a>
+<ul class="sectlevel2">
+<li><a href="#overload-detection">2.1. 過負荷検出</a></li>
+<li><a href="#priority-load-shedding">2.2. 優先負荷制限</a></li>
+</ul>
+</li>
+<li><a href="#limitations">3. 制約事項</a></li>
+<li><a href="#configuration-reference">4. 設定リファレンス</a></li>
+<li><a href="#further-reading">5. さらに詳しく</a></li>
+</ul></div>
+    </div>
+  </div>
+  <h2>関連コンテンツ</h2>
+  <div class="grid-wrapper relations">
+    <div class="grid__item width-6-12 width-12-12-m">
+      <h3>On the same topics</h3>
+      <ul class="related-content">
+      
+        
+        <li class="tutorial"><a href="/version/main/guides/websockets-next-tutorial">Getting started with WebSockets Next</a></li>
+      
+        
+        <li class="reference"><a href="/version/main/guides/http-reference">HTTPリファレンス</a></li>
+      
+        
+        <li class="guide"><a href="/version/main/guides/web">Web 向け Quarkus</a></li>
+      
+        
+        <li class="guide"><a href="/version/main/guides/reactive-routes">リアクティブルートの使用</a></li>
+      
+        
+        <li class="guide"><a href="/version/main/guides/websockets">WebSocketの使用</a></li>
+      
+        
+        <li class="guide"><a href="/version/main/guides/web-dependency-locator">Web dependency locator</a></li>
+      
+        
+        <li class="reference"><a href="/version/main/guides/websockets-next-reference">WebSockets Next reference guide</a></li>
+      </ul>
+    </div>
+    </div>
+  </div>
+
+  </div>
+
+  <div class="content project-footer">
+  <div class="footer-section">
+    <div class="logo-wrapper">
+      <a href="/"><img src="/assets/images/quarkus_logo_horizontal_rgb_reverse.svg" class="project-logo" title="Quarkus"></a>
+    </div>
+  </div>
+  <div class="grid-wrapper">
+    <p class="grid__item width-3-12">Quarkusはオープンです。このプロジェクトのすべての依存関係は、<a href='https://www.apache.org/licenses/LICENSE-2.0' target='_blank'>Apache Software License 2.0</a> または互換性のあるライセンスのもとで利用可能です。<br /><br />このウェブサイトは<a href='https://jekyllrb.com/' target='_blank'>Jekyll</a> で構築され、<a href='https://pages.github.com/' target='_blank'>GitHub Pages</a> にホストされ、完全にオープンソースです。改善したい場合は、<a href='https://github.com/quarkusio/quarkusio.github.io' target='_blank'>ウェブサイトをフォーク</a>し、修正してみせてください。</p>
+
+    
+      <div class="width-1-12 project-links">
+        <span>ナビゲーション</span>
+        <ul class="footer-links">
+          
+          
+            <li><a href="/" target="_blank">ホーム</a></li>
+          
+          
+          
+            <li><a href="/about" target="_blank">Quarkusについて</a></li>
+          
+          
+          
+            <li><a href="/blog" target="_blank">ブログ</a></li>
+          
+          
+          
+            <li><a href="/insights" target="_blank">ポッドキャスト</a></li>
+          
+          
+          
+            <li><a href="/events" target="_blank">イベント</a></li>
+          
+          
+          
+            <li><a href="/newsletter" target="_blank">ニュースレター</a></li>
+          
+          
+          
+            <li><a href="/userstories" target="_blank">User Stories</a></li>
+          
+          
+          
+            <li><a href="https://github.com/orgs/quarkusio/projects/13/views/1" target="_blank">ロードマップ</a></li>
+          
+          
+          
+            <li><a href="/security" target="_blank">セキュリティ&nbsp;ポリシー</a></li>
+          
+          
+          
+            <li><a href="/usage" target="_blank">使用方法</a></li>
+          
+          
+          
+            <li><a href="/brand" target="_blank">Brand</a></li>
+          
+          
+          
+            <li><a href="/desktopwallpapers" target="_blank">Wallpapers</a></li>
+          
+          
+        </ul>
+      </div>
+    
+      <div class="width-1-12 project-links">
+        <span>フォローする</span>
+        <ul class="footer-links">
+          
+          
+            <li><a href="https://x.com/quarkusio" target="_blank">X</a></li>
+          
+          
+          
+            <li><a href="https://bsky.app/profile/quarkus.io" target="_blank">Bluesky</a></li>
+          
+          
+          
+            <li><a rel="me" href="https://fosstodon.org/@quarkusio" target="_blank">Mastodon</a></li>
+            
+          
+          
+            <li><a href="https://www.facebook.com/quarkusio" target="_blank">Facebook</a></li>
+          
+          
+          
+            <li><a href="https://www.linkedin.com/company/quarkusio/" target="_blank">Linkedin</a></li>
+          
+          
+          
+            <li><a href="https://www.youtube.com/channel/UCaW8QG_QoIk_FnjLgr5eOqg" target="_blank">Youtube</a></li>
+          
+          
+          
+            <li><a href="https://github.com/quarkusio" target="_blank">GitHub</a></li>
+          
+          
+        </ul>
+      </div>
+    
+      <div class="width-2-12 project-links">
+        <span>ヘルプ</span>
+        <ul class="footer-links">
+          
+          
+            <li><a href="/support" target="_blank">サポート</a></li>
+          
+          
+          
+            <li><a href="/guides" target="_blank">ガイド</a></li>
+          
+          
+          
+            <li><a href="/faq" target="_blank">FAQ</a></li>
+          
+          
+          
+            <li><a href="/get-started" target="_blank">入門</a></li>
+          
+          
+          
+            <li><a href="https://stackoverflow.com/questions/tagged/quarkus" target="_blank">Stack Overflow</a></li>
+          
+          
+          
+            <li><a href="https://github.com/quarkusio/quarkus/discussions" target="_blank">ディスカッション</a></li>
+          
+          
+          
+            <li><a href="https://groups.google.com/forum/#!forum/quarkus-dev" target="_blank">開発メーリングリスト</a></li>
+          
+          
+        </ul>
+      </div>
+    
+      <div class="width-1-12 project-links">
+        <span>言語</span>
+        <ul class="footer-links">
+          
+          
+            <li><a href=" https://quarkus.io/ " target="_blank">English</a></li>
+          
+          
+          
+            <li><a href="https://pt.quarkus.io/" target="_blank">Português&nbsp;(Brasileiro)</a></li>
+          
+          
+          
+            <li><a href=" https://es.quarkus.io/ " target="_blank">Español</a></li>
+          
+          
+          
+            <li><a href="https://cn.quarkus.io/" target="_blank">简体中文</a></li>
+          
+          
+          
+            <li><a href=" https://ja.quarkus.io/ " target="_blank">日本語</a></li>
+          
+          
+        </ul>
+      </div>
+    
+
+    
+      <div class="width-4-12 more-links">
+        <span>Quarkusはコミュニティプロジェクトで構成されています</span>
+        <ul class="footer-links">
+          
+            <li><a blah href="https://vertx.io/" target="_blank">Eclipse Vert.x</a></li>
+          
+            <li><a blah href="https://smallrye.io" target="_blank">SmallRye</a></li>
+          
+            <li><a blah href="https://hibernate.org" target="_blank">Hibernate ORM</a></li>
+          
+            <li><a blah href="https://netty.io" target="_blank">Netty</a></li>
+          
+            <li><a blah href="https://resteasy.github.io" target="_blank">RESTEasy</a></li>
+          
+            <li><a blah href="https://camel.apache.org" target="_blank">Apache Camel</a></li>
+          
+            <li><a blah href="https://microprofile.io" target="_blank">Eclipse MicroProfile</a></li>
+          
+            <li><a blah href="https://code.quarkus.io/" target="_blank">その他多数...</a></li>
+          
+        </ul>
+      </div>
+    
+  </div>
+</div>
+
+  <div class="content redhat-footer">
+  <div class="grid-wrapper">
+    <span class="licence">
+      <i class="fab fa-creative-commons"></i><i class="fab fa-creative-commons-by"></i> <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank">CC by 3.0</a> | <a href="https://www.redhat.com/en/about/privacy-policy">Privacy Policy</a>
+    </span>
+    <span class="redhat">
+      Sponsored by
+    </span>
+    <span class="redhat-logo">
+      <a href="https://www.redhat.com/" target="_blank"><img src="/assets/images/redhat_reversed.svg"></a>
+    </span>
+  </div>
+</div>
+
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js" integrity="sha384-8gBf6Y4YYq7Jx97PIqmTwLPin4hxIzQw5aDmUg/DDhul9fFpbbLcLh3nTIIDJKhx" crossorigin="anonymous"></script>
+  <script type="text/javascript" src="/assets/javascript/mobile-nav.js"></script>
+  <script type="text/javascript" src="/assets/javascript/scroll-down.js"></script>
+  <script src="/assets/javascript/satellite.js" type="text/javascript"></script>
+  <script src="/guides/javascript/config.js" type="text/javascript"></script>
+  <script src="/assets/javascript/guides-version-dropdown.js" type="text/javascript"></script>
+  <script src="/assets/javascript/back-to-top.js" type="text/javascript"></script>
+  <script src="/assets/javascript/clipboard.min.js" type="text/javascript"></script>
+  <script src="/assets/javascript/copy.js" type="text/javascript"></script>
+  <script src="/assets/javascript/asciidoc-tabs.js" type="text/javascript"></script>
+  <script src="/assets/javascript/future-date.js" type="text/javascript"></script>
+</body>
+
+</html>
