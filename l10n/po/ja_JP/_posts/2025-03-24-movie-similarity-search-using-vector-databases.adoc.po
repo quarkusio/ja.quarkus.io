@@ -1,0 +1,259 @@
+msgid ""
+msgstr ""
+"Language: ja_JP\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: jekyll-l10n\n"
+
+#: _posts/2025-03-24-movie-similarity-search-using-vector-databases.adoc
+msgid "Movie similarity search using vector databases"
+msgstr ""
+
+#: _posts/2025-03-24-movie-similarity-search-using-vector-databases.adoc
+msgid "Shows how to create a movie similarity search system using a vector database and Quarkus LangChain4j"
+msgstr ""
+
+#: _posts/2025-03-24-movie-similarity-search-using-vector-databases.adoc
+msgid "Introduction"
+msgstr ""
+
+#: _posts/2025-03-24-movie-similarity-search-using-vector-databases.adoc
+msgid ""
+"With LLMs becoming increasingly popular we often see them being used even for tasks that are not directly related to text generation.\n"
+"Such case is using LLMs for recommendation systems. In this post we'll see how you can build such a system using https://docs.quarkiverse.io/quarkus-langchain4j/dev/index.html[Quarkus LangChain4j]\n"
+"but without using LLMs. More specifically we'll create a simple movie similarity search system using a vector database. The role\n"
+"of https://docs.quarkiverse.io/quarkus-langchain4j/dev/index.html[Quarkus LangChain4j] in this story is to abstract the underlying vector database through the `EmbeddingStore` interface."
+msgstr ""
+
+#: _posts/2025-03-24-movie-similarity-search-using-vector-databases.adoc
+msgid "A relevant sample has been recently added to the https://github.com/quarkiverse/quarkus-langchain4j/tree/main/samples/[Quarkus LangChain4j samples]."
+msgstr ""
+
+#: _posts/2025-03-24-movie-similarity-search-using-vector-databases.adoc
+msgid "Embeddings"
+msgstr ""
+
+#: _posts/2025-03-24-movie-similarity-search-using-vector-databases.adoc
+msgid ""
+"An embedding is a way to represent unstructured data (text, images etc.) in a structured way. This is done by mapping the data into a vector.\n"
+"As we are able to perform mathematical operations on vectors, such as calculating the distance between them, we can use embeddings to calculate\n"
+"how close (or similar) two pieces of data are. In our case, comparing the embeddings of the movie overview can give us a measure of how similar\n"
+"the two movies are. This is the premise of this post."
+msgstr ""
+
+#: _posts/2025-03-24-movie-similarity-search-using-vector-databases.adoc
+msgid "How are embeddings created?"
+msgstr ""
+
+#: _posts/2025-03-24-movie-similarity-search-using-vector-databases.adoc
+msgid "There are multiple ways to create embeddings. https://docs.quarkiverse.io/quarkus-langchain4j/dev/index.html[Quarkus LangChain4j] provides the following:"
+msgstr ""
+
+#: _posts/2025-03-24-movie-similarity-search-using-vector-databases.adoc
+msgid "https://docs.quarkiverse.io/quarkus-langchain4j/dev/in-process-embedding.html[In-process embedding]"
+msgstr ""
+
+#: _posts/2025-03-24-movie-similarity-search-using-vector-databases.adoc
+msgid "https://docs.quarkiverse.io/quarkus-langchain4j/dev/llms.html[Model provider]"
+msgstr ""
+
+#: _posts/2025-03-24-movie-similarity-search-using-vector-databases.adoc
+msgid ""
+"In this post we'll use the former. Did I mention that we won't be using LLMs?\n"
+"Instead, we'll be using https://github.com/pgvector/pgvector[pgvector] which is a PostgreSQL extension that provides vector operations and indexing."
+msgstr ""
+
+#: _posts/2025-03-24-movie-similarity-search-using-vector-databases.adoc
+msgid "Our project will need the following dependencies, for https://github.com/pgvector/pgvector[pgvector] and https://docs.quarkiverse.io/quarkus-langchain4j/dev/in-process-embedding.html[in-process embedding]:"
+msgstr ""
+
+#: _posts/2025-03-24-movie-similarity-search-using-vector-databases.adoc
+msgid "To be able to use these dependencies without needing to specify versions, the BOM can be imported to the `dependencyManagement` of the project:"
+msgstr ""
+
+#: _posts/2025-03-24-movie-similarity-search-using-vector-databases.adoc
+msgid ""
+"To properly use the in-process embedding model we need to configure it in the `application.properties` file.\n"
+"We also need to configure the pgvector dimension and ensure it's aligned with the dimension of the embedding model.\n"
+"In our case, it's 384 (the https://docs.quarkiverse.io/quarkus-langchain4j/dev/index.html[Quarkus LangChain4j] documentation provides the size used by each model)."
+msgstr ""
+
+#: _posts/2025-03-24-movie-similarity-search-using-vector-databases.adoc
+msgid "So, the `application.properties` file should look like this:"
+msgstr ""
+
+#: _posts/2025-03-24-movie-similarity-search-using-vector-databases.adoc
+msgid ""
+"*Note*: We can use any other document store supported by https://docs.quarkiverse.io/quarkus-langchain4j/dev/index.html[Quarkus LangChain4j], in fact that's one of the key benefits of using it, the abstraction\n"
+"of embeddings stores."
+msgstr ""
+
+#: _posts/2025-03-24-movie-similarity-search-using-vector-databases.adoc
+msgid "Storing the embedding"
+msgstr ""
+
+#: _posts/2025-03-24-movie-similarity-search-using-vector-databases.adoc
+msgid ""
+"To store the embedding we'll need an `EmbeddingStoreIngestor` The ingestor is created using the `EmbeddingModel` and the `EmbeddingStore`, both provided\n"
+"as beans and can be easily injected. Alternatively, the user can specify a document splitter, for splitting large documents into smaller chunks, but we won't be needing that\n"
+"in this post, as the movie overview are relatively small."
+msgstr ""
+
+#: _posts/2025-03-24-movie-similarity-search-using-vector-databases.adoc
+msgid ""
+"Before passing the unstructured text to the ingestor we need to wrap it in a `Document` object. The `Document` also contains a `Metadata` object which holds key-value pairs.\n"
+"The `Metadata` is really handy as we can add there information needed for correlating the `Document` with other data. In our case we'll use the `Metadata` to store the id of the movie.\n"
+"That id will help us correlate the movie overview with the actual movie."
+msgstr ""
+
+#: _posts/2025-03-24-movie-similarity-search-using-vector-databases.adoc
+msgid "The simplified code below shows, how the actual ingestor is created and how the embedding is stored."
+msgstr ""
+
+#: _posts/2025-03-24-movie-similarity-search-using-vector-databases.adoc
+msgid ""
+"So, how exactly do we use the movie id ? This depends really on how we store the rest of the movie data. In our case, we'll store the movie data in a PostgreSQL database.\n"
+"This means that the movie id, corresponds to the id of the Movie in the database."
+msgstr ""
+
+#: _posts/2025-03-24-movie-similarity-search-using-vector-databases.adoc
+msgid "Querying the embedding"
+msgstr ""
+
+#: _posts/2025-03-24-movie-similarity-search-using-vector-databases.adoc
+msgid ""
+"To query the embedding we'll use the `EmbeddingStore` and the `EmbeddingModel` in order to execute `EmbeddingSearchRequest`.\n"
+"The code is pretty straight forward. We use the movie overview to create a search request. The `EmbeddingSearchRequest` builder\n"
+"also allows us to specify the maximum number of results and also the minimum similarity threshold. The later allows us to filter\n"
+"out embeddings that are not similar enough to the query embedding. In other words, it tells the store that if there are not enough similar results\n"
+"to avoid adding irrelevant results to the response."
+msgstr ""
+
+#: _posts/2025-03-24-movie-similarity-search-using-vector-databases.adoc
+msgid "Loading the movies"
+msgstr ""
+
+#: _posts/2025-03-24-movie-similarity-search-using-vector-databases.adoc
+msgid ""
+"To populate the movies in the database, we'll use a CSV file containing the top 1000 movies from IMDB.\n"
+"The important columns for us are:"
+msgstr ""
+
+#: _posts/2025-03-24-movie-similarity-search-using-vector-databases.adoc
+msgid "`title` the movie title"
+msgstr ""
+
+#: _posts/2025-03-24-movie-similarity-search-using-vector-databases.adoc
+msgid "`overview` the movie overview"
+msgstr ""
+
+#: _posts/2025-03-24-movie-similarity-search-using-vector-databases.adoc
+msgid "`link` the link to the image poster"
+msgstr ""
+
+#: _posts/2025-03-24-movie-similarity-search-using-vector-databases.adoc
+msgid ""
+"To easily map CSV entries to `Movie` objects we'll use `Jackson`. Specifically, we will use the `@JsonProperty`\n"
+"annotation to map the CSV columns to the `Movie` fields. Also, we'll use `@JsonIgnoreProperties(ignoreUnknown = true)`\n"
+"to ignore unknown fields."
+msgstr ""
+
+#: _posts/2025-03-24-movie-similarity-search-using-vector-databases.adoc
+msgid "So, a simplified version of our Movie entity object looks like:"
+msgstr ""
+
+#: _posts/2025-03-24-movie-similarity-search-using-vector-databases.adoc
+msgid "So, now we are ready to load our movies from the CSV to our relational and vector databases."
+msgstr ""
+
+#: _posts/2025-03-24-movie-similarity-search-using-vector-databases.adoc
+msgid "Key points:"
+msgstr ""
+
+#: _posts/2025-03-24-movie-similarity-search-using-vector-databases.adoc
+msgid "Observing the `StartupEvent` allows us to load the movies when the application starts"
+msgstr ""
+
+#: _posts/2025-03-24-movie-similarity-search-using-vector-databases.adoc
+msgid "CSVMapper is used to map the CSV entries to `Movie` objects"
+msgstr ""
+
+#: _posts/2025-03-24-movie-similarity-search-using-vector-databases.adoc
+msgid "We save each movie using a @Transaction method because we need that `id` that's often generated by the database"
+msgstr ""
+
+#: _posts/2025-03-24-movie-similarity-search-using-vector-databases.adoc
+msgid "We ingest the documents in a batch. This can make a huge difference especially, if we move from in-process to remote embedding models."
+msgstr ""
+
+#: _posts/2025-03-24-movie-similarity-search-using-vector-databases.adoc
+msgid "To use the CSV mapper, we'll need to Jackson's CSV dataformat dependency:"
+msgstr ""
+
+#: _posts/2025-03-24-movie-similarity-search-using-vector-databases.adoc
+msgid "The path of the movies file is specified in the `application.properties` file."
+msgstr ""
+
+#: _posts/2025-03-24-movie-similarity-search-using-vector-databases.adoc
+msgid "Bringing it all together"
+msgstr ""
+
+#: _posts/2025-03-24-movie-similarity-search-using-vector-databases.adoc
+msgid ""
+"The only thing that's left is to create a REST endpoint that allows us to search for similar movies. We could also use a simple UI.\n"
+"Let's start with the REST endpoint. It's pretty straightforward. We need two methods, one for searching movies and one for searching similar movies.\n"
+"For the former we just use the `Movie` entity, for the latter we inject and use the `MovieRecommendationService` we created earlier."
+msgstr ""
+
+#: _posts/2025-03-24-movie-similarity-search-using-vector-databases.adoc
+msgid "For the UI, let's just use a simple HTML page that uses the REST endpoint to search for similar movies."
+msgstr ""
+
+#: _posts/2025-03-24-movie-similarity-search-using-vector-databases.adoc
+msgid "The key elements of that page are:"
+msgstr ""
+
+#: _posts/2025-03-24-movie-similarity-search-using-vector-databases.adoc
+msgid "movie-box: a text field for entering the movie title"
+msgstr ""
+
+#: _posts/2025-03-24-movie-similarity-search-using-vector-databases.adoc
+msgid "search-results: an unordered list for displaying the search results"
+msgstr ""
+
+#: _posts/2025-03-24-movie-similarity-search-using-vector-databases.adoc
+msgid "movie-overview: div for displaying the overview of the selected movie"
+msgstr ""
+
+#: _posts/2025-03-24-movie-similarity-search-using-vector-databases.adoc
+msgid "movie-poster: an image for displaying the movie poster"
+msgstr ""
+
+#: _posts/2025-03-24-movie-similarity-search-using-vector-databases.adoc
+msgid "similar-results: an additional unordered list for displaying the similar movies"
+msgstr ""
+
+#: _posts/2025-03-24-movie-similarity-search-using-vector-databases.adoc
+msgid ""
+"It's important to remember that the `Movie` entity is using Jackson to map the CSV columns to the entity fields.\n"
+"This means that when a `Movie` is serialized to JSON, it will use the CSV column names as the field names and not\n"
+"the entity field names. The HTML code below needs to take that into consideration."
+msgstr ""
+
+#: _posts/2025-03-24-movie-similarity-search-using-vector-databases.adoc
+msgid ""
+"I won't go into much detail about the HTML code as it's outside the scope of this post.\n"
+"The final results should look like this:"
+msgstr ""
+
+#: _posts/2025-03-24-movie-similarity-search-using-vector-databases.adoc
+msgid "Conclusion"
+msgstr ""
+
+#: _posts/2025-03-24-movie-similarity-search-using-vector-databases.adoc
+msgid ""
+"The quality of the recommendations depends on the accuracy of the movie overview and also on the quality of the embeddings.\n"
+"This means that better embedding models can lead to better recommendations. The vector database used could possibly also\n"
+"affect the quality of the recommendations, but that's a topic for another post."
+msgstr ""
