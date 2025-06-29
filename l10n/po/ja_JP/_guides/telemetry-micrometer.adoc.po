@@ -753,6 +753,10 @@ msgid "Automatically generated metrics"
 msgstr "自動的に生成されたメトリクス"
 
 #: _guides/telemetry-micrometer.adoc
+msgid "HTTP server"
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
 msgid ""
 "The Micrometer extension automatically times HTTP server requests. Following Prometheus naming conventions for\n"
 "timers, look for `http_server_requests_seconds_count`, `http_server_requests_seconds_sum`, and\n"
@@ -815,6 +819,352 @@ msgid ""
 "By default, the  metrics are exported using the Prometheus format `application/openmetrics-text`,\n"
 "you can revert to the former format by specifying the `Accept` request header to `text/plain` (`curl -H \"Accept: text/plain\" localhost:8080/q/metrics/`)."
 msgstr "デフォルトでは、メトリクスはPrometheusのフォーマット `application/openmetrics-text` を使用してエクスポートされます。 `Accept` リクエストヘッダを `plain/text` ( `curl -H \"Accept: plain/text\" localhost:8080/q/metrics/` ) に指定することで、以前のフォーマットに戻すことも可能です。"
+
+#: _guides/telemetry-micrometer.adoc
+msgid "Netty memory management metrics"
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "https://netty.io/[Netty] memory management metrics are important because Quarkus is built on top of https://vertx.io/[Eclipse Vert.x], which is a framework built on top of Netty to create reactive applications in Java. Even if you use imperative style programing in Quarkus, under the surface it is conveniently handled by Vert.x in a reactive way."
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid ""
+"In short, Netty provides an _efficient_ memory management system for asynchronous applications.\n"
+"It offers different types of memory allocation strategies, including **heap** (stored in the JVM heap) and direct memory (allocated outside the JVM memory), along with a **buffer pooling mechanism** to optimize allocations and reduce garbage collection (GC) overhead."
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "Memory Categories in Netty"
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "Netty uses two primary memory categories:"
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "**Heap Memory**"
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "Allocated from the JVM heap (`byte[]`)."
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "Managed by the garbage collector."
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "Slower for I/O operations because it requires copying data to/from direct memory before sending over a socket."
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "**Direct Memory**"
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "Allocated outside the JVM heap using `ByteBuffer.allocateDirect()`."
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "Not managed by the garbage collector, reducing GC pressure."
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "Faster for I/O operations as it avoids unnecessary copying."
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "Using a very high value for -XX:MaxRAMPercentage (allocating most of the available RAM to the Java heap) is not recommended for Quarkus applications, as it’s important to leave room for Netty's native memory allocations."
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "These Netty metrics help evaluate how much room is needed."
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "Pooling Mechanism"
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "Netty uses **PooledByteBufAllocator** to reduce memory allocation overhead and fragmentation. It is based on a **jemalloc-style arena system** (see https://github.com/jemalloc/jemalloc[jemalloc/jemalloc]), which includes:"
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "**Arenas**: Large memory blocks that manage allocations."
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "**Chunks**: Memory segments within arenas (typically 16MB in size)."
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "**Pages**: Fixed-size portions of a chunk (usually 8KB)."
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "**Subpages**: Smaller allocations within a page for tiny objects."
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "**Thread-local Caches**: Per-thread cache for frequently used small buffers, reducing contention."
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "Metrics for Netty Memory Management"
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "The Micrometer metrics report key metrics from Netty's allocator, helping monitor memory usage, pinned memory, pooling efficiency, and cache behavior."
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "**1. Memory Usage Metrics (Every allocator)**"
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "These metrics track the current memory usage by Netty allocators (in bytes)"
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "Metric Name"
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "Description"
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "Type"
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "Tags"
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "`allocator.memory.used`"
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "Amount of memory currently used by the allocator"
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "Gauge"
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "`memory_type=[heap, direct]`, `name=allocator-name`"
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "**2. Pooled  Allocator - Pinned Memory Metrics**"
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "Pinned memory refers to buffers that cannot be recycled due to active references, preventing reuse by the allocator. A _high_ number may indicate some kind of leak (as reference are not released)."
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "`allocator.memory.pinned`"
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "Amount of pinned memory that cannot be reused"
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "**3. Pooled Allocator - Arena Metrics**"
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "Arenas (large size of memory) manage memory allocations efficiently by grouping chunks of memory. So this metric is the number of arenas allocated for a given allocator."
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "`allocator.pooled.arenas`"
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "Number of arenas handling memory allocation"
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "`memory_type=[heap, direct]`"
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "**4. Cache Size Metrics**"
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "Netty caches small buffers within a given thread to avoid frequent memory allocations and improve performance. If the same thread needs memory, it will first check in its own cache. This is particularly efficient due to the event loop threading model (low number of threads). Note that the tiny caches are now merged into the small ones."
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "`allocator.pooled.cache.size`"
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "Size of the buffer cache"
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "`cache_type=[small, normal]`"
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "**5. Thread-Local Cache Metrics**"
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "These metrics indicate the number of active thread-local caches used for memory pooling. It complements the cache size metrics (cache being the size, and this being the number of cache)"
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "`allocator.pooled.threadlocal.caches`"
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "Number of thread-local caches for buffers"
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "None"
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "**6. Chunk Size Metrics**"
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "Chunks are the primary unit of memory allocation in Netty's arenas."
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "`allocator.pooled.chunk.size`"
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "Size of a memory chunk in pooled allocator"
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "List of Quarkus core extensions automatically instrumented with Micrometer"
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
+msgid "https://quarkus.io/extensions/io.quarkus/quarkus-agroal[`quarkus-agroal`]"
+msgstr "https://quarkus.io/extensions/io.quarkus/quarkus-agroal[`quarkus-agroal`]"
+
+#: _guides/telemetry-micrometer.adoc
+msgid "https://quarkus.io/guides/cache[`quarkus-cache`]"
+msgstr "https://quarkus.io/guides/cache[`quarkus-cache`]"
+
+#: _guides/telemetry-micrometer.adoc
+msgid "https://quarkus.io/extensions/io.quarkus/quarkus-caffeine[`quarkus-caffeine`]"
+msgstr "https://quarkus.io/extensions/io.quarkus/quarkus-caffeine[`quarkus-caffeine`]"
+
+#: _guides/telemetry-micrometer.adoc
+msgid "https://quarkus.io/guides/smallrye-fault-tolerance[`quarkus-smallrye-fault-tolerance`]"
+msgstr "https://quarkus.io/guides/smallrye-fault-tolerance[`quarkus-smallrye-fault-tolerance`]"
+
+#: _guides/telemetry-micrometer.adoc
+msgid "https://quarkus.io/guides/grpc-getting-started[`quarkus-grpc`]"
+msgstr "https://quarkus.io/guides/grpc-getting-started[`quarkus-grpc`]"
+
+#: _guides/telemetry-micrometer.adoc
+msgid "https://quarkus.io/guides/hibernate-orm[`quarkus-hibernate-orm`]"
+msgstr "https://quarkus.io/guides/hibernate-orm[`quarkus-hibernate-orm`]"
+
+#: _guides/telemetry-micrometer.adoc
+msgid "https://quarkus.io/extensions/io.quarkus/quarkus-jaxrs-client-reactive[`quarkus-jaxrs-client-reactive`]"
+msgstr "https://quarkus.io/extensions/io.quarkus/quarkus-jaxrs-client-reactive[`quarkus-jaxrs-client-reactive`]"
+
+#: _guides/telemetry-micrometer.adoc
+msgid "https://quarkus.io/guides/deploying-to-kubernetes[`quarkus-kubernetes`]"
+msgstr "https://quarkus.io/guides/deploying-to-kubernetes[`quarkus-kubernetes`]"
+
+#: _guides/telemetry-micrometer.adoc
+msgid "https://quarkus.io/guides/logging[`jboss-logging`] (logging API in Quarkus)"
+msgstr "https://quarkus.io/guides/logging[`jboss-logging`] (Quarkusのlogging API)"
+
+#: _guides/telemetry-micrometer.adoc
+msgid "https://quarkus.io/guides/mongodb[`quarkus-mongodb-client`]"
+msgstr "https://quarkus.io/guides/mongodb[`quarkus-mongodb-client`]"
+
+#: _guides/telemetry-micrometer.adoc
+msgid "https://quarkus.io/extensions/io.quarkus/quarkus-netty[`quarkus-netty`]"
+msgstr "https://quarkus.io/extensions/io.quarkus/quarkus-netty[`quarkus-netty`]"
+
+#: _guides/telemetry-micrometer.adoc
+msgid "https://quarkus.io/guides/redis[`quarkus-redis-client`]"
+msgstr "https://quarkus.io/guides/redis[`quarkus-redis-client`]"
+
+#: _guides/telemetry-micrometer.adoc
+msgid "https://quarkus.io/guides/rest[`quarkus-rest`]"
+msgstr "https://quarkus.io/guides/rest[`quarkus-rest`]"
+
+#: _guides/telemetry-micrometer.adoc
+msgid "https://quarkus.io/guides/resteasy[`quarkus-resteasy-jackson`]"
+msgstr "https://quarkus.io/guides/resteasy[`quarkus-resteasy-jackson`]"
+
+#: _guides/telemetry-micrometer.adoc
+msgid "https://quarkus.io/guides/resteasy-client[`quarkus-resteasy-client`]"
+msgstr "https://quarkus.io/guides/resteasy-client[`quarkus-resteasy-client`]"
+
+#: _guides/telemetry-micrometer.adoc
+msgid "https://quarkus.io/guides/scheduler[`quarkus-scheduler`]"
+msgstr "https://quarkus.io/guides/scheduler[`quarkus-scheduler`]"
+
+#: _guides/telemetry-micrometer.adoc
+msgid "https://quarkus.io/guides/smallrye-graphql[`quarkus-smallrye-graphql`]"
+msgstr "https://quarkus.io/guides/smallrye-graphql[`quarkus-smallrye-graphql`]"
+
+#: _guides/telemetry-micrometer.adoc
+msgid "https://quarkus.io/extensions/io.quarkus/quarkus-messaging[`quarkus-messaging`]"
+msgstr "https://quarkus.io/extensions/io.quarkus/quarkus-messaging[`quarkus-messaging`]"
+
+#: _guides/telemetry-micrometer.adoc
+msgid "AMQP 1.0"
+msgstr "AMQP 1.0"
+
+#: _guides/telemetry-micrometer.adoc
+msgid "RabbitMQ"
+msgstr "RabbitMQ"
+
+#: _guides/telemetry-micrometer.adoc
+msgid "Kafka"
+msgstr "Kafka"
+
+#: _guides/telemetry-micrometer.adoc
+msgid "Pulsar"
+msgstr "Pulsar"
+
+#: _guides/telemetry-micrometer.adoc
+msgid "JMS"
+msgstr "JMS"
+
+#: _guides/telemetry-micrometer.adoc
+msgid "MQTT"
+msgstr "MQTT"
+
+#: _guides/telemetry-micrometer.adoc
+msgid "Camel Messaging"
+msgstr "Camel Messaging"
+
+#: _guides/telemetry-micrometer.adoc
+msgid "https://quarkus.io/guides/stork-reference[`quarkus-smallrye-stork`]"
+msgstr "https://quarkus.io/guides/stork-reference[`quarkus-smallrye-stork`]"
+
+#: _guides/telemetry-micrometer.adoc
+msgid "https://quarkus.io/guides/vertx[`quarkus-vertx`] (http requests)"
+msgstr "link:https://quarkus.io/guides/vertx[quarkus-vertx] (httpリクエスト)"
+
+#: _guides/telemetry-micrometer.adoc
+msgid "xref:websockets-next-reference.adoc[`websockets-next`]"
+msgstr "xref:websockets-next-reference.adoc[`websockets-next`]"
 
 #. type: Title ==
 #: _guides/telemetry-micrometer.adoc
@@ -995,130 +1345,18 @@ msgid "You can configure the path of each exposed format using:"
 msgstr "公開される各形式のパスは、以下を使用して設定できます。"
 
 #: _guides/telemetry-micrometer.adoc
+msgid "Enable JSON metrics"
+msgstr ""
+
+#: _guides/telemetry-micrometer.adoc
 msgid ""
-"With such a configuration, the json metrics will be available from `http://0.0.0.0:9000/q/metrics/json`.\n"
-"The prometheus metrics will be available from `http://0.0.0.0:9000/q/metrics/prometheus`."
-msgstr "このような設定にすることで、json メトリクスが `http://0.0.0.0:9000/q/metrics/json` で利用可能になります。prometheus メトリクスは、 `http://0.0.0.0:9000/q/metrics/prometheus` で利用可能になります。"
+"With such a configuration, the JSON metrics will be available from `http://0.0.0.0:9000/q/metrics/json`.\n"
+"The Prometheus metrics will be available from `http://0.0.0.0:9000/q/metrics/prometheus`."
+msgstr ""
 
 #: _guides/telemetry-micrometer.adoc
 msgid "Refer to the xref:./management-interface-reference.adoc[management interface reference] for more information."
 msgstr "詳細は、xref:./management-interface-reference.adoc[マネジメントインターフェイスのリファレンス] を参照してください。"
-
-#: _guides/telemetry-micrometer.adoc
-msgid "Quarkus core extensions instrumented with Micrometer"
-msgstr "Micrometerで計測されたQuarkusのコアエクステンション"
-
-#: _guides/telemetry-micrometer.adoc
-msgid "https://quarkus.io/extensions/io.quarkus/quarkus-agroal[`quarkus-agroal`]"
-msgstr "https://quarkus.io/extensions/io.quarkus/quarkus-agroal[`quarkus-agroal`]"
-
-#: _guides/telemetry-micrometer.adoc
-msgid "https://quarkus.io/guides/cache[`quarkus-cache`]"
-msgstr "https://quarkus.io/guides/cache[`quarkus-cache`]"
-
-#: _guides/telemetry-micrometer.adoc
-msgid "https://quarkus.io/extensions/io.quarkus/quarkus-caffeine[`quarkus-caffeine`]"
-msgstr "https://quarkus.io/extensions/io.quarkus/quarkus-caffeine[`quarkus-caffeine`]"
-
-#: _guides/telemetry-micrometer.adoc
-msgid "https://quarkus.io/guides/smallrye-fault-tolerance[`quarkus-smallrye-fault-tolerance`]"
-msgstr "https://quarkus.io/guides/smallrye-fault-tolerance[`quarkus-smallrye-fault-tolerance`]"
-
-#: _guides/telemetry-micrometer.adoc
-msgid "https://quarkus.io/guides/grpc-getting-started[`quarkus-grpc`]"
-msgstr "https://quarkus.io/guides/grpc-getting-started[`quarkus-grpc`]"
-
-#: _guides/telemetry-micrometer.adoc
-msgid "https://quarkus.io/guides/hibernate-orm[`quarkus-hibernate-orm`]"
-msgstr "https://quarkus.io/guides/hibernate-orm[`quarkus-hibernate-orm`]"
-
-#: _guides/telemetry-micrometer.adoc
-msgid "https://quarkus.io/extensions/io.quarkus/quarkus-jaxrs-client-reactive[`quarkus-jaxrs-client-reactive`]"
-msgstr "https://quarkus.io/extensions/io.quarkus/quarkus-jaxrs-client-reactive[`quarkus-jaxrs-client-reactive`]"
-
-#: _guides/telemetry-micrometer.adoc
-msgid "https://quarkus.io/guides/deploying-to-kubernetes[`quarkus-kubernetes`]"
-msgstr "https://quarkus.io/guides/deploying-to-kubernetes[`quarkus-kubernetes`]"
-
-#: _guides/telemetry-micrometer.adoc
-msgid "https://quarkus.io/guides/logging[`jboss-logging`] (logging API in Quarkus)"
-msgstr "https://quarkus.io/guides/logging[`jboss-logging`] (Quarkusのlogging API)"
-
-#: _guides/telemetry-micrometer.adoc
-msgid "https://quarkus.io/guides/mongodb[`quarkus-mongodb-client`]"
-msgstr "https://quarkus.io/guides/mongodb[`quarkus-mongodb-client`]"
-
-#: _guides/telemetry-micrometer.adoc
-msgid "https://quarkus.io/extensions/io.quarkus/quarkus-netty[`quarkus-netty`]"
-msgstr "https://quarkus.io/extensions/io.quarkus/quarkus-netty[`quarkus-netty`]"
-
-#: _guides/telemetry-micrometer.adoc
-msgid "https://quarkus.io/guides/redis[`quarkus-redis-client`]"
-msgstr "https://quarkus.io/guides/redis[`quarkus-redis-client`]"
-
-#: _guides/telemetry-micrometer.adoc
-msgid "https://quarkus.io/guides/rest[`quarkus-rest`]"
-msgstr "https://quarkus.io/guides/rest[`quarkus-rest`]"
-
-#: _guides/telemetry-micrometer.adoc
-msgid "https://quarkus.io/guides/resteasy[`quarkus-resteasy-jackson`]"
-msgstr "https://quarkus.io/guides/resteasy[`quarkus-resteasy-jackson`]"
-
-#: _guides/telemetry-micrometer.adoc
-msgid "https://quarkus.io/guides/resteasy-client[`quarkus-resteasy-client`]"
-msgstr "https://quarkus.io/guides/resteasy-client[`quarkus-resteasy-client`]"
-
-#: _guides/telemetry-micrometer.adoc
-msgid "https://quarkus.io/guides/scheduler[`quarkus-scheduler`]"
-msgstr "https://quarkus.io/guides/scheduler[`quarkus-scheduler`]"
-
-#: _guides/telemetry-micrometer.adoc
-msgid "https://quarkus.io/guides/smallrye-graphql[`quarkus-smallrye-graphql`]"
-msgstr "https://quarkus.io/guides/smallrye-graphql[`quarkus-smallrye-graphql`]"
-
-#: _guides/telemetry-micrometer.adoc
-msgid "https://quarkus.io/extensions/io.quarkus/quarkus-messaging[`quarkus-messaging`]"
-msgstr "https://quarkus.io/extensions/io.quarkus/quarkus-messaging[`quarkus-messaging`]"
-
-#: _guides/telemetry-micrometer.adoc
-msgid "AMQP 1.0"
-msgstr "AMQP 1.0"
-
-#: _guides/telemetry-micrometer.adoc
-msgid "RabbitMQ"
-msgstr "RabbitMQ"
-
-#: _guides/telemetry-micrometer.adoc
-msgid "Kafka"
-msgstr "Kafka"
-
-#: _guides/telemetry-micrometer.adoc
-msgid "Pulsar"
-msgstr "Pulsar"
-
-#: _guides/telemetry-micrometer.adoc
-msgid "JMS"
-msgstr "JMS"
-
-#: _guides/telemetry-micrometer.adoc
-msgid "MQTT"
-msgstr "MQTT"
-
-#: _guides/telemetry-micrometer.adoc
-msgid "Camel Messaging"
-msgstr "Camel Messaging"
-
-#: _guides/telemetry-micrometer.adoc
-msgid "https://quarkus.io/guides/stork-reference[`quarkus-smallrye-stork`]"
-msgstr "https://quarkus.io/guides/stork-reference[`quarkus-smallrye-stork`]"
-
-#: _guides/telemetry-micrometer.adoc
-msgid "https://quarkus.io/guides/vertx[`quarkus-vertx`] (http requests)"
-msgstr "link:https://quarkus.io/guides/vertx[quarkus-vertx] (httpリクエスト)"
-
-#: _guides/telemetry-micrometer.adoc
-msgid "xref:websockets-next-reference.adoc[`websockets-next`]"
-msgstr "xref:websockets-next-reference.adoc[`websockets-next`]"
 
 #. type: Title ==
 #: _guides/telemetry-micrometer.adoc
