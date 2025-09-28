@@ -1,0 +1,909 @@
+msgid ""
+msgstr ""
+"Language: ja_JP\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: jekyll-l10n\n"
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "Using the Cassandra Client"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"Apache Cassandra® is a free and open-source, distributed, wide column store, NoSQL database\n"
+"management system designed to handle large amounts of data across many commodity servers, providing\n"
+"high availability with no single point of failure."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "In this guide, we will see how you can get your REST services to use a Cassandra database."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "Prerequisites"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"A running link:https://cassandra.apache.org[Apache Cassandra],\n"
+"link:https://www.datastax.fr/products/datastax-enterprise[DataStax Enterprise] (DSE) or\n"
+"link:https://astra.datastax.com[DataStax Astra] database; or alternatively, a fresh Docker\n"
+"installation."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "Architecture"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"This quickstart guide shows how to build a REST application using the\n"
+"link:https://github.com/datastax/cassandra-quarkus[Cassandra Quarkus extension], which allows you to\n"
+"connect to an Apache Cassandra, DataStax Enterprise (DSE) or DataStax Astra database, using the\n"
+"link:https://docs.datastax.com/en/developer/java-driver/latest[DataStax Java driver]."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"This guide will also use the\n"
+"link:https://docs.datastax.com/en/developer/java-driver/latest/manual/mapper[DataStax Object Mapper]\n"
+"– a powerful Java-to-CQL mapping framework that greatly simplifies your application's data access\n"
+"layer code by sparing you the hassle of writing your CQL queries by hand."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"The application built in this quickstart guide is quite simple: the user can add elements in a list\n"
+"using a form, and the items list is updated. All the information between the browser and the server\n"
+"is formatted as JSON, and the elements are stored in the Cassandra database."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "Solution"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"We recommend that you follow the instructions in the next sections and create the application step\n"
+"by step. However, you can go right to the completed example."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"The solution is located in the\n"
+"link:https://github.com/datastax/cassandra-quarkus/tree/main/quickstart[quickstart directory] of\n"
+"the Cassandra Quarkus extension GitHub repository."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "Creating a Blank Maven Project"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"First, create a new Maven project and copy the `pom.xml` file that is present in the `quickstart`\n"
+"directory."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "The `pom.xml` is importing all the Quarkus extensions and dependencies you need."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "Creating the Data Model and Data Access Objects"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "In this example, we will create an application to manage a list of fruits."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "First, let's create our data model – represented by the `Fruit` class – as follows:"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"As stated above, we are using the DataStax Object Mapper. In other words, we are not going to write\n"
+"our CQL queries manually; instead, we will annotate our data model with a few annotations, and the\n"
+"mapper will generate proper CQL queries underneath."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"This is why the `Fruit` class is annotated with `@Entity`: this annotation marks it as an _entity\n"
+"class_ that is mapped to a Cassandra table. Its instances are meant to be automatically persisted\n"
+"into, and retrieved from, the Cassandra database. Here, the table name will be inferred from the\n"
+"class name: `fruit`."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"Also, the `name` field represents a Cassandra partition key, and so we are annotating it with\n"
+"`@PartitionKey` – another annotation from the Object Mapper library."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"Entity classes are normally required to have a default no-arg constructor, unless they\n"
+"are annotated with `@PropertyStrategy(mutable = false)`, which is the case here."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"The next step is to create a DAO (Data Access Object) interface that will manage instances of\n"
+"`Fruit` entities:"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"This interface exposes operations that will be used in our REST service. Again, the annotation\n"
+"`@Dao` comes from the DataStax Object Mapper, which will also automatically generate an\n"
+"implementation of this interface for you."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"Note also the special return type of the `findAll` method,\n"
+"link:https://docs.datastax.com/en/drivers/java/latest/com/datastax/oss/driver/api/core/PagingIterable.html[`PagingIterable`]:\n"
+"it's the base type of result sets returned by the driver."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "Finally, let's create a Mapper interface:"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"The `@Mapper` annotation is yet another annotation recognized by the DataStax Object Mapper. A\n"
+"mapper is responsible for constructing DAO instances – in this case, out mapper is constructing\n"
+"an instance of our only DAO, `FruitDao`."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"Think of the mapper interface as a factory for DAO beans. If you intend to construct and inject a\n"
+"specific DAO bean in your own code, then you first must add a `@DaoFactory` method for it in a\n"
+"`@Mapper` interface."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "`@DaoFactory` method names are irrelevant."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "`@DaoFactory` methods should return beans of the following types:"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "Any `@Dao`-annotated interface, e.g. `FruitDao`;"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "A `CompletionStage` of any `@Dao`-annotated interface, e.g. `CompletionStage<FruitDao>`."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "A `Uni` of any `@Dao`-annotated interface, e.g. `Uni<FruitDao>`."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"`Uni` is a type from the Mutiny library, which is the reactive programming library used by\n"
+"Quarkus. This will be explained in more detail in the \"Reactive Programming\" section below."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "Generating the DAO and mapper implementations"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"As you probably guessed already, we are not going to implement the interfaces above. Instead, the\n"
+"Object Mapper will generate such implementations for us."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "The Object Mapper is composed of 2 pieces:"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"A (compile-time) annotation processor that scans the classpath for classes annotated with\n"
+"`@Mapper`, `@Dao` or `@Entity`, and generates code and CQL queries for them; and"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "A runtime module that contains the logic to execute the generated queries."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "Therefore, enabling the Object Mapper requires two steps:"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"Declare the `cassandra-quarkus-mapper-processor` annotation processor. With Maven, this is done\n"
+"by modifying the compiler plugin configuration in the project's `pom.xml` file as follows:"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "With Gradle, this is done by adding the following line to the `build.gradle` file:"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"Verify that you are enabling the right annotation processor! The Cassandra driver ships\n"
+"with its Object Mapper annotation processor, called `java-driver-mapper-processor`. But the\n"
+"Cassandra Quarkus extension also ships with its own annotation processor:\n"
+"`cassandra-quarkus-mapper-processor`, which has more capabilities than the driver's. This annotation\n"
+"processor is the only one suitable for use in a Quarkus application, so check that this is the one\n"
+"in use. Also, never use both annotation processors together."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"Declare the `java-driver-mapper-runtime` dependency in compile scope in the project's `pom.xml`\n"
+"file as follows:"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "Although this module is called \"runtime\", it must be declared in compile scope."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"If your project is correctly set up, you should now be able to compile it without errors, and you\n"
+"should see the generated code in the `target/generated-sources/annotations` directory (if you are\n"
+"using Maven). It's not required to get familiar with the generated code though, as it is mostly\n"
+"internal machinery to interact with the database."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "Creating a service & JSON REST endpoint"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"Now let's create a `FruitService` that will be the business layer of our application and store/load\n"
+"the fruits from the Cassandra database."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"Note how the service is being injected a `FruitDao` instance. This DAO instance is injected\n"
+"automatically, thanks to the generated implementations."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"The Cassandra Quarkus extension allows you to inject any of the following beans in your own\n"
+"components:"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "All `@Mapper`-annotated interfaces in your project."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "You can also inject a `CompletionStage` or `Uni` of any `@Mapper`-annotated interface."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "Any bean returned by a `@DaoFactory` method (see above for possible bean types)."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"The\n"
+"link:https://javadoc.io/doc/com.datastax.oss.quarkus/cassandra-quarkus-client/latest/com/datastax/oss/quarkus/runtime/api/session/QuarkusCqlSession.html[`QuarkusCqlSession`]\n"
+"bean: this application-scoped, singleton bean is your main entry point to the Cassandra client; it\n"
+"is a specialized Cassandra driver session instance with a few methods tailored especially for\n"
+"Quarkus. Read its javadocs carefully!"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "You can also inject `CompletionStage<QuarkusCqlSession>` or `Uni<QuarkusCqlSession>`."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"In our example, both `FruitMapper` and `FruitDao` could be injected anywhere. We chose to inject\n"
+"`FruitDao` in `FruitService`."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "The last missing piece is the REST API that will expose GET and POST methods:"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "Notice how `FruitResource` is being injected a `FruitService` instance automatically."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"It is generally not recommended using the same entity object between the REST API and the data\n"
+"access layer. These layers should indeed be decoupled and use distinct APIs in order to allow each\n"
+"API to evolve independently of the other. This is the reason why our REST API is using a different\n"
+"object: the `FruitDto` class – the word DTO stands for \"Data Transfer Object\". This DTO object will\n"
+"be automatically converted to and from JSON in HTTP messages:"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"The translation to and from JSON is done automatically by the Quarkus REST (formerly RESTEasy Reactive) extension, which is\n"
+"included in this guide's pom.xml file. If you want to add it manually to your application, add the\n"
+"below snippet to your application's pom.xml file:"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"DTO classes used by the JSON serialization layer are required to have a default no-arg\n"
+"constructor."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"The conversion from DTO to JSON is handled automatically for us, but we still must convert from\n"
+"`Fruit` to `FruitDto` and vice versa. This must be done manually, which is why we have two\n"
+"conversion methods declared in `FruitResource`: `convertToDto` and `convertFromDto`."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"In our example, `Fruit` and `FruitDto` are very similar, so you might wonder why not use\n"
+"`Fruit` everywhere. In real life cases though, it's not uncommon to see DTOs and entities having\n"
+"very different structures."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "Connecting to the Cassandra Database"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "Connecting to Apache Cassandra or DataStax Enterprise (DSE)"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"The main properties to configure are: `contact-points`, to access the Cassandra database;\n"
+"`local-datacenter`, which is required by the driver; and – optionally – the keyspace to bind to."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "A sample configuration should look like this:"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"In this example, we are using a single instance running on localhost, and the keyspace containing\n"
+"our data is `k1`:"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"If your cluster requires plain text authentication, you must also provide two more settings:\n"
+"`username` and `password`."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "Connecting to a DataStax Astra Cloud Database"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"When connecting to link:https://astra.datastax.com[DataStax Astra], instead of providing a contact\n"
+"point and a datacenter, you should provide a so-called _secure connect bundle_, which should point\n"
+"to a valid path to an Astra secure connect bundle file. You can download your secure connect bundle\n"
+"from the Astra web console."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"You will also need to provide a username and password, since authentication is always required on\n"
+"Astra clusters."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "A sample configuration for DataStax Astra should look like this:"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "Advanced Driver Configuration"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"You can configure other Java driver settings using `application.conf` or `application.json` files.\n"
+"They need to be located in the classpath of your application. All settings will be passed\n"
+"automatically to the underlying driver configuration mechanism. Settings defined in\n"
+"`application.properties` with the `quarkus.cassandra` prefix will have priority over settings\n"
+"defined in `application.conf` or `application.json`."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"To see the full list of settings, please refer to the\n"
+"link:https://docs.datastax.com/en/developer/java-driver/latest/manual/core/configuration/reference/[driver\n"
+"settings reference]."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "Running a Local Cassandra Database"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"By default, the Cassandra client is configured to access a local Cassandra database on port 9042\n"
+"(the default Cassandra port)."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"Make sure that the setting `quarkus.cassandra.local-datacenter` matches the datacenter of\n"
+"your Cassandra cluster."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"If you don't know the name of your local datacenter, this value can be found by running the\n"
+"following CQL query: `SELECT data_center FROM system.local`."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"If you want to use Docker to run a Cassandra database, you can use the following command to launch\n"
+"one in the background:"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"Next you need to create the keyspace and table that will be used by your application. If you are\n"
+"using Docker, run the following commands:"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "You can also use the CQLSH utility to interactively interrogate your database:"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "Testing the REST API"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "In the project root directory:"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "Run `mvn clean package` and then `java -jar ./target/cassandra-quarkus-quickstart-*-runner.jar` to start the application;"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "Or better yet, run the application in dev mode: `mvn clean quarkus:dev`."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "Now you can use curl commands to interact with the underlying REST API."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "To create a fruit:"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "To retrieve fruits:"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "Creating a Frontend"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "Now let's add a simple web page to interact with our `FruitResource`."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"Quarkus automatically serves static resources located under the `META-INF/resources` directory. In\n"
+"the `src/main/resources/META-INF/resources` directory, add a `fruits.html` file with the contents\n"
+"from link:src/main/resources/META-INF/resources/fruits.html[this file] in it."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "You can now interact with your REST service:"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "If you haven't done yet, start your application with `mvn clean quarkus:dev`;"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "Point your browser to `http://localhost:8080/fruits.html`;"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "Add new fruits to the list via the form."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "Reactive Programming with the Cassandra Client"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"The\n"
+"link:https://javadoc.io/doc/com.datastax.oss.quarkus/cassandra-quarkus-client/latest/com/datastax/oss/quarkus/runtime/api/session/QuarkusCqlSession.html[`QuarkusCqlSession`\n"
+"interface] gives you access to a series of reactive methods that integrate seamlessly with Quarkus\n"
+"and its reactive framework, Mutiny."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "If you are not familiar with Mutiny, please check xref:mutiny-primer.adoc[Mutiny - an intuitive reactive programming library]."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "Let's rewrite our application using reactive programming with Mutiny."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "First, let's declare another DAO interface that works in a reactive way:"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"Note the usage of `MutinyMappedReactiveResultSet` - it is a specialized `Mutiny` type converted from\n"
+"the original `Publisher` returned by the driver, which also exposes a few extra methods, e.g. to\n"
+"obtain the query execution info. If you don't need anything in that interface, you can also simply\n"
+"declare your method to return `Multi`: `Multi<Fruit> findAll()`,"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"Similarly, the method `updateAsync` returns a `Uni` - it is automatically converted from the\n"
+"original result set returned by the driver."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"The Cassandra driver uses the Reactive Streams `Publisher` API for reactive calls. The Quarkus\n"
+"framework however uses Mutiny. Because of that, the `CqlQuarkusSession` interface transparently\n"
+"converts the `Publisher` instances returned by the driver into the reactive type `Multi`.\n"
+"`CqlQuarkusSession` is also capable of converting a `Publisher` into a `Uni` – in this case, the\n"
+"publisher is expected to emit at most one row, then complete. This is suitable for write queries\n"
+"(they return no rows), or for read queries guaranteed to return one row at most (count queries, for\n"
+"example)."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "Next, we need to adapt the `FruitMapper` to construct a `ReactiveFruitDao` instance:"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "Now, we can create a `ReactiveFruitService` that leverages our reactive DAO:"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "Finally, we can create a `ReactiveFruitResource`:"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"The above resource is exposing a new endpoint, `reactive-fruits`. Its capabilities are identical to\n"
+"the ones that we created before with `FruitResource`, but everything is handled in a reactive\n"
+"fashion, without any blocking operation."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"The `getAll()` method above returns `Multi`, and the `add()` method returns `Uni`. These types\n"
+"are the same Mutiny types that we met before; they are automatically recognized by the Quarkus\n"
+"reactive REST API, so we don't need to convert them into JSON ourselves."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "Quarkus REST natively supports the Mutiny reactive types e.g. `Uni` and `Multi`."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"This dependency is already included in this guide's pom.xml, but if you are starting a new project\n"
+"from scratch, make sure to include it."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "Testing the Reactive REST API"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"Run the application in dev mode as explained above, then you can use curl commands to interact with\n"
+"the underlying REST API."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "To create a fruit using the reactive REST endpoint:"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "To retrieve fruits with the reactive REST endpoint:"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "Creating a Reactive Frontend"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"Now let's add a simple web page to interact with our `ReactiveFruitResource`. In the\n"
+"`src/main/resources/META-INF/resources` directory, add a `reactive-fruits.html` file with the\n"
+"contents from link:src/main/resources/META-INF/resources/reactive-fruits.html[this file] in it."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "You can now interact with your reactive REST service:"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "Point your browser to `http://localhost:8080/reactive-fruits.html`;"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "Health Checks"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"If you are using the Quarkus SmallRye Health extension, then the Cassandra client will automatically\n"
+"add a readiness health check to validate the connection to the Cassandra cluster. This extension is\n"
+"already included in this guide's pom.xml, but if you need to include it manually in your\n"
+"application, add the following:"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"When health checks are available, you can access the `/health/ready` endpoint of your application\n"
+"and have information about the connection validation status."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"Running in dev mode with `mvn clean quarkus:dev`, if you point your browser to\n"
+"http://localhost:8080/health/ready you should see an output similar to the following one:"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"If you need health checks globally enabled in your application, but don't want to activate\n"
+"Cassandra health checks, you can disable Cassandra health checks by setting the\n"
+"`quarkus.cassandra.health.enabled` property to `false` in your `application.properties`."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "Metrics"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"The Cassandra Quarkus client can provide metrics about the Cassandra session and about individual\n"
+"Cassandra nodes. It supports both Micrometer and MicroProfile."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"The first step to enable metrics is to add a few additional dependencies depending on the metrics\n"
+"framework you plan to use."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "Enabling Metrics with Micrometer"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "Micrometer is the recommended metrics framework in Quarkus applications."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "To enable Micrometer metrics in your application, you need to add the following to your pom.xml."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "This guide uses Micrometer, so the above dependencies are already included in this guide's pom.xml."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "Enabling Metrics with MicroProfile Metrics"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "Remove any dependency to Micrometer from your pom.xml, then add the following ones instead:"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "Enabling Cassandra Metrics"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"Even when metrics are enabled in your application, the Cassandra client will not report any metrics,\n"
+"unless you opt in for this feature. So your next step is to enable Cassandra metrics in your\n"
+"`application.properties` file."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "That's it!"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"The final (and optional) step is to customize which specific Cassandra metrics you would like the\n"
+"Cassandra client to track. Several metrics can be tracked; if you skip this step, a default set of\n"
+"useful metrics will be automatically tracked."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"For the full list of available metric names, please refer to the\n"
+"link:https://docs.datastax.com/en/developer/java-driver/latest/manual/core/configuration/reference/[driver\n"
+"settings reference] page; search for the `advanced.metrics` section.\n"
+"Also, Cassandra driver metrics are covered in detail in the\n"
+"https://docs.datastax.com/en/developer/java-driver/latest/manual/core/metrics/[driver manual]."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "If you do wish to customize which metrics to track, you should use the following properties:"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"`quarkus.cassandra.metrics.session.enabled` should contain the session-level metrics to enable\n"
+"(metrics that are global to the session)."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"`quarkus.cassandra.metrics.node.enabled` should contain the node-level metrics to enable (metrics\n"
+"for which each node contacted by the Cassandra client gets its own metric value)."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "Both properties accept a comma-separated list of valid metric names."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "For example, let's assume that you wish to enable the following three Cassandra metrics:"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "Session-level: `session.connected-nodes` and `session.bytes-sent`;"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "Node-level: `node.pool.open-connections`."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "Then you should add the following settings to your `application.properties`:"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"This guide's `application.properties` file has already many metrics enabled; you can use its metrics\n"
+"list as a good starting point for exposing useful Cassandra metrics in your application."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"When metrics are properly enabled, metric reports for all enabled metrics are available at the\n"
+"`/metrics` REST endpoint of your application."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"Running in dev mode with `mvn clean quarkus:dev`, if you point your browser to\n"
+"`http://localhost:8080/metrics` you should see a list of metrics; search for metrics whose names\n"
+"contain `cassandra`."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"For Cassandra metrics to show up, the Cassandra client needs to be initialized and\n"
+"connected; if you are using lazy initialization (see below), you won't see any Cassandra metrics\n"
+"until your application actually connects and hits the database for the first time."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "Running in native mode"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "If you installed GraalVM, you can xref:building-native-image.adoc[build a native image] using:"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"Beware that native compilation can take a significant amount of time! Once the compilation is done,\n"
+"you can run the native executable as follows:"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "You can then point your browser to `http://localhost:8080/fruits.html` and use your application."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "Choosing between eager and lazy initialization"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "As explained above, this extension allows you to inject many types of beans:"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "A simple bean like `QuarkusCqlSession` or `FruitDao`;"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"The asynchronous version of that bean, for example `CompletionStage<QuarkusCqlSession>` or\n"
+"`CompletionStage<FruitDao>;"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "The reactive version of that bean, for example `Uni<QuarkusCqlSession>` or `Uni<FruitDao>`."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"The most straightforward approach is obviously to inject the bean directly. This should work just\n"
+"fine for most applications. However, the `QuarkusCqlSession` bean, and all DAO beans that depend on\n"
+"it, might take some time to initialize before they can be used for the first time, and this process\n"
+"is blocking."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"Fortunately, it is possible to control when the initialization should happen: the\n"
+"`quarkus.cassandra.init.eager-init` parameter determines if the `QuarkusCqlSession` bean should be\n"
+"initialized on its first access (lazy) or when the application is starting (eager). The default\n"
+"value of this parameter is `false`, meaning the init process is lazy: the `QuarkusCqlSession` bean\n"
+"will be initialized lazily on its first access – for example, when there is a first REST request\n"
+"that needs to interact with the Cassandra database."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"Using lazy initialization speeds up your application startup time, and avoids startup failures if\n"
+"the Cassandra database is not available. However, it could also prove dangerous if your code is\n"
+"fully non-blocking, for example if it uses xref:reactive-routes.adoc[reactive routes].\n"
+"Indeed, the lazy initialization could accidentally happen on a thread that is not allowed\n"
+"to block, such as a Vert.x event loop thread. Therefore, setting `quarkus.cassandra.init.eager-init`\n"
+"to `false` and injecting `QuarkusCqlSession` should be avoided in these contexts."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"If you want to use Vert.x (or any other non-blocking framework) and keep the lazy initialization\n"
+"behavior, you should instead inject only a `CompletionStage` or a `Uni` of the desired bean. When\n"
+"injecting these beans, the initialization process will be triggered lazily, but it will happen in\n"
+"the background, in a non-blocking way, leveraging the Vert.x event loop. This way you don't risk\n"
+"blocking the Vert.x thread."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"Alternatively, you can set `quarkus.cassandra.init.eager-init` to true: in this case the session\n"
+"bean and all DAO beans will be initialized eagerly during application startup, on the Quarkus main\n"
+"thread. This would eliminate any risk of blocking a Vert.x thread, at the cost of making your\n"
+"startup time (much) longer."
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid "Conclusion"
+msgstr ""
+
+#: _versions/3.27/guides/cassandra.adoc
+msgid ""
+"Accessing a Cassandra database from a client application is easy with Quarkus and the Cassandra\n"
+"extension, which provides configuration and native support for the DataStax Java driver for Apache\n"
+"Cassandra."
+msgstr ""

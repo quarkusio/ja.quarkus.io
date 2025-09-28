@@ -1,0 +1,361 @@
+msgid ""
+msgstr ""
+"Language: ja_JP\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: jekyll-l10n\n"
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "Measuring Performance"
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "This guide covers:"
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "how we measure memory usage"
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "how we measure startup time"
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "which additional flags will Quarkus apply to native-image by default"
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "Coordinated omission Problem in Tools"
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid ""
+"All of our tests are run on the same hardware for a given batch.\n"
+"It goes without saying, but it's better when you say it."
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "How do we measure memory usage"
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid ""
+"When measuring the footprint of a Quarkus application, we measure https://en.wikipedia.org/wiki/Resident_set_size[Resident Set Size (RSS)]\n"
+"and not the JVM heap size which is only a small part of the overall problem.\n"
+"The JVM not only allocates native memory for heap (`-Xms`, `-Xmx`) but also structures required by the jvm to run your application. Depending on the JVM implementation, the total memory allocated for an application will include, but not limited to:"
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "Heap space"
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "Class metadata"
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "Thread stacks"
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "Compiled code"
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "Garbage collection"
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "Native Memory Tracking"
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "In order to view the native memory used by the JVM, you can enable the https://docs.oracle.com/javase/8/docs/technotes/guides/vm/nmt-8.html[Native Memory Tracking] (NMT) feature in hotspot;"
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "Enable NMT on the command line;"
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "-XX:NativeMemoryTracking=[off | summary | detail] <1>"
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "NOTE: this feature will add a 5-10% performance overhead"
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "It is then possible to use jcmd to dump a report of the native memory usage of the Hotspot JVM running your application;"
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "jcmd <pid> VM.native_memory [summary | detail | baseline | summary.diff | detail.diff | shutdown] [scale= KB | MB | GB]"
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "Cloud Native Memory Limits"
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid ""
+"It is important to measure the whole memory to see the impact of a Cloud Native application.\n"
+"It is particularly true of container environments which will kill a process based on its full RSS memory usage."
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid ""
+"Likewise, don't fall into the trap of only measuring private memory which is what the process uses that is not shareable with other processes.\n"
+"While private memory might be useful in an environment deploying many different applications (and thus sharing memory a lot),\n"
+"it is very misleading in environments like Kubernetes/OpenShift."
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "Measuring Memory Correctly on Docker"
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "In order to measure memory correctly **DO NOT use docker stat or anything derived from it** (e.g. ctop). This approach only measures a subset of the in-use resident pages, while the Linux Kernel, cgroups and cloud orchestration providers will utilize the full resident set in their accounting (determining whether a process is over the limits and should be killed)."
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "To measure accurately, a similar set of steps for measuring RSS on Linux should be performed. The docker `top` command allows running a `ps` command on the container host machine against the processes in the container instance. By utilizing this in combination with formatting output parameters, the rss value can be returned:"
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "docker top <CONTAINER ID> -o pid,rss,args"
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "For example:"
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "Alternatively, one can jump directly into a privileged shell (root on the host), and execute a `ps` command directly:"
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "If you happen to be running on Linux, you can execute the `ps` command directly, since your shell is the same as the container host:"
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "ps -e -o pid,rss,args | grep application"
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "Platform Specific Memory Reporting"
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "In order to not incur the performance overhead of running with NVM enabled, we measure the total RSS of an JVM application using tools specific to each platform."
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "Linux"
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "The linux https://linux.die.net/man/1/pmap[pmap] and https://linux.die.net/man/1/ps[ps] tools provide a report on the native memory map for a process"
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "Each Memory region that has been allocated for the process is listed;"
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "Address: Start address of virtual address space"
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "Kbytes:  Size (kilobytes) of virtual address space reserved for region"
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "RSS:     Resident set size (kilobytes).  This is the measure of how much memory space is actually being used"
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "Dirty:   dirty pages (both shared and private) in kilobytes"
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "Mode:    Access mode for memory region"
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "Mapping: Includes application regions and Shared Object (.so) mappings for process"
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "The Total RSS (kB) line reports the total native memory the process is using."
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "macOS"
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "On macOS, you can use `ps x -o pid,rss,command -p <PID>` which list the RSS for a given process in KB (1024 bytes)."
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "Which means IntelliJ IDEA consumes 281,8 MB of resident memory."
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "How do we measure startup time"
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid ""
+"Some frameworks use aggressive lazy initialization techniques.\n"
+"It is important to measure the startup time to first request to most accurately reflect how long a framework needs to start.\n"
+"Otherwise, you will miss the time the framework _actually_ takes to initialize."
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "Here is how we measure startup time in our tests."
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "We create a sample application that logs timestamps for certain points in the application lifecycle."
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "We start looping in a shell, sending requests to the rest endpoint of the sample application we are testing."
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "In a separate terminal, we start the timing application that we are testing, printing the time the application starts"
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "The difference between the final timestamp and the first timestamp is the total startup time for the application to serve the first request."
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "Additional flags applied by Quarkus"
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "When Quarkus invokes GraalVM `native-image` it will apply some additional flags by default."
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "You might want to know about the following ones in case you're comparing performance properties with other builds."
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "Disable fallback images"
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid ""
+"Fallback native images are a feature of GraalVM to \"fall back\" to run your application in the normal JVM, should the compilation\n"
+"to native code fail for some reason."
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid ""
+"Quarkus disables this feature by setting `-H:FallbackThreshold=0`: this will ensure you get a compilation failure rather\n"
+"risking to not notice that the application is unable to really run in native mode."
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "If you instead want to just run in Java mode, that's totally possible: just skip the native-image build and run it as a jar."
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "Disable Isolates"
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "Isolates are a neat feature of GraalVM, but Quarkus isn't using them at this stage."
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "Disable via `-H:-SpawnIsolates`."
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "Disable auto-registration of all Service Loader implementations"
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid ""
+"Quarkus extensions can automatically pick the right services they need, while GraalVM's native-image defaults to include\n"
+"all services it's able to find on the classpath."
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "We prefer listing services explicitly as it produces better optimised binaries. Disable it as well by setting `-H:-UseServiceLoaderFeature`."
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "Others ..."
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid ""
+"This section is provided as high level guidance, but can't presume to be comprehensive as some flags are controlled\n"
+" dynamically by the extensions, the platform you're building on, configuration details, your code and possibly\n"
+" a combination of these."
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid ""
+"Generally speaking the ones listed here are those most likely to affect performance metrics, but in the right\n"
+"circumstances one could observe non-negligible impact from the other flags too."
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid ""
+"If you're to investigate some differences in detail make sure to check what Quarkus is invoking exactly: when the build\n"
+"plugin is producing a native image, the full command lines are logged."
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "Coordinated Omission Problem in Tools"
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "When measuring performance of a framework like Quarkus the latency experience by users are especially interesting and for that there are many different tools. Unfortunately, many fail to measure the latency correctly and instead fall short and create the Coordinate Omission problem. Meaning tools fails to acoomodate for delays to submit new requests when system is under load and aggregate these numbers making the latency and throughput numbers very misleading."
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "A good walkthrough of the issue is https://www.youtube.com/watch?v=lJ8ydIuPFeU[this video] where Gil Tene the author of wrk2 explains the issue and https://www.youtube.com/watch?v=xdG8b9iDYbE[Quarkus Insights #22] have John O'Hara from Quarkus performance team show how it can show up."
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "Although that video and related papers and articles date all back to 2015 then even today you will find tools that fall short with the coordinated oission problem"
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "Tools that at current time of writing is known to excert the problem and should NOT be used for measuring latency/throughput (it may be used for other things):"
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "JMeter"
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "wrk"
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "Tools that are known to not be affected are:"
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "https://github.com/giltene/wrk2[wrk2]"
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "https://hyperfoil.io[HyperFoil]"
+msgstr ""
+
+#: _versions/3.27/guides/performance-measure.adoc
+msgid "Mind you, the tools are not better than your own understanding of what they measure thus even when using `wrk2` or `hyperfoil` make sure you understand what the numbers mean."
+msgstr ""

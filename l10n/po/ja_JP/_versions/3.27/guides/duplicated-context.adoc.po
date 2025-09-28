@@ -1,0 +1,378 @@
+msgid ""
+msgstr ""
+"Language: ja_JP\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: jekyll-l10n\n"
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid "Duplicated context, context locals, asynchronous processing and propagation"
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid ""
+"When using a traditional, blocking, and synchronous framework, processing of each request is performed in a dedicated thread.\n"
+"So, the same thread is used for the entire processing.\n"
+"You know that this thread will not be used to execute anything else until the completion of the processing.\n"
+"When you need to propagate data along the processing, such as the security principal or a trace id, you can use `ThreadLocals`.\n"
+"The propagated data is cleared once the processing is complete."
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid ""
+"When using a reactive and asynchronous execution model, you cannot use the same mechanism.\n"
+"To avoid using many process threads, and reduce resource usage (and also increase the concurrency of the application), the same thread can be used to handle multiple concurrent processing.\n"
+"Thus, you cannot use `ThreadLocals` as the values would be leaked between the various concurrent processing."
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid ""
+"Vert.x _duplicated context_ is a construct that provides the same kind of propagation but for asynchronous processing.\n"
+"It can also be used with synchronous code."
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid "This document explains duplicated contexts, how to retrieve one, use it, and how it's propagated along the (asynchronous) processing."
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid "The reactive model"
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid "This section is not an explanation of the reactive model. Refer to that xref:quarkus-reactive-architecture.adoc[the Quarkus Reactive Architecture] for more details."
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid ""
+"Under the hood, Quarkus uses a reactive engine.\n"
+"This engine provides the efficiency and concurrency to cope with modern, containerized, and cloud-native applications."
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid ""
+"For example, when you use Quarkus REST (formerly RESTEasy Reactive) or gRPC, Quarkus can invoke your business logic on I/O threads.\n"
+"These threads are named https://en.wikipedia.org/wiki/Event_loop[event loops] and implement a https://en.wikipedia.org/wiki/Reactor_pattern[multi-reactor pattern]."
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid ""
+"When using the imperative model, Quarkus associates a worker thread to each processing unit (like an HTTP request or a gRPC invocation).\n"
+"That thread is dedicated to this specific processing until the processing completes.\n"
+"Thus, you can use _Thread Locals_ to propagate data along the processing, and no other processing unit will use that thread until the completion of the current one."
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid ""
+"With the reactive model, the code runs on event loop threads.\n"
+"These event loops execute multiple concurrent processing units. For example,\n"
+"the same event loop can handle multiple concurrent HTTP requests.\n"
+"The following picture illustrates this reactive execution model:"
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid ""
+"You must **NEVER** block these event loops.\n"
+"If you do, the whole model collapses.\n"
+"Thus, when the processing of an HTTP request needs to execute an I/O operation (such as calling an external service), it:"
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid "schedules the operation,"
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid "passes a continuation (the code to call when the I/O completes),"
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid "releases the thread."
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid ""
+"That thread can then handle another concurrent request.\n"
+"When the scheduled operation completes, it executes the passed continuation **on the same event loop**."
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid ""
+"That model is particularly efficient (low number of threads) and performant (avoid context switches).\n"
+"However, it requires a different development model, and you cannot use _Thread Locals_, as the concurrent requests would see the same value.\n"
+"Indeed, they are all processed by the same thread: the event loop."
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid ""
+"The xref:context-propagation.adoc[MicroProfile Context Propagation] specification addresses this issue.\n"
+"It saves and restores the values stored in thread locals whenever we switch to another processing unit.\n"
+"However, that model is expensive.\n"
+"Context locals (also known as _duplicated context_) is another way to do this and requires fewer mechanics."
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid "Context and duplicated context"
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid "In Quarkus, when you execute reactive code, you run in a _Context_, representing the execution thread (event loop or worker thread)."
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid "Produces: `Hello 1, you are running on context: io.vertx.core.impl.DuplicatedContext@5dc42d4f and on thread Thread[vert.x-eventloop-thread-1,5,main]` - so invoked on an event loop."
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid "Produces: `Hello 2, you are running on context: io.vertx.core.impl.DuplicatedContext@41781ccb and on thread Thread[executor-thread-1,5,main]` - so invoked on a worker thread."
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid ""
+"With this _Context_ object, you can schedule operations in the same context.\n"
+"The context is handy for executing the continuation on the same event loop (as contexts are attached to event loops), as described in the picture above.\n"
+"For example, when you need to call something asynchronous, you capture the current context, and when the response arrives, it invokes the continuation in that context:"
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid "Emit the result in the same context."
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid "Most Quarkus clients do this automatically, invoking the continuation in the proper context."
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid "There are two levels of contexts:"
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid "the root contexts representing the event loop, and thus cannot be used to propagate data without leaking it between concurrent processing"
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid "the duplicated contexts, which are based on a root context, but are NOT shared and represent the processing unit"
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid ""
+"Thus, a duplicated context is associated with each processing unit.\n"
+"A duplicated context is still associated with a root context, and scheduling operations using a duplicated context run them in the associated root context.\n"
+"But, unlike the root context, they are not shared between processing units.\n"
+"Yet, continuations of a processing unit use the same duplicated context.\n"
+"So, in the previous code snippet, the continuation is not only called on the same event loop but on the same duplicated context (supposing that the captured context is a duplicated context, more on that later)."
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid "Context local data"
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid ""
+"When executed in a duplicated context, the code can store data without sharing it with the other concurrent processing.\n"
+"So, you can store, retrieve and remove local data.\n"
+"The continuation invokes on the same duplicated context, will have access to that data:"
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid ""
+"The previous code snippet uses `io.smallrye.common.vertx.ContextLocals`, which eases access to the local data.\n"
+"You can also access them using `Vertx.currentContext().getLocal(\"key\")`."
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid ""
+"Context local data provides an efficient way to propagate objects during a reactive execution.\n"
+"Tracing metadata, metrics, and sessions can be stored and retrieved safely."
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid "Context locals restrictions"
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid ""
+"However, such a feature must only be used with duplicated contexts.\n"
+"As said above, it's transparent for the code.\n"
+"A duplicated context is a context, so they expose the same API."
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid ""
+"In Quarkus, access to the local data is restricted to duplicated contexts.\n"
+"If you try to access local data from a root context, it throws an `UnsupportedOperationException`.\n"
+"It prevents accessing data shared among different units of processing."
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid "Safe context"
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid ""
+"You can mark a context _safe_.\n"
+"It is meant for other extensions to integrate with to help identify which contexts are isolated and guarantee access by a unique thread.\n"
+"Hibernate Reactive uses this feature to check if the current context is safe to store the currently opened session to protect users from mistakenly interleaving multiple reactive operations that could unintentionally share the same session."
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid ""
+"Vert.x web will create a new duplicated context for each http web request; Quarkus REST will mark such contexts as safe.\n"
+"Other extensions should follow a similar pattern when they are setting up a new context that is safe to be used for a local context guaranteeing sequential use, non-concurrent access, and scoped to the current reactive chain as a convenience not to have to pass a \"context\" object along explicitly."
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid ""
+"In other cases, it might be helpful to mark the current context as not safe instead explicitly; for example, if an existing context needs to be shared across multiple workers to process some operations in parallel: by marking and un-marking appropriately the same\n"
+"context can have spans in which it's safe, followed by spans in which it's not safe."
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid "To mark a context as safe, you can:"
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid "Use the `io.quarkus.vertx.SafeVertxContext` annotation"
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid "Use the `io.quarkus.vertx.core.runtime.context.VertxContextSafetyToggle` class"
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid ""
+"By using the `io.quarkus.vertx.core.runtime.context.VertxContextSafetyToggle` class, the current context can be explicitly marked as `safe`, or it can be explicitly marked as `unsafe`; there's a third state which is the default of any new context: `unmarked`.\n"
+"The default is to consider any unmarked context to be `unsafe`, unless the system property `io.quarkus.vertx.core.runtime.context.VertxContextSafetyToggle.UNRESTRICTED_BY_DEFAULT` is set to `true`;"
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid ""
+"The `SafeVertxContext` annotation marks the current duplicated context as safe and invokes the annotated method if the context is `unmarked` or already marked as `safe`.\n"
+"If the context is marked as `unsafe`, you can force it to be `safe` using the `force=true` parameter.\n"
+"However, this possibility must be used carefully."
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid ""
+"The `@SafeVertxContext` annotation is a CDI interceptor binding annotation.\n"
+"Therefore, it only works for CDI beans and on non-private methods."
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid "Extensions supporting duplicated contexts"
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid ""
+"In general, Quarkus invokes reactive code on duplicated contexts.\n"
+"So it can safely access the local data.\n"
+"It is the case with:"
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid "Quarkus REST"
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid "gRPC"
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid "Reactive Routes"
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid "Vert.x Event Bus `@ConsumeEvent`"
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid "REST Client"
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid "Reactive Messaging (Kafka, AMQP)"
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid "Funqy"
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid "Quarkus scheduler and Quartz"
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid "Redis Client (for the pub/sub commands)"
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid "GraphQL"
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid "Distinguish between root and duplicated contexts"
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid "You can distinguish between a root and a duplicated context using the following:"
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid "This code uses the `io.smallrye.common.vertx.VertxContext` helper class."
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid "Duplicated contexts and mapped diagnostic context (MDC)"
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid ""
+"When using loggers, the MDC (contextual data added to the log messages) is stored in duplicated context when available.\n"
+"Check the xref:logging.adoc#mdc-propagation[logging reference guide] for more details."
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid "CDI request scope"
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid "In Quarkus, the CDI request scope is stored in a duplicated context, meaning it gets automatically propagated alongside the reactive processing of a request."
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid "Reactive Messaging"
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid ""
+"The Kafka and AMQP connector creates a duplicated context for each message, implementing a _message context_.\n"
+"This message context is used for the complete message processing and thus can be used to propagate data."
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid "See the https://smallrye.io/smallrye-reactive-messaging/latest/concepts/message-context/[Message Context] documentation for further information."
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid "OpenTelemetry"
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid "The OpenTelemetry extension stores the traces in the duplicated context, ensuring propagation even when using reactive and asynchronous code."
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid "References"
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid "xref:quarkus-reactive-architecture.adoc[Quarkus Reactive Architecture]"
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid "https://vertx.io/docs/vertx-core/java/#_reactor_and_multi_reactor[Vert.x Reactor and Multi-Reactor documentation]"
+msgstr ""
+
+#: _versions/3.27/guides/duplicated-context.adoc
+msgid "xref:logging.adoc[Quarkus logging]"
+msgstr ""

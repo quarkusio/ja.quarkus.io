@@ -1,0 +1,607 @@
+msgid ""
+msgstr ""
+"Language: ja_JP\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: jekyll-l10n\n"
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "Introduction to Contexts and Dependency Injection (CDI)"
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid ""
+"In this guide we're going to describe the basic principles of the Quarkus programming model that is based on the https://jakarta.ee/specifications/cdi/4.1/jakarta-cdi-spec-4.1.html[Jakarta Contexts and Dependency Injection 4.1, window=\"_blank\"] specification.\n"
+"The xref:cdi-reference.adoc[CDI reference guide] describes the bean discovery, non-standard features and configuration properties.\n"
+"The xref:cdi-integration.adoc[CDI integration guide] has more detail on common CDI-related integration use cases, and example code for solutions."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "OK. Let's start simple. What is a bean?"
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "Well, a bean is a _container-managed_ object that supports a set of basic services, such as injection of dependencies, lifecycle callbacks and interceptors."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "Wait a minute. What does \"container-managed\" mean?"
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid ""
+"Simply put, you don't control the lifecycle of the object instance directly.\n"
+"Instead, you can affect the lifecycle through declarative means, such as annotations, configuration, etc.\n"
+"The container is the _environment_ where your application runs.\n"
+"It creates and destroys the instances of beans, associates the instances with a designated context, and injects them into other beans."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "What is it good for?"
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "An application developer can focus on the business logic rather than finding out \"where and how\" to obtain a fully initialized component with all of its dependencies."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "You've probably heard of the _inversion of control_ (IoC) programming principle. Dependency injection is one of the implementation techniques of IoC."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "What does a bean look like?"
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid ""
+"There are several kinds of beans.\n"
+"The most common ones are class-based beans:"
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "Simple Bean Example"
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "This is a scope annotation. It tells the container which context to associate the bean instance with. In this particular case, a *single bean instance* is created for the application and used by all other beans that inject `Translator`."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "This is a field injection point. It tells the container that `Translator` depends on the `Dictionary` bean. If there is no matching bean the build fails."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "This is an interceptor binding annotation. In this case, the annotation comes from the MicroProfile Metrics. The relevant interceptor intercepts the invocation and updates the relevant metrics. We will talk about <<interceptors,interceptors>> later."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "Nice. How does the dependency resolution work? I see no names or identifiers."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid ""
+"That's a good question.\n"
+"In CDI the process of matching a bean to an injection point is *type-safe*.\n"
+"Each bean declares a set of bean types.\n"
+"In our example above, the `Translator` bean has two bean types: `Translator` and `java.lang.Object`.\n"
+"Subsequently, a bean is assignable to an injection point if the bean has a bean type that matches the _required type_ and has all the _required qualifiers_.\n"
+"We'll talk about qualifiers later.\n"
+"For now, it's enough to know that the bean above is assignable to an injection point of type `Translator` and `java.lang.Object`."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "Hm, wait a minute. What happens if multiple beans declare the same type?"
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid ""
+"There is a simple rule: *exactly one bean must be assignable to an injection point, otherwise the build fails*.\n"
+"If none is assignable the build fails with `UnsatisfiedResolutionException`.\n"
+"If multiple are assignable the build fails with `AmbiguousResolutionException`.\n"
+"This is very useful because your application fails fast whenever the container is not able to find an unambiguous dependency for any injection point."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "You can use programmatic lookup via  `jakarta.enterprise.inject.Instance` to resolve ambiguities at runtime and even iterate over all beans implementing a given type:"
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "This injection point will not result in an ambiguous dependency even if there are multiple beans that implement the `Dictionary` type."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "`jakarta.enterprise.inject.Instance` extends `Iterable`."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "Can I use setter and constructor injection?"
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid ""
+"Yes, you can.\n"
+"In fact, in CDI the \"setter injection\" is superseded by more powerful https://jakarta.ee/specifications/cdi/4.1/jakarta-cdi-spec-4.1.html#initializer_methods[initializer methods, window=\"_blank\"].\n"
+"Initializers may accept multiple parameters and don't have to follow the JavaBean naming conventions."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "Initialized and Constructor Injection Example"
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid ""
+"This is a constructor injection.\n"
+"In fact, this code would not work in regular CDI implementations where a bean with a normal scope must always declare a no-args constructor and the bean constructor must be annotated with `@Inject`.\n"
+"However, in Quarkus we detect the absence of no-args constructor and \"add\" it directly in the bytecode.\n"
+"It's also not necessary to add `@Inject` if there is only one constructor present."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "An initializer method must be annotated with `@Inject`."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "An initializer may accept multiple parameters - each one is an injection point."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "You talked about some qualifiers?"
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid ""
+"https://jakarta.ee/specifications/cdi/4.1/jakarta-cdi-spec-4.1.html#qualifiers[Qualifiers, window=\"_blank\"] are annotations that help the container to distinguish beans that implement the same type.\n"
+"As we already said a bean is assignable to an injection point if it has all the required qualifiers.\n"
+"If you declare no qualifier at an injection point the `@Default` qualifier is assumed."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "A qualifier type is a Java annotation defined as `@Retention(RUNTIME)` and annotated with the `@jakarta.inject.Qualifier` meta-annotation:"
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "Qualifier Example"
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "The qualifiers of a bean are declared by annotating the bean class or producer method or field with the qualifier types:"
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "Bean With Custom Qualifier Example"
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "`@Superior` is a https://jakarta.ee/specifications/cdi/4.1/jakarta-cdi-spec-4.1.html#defining_qualifier_types[qualifier annotation, window=\"_blank\"]."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid ""
+"This bean would be assignable to `@Inject @Superior Translator` and `@Inject @Superior SuperiorTranslator` but not to `@Inject Translator`.\n"
+"The reason is that `@Inject Translator` is automatically transformed to `@Inject @Default Translator` during typesafe resolution.\n"
+"And since our `SuperiorTranslator` does not declare `@Default` only the original `Translator` bean is assignable."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid ""
+"The `@Named` qualifier, which you might be familiar with, is somewhat different in CDI to all other qualifiers.\n"
+"See the xref:cdi-reference.adoc#string-based-qualifiers[corresponding section] in CDI Reference Guide for why you typically shouldn't use it."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "Looks good. What is the bean scope?"
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "The scope of a bean determines the lifecycle of its instances, i.e. when and where an instance should be created and destroyed."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "Every bean has exactly one scope."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "What scopes can I actually use in my Quarkus application?"
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "You can use all the built-in scopes mentioned by the specification except for `jakarta.enterprise.context.ConversationScoped`."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "Annotation"
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "Description"
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "`@jakarta.enterprise.context.ApplicationScoped`"
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "A single bean instance is used for the application and shared among all injection points. The instance is created lazily, i.e. once a method is invoked upon the <<client_proxies, client proxy>>."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "`@jakarta.inject.Singleton`"
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "Just like `@ApplicationScoped` except that no client proxy is used. The instance is created when an injection point that resolves to a @Singleton bean is being injected."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "`@jakarta.enterprise.context.RequestScoped`"
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "The bean instance is associated with the current _request_ (usually an HTTP request)."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "`@jakarta.enterprise.context.Dependent`"
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "This is a pseudo-scope. The instances are not shared and every injection point spawns a new instance of the dependent bean. The lifecycle of dependent bean is bound to the bean injecting it - it will be created and destroyed along with the bean injecting it."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "`@jakarta.enterprise.context.SessionScoped`"
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "This scope is backed by a `jakarta.servlet.http.HttpSession` object. It's only available if the `quarkus-undertow` extension is used."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "There can be other custom scopes provided by Quarkus extensions. For example, xref:transaction.adoc[`quarkus-narayana-jta`] provides xref:transaction.adoc#transaction-scope[`jakarta.transaction.TransactionScoped`]."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "`@ApplicationScoped` and `@Singleton` look very similar. Which one should I choose for my Quarkus application?"
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "It depends ;-)."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid ""
+"A `@Singleton` bean has no <<client_proxies,client proxy>> and hence an instance is _created eagerly_ when the bean is injected. By contrast, an instance of an `@ApplicationScoped` bean is _created lazily_, i.e.\n"
+"when a method is invoked upon an injected instance for the first time."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid ""
+"Furthermore, client proxies only delegate method invocations and thus you should never read/write fields of an injected `@ApplicationScoped` bean directly.\n"
+"You can read/write fields of an injected `@Singleton` safely."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "`@Singleton` should have a slightly better performance because there is no indirection (no proxy that delegates to the current instance from the context)."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "On the other hand, you cannot mock `@Singleton` beans using <<getting-started-testing.adoc#quarkus_mock,QuarkusMock>>."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid ""
+"`@ApplicationScoped` beans can be also destroyed and recreated at runtime.\n"
+"Existing injection points just work because the injected proxy delegates to the current instance."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "Therefore, we recommend to stick with `@ApplicationScoped` by default unless there's a good reason to use `@Singleton`."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "I don't understand the concept of client proxies."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid ""
+"Indeed, the https://jakarta.ee/specifications/cdi/4.1/jakarta-cdi-spec-4.1.html#client_proxies[client proxies, window=\"_blank\"] could be hard to grasp, but they provide some useful functionality.\n"
+"A client proxy is basically an object that delegates all method invocations to a target bean instance.\n"
+"It's a container construct that implements `io.quarkus.arc.ClientProxy` and extends the bean class."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "Client proxies only delegate method invocations. So never read or write a field of a normal scoped bean, otherwise you will work with non-contextual or stale data."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "Generated Client Proxy Example"
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "The `Translator_ClientProxy` instance is always injected instead of a direct reference to a https://jakarta.ee/specifications/cdi/4.1/jakarta-cdi-spec-4.1.html#contextual_instance[contextual instance, window=\"_blank\"] of the `Translator` bean."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "Client proxies allow for:"
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "Lazy instantiation - the instance is created once a method is invoked upon the proxy."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "Ability to inject a bean with \"narrower\" scope to a bean with \"wider\" scope; i.e. you can inject a `@RequestScoped` bean into an `@ApplicationScoped` bean."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "Circular dependencies in the dependency graph. Having circular dependencies is often an indication that a redesign should be considered, but sometimes it's inevitable."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "In rare cases it's practical to destroy the beans manually. A direct injected reference would lead to a stale bean instance."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "OK. You said that there are several kinds of beans?"
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "Yes. In general, we distinguish:"
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "Class beans"
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "Producer methods"
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "Producer fields"
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "Synthetic beans"
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "Synthetic beans are usually provided by extensions. Therefore, we are not going to cover them in this guide."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid ""
+"Producer methods and fields are useful if you need additional control over instantiation of a bean.\n"
+"They are also useful when integrating third-party libraries where you don't control the class source and may not add additional annotations etc."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "Producers Example"
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid ""
+"The container analyses the field annotations to build a bean metadata.\n"
+"The _type_ is used to build the set of bean types.\n"
+"In this case, it will be `double` and `java.lang.Object`.\n"
+"No scope annotation is declared and so it's defaulted to `@Dependent`."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "The container will read this field when creating the bean instance."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid ""
+"The container analyses the method annotations to build a bean metadata.\n"
+"The _return type_ is used to build the set of bean types.\n"
+"In this case, it will be `List<String>`, `Collection<String>`, `Iterable<String>` and `java.lang.Object`.\n"
+"No scope annotation is declared and so it's defaulted to `@Dependent`."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "The container will call this method when creating the bean instance."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid ""
+"There's more about producers.\n"
+"You can declare qualifiers, inject dependencies into the producer methods parameters, etc.\n"
+"You can read more about producers for example in the https://docs.jboss.org/weld/reference/latest/en-US/html/producermethods.html[Weld docs, window=\"_blank\"]."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "OK, injection looks cool. What other services are provided?"
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "Lifecycle Callbacks"
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "A bean class may declare lifecycle `@PostConstruct` and `@PreDestroy` callbacks:"
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "Lifecycle Callbacks Example"
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "This callback is invoked before the bean instance is put into service. It is safe to perform some initialization here."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "This callback is invoked before the bean instance is destroyed. It is safe to perform some cleanup tasks here."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "It's a good practice to keep the logic in the callbacks \"without side effects\", i.e. you should avoid calling other beans inside the callbacks."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "Interceptors"
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid ""
+"Interceptors are used to separate cross-cutting concerns from business logic.\n"
+"There is a separate specification - Java Interceptors - that defines the basic programming model and semantics."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "Simple Interceptor Binding Example"
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "This is an interceptor binding annotation. See the following examples for how it's used."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "An interceptor binding annotation is always put on the interceptor type, and may be put on target types or methods."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "Interceptor bindings are often `@Inherited`, but don't have to be."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "Simple Interceptor Example"
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "The interceptor binding annotation is used to bind our interceptor to a bean. Simply annotate a bean class with `@Logged`, as in the following example."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "`Priority` enables the interceptor and affects the interceptor ordering. Interceptors with smaller priority values are called first."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "Marks an interceptor component."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "An interceptor may inject dependencies."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "`AroundInvoke` denotes a method that interposes on business methods."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "Proceed to the next interceptor in the interceptor chain or invoke the intercepted business method."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "Instances of interceptors are dependent objects of the bean instance they intercept, i.e. a new interceptor instance is created for each intercepted bean."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "Simple Example of Interceptor Usage"
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid ""
+"The interceptor binding annotation is put on a bean class so that all business methods are intercepted.\n"
+"The annotation can also be put on individual methods, in which case, only the annotated methods are intercepted."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid ""
+"Remember that the `@Logged` annotation is `@Inherited`.\n"
+"If there's a bean class that inherits from `MyService`, the `LoggingInterceptor` will also apply to it."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "Decorators"
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "Decorators are similar to interceptors, but because they implement interfaces with business semantics, they are able to implement business logic."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "Simple Decorator Example"
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "`@Priority` enables the decorator. Decorators with smaller priority values are called first."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "`@Decorator` marks a decorator component."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "The set of decorated types includes all bean types which are Java interfaces, except for `java.io.Serializable`."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "Each decorator must declare exactly one _delegate injection point_. The decorator applies to beans that are assignable to this delegate injection point."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "It is possible to obtain information about the decorated bean by using the `@Decorated` qualifier."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "Decorators can inject other beans."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "The decorator may invoke any method of the delegate object. And the container invokes either the next decorator in the chain or the business method of the intercepted instance."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "Instances of decorators are dependent objects of the bean instance they intercept, i.e. a new decorator instance is created for each intercepted bean."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "Events and Observers"
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid ""
+"Beans may also produce and consume events to interact in a completely decoupled fashion.\n"
+"Any Java object can serve as an event payload.\n"
+"The optional qualifiers act as topic selectors."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "Simple Event Example"
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "`jakarta.enterprise.event.Event` is used to fire events."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "Fire the event synchronously."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "This method is notified when a `TaskCompleted` event is fired."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "For more info about events/observers visit https://docs.jboss.org/weld/reference/latest/en-US/html/events.html[Weld docs, window=\"_blank\"]."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid "Conclusion"
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid ""
+"In this guide, we've covered some basic topics of the Quarkus programming model that is based on the https://jakarta.ee/specifications/cdi/4.1/jakarta-cdi-spec-4.1.html[Jakarta Contexts and Dependency Injection 4.1, window=\"_blank\"] specification.\n"
+"Quarkus implements the CDI Lite specification, but not CDI Full.\n"
+"See also <<cdi-reference.adoc#supported_features_and_limitations,the list of supported features and limitations>>.\n"
+"There are also quite a few <<cdi-reference#nonstandard_features,non-standard features>> and <<cdi-reference.adoc#build_time_apis,Quarkus-specific APIs>>."
+msgstr ""
+
+#: _versions/3.27/guides/cdi.adoc
+msgid ""
+"If you wish to learn more about Quarkus-specific features and limitations there is a Quarkus xref:cdi-reference.adoc[CDI Reference Guide].\n"
+"We also recommend you to read the https://jakarta.ee/specifications/cdi/4.1/jakarta-cdi-spec-4.1.html[CDI specification] and the https://docs.jboss.org/weld/reference/latest/en-US/html/[Weld documentation] (Weld is a CDI Reference Implementation) to get acquainted with more complex topics."
+msgstr ""

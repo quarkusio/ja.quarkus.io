@@ -1,0 +1,584 @@
+msgid ""
+msgstr ""
+"Language: ja_JP\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: jekyll-l10n\n"
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "SmallRye Fault Tolerance"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid ""
+"One of the challenges brought by the distributed nature of microservices is that communication with external systems is\n"
+"inherently unreliable. This increases demand on resiliency of applications. To simplify making more resilient\n"
+"applications, Quarkus provides https://github.com/smallrye/smallrye-fault-tolerance/[SmallRye Fault Tolerance], an\n"
+"implementation of the https://github.com/eclipse/microprofile-fault-tolerance/[MicroProfile Fault Tolerance]\n"
+"specification."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid ""
+"In this guide, we demonstrate usage of MicroProfile Fault Tolerance annotations such as `@Timeout`, `@Fallback`,\n"
+"`@Retry`, `@CircuitBreaker`, and `@RateLimit`."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "Prerequisites"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "The Scenario"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid ""
+"The application built in this guide simulates a simple backend for a gourmet coffee e-shop. It implements a REST\n"
+"endpoint providing information about coffee samples we have on store."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid ""
+"Let's imagine, although it's not implemented as such, that some methods in our endpoint require communication\n"
+"to external services like a database or an external microservice, which introduces a factor of unreliability."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "Solution"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid ""
+"We recommend that you follow the instructions in the next sections and create the application step by step.\n"
+"However, you can go right to the completed example."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "Clone the Git repository: `git clone {quickstarts-clone-url}`, or download an {quickstarts-archive-url}[archive]."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "The solution is located in the `microprofile-fault-tolerance-quickstart` link:{quickstarts-tree-url}/microprofile-fault-tolerance-quickstart[directory]."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "Creating the Maven Project"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "First, we need a new project. Create a new project with the following command:"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "This command generates a project, importing the extensions for Quarkus REST (formerly RESTEasy Reactive)/Jakarta REST and SmallRye Fault Tolerance."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid ""
+"If you already have your Quarkus project configured, you can add the `smallrye-fault-tolerance` extension\n"
+"to your project by running the following command in your project base directory:"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "This will add the following to your build file:"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "pom.xml"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "build.gradle"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "Preparing an Application: REST Endpoint and CDI Bean"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid ""
+"In this section we create a skeleton of our application, so that we have something that we can extend and to which\n"
+"we can add fault tolerance features later on."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "First, create a simple entity representing a coffee sample in our store:"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "Let's continue with a simple CDI bean, that would work as a repository of our coffee samples."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "Finally, create the `org.acme.microprofile.faulttolerance.CoffeeResource` class as follows:"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid ""
+"At this point, we expose a single REST method that will show a list of coffee samples in a JSON format. Note\n"
+"that we introduced some fault making code in our `CoffeeResource#maybeFail()` method, which is going to cause failures\n"
+"in the `CoffeeResource#coffees()` endpoint method in about 50 % of requests."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "Why not check that our application works? Run the Quarkus development server with:"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid ""
+"and open `http://localhost:8080/coffee` in your browser. Make a couple of requests (remember, some of them are expected\n"
+"to fail). At least some requests should show us the list of our coffee samples in JSON, the rest will fail\n"
+"with a `RuntimeException` thrown in `CoffeeResource#maybeFail()`."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "Congratulations, you've just made a working (although somewhat unreliable) Quarkus application!"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "Adding Resiliency: Retries"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid ""
+"Let the Quarkus development server running and in your IDE add the `@Retry` annotation to the `CoffeeResource#coffees()`\n"
+"method as follows and save the file:"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid ""
+"Hit refresh in your browser. The Quarkus development server will automatically detect the changes\n"
+"and recompile the app for you, so there's no need to restart it."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid ""
+"You can hit refresh couple more times. Practically all requests should now be succeeding. The `CoffeeResource#coffees()`\n"
+"method is still in fact failing in about 50 % of time, but every time it happens, the platform will automatically retry\n"
+"the call!"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid ""
+"To see that the failures still happen, check the output of the development server. The log messages should be\n"
+"similar to these:"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid ""
+"You can see that every time an invocation fails, it's immediately followed by another invocation, until one succeeds.\n"
+"Since we allowed 4 retries, it would require 5 invocations to fail in a row, in order for the user to be actually exposed\n"
+"to a failure. Which is fairly unlikely to happen."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "Adding Resiliency: Timeouts"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "So what else have we got in MicroProfile Fault Tolerance? Let's look into timeouts."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid ""
+"Add following two methods to our `CoffeeResource` endpoint. Again, no need to restart the server, just paste the code\n"
+"and save the file."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid ""
+"We added some new functionality. We want to be able to recommend some related coffees based on a coffee that a user\n"
+"is currently looking at. It's not a critical functionality, it's a nice-to-have. When the system is overloaded and the\n"
+"logic behind obtaining recommendations takes too long to execute, we would rather time out and render the UI without\n"
+"recommendations."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid ""
+"Note that the timeout was configured to 250 ms, and a random artificial delay between 0 and 500 ms was introduced\n"
+"into the `CoffeeResource#recommendations()` method."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "In your browser, go to `http://localhost:8080/coffee/2/recommendations` and hit refresh a couple of times."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid ""
+"You should see some requests time out with `org.eclipse.microprofile.faulttolerance.exceptions.TimeoutException`.\n"
+"Requests that do not time out should show two recommended coffee samples in JSON."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "Adding Resiliency: Fallbacks"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid ""
+"Let's make our recommendations feature even better by providing a fallback (and presumably faster) way of getting related\n"
+"coffees."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid ""
+"Add a fallback method to `CoffeeResource` and a `@Fallback` annotation to `CoffeeResource#recommendations()` method\n"
+"as follows:"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid ""
+"Hit refresh several times on `http://localhost:8080/coffee/2/recommendations`.\n"
+"The `TimeoutException` should not appear anymore. Instead, in case of a timeout, the page will\n"
+"display a single recommendation that we hardcoded in our fallback method `fallbackRecommendations()`, rather than\n"
+"two recommendations returned by the original method."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "Check the server output to see that fallback is really happening:"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "The fallback method is required to have the same parameters as the original method."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "Adding Resiliency: Circuit Breaker"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid ""
+"A circuit breaker is useful for limiting number of failures happening in the system, when part of the system becomes\n"
+"temporarily unstable. The circuit breaker records successful and failed invocations of a method, and when the ratio\n"
+"of failed invocations reaches the specified threshold, the circuit breaker _opens_ and blocks all further invocations\n"
+"of that method for a given time."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "Add the following code into the `CoffeeRepositoryService` bean, so that we can demonstrate a circuit breaker in action:"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "And inject the code below into the `CoffeeResource` endpoint:"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid ""
+"We added another functionality - the application can return the amount of remaining packages of given coffee on our store\n"
+"(just a random number)."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid ""
+"This time an artificial failure was introduced in the CDI bean: the `CoffeeRepositoryService#getAvailability()` method is\n"
+"going to alternate between two successful and two failed invocations."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid ""
+"We also added a `@CircuitBreaker` annotation with `requestVolumeThreshold = 4`. `CircuitBreaker.failureRatio` is\n"
+"by default 0.5, and `CircuitBreaker.delay` is by default 5 seconds. That means that a circuit breaker will open\n"
+"when 2 of the last 4 invocations failed, and it will stay open for 5 seconds."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "To test this out, do the following:"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "Go to `http://localhost:8080/coffee/2/availability` in your browser. You should see a number being returned."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "Hit refresh, this second request should again be successful and return a number."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid ""
+"Refresh two more times. Both times you should see text \"RuntimeException: Service failed.\", which is the exception\n"
+"thrown by `CoffeeRepositoryService#getAvailability()`."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid ""
+"Refresh a couple more times. Unless you waited too long, you should again see exception, but this time it's\n"
+"\"CircuitBreakerOpenException: getAvailability\". This exception indicates that the circuit breaker opened\n"
+"and the `CoffeeRepositoryService#getAvailability()` method is not being called anymore."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid ""
+"Give it 5 seconds during which circuit breaker should close, and you should be able to make two successful requests\n"
+"again."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "Adding Resiliency: Rate Limits"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "This is an additional feature of https://github.com/smallrye/smallrye-fault-tolerance/[SmallRye Fault Tolerance] and is not specified by MicroProfile Fault Tolerance."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "It is possible to prevent an operation from being executed too often using a _rate limit_. Rate limits enforce a maximum number of permitted invocations in a time window of some length. For example, with a rate limit, one can make sure that a method may only be called 50 times per minute. Invocations that would exceed the limit are rejected with an exception of type `RateLimitException`."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "Additionally, it is possible to define minimum spacing between invocations. For example, with a minimum spacing of 1 second, if a second invocation happens 500 millis after the first, it is rejected even if the limit would not be exceeded yet."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "Rate limit is superficially similar to a bulkhead (concurrency limit), but is in fact quite different. Bulkhead limits the number of executions happening concurrently at any point in time. Rate limit limits the number of executions in a time window of some length, without considering concurrency."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "Rate limits need to maintain some state between invocations: the number of recent invocations, the time stamp of last invocation, and so on. This state is a singleton, irrespective of the lifecycle of the bean that uses the `@RateLimit` annotation."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "More specifically, the rate limit state is uniquely identified by the combination of the bean class (`java.lang.Class`) and the method object (`java.lang.reflect.Method`) representing the guarded method."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "Let the Quarkus development mode run and in your IDE add the `@RateLimit` annotation to the `CoffeeResource#coffees()` method as follows and save the file:"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "Hit refresh in your browser. The Quarkus development server will automatically detect the changes and recompile the app for you, so there’s no need to restart it."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "You can hit refresh a couple more times. After 2 requests within a 10 second interval you should start seeing errors in the logs, similar to these:"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "If `@Fallback` is used with `@RateLimit`, the fallback method or handler may be invoked if a `RateLimitException` is thrown, depending on the fallback configuration."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "If `@Retry` is used with `@RateLimit`, each retry attempt is processed by the rate limit as an independent invocation. If `RateLimitException` is thrown, the execution may be retried, depending on how the retry is configured."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "If `@CircuitBreaker` is used with `@RateLimit`, the circuit breaker is checked before enforcing the rate limit. If rate limiting results in `RateLimitException`, this may be counted as a failure, depending on how the circuit breaker is configured."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "Runtime configuration"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "You can override the annotations parameters at runtime inside your `application.properties` file."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "If we take the retry example that we already saw:"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "We can override the `maxRetries` parameter with 6 retries instead of 4 by the following configuration item:"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid ""
+"The full set of Quarkus-native configuration properties is detailed in the <<configuration-reference>>.\n"
+"The specification-defined configuration properties are still supported, but the Quarkus-native configuration takes priority."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "Conclusion"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid ""
+"SmallRye Fault Tolerance allows to improve resiliency of your application, without having an impact on the complexity\n"
+"of our business logic."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "All that is needed to enable the fault tolerance features in Quarkus is:"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "adding the `smallrye-fault-tolerance` Quarkus extension to your project using the `quarkus-maven-plugin`:"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "CLI"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "Maven"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "Gradle"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "or simply adding the following Maven dependency:"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "Additional resources"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid ""
+"SmallRye Fault Tolerance has more features than shown here.\n"
+"Please check the link:https://smallrye.io/docs/smallrye-fault-tolerance/6.9.2/index.html[SmallRye Fault Tolerance documentation] to learn about them."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "In Quarkus, you can use the SmallRye Fault Tolerance optional features out of the box."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "Support for Mutiny is present, so your asynchronous methods can return `Uni` in addition to `CompletionStage`."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "MicroProfile Context Propagation is integrated with Fault Tolerance, so existing contexts are automatically propagated to your asynchronous methods."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid ""
+"This also applies to the CDI request context: if it is active on the original thread, it is propagated to the new thread, but if it's not, then the new thread won't have it either.\n"
+"This is contrary to MicroProfile Fault Tolerance specification, which states that the request context must be active during the `@Asynchronous` method invocation."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid ""
+"We believe that in presence of MicroProfile Context Propagation, this requirement should not apply.\n"
+"The entire point of context propagation is to make sure the new thread has the same contexts as the original thread."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid ""
+"Non-compatible mode is enabled by default.\n"
+"This means that methods that return `CompletionStage` (or `Uni`) have asynchronous fault tolerance applied without the `@Asynchronous` or `@AsynchronousNonBlocking` annotation.\n"
+"It also means that circuit breaker, fallback and retry automatically inspect the exception cause chain if the exception itself is insufficient to decide what should happen."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid ""
+"This mode is not compatible with the MicroProfile Fault Tolerance specification, albeit the incompatibility is very small.\n"
+"To restore full compatibility, add this configuration property:"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid ""
+"The link:https://smallrye.io/docs/smallrye-fault-tolerance/6.9.2/reference/programmatic-api.html[programmatic API] is present and integrated with the declarative, annotation-based API.\n"
+"You can use the `Guard`, `TypedGuard` and `@ApplyGuard` APIs out of the box."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "Support for Kotlin is present (assuming you use the Quarkus extension for Kotlin), so you can guard your `suspend` functions with fault tolerance annotations."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid ""
+"Metrics are automatically discovered and integrated.\n"
+"If your application uses the Quarkus extension for Micrometer, SmallRye Fault Tolerance will emit metrics to Micrometer.\n"
+"If your application uses the Quarkus extension for SmallRye Metrics, SmallRye Fault Tolerance will emit metrics to MicroProfile Metrics.\n"
+"Otherwise, SmallRye Fault Tolerance metrics will be disabled."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "Configuration reference"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "The `\"<identifier>\"` below is:"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "`\"<classname>/<methodname>\"` for per method configuration"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "`\"<classname>\"` for per class configuration"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "`global` for global configuration"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid ""
+"It may also be an `@Identifier` value for configuring a programmatically constructed `Guard` or `TypedGuard` that is used declaratively through `@ApplyGuard`.\n"
+"Note that in this case, the `Guard`/`TypedGuard` should *NEVER* be used programmatically, because configuration is applied on creation, which happens lazily, on the first use.\n"
+"This first use must be through `@ApplyGuard`, otherwise configuration would be ignored."
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "<span class=\"icon\"><i class=\"fa fa-lock\" title=\"Fixed at build time\"></i></span> Configuration property fixed at build time - All other configuration properties are overridable at runtime <input type=\"search\" id=\"config-search-0\" placeholder=\"FILTER CONFIGURATION\" disabled>"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "This is how the specification-defined properties are mapped to the Quarkus-native configuration:"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "Specification-defined config property"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "Quarkus-native config property"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "`<classname>/<methodname>/<annotation>/<member>`"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "`quarkus.fault-tolerance.\"<classname>/<methodname>\".<annotation>.<member>`"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "`<classname>/<annotation>/<member>`"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "`quarkus.fault-tolerance.\"<classname>\".<annotation>.<member>`"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "`<annotation>/<member>`"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "`quarkus.fault-tolerance.global.<annotation>.<member>`"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "`MP_Fault_Tolerance_NonFallback_Enabled`"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "`quarkus.fault-tolerance.enabled`"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "`MP_Fault_Tolerance_Metrics_Enabled`"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "`quarkus.fault-tolerance.metrics.enabled`"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid ""
+"All the `<annotation>` and `<member>` parts are changed from camel case (`BeforeRetry`, `methodName`) to kebab case (`before-retry`, `method-name`).\n"
+"Two annotation members are special cased to improve consistency:"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "`Retry/durationUnit` moves to `retry.max-duration-unit`"
+msgstr ""
+
+#: _versions/3.27/guides/smallrye-fault-tolerance.adoc
+msgid "`Retry/jitterDelayUnit` moves to `retry.jitter-unit`"
+msgstr ""

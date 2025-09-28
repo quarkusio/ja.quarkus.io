@@ -1,0 +1,804 @@
+msgid ""
+msgstr ""
+"Language: ja_JP\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: jekyll-l10n\n"
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Building my first extension"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid ""
+"Quarkus extensions enhance your application just as projects dependencies do.\n"
+"The role of the extensions is to leverage Quarkus paradigms to integrate seamlessly a library into Quarkus architecture - e.g. do more things at build time.\n"
+"This is how you can use your battle-tested ecosystem and take advantage of Quarkus performance and native compilation.\n"
+"Go to https://code.quarkus.io/[code.quarkus.io] to get the list of the supported extensions."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid ""
+"In this guide we are going to develop the *Sample Greeting Extension*.\n"
+"The extension will expose a customizable HTTP endpoint which simply greets the visitor."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Disclaimer"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid ""
+"To be sure it's extra clear you don't need an extension to add a Servlet to your application.\n"
+"This guide is a simplified example to explain the concepts of extensions development, see the xref:writing-extensions.adoc[full documentation] if you need more information.\n"
+"Keep in mind it's not representative of the power of moving things to build time or simplifying the build of native images."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Prerequisites"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid ""
+"Writing extension with any other than Java and Maven has **not** been tested by the Quarkus team so your mileage may vary\n"
+"if you stray off this path"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Basic Concepts"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "First things first, we will need to start with some basic concepts."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "JVM mode vs Native mode"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Quarkus is first and foremost a Java framework, that means you can develop, package and run classic JAR applications, that's what we call *JVM mode*."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Thanks to https://graalvm.org/[GraalVM] you can compile your Java application into machine specific code (like you do in Go or C++) and that's what we call *Native mode*."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "The operation of compiling Java bytecode into a native system-specific machine code is named *Ahead of Time Compilation* (aka AoT)."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "build time vs runtime in classic Java frameworks"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid ""
+"The build time corresponds to all the actions you apply to your Java source files to convert them into something runnable (class files, jar/war, native images).\n"
+"Usually this stage is composed by the compilation, annotation processing, bytecode generation, etc. At this point, everything is under the developer's scope and control."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid ""
+"The runtime is all the actions that happen when you execute your application.\n"
+"It's obviously focused on starting your business-oriented actions, but it relies on a lot of technical actions like loading libraries and configuration files, scanning the application's classpath, configuring the dependency injection, setting up your Object-Relational Mapping, instantiating your REST controllers, etc."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Usually, Java frameworks do their bootstrapping during the runtime before actually starting the application \"Business oriented layer\". During bootstrap, frameworks dynamically collect metadata by scanning the classpath to find configurations, entity definitions, dependency injection binding, etc. in order to instantiate proper objects through reflection. The main consequences are:"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Delaying the readiness of your application: you need to wait a couple of seconds before actually serving a business request."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Having a peak of resource consumption at bootstrap: in a constrained environment, you will need to size the needed resources based on your technical bootstrap needs rather than your actual business needs."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid ""
+"Quarkus' philosophy is to prevent as much as possible slow and memory intensive dynamic code execution by shifting left these actions and eventually do them during the build time.\n"
+"A Quarkus extension is a Java piece of code acting as an adapter layer for your favorite library or technology."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Description of a Quarkus extension"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "A Quarkus extension consists of two parts:"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid ""
+"The *runtime module* which represents the capabilities the extension developer exposes to the application's developer (an authentication filter, an enhanced data layer API, etc).\n"
+"Runtime dependencies are the ones the users will add as their application dependencies (in Maven POMs or Gradle build scripts)."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid ""
+"The *deployment module* which is used during the augmentation phase of the build, it describes how to \"deploy\" a library\n"
+"following the Quarkus philosophy.\n"
+"In other words, it applies all the Quarkus optimizations to your application during the build.\n"
+"The deployment module is also where we prepare things for GraalVM's native compilation."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid ""
+"Users should not be adding the deployment modules of extension as application dependencies. The deployment dependencies are resolved by\n"
+"Quarkus during the augmentation phase from the runtime dependencies of the application."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "At this point, you should have understood that most of the magic will happen at the Augmentation build time thanks to the deployment module."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Quarkus Application Bootstrap"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "There are three distinct bootstrap phases of a Quarkus application."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid ""
+"*Augmentation*. During the build time, the Quarkus extensions will load and scan your application's bytecode (including the dependencies) and configuration.\n"
+"At this stage, the extension can read configuration files, scan classes for specific annotations, etc.\n"
+"Once all the metadata has been collected, the extensions can pre-process the libraries bootstrap actions like your ORM, DI or REST controllers configurations.\n"
+"The result of the bootstrap is directly recorded into bytecode and will be part of your final application package."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid ""
+"*Static Init*. During the run time, Quarkus will execute first a static init method which contains some extensions actions/configurations.\n"
+"When you will do your native packaging, this static method will be pre-processed during the build time and the objects it has generated will be serialized into the final native executable, so the initialization code will not be executed in the native mode (imagine you execute a Fibonacci function during this phase, the result of the computation will be directly recorded in the native executable).\n"
+"When running the application in JVM mode, this static init phase is executed at the start of the application."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid ""
+"*Runtime Init*. Well nothing fancy here, we do classic run time code execution.\n"
+"So, the more code you run during the two phases above, the faster your application will start."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Now that everything is explained, we can start coding!"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Project setup"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Extensions can be built with either Maven or Gradle. Depending on your build tool, setup can be done as following:"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "The Gradle extension plugin is still experimental and may be missing features available in the Maven plugin."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Maven setup"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Quarkus provides `create-extension` Maven Mojo to initialize your extension project."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "It will try to auto-detect its options:"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "from `quarkus` (Quarkus Core) or `quarkus/extensions` directory, it will use the 'Quarkus Core' extension layout and defaults."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "with `-DgroupId=io.quarkiverse.[extensionId]`, it will use the 'Quarkiverse' extension layout and defaults."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "in other cases it will use the 'Standalone' extension layout and defaults."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "we may introduce other layout types in the future."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "You may call it without any parameter to use the interactive mode: `mvn {quarkus-platform-groupid}:quarkus-maven-plugin:{quarkus-version}:create-extension -N`"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "The extension groupId"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "The extension id (not namespaced)."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Indicate that we don't want to generate any test"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "From a directory with no pom.xml and without any further options, the generator will automatically pick the 'standalone' extension layout"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "With the 'standalone' layout, the `namespaceId` is empty by default, so the computed runtime module artifactId is the `extensionId`"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Maven has generated a `greeting-extension` directory containing the extension project which consists of the parent `pom.xml`, the `runtime` and the `deployment` modules."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "The parent pom.xml"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Your extension is a multi-module project. So let's start by checking out the parent POM at `./greeting-extension/pom.xml`."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Your extension declares 2 sub-modules `deployment` and `runtime`."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Quarkus requires a recent version of the Maven compiler plugin supporting the annotationProcessorPaths configuration."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "The `quarkus-bom` aligns your dependencies with those used by Quarkus during the augmentation phase."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Quarkus requires these configs to run tests properly."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "The Deployment module"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Let's have a look at the deployment's `./greeting-extension/deployment/pom.xml`."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "The key points are:"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "By convention, the deployment module has the `-deployment` suffix (`greeting-extension-deployment`)."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid ""
+"The deployment module depends on the `quarkus-arc-deployment` artifact.\n"
+"We will see later which dependencies are convenient to add."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "The deployment module also *must* depend on the runtime module."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "We add  the `quarkus-extension-processor` to the compiler annotation processors."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "In addition to the `pom.xml` `create-extension` also generated the `org.acme.greeting.extension.deployment.GreetingExtensionProcessor` class."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid ""
+"`FeatureBuildItem` represents a functionality provided by an extension.\n"
+"The name of the feature gets displayed in the log during application bootstrap.\n"
+"An extension should provide at most one feature."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid ""
+"Be patient, we will explain the `Build Step Processor` concept and all the extension deployment API later on.\n"
+"At this point, you just need to understand that this class explains to Quarkus how to deploy a feature named `greeting` which is your extension.\n"
+"In other words, you are augmenting your application to use the `greeting` extension with all the Quarkus benefits (build time optimization, native support, etc.)."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "The Runtime module"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Finally `./greeting-extension/runtime/pom.xml`."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "By convention, the runtime module has no suffix (`greeting-extension`) as it is the artifact exposed to the end user."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "The runtime module depends on the `quarkus-arc` artifact."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "We add  the `quarkus-extension-maven-plugin` to generate the Quarkus extension descriptor included into the runtime artifact which links it with the corresponding deployment artifact."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Gradle setup"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Quarkus does not provide any way to initialize a Gradle project for extensions yet."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "As mentioned before, an extension is composed of two modules:"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "`runtime`"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "`deployment`"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "We are going to create a Gradle multi-module project with those two modules. Here is a simple `settings.gradle` example file:"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Configure the quarkus extension plugin version"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Include both `runtime` and `deployment` modules"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Here is a sample of a root `build.gradle` file:"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Apply the `java-library` plugin for all sub-modules"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Apply the `maven-publish` plugin used to publish our artifacts"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Globally set the group id used for publication"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid ""
+"The `io.quarkus.extension` plugin will be used in order to help us building the extension.\n"
+"The plugin will *only* be applied to the `runtime` module."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "The deployment module"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid ""
+"The deployment module does not require any specific plugin.\n"
+"Here is an example of a minimal `build.gradle` file for the `deployment` module:"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "The deployment module *must* depend on the `runtime` module."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "The runtime module"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "The runtime module applies the `io.quarkus.extension` plugin. This will:"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Add `quarkus-extension-process` as annotation processor to both modules."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Generate extension description files."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Here is an example of `build.gradle` file for the `runtime` module:"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Apply the `io.quarkus.extension` plugin."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "By convention, the runtime module doesn't have a suffix (and thus is named `greeting-extension`) as it is the artifact exposed to the end user."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Basic version of the Sample Greeting extension"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Implementing the Greeting feature"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid ""
+"The (killer) feature proposed by our extension is to greet the user.\n"
+"To do so, our extension will deploy, in the user application, a Servlet exposing the HTTP endpoint `/greeting` which responds to the GET verb with a plain text `Hello`."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "The `runtime` module is where you develop the feature you want to propose to your users, so it's time to create our Web Servlet."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid ""
+"To use Servlets in your applications you need to have a Servlet Container such as https://undertow.io[Undertow].\n"
+"Luckily, `quarkus-bom` imported by our parent `pom.xml` already includes the Undertow Quarkus extension."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "All we need to do is add `quarkus-undertow` as dependency to our `./greeting-extension/runtime/pom.xml`:"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "For Gradle, add the dependency in `./greeting-extension/runtime/build.gradle` file:"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid ""
+"The dependency on `quarkus-arc` generated by the `create-extension` mojo can now be removed since\n"
+"`quarkus-undertow` already depends on it."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Now we can create our Servlet `org.acme.greeting.extension.GreetingExtensionServlet` in the `runtime` module."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "As usual, defining a servlet requires to extend `jakarta.servlet.http.HttpServlet`."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Since we want to respond to the HTTP GET verb, we override the `doGet` method and write `Hello` in the Servlet response's output stream."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Deploying the Greeting feature"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid ""
+"Quarkus magic relies on bytecode generation at build time rather than waiting for the runtime code evaluation, that's the role of your extension's `deployment` module.\n"
+"Calm down, we know, bytecode is hard and you don't want to do it manually. Quarkus proposes a high level API to make your life easier.\n"
+"Thanks to basic concepts, you will describe the items to produce/consume and the corresponding steps in order to generate the bytecode to produce during the deployment time."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "The `io.quarkus.builder.item.BuildItem` concept represents object instances you will produce or consume (and at some point convert into bytecode) thanks to methods annotated with `@io.quarkus.deployment.annotations.BuildStep` which describe your extension's deployment tasks."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "NOTE"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "See xref:all-builditems.adoc[the complete list of BuildItem implementations in core] for more information"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Go back to the generated `org.acme.greeting.extension.deployment.GreetingExtensionProcessor` class."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid ""
+"`feature()` method is annotated with `@BuildStep` which means it is identified as a deployment task Quarkus will have to execute during the deployment.\n"
+"`BuildStep` methods are run concurrently at augmentation time to augment the application.\n"
+"They use a producer/consumer model, where a step is guaranteed not to be run until all the items that it is consuming have been produced."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid ""
+"`io.quarkus.deployment.builditem.FeatureBuildItem` is an implementation of `BuildItem` which represents the description of an extension.\n"
+"This `BuildItem` will be used by Quarkus to display information to the users when the application is starting."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid ""
+"There are many `BuildItem` implementations, each one represents an aspect of the deployment process.\n"
+"Here are some examples:"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "`ServletBuildItem`: describes a Servlet (name, path, etc.) we want to generate during the deployment."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "`BeanContainerBuildItem`: describes a container used to store and retrieve object instances during the deployment."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid ""
+"If you don't find a `BuildItem` for what you want to achieve, you can create your own implementation. Keep in mind that a `BuildItem` should be as fine-grained as possible, representing a specific part of the deployment.\n"
+"To create your `BuildItem` you can extend:"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "`io.quarkus.builder.item.SimpleBuildItem` if you need only a single instance of the item during the deployment (e.g. `BeanContainerBuildItem`, you only want one container)."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "`io.quarkus.builder.item.MultiBuildItem` if you want to have multiple instances (e.g. `ServletBuildItem`, you can produce many Servlets during the deployment)."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid ""
+"It's now time to declare our HTTP endpoint. To do so, we need to produce a `ServletBuildItem`.\n"
+"At this point, we are sure you understood that if the `quarkus-undertow` dependency proposes Servlet support for our `runtime` module, we will need the `quarkus-undertow-deployment` dependency in our `deployment` module to have access to the `io.quarkus.undertow.deployment.ServletBuildItem`."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Let's add `quarkus-undertow-deployment` as dependency to our `./greeting-extension/deployment/pom.xml`:"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid ""
+"The dependency on `quarkus-arc-deployment` generated by the `create-extension` mojo can now be removed since\n"
+"`quarkus-undertow-deployment` already depends on it."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "For Gradle, add the dependency in `./greeting-extension/deployment/build.gradle` file:"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "We can now update `org.acme.greeting.extension.deployment.GreetingExtensionProcessor`:"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid ""
+"We add a `createServlet` method which returns a `ServletBuildItem` and annotate it with `@BuildStep`.\n"
+"Now, Quarkus will process this new task which will result in the bytecode generation of the Servlet registration at build time."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "`ServletBuildItem` proposes a fluent API to instantiate a Servlet named `greeting-extension` of type `GreetingExtensionServlet` (it's our class provided by our extension `runtime` module), and map it the `/greeting` path."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Testing the Greeting Extension feature"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid ""
+"When developing a Quarkus extension, you mainly want to test your feature is properly deployed in an application and works as expected.\n"
+"That's why the tests will be hosted in the `deployment` module."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Quarkus proposes facilities to test extensions via the `quarkus-junit5-internal` artifact (which should already be in the deployment pom.xml), in particular the `io.quarkus.test.QuarkusUnitTest` runner which starts an application with your extension."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid ""
+"We will use https://rest-assured.io[RestAssured] (massively used in Quarkus) to test our HTTP endpoint.\n"
+"Let's add the `rest-assured` dependency into the  `./greeting-extension/deployment/pom.xml`."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "The `create-extension` Maven Mojo can create the test and integration-test structure (drop the `-DwithoutTests`). Here, we'll create it ourselves:"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "To start testing your extension, create the following `org.acme.greeting.extension.deployment.GreetingExtensionTest` test class:"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "We register a Junit Extension which will start a Quarkus application with the Greeting extension."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "We verify the application has a `greeting` endpoint responding to an HTTP GET request with an OK status (200) and a plain text body containing `Hello`"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Time to test and install to our local maven repository!"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Looks good! Congratulations you just finished your first extension."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Debugging your extension"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid ""
+"_If debugging is the process of removing bugs, then programming must be the process of putting them in._\n"
+"Edsger W. Dijkstra"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Debugging your application build"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid ""
+"Since your extension deployment is made during the application build, this process is triggered by your build tool.\n"
+"That means if you want to debug this phase you need to launch your build tool with the remote debug mode switched on."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Maven"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid ""
+"You can activate Maven remote debugging by using `mvnDebug`.\n"
+"You can launch your application with the following command line:"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid ""
+"By default, Maven will wait for a connection on `localhost:8000`.\n"
+"Now, you can run your IDE `Remote` configuration to attach it to `localhost:8000`."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Gradle"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid ""
+"You can activate Gradle remote debugging by using the flags `org.gradle.debug=true` or `org.gradle.daemon.debug=true` in daemon mode.\n"
+"You can launch your application with the following command line:"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid ""
+"By default, Gradle will wait for a connection on `localhost:5005`.\n"
+"Now, you can run your IDE `Remote` configuration to attach it to `localhost:5005`."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Debugging your extension tests"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid ""
+"We have seen together how to test your extension and sometimes things don't go so well and you want to debug your tests.\n"
+"Same principle here, the trick is to enable the Maven Surefire remote debugging in order to attach an IDE `Remote` configuration."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "By default, Maven will wait for a connection on `localhost:5005`."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Time to use your new extension"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Now that you just finished building your first extension you should be eager to use it in a Quarkus application!"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "*Classic Maven publication*"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "If not already done in the previous step, you should install the `greeting-extension` in your local repository:"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Then from another directory, use our tooling to create a new `greeting-app` Quarkus application with your new extension:"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "`cd` into `greeting-app`."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "The `greeting-extension` extension has to be installed in the local Maven repository to be usable in the application."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Run the application and notice the `Installed Features` list contains the `greeting-extension` extension."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid ""
+"From an extension developer standpoint the Maven publication strategy is very handy and fast but Quarkus wants to go one step further by also ensuring a reliability of the ecosystem for the people who will use the extensions.\n"
+"Think about it, we all had a poor Developer Experience with an unmaintained library, an incompatibility between dependencies (and we don't even talk about legal issues).\n"
+"That's why there is the Quarkus Platform."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "*Quarkus Platform*"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid ""
+"Quarkus platform is a set of extensions that target the primary use-cases of Quarkus as a development framework and can safely be used in any combination in the same application without creating a dependency conflict.\n"
+"From an application developer perspective, a Quarkus platform is represented as one or more Maven BOMs, for example `{quarkus-platform-groupid}:quarkus-bom:{quarkus-version}`, `{quarkus-platform-groupid}:quarkus-camel-bom:{quarkus-version}`, etc, whose dependency version constraints were globally aligned so that these BOMs can be imported in the same application in any order without introducing a dependency conflict."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "*Quarkiverse Hub*"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "link:https://github.com/quarkiverse[Quarkiverse Hub] is the GitHub organization that provides repository hosting (including build, CI and release publishing setup) for Quarkus extension projects contributed by the community."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "In case you are wondering about creating a new Quarkus extension and adding it to the Quarkus ecosystem so that the Quarkus community can discover it using the Quarkus dev tools (including the xref:cli-tooling.adoc[Quarkus CLI] and https://code.quarkus.io[code.quarkus.io]), the https://github.com/quarkiverse[Quarkiverse Hub] GitHub organization will be a good home for it."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "You can get started by creating an link:https://github.com/quarkusio/quarkus/issues/new/choose[Extension Request] issue (check first if one wasn't already submitted link:https://github.com/quarkusio/quarkus/labels/kind%2Fextension-proposal[here]) and asking to lead it."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "We'll take care of provisioning a new repository and set it up to:"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Be supported by our tooling;"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Publish the documentation you produce for your extension to the Quarkiverse website;"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Configure your extension to use the link:https://github.com/quarkusio/quarkus-ecosystem-ci#quarkus-ecosystem-ci[Quarkus Ecosystem CI] to build against the latest Quarkus Core changes;"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Give you the freedom to manage the project and release to Maven Central as you like."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Extensions hosted in the Quarkiverse Hub may or may not end up in the Quarkus platform."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "For more information, check link:https://github.com/quarkiverse/quarkiverse/wiki[the Quarkiverse Wiki] and link:https://quarkus.io/blog/quarkiverse/[this blog post]."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Conclusion"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Creating new extensions may appear to be an intricate task at first but once you understood the Quarkus game-changer paradigm (build time vs runtime) the structure of an extension makes perfectly sense."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "As usual, along the path Quarkus simplifies things under the hood (Maven Mojo, bytecode generation or testing) to make it pleasant to develop new features."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "Further reading"
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "xref:writing-extensions.adoc[Writing your own extension] for the full documentation."
+msgstr ""
+
+#: _versions/3.27/guides/building-my-first-extension.adoc
+msgid "xref:dev-ui.adoc[Quarkus Dev UI] to learn how to support the Dev UI in your extension"
+msgstr ""

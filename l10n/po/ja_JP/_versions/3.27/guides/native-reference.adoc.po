@@ -1,0 +1,2073 @@
+msgid ""
+msgstr ""
+"Language: ja_JP\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: jekyll-l10n\n"
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Native Reference Guide"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"This guide is a companion to the\n"
+"xref:building-native-image.adoc[Building a Native Executable],\n"
+"xref:native-and-ssl.adoc[Using SSL With Native Images],\n"
+"and xref:writing-native-applications-tips.adoc[Writing Native Applications],\n"
+"guides.\n"
+"It explores advanced topics that help users diagnose issues,\n"
+"increase the reliability and improve the runtime performance of native executables.\n"
+"These are the high level sections to be found in this guide:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "<<native-memory-management,Native Memory Management>>"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "<<inspecting-and-debugging,Inspecting and Debugging Native Executables>>"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "<<native-faq,Frequently Asked Questions>>"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Native Memory Management"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Memory management for Quarkus native executables is enabled by GraalVM’s SubstrateVM runtime system."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "For detailed explanations about the memory management component in GraalVM, see the link:https://www.graalvm.org/{graalvm-docs-version}/reference-manual/native-image/optimizations-and-performance/MemoryManagement[GraalVM Memory Management] guide."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "This guide complements the information available in the GraalVM website with further observations particularly relevant to Quarkus applications."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Garbage Collectors"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "The garbage collectors available for Quarkus users are currently Serial GC and Epsilon GC."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Serial GC"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Serial GC, the default option in GraalVM and Quarkus, is a single-threaded non-concurrent GC, just like HotSpot’s Serial GC.\n"
+"The implementation in GraalVM however is different from the HotSpot one,\n"
+"and there can be significant differences in the runtime behavior."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"One of the key differences between HotSpot’s Serial GC and GraalVM’s Serial GC is the way they perform full GC cycles.\n"
+"In HotSpot the algorithm used is mark-sweep-compact whereas in GraalVM it is mark-copy.\n"
+"Both need to traverse all live objects,\n"
+"but in mark-copy this traversal is also used to copy live objects to a secondary space or semi-space.\n"
+"As objects are copied from one semi-space to another they’re also compacted.\n"
+"In mark-sweep-compact, the compacting requires a second pass on the live objects.\n"
+"This makes full GCs in mark-copy more time efficient (in terms of time spent in each GC cycle) than mark-sweep-compact.\n"
+"The tradeoff mark-copy makes in order to make individual full GC cycles shorter is space.\n"
+"The use of semi-spaces means that for an application to maintain the same GC performance that mark-sweep achieves (in terms of allocated MB per second),\n"
+"it requires double the amount of memory."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "GC Collection Policy"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "GraalVM's Serial GC implementation offers a choice between two different collection policies, the default is called \"adaptive\" and the alternative is called \"space/time\"."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"The “adaptive” collection policy is based on HotSpot's ParallelGC adaptive size policy.\n"
+"The main difference with HotSpot is GraalVM's focus on memory footprint.\n"
+"This means that GraalVM’s adaptive GC policy tries to aggressively trigger GCs in order to keep memory consumption down."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Up to version 2.13, Quarkus used the “space/time” GC collection policy by default,\n"
+"but starting with version 2.14, it switched to using the “adaptive” policy instead.\n"
+"The reason why Quarkus initially chose to use \"space/time\" is because at that time it had considerable performance improvements over \"adaptive\".\n"
+"Recent performance experiments, however, indicate that the \"space/time\" policy can result in worse out-of-the-box experience compared to the \"adaptive\" policy,\n"
+"while at the same time the benefits it used to offer have diminished considerably after improvements made to the \"adaptive\" policy.\n"
+"As a result, the \"adaptive\" policy appears to be the best option for most, if not all, Quarkus applications.\n"
+"Full details on this switch can be read in link:https://github.com/quarkusio/quarkus/issues/28267[this issue]."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"It is still possible to change the GC collection policy using GraalVM’s `-H:InitialCollectionPolicy` flag.\n"
+"Switching to the \"space/time\" policy can be done by passing the following via command line:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Or adding this to the `application.properties` file:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Escaping the `$` character is required to configure the \"space/time\" GC collection policy if passing via command line in Bash.\n"
+"Other command line environments might have similar requirements."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Epsilon GC"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Epsilon GC is a no-op garbage collector which does not do any memory reclamation.\n"
+"From a Quarkus perspective, some of the most relevant use cases for this garbage collector are extremely short-lived jobs, e.g. serverless functions.\n"
+"To build Quarkus native with epsilon GC, pass the following argument at build time:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Memory Management Options"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"For information about options to control maximum heap size, young space, and other typical use cases found in the JVM, see the link:https://www.graalvm.org/{graalvm-docs-version}/reference-manual/native-image/optimizations-and-performance/MemoryManagement[GraalVM Memory Management] guide.\n"
+"Setting the maximum heap size, either as a percentage or an explicit value, is generally recommended."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "GC Logging"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Multiple options exist to print information about garbage collection cycles, depending on the level of detail required.\n"
+"The minimum detail is provided `-XX:+PrintGC`, which prints a message for each GC cycle that occurs:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"When you combine this option with `-XX:+VerboseGC` you still get a message per GC cycle,\n"
+"but it contains extra information.\n"
+"Also, adding this option shows the sizing decisions made by the GC algorithm at startup:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Beyond these two options, `-XX:+PrintHeapShape` and `-XX:+TraceHeapChunks` provide even lower level details about memory chunks on top of which the different memory regions are constructed."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "The most up-to-date information on GC logging flags can be obtained by printing the list of flags that can be passed to native executables:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Resident Set Size (RSS)"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"As described in the\n"
+"xref:performance-measure.adoc[Measuring Performance guide],\n"
+"the footprint of Quarkus applications is measured using the resident set size (RSS).\n"
+"This is also applicable to native applications,\n"
+"but the runtime engine that manages the footprint in this case is built in the native executable itself rather than the JVM."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"The reporting techniques specified in the\n"
+"xref:performance-measure.adoc[Measuring Performance guide]\n"
+"are applicable to native applications too,\n"
+"but what causes the RSS to be higher or lower is specific to how the generated native executables work."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"When the RSS is higher in one native version of the application versus another,\n"
+"the following checks should be carried out first:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Check the <<native-reports,native build time reports>>\n"
+"and see if there are big discrepancies in the number of used packages, used classes or used methods.\n"
+"A bigger universe will result in bigger memory footprint."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Check the size of the binary for differences.\n"
+"Using `readelf` you can observe the size of different sections and compare them.\n"
+"The `.text` section where code lives,\n"
+"and the `.svm_heap` section where heap produced at build time lives,\n"
+"are particularly interesting."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Generate <<heap-dumps,heap dumps>> and inspect them with tools such as VisualVM or Eclipse MAT."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Often profiling, instrumenting or tracing applications is the best way to figure out how things work.\n"
+"In the case of RSS and native applications,\n"
+"the techniques that Brendan Gregg explains in the\n"
+"https://www.brendangregg.com/FlameGraphs/memoryflamegraphs.html[\"Memory Leak (and Growth) Flame Graphs\"] guide are particularly useful.\n"
+"This section will apply the information in that article to show how to use `perf` and\n"
+"https://github.com/iovisor/bcc[bcc/eBPF]\n"
+"to understand what causes Quarkus native executables to consume memory on startup."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Perf"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"`perf` works in older Linux systems, whereas eBPF requires a newer Linux kernel.\n"
+"The overhead of `perf` is higher than eBPF,\n"
+"but it can understand stack traces generated with DWARF debug symbols, which eBPF can't."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"In the context of GraalVM,\n"
+"DWARF stack traces contain more detail and are easier to understand than those generated with frame pointers.\n"
+"As first step, build a Quarkus native executable with debug info enabled and a couple of extra flags.\n"
+"One flag to disable optimizations,\n"
+"and another to avoid inlined methods being omitted from the stack traces.\n"
+"These two flags have been added to obtain stack traces that contain as much information as possible."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Disabling optimizations makes it easier to learn how to use `perf`\n"
+"and get as detailed stack traces as possible,\n"
+"because it shows more info about what gets called where.\n"
+"However, doing so might lead to more allocations happening which would not happen if optimizations would have been applied.\n"
+"In other words, passing in `-O0` will change the allocation pattens for many applications,\n"
+"because it disables optimizations such as escape analysis or dead code elimination.\n"
+"To properly assess the allocations made by an application deployed in production,\n"
+"run with default optimizations (`-O2`).\n"
+"With default optimizations the stack traces obtained with `perf` maybe be harder to decipher."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Let's measure how much RSS a Quarkus native executable takes on startup on this particular environment:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"How come this Quarkus native executable consumes ~35MB RSS on startup?\n"
+"To get an understanding of this number, this section will use `perf` to trace calls to `syscalls:sys_enter_mmap`.\n"
+"Assuming the default link:https://www.graalvm.org/{graalvm-docs-version}/reference-manual/native-image/optimizations-and-performance/MemoryManagement/#serial-garbage-collector[GraalVM Serial Garbage Collector] is in use, this system call is particularly interesting for native executables generated by GraalVM's `native-image` because of how it allocates heap.\n"
+"In native executables generated by GraalVM's `native-image`, the heap is allocated using either aligned or unaligned heap chunks.\n"
+"All non-array objects get allocated in thread local aligned chunks.\n"
+"Each of these are 1MB in size by default.\n"
+"For arrays, if they are bigger than 1/8 of the aligned chunk size,\n"
+"they will be allocated in unaligned heap chunks which have a size dependant on the object itself.\n"
+"The very first time a thread allocates an object or small array,\n"
+"it will request an aligned heap chunk that it will use exclusively until it has run out of space in that chunk,\n"
+"in which case it will request another aligned heap chunk.\n"
+"So by tracing these system calls,\n"
+"the code paths that end up requesting new aligned or unaligned heap chunks will be recorded.\n"
+"Next, run the Quarkus native executable through `perf record` tracing the `mmap` system call:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"The size of the aligned heap chunks can be changed during native build time.\n"
+"A custom value (in number of bytes) can be passed via the `-H:AlignedHeapChunkSize` flag.\n"
+"One caveat is that this value needs to be multiple of 4096 (4KB)."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Once the startup completes, stop the process and generate the stacks:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"As a final step, generate a\n"
+"https://github.com/brendangregg/FlameGraph[flamegraph]\n"
+"with the generated stacks:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "The flamegraph should look similar to this:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "There are several things of interest to notice there:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"First, the stack traces that contain method calls to `com.oracle.svm.core.genscavenge.ThreadLocalAllocation` are related to aligned or unaligned heap chunk allocations explained above.\n"
+"As noted earlier,\n"
+"for the majority of allocations these chunks will be 1MB by default,\n"
+"so they're interesting because each allocated chunk has a considerable effect on the RSS consumption."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Second, of the thread allocation stacks,\n"
+"the ones under `start_thread` are particularly revealing.\n"
+"In this environment, taking into account the `-Xmx` value passed in,\n"
+"Quarkus creates 12 event loop threads.\n"
+"Aside from those, there are 6 extra threads.\n"
+"The names of all those 18 threads exceed 16 characters.\n"
+"This can be observed via the `ps` command:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"The very first allocation that all these threads do is taking the thread name and trimming it so that it can fall within the character limit enforced by kernels.\n"
+"For each of those allocations,\n"
+"there are 2 `mmap` calls,\n"
+"one to reserve the memory and the other to commit it.\n"
+"When recording `syscalls:sys_enter_mmap` system call,\n"
+"the `perf` implementation tracks calls to `__GI___mmap64`.\n"
+"But this glibc `__GI___mmap64` implementation makes another call into `__GI___mmap64`:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Setting `set scheduler-locking step` when the Quarkus native executable is running through `gdb` makes it easier to debug multi-threaded applications.\n"
+"It optimizes for single-stepping by stopping other threads from \"seizing the prompt\" by preempting the current thread is being stepped through."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"This is how the above flamegraph shows a total of 72 calls to `__GI___mmap64` for the thread name abbreviation stack trace,\n"
+"given that Quarkus native executable runs 18 threads."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"A third, and final observation,\n"
+"is that if you capture the `syscalls:sys_enter_munmmap` event,\n"
+"you might observe that some allocations also result in calls to `munmap`.\n"
+"When calculating the size to reserve,\n"
+"the requested size to allocate can be rounded up to the page size.\n"
+"The maintain alignment,\n"
+"1MB in case of aligned chunks or 1 byte for unaligned chunks,\n"
+"some of the reserved memory might be unreserved.\n"
+"That is where these `munmap` calls would come from."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Just by looking at the flamegraph and counting the number of `mmap` calls that originate in thread local allocations,\n"
+"an approximate estimation can be made on the RSS a Quarkus native executable uses on startup.\n"
+"This estimation can't be fully precise because for unaligned heap chunks, the stack trace doesn't record the size of the chunk.\n"
+"Also, if the additional build args are removed,\n"
+"inlining optimizations might obscure the type of array allocation chunk requested,\n"
+"so it might not be possible to decipher if the allocation is for an aligned or unaligned chunk."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "bcc/eBPF"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"A version of\n"
+"https://github.com/iovisor/bcc[bcc]/\n"
+"https://ebpf.io/[eBPF]\n"
+"that can do stack traces is only available from Linux kernel 4.8 onwards.\n"
+"It can do in-kernel summaries,\n"
+"which makes it more efficient and has lower overhead.\n"
+"Unfortunately it doesn't understand DWARF debug symbols,\n"
+"so the information obtained might be harder to read and contain less detail."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"bcc/eBPF is very extensible so it's easier to tailor make scripts to track specific metrics.\n"
+"The `bcc` project contains a `stackcount` program that can be used to count stack traces in similar way to what `perf` did in the previous section.\n"
+"But in some cases, it might be more useful to have other metrics other than number of calls to a system call.\n"
+"`malloc` is one such example.\n"
+"The number of `malloc` calls is not so important,\n"
+"but rather the size of the allocations.\n"
+"So rather than having a flamegraph showing sample counts,\n"
+"a flamegraph can be generated that shows bytes allocated."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Aside from `mmap`,\n"
+"`malloc` system calls are also present in native executables generated by GraalVM.\n"
+"Let's put bcc/eBPF in action to generate a flamegraph of bytes allocated using `malloc`."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"To do this,\n"
+"first re-generate a Quarkus native executable removing debug info,\n"
+"which bcc/eBPF does not understand,\n"
+"and instead use frame pointer with local symbols to get the stack traces:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"The link:mallocstacks.py[mallocstacks.py]\n"
+"bcc/eBPF script will be used to capture the `malloc` stacktraces with their allocated size.\n"
+"This script, and other typical bcc/eBPF scripts (e.g. `stackcount`), need to be given a process ID (PID).\n"
+"This makes a bit tricky when you want to trace startup,\n"
+"but you can use `gdb`\n"
+"(even if you haven't enabled debug info)\n"
+"to get around this obstacle because it allows you to stop the application at the first instruction.\n"
+"Let's start by running the native executable via `gdb`:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "`starti` is a `gdb` command that sets a temporary breakpoint at the very first instruction of the program's execution."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Next invoke the bcc/eBPF script giving it the PID of the Quarkus process,\n"
+"so that it can track the `malloc` calls,\n"
+"capture stack traces and dump them to a file for post-processing:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Then go back to the `gdb` shell and instruct it to continue the startup procedure after hitting the first instruction:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Once the startup has complete,\n"
+"press `Ctrl-C` on the `stackcount` shell."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Then process the stacks file as a flamegraph.\n"
+"Note that the stacks generated by this script are already collapsed,\n"
+"so the flamegraph can be generated just like this:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "The flamegraph produced should look something like this:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"This shows that most of the memory requested using `malloc` comes from epoll in Java NIO,\n"
+"but the overall amount allocated via `malloc` is barely 268KB.\n"
+"This amount of 274,269 bytes can be observed by hovering on top of `all` at the bottom of flamegraph\n"
+"(you might need to ask the browser to open the flamegraph in a different tab or window to observe this).\n"
+"This is very small compared with the amount allocated for the heap with `mmap`."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Finally, just a brief mention about other bcc/eBPF commands,\n"
+"and how to transform them into flamegraphs."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Stacks produced by `stackcount` need to be collapsed before they can be transformed into flamegraphs.\n"
+"For example:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Native Image Tracing Agent Integration"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Quarkus users that want to integrate new libraries/components into native image process\n"
+"(e.g. link:https://github.com/hierynomus/smbj[smbj]),\n"
+"or want to use JDK APIs that require extensive native image configuration to work (e.g. graphical user interfaces),\n"
+"face a considerable challenge coming up with the native image configuration to make their use cases work.\n"
+"These users can tweak their applications to run in JVM mode with the native image agent in order to\n"
+"auto-generate native image configuration that will help them get a head start getting applications to work as native executables."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"The native image tracing agent is a JVM tool interface (JVMTI) agent available within both GraalVM and Mandrel that\n"
+"tracks all usages of dynamic features such as reflection, JNI, dynamic proxies, access classpath resources...etc,\n"
+"during an application's regular JVM execution.\n"
+"When the JVM stops, it dumps the information on the dynamic features used during the run\n"
+"onto a collection of native image configuration files that can be used in subsequent native image builds."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Using the agent and applying the generated data can be difficult for Quarkus users.\n"
+"First, the agent can be cumbersome because it requires the JVM arguments to be modified,\n"
+"and the generated configuration needs to be placed in a specific location such that the subsequent native image builds picks them up.\n"
+"Secondly, the native image configuration produced contains a lot of superfluous configuration that the Quarkus integration takes care of."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Native image tracing agent integration is included in Quarkus to make the agent easier to consume.\n"
+"In this section you will learn about the integration and how to apply it to your Quarkus application."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"The integration is currently only available for Maven applications.\n"
+"link:https://github.com/quarkusio/quarkus/issues/40361[Gradle integration] will follow up."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Integration Testing with the Tracing Agent"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Quarkus users can now run JVM mode integration tests on Quarkus Maven applications transparently with the native image tracing agent.\n"
+"To do this make sure a container runtime is available,\n"
+"because JVM mode integration tests will run using the JVM within the default Mandrel builder container image.\n"
+"This image contains the agent libraries required to produce native image configuration,\n"
+"hence avoiding the need for a local Mandrel or GraalVM installation."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"It is highly recommended to align the Mandrel version used in integration testing\n"
+"with the Mandrel version used to build native executables.\n"
+"Doing in-container native builds with the default Mandrel builder image,\n"
+"is the safest way to keep both versions aligned."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Additionally make sure that the `native-image-agent` goal is present in the `quarkus-maven-plugin` configuration:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"With a container runtime running,\n"
+"invoke Maven's `verify` goal with `-DskipITs=false -Dquarkus.test.integration-test-profile=test-with-native-agent` to run the JVM mode integration tests and\n"
+"generate the native image configuration.\n"
+"For example:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"When the Maven invocation completes,\n"
+"you can inspect the generated configuration in the `target/native-image-agent-final-config` folder:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Informative By Default"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"By default the generated native image configuration files are not used by subsequent native image building processes.\n"
+"This precaution is taken to avoid situations where seemingly unrelated actions have unintended consequences on the native executable produced,\n"
+"e.g. disabling randomly failing tests."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Quarkus users are free to copy the files from the folder reported in the build,\n"
+"store them under source control and evolve as needed.\n"
+"Ideally these files should be stored under the `src/main/resources/META-INF/native-image/<group-id>/<artifact-id>`` folder,\n"
+"in which case the native image process will automatically pick them up."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"If managing native image agent configuration files manually,\n"
+"it is highly recommended to regenerate them each time a Mandrel version update occurs,\n"
+"because the configuration necessary to make the application work might have varied due to internal Mandrel changes."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"It is possible to instruct Quarkus to optionally apply the generated native image configuration files into subsequent native image processes,\n"
+"by setting the -Dquarkus.native.agent-configuration-apply` property.\n"
+"This can be useful to verify that the native integration tests work as expected,\n"
+"assuming that the JVM unit tests have generated the correct native image configuration.\n"
+"The typical workflow here would be to first run the integration tests with the native image agent as shown in the previous section:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"And then request a native build passing in the configuration apply flag.\n"
+"A message during the native build process will indicate that the native image agent generated configuration files are being applied:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Debugging the Tracing Agent Integration"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"If the generated native image agent configuration is not satisfactory,\n"
+"more information can be obtained using any of the following techniques:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Debugging Filters"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Quarkus generates native image tracing agent configuration filters.\n"
+"These filters exclude commonly used packages for which Quarkus already applies the necessary configuration."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"If native image agent is generating a configuration that it’s not working as expected,\n"
+"you should check that the configuration files include the expected information.\n"
+"For example, if some method happens to be accessed via reflection at runtime and you get an error,\n"
+"you want to verify that the configuration file contains a reflection entry for that method."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"If the entry is missing, it could be that some call path is being filtered that maybe shouldn’t have been.\n"
+"To verify that, inspect the contents of `target/quarkus-caller-filter.json` and `target/quarkus-access-filter.json` files,\n"
+"and confirm that the class and/or package making the call or being accessed is not being filtered out."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"If the missing entry is related to some resource,\n"
+"you should inspect the Quarkus build debug output and verify which resource patterns are being discarded, e.g."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Tracing Agent Logging"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"The native image tracing agent can log the method invocations that result in the generated configuration to a JSON file.\n"
+"This can help understand why a configuration entry is generated.\n"
+"To enable this logging,\n"
+"`-Dquarkus.test.native.agent.output.property.name=trace-output` and\n"
+"`-Dquarkus.test.native.agent.output.property.value=native-image-agent-trace-file.json`\n"
+"system properties need to be added.\n"
+"For example:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"When trace output is configured, no native image configuration is generated,\n"
+"and instead a `target/native-image-agent-trace-file.json` file is generated that contains trace information.\n"
+"For example:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Unfortunately the trace output does not take into account the applied configuration filters,\n"
+"so the output contains all configuration decisions made by the agent.\n"
+"This is unlikely to change in the near future\n"
+"(see link:https://github.com/oracle/graal/issues/7635[oracle/graal#7635])."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Configuration With Origins (Experimental)"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Alternative to the trace output,\n"
+"it is possible to configure the native image agent with an experimental flag that shows the origins of the configuration entries.\n"
+"You can enable that with the following additional system property:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"The origins of the configuration entries can be found in text files inside the `target/native-image-agent-base-config` folder.\n"
+"For example:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Debugging With GDB"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"The native image agent itself is a native executable produced with GraalVM that uses JVMTI to intercept the calls that require native image configuration.\n"
+"As a last resort, it is possible to debug the native image agent with GDB,\n"
+"see link:https://github.com/oracle/graal/blob/master/substratevm/src/com.oracle.svm.agent/README.md[here]\n"
+"for instructions on how to do that."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Inspecting and Debugging Native Executables"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "This debugging guide provides further details on debugging issues in Quarkus native executables that might arise during development or production."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"It takes as input the application developed in the xref:getting-started.adoc[Getting Started Guide].\n"
+"You can find instructions on how to quickly set up this application in this guide."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Requirements and Assumptions"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "This debugging guide has the following requirements:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "JDK 17 installed with `JAVA_HOME` configured appropriately"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Apache Maven {maven-version}"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "A working container runtime (Docker, podman)"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"This guide builds and executes Quarkus native executables within a Linux environment.\n"
+"To offer a homogeneous experience across all environments,\n"
+"the guide relies on a container runtime environment to build and run the native executables.\n"
+"The instructions below use Docker as example, but very similar commands should work on alternative container runtimes, e.g. podman."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Building native executables is an expensive process,\n"
+"so make sure the container runtime has enough CPU and memory to do this.\n"
+"A minimum of 4 CPUs and 4GB of memory is required."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Finally, this guide assumes the use of the link:https://github.com/graalvm/mandrel[Mandrel distribution] of GraalVM for building native executables,\n"
+"and these are built within a container so there is no need for installing Mandrel on the host."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Bootstrapping the project"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Start by creating a new Quarkus project.\n"
+"Open a terminal and run the following command:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "For Linux & MacOS users"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "For Windows users"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "If using cmd , (don't use backward slash `\\` and put everything on the same line)"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "If using Powershell , wrap `-D` parameters in double quotes e.g. `\"-DprojectArtifactId=debugging-native\"`"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Configure Quarkus properties"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Some Quarkus configuration options will be used constantly throughout this debugging guide,\n"
+"so to help declutter command line invocations,\n"
+"it's recommended to add these options to the `application.properties` file.\n"
+"So, go ahead and add the following options to that file:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "First Debugging Steps"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "As a first step, change to the project directory and build the native executable for the application:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Run the application to verify it works as expected. In one terminal:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "In another:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"The rest of this section explores ways to build the native executable with extra information,\n"
+"but first, stop the running application.\n"
+"We can obtain this information while building the native executable by adding additional native-image build options using `-Dquarkus.native.additional-build-args`, e.g."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Executing that will produce additional output lines like this:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Note that `/project` is a folder within the container that is building the native executable.\n"
+"So, this is not a folder that you will find in the host environment.\n"
+"`/project` folder is mapped to `target/debugging-native-1.0.0-SNAPSHOT-native-image-source-jar`,\n"
+"so you will find the files under the `reports` folder in that directory."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"The target info file contains information such as the target platform,\n"
+"the toolchain used to compile the executable,\n"
+"and the C library in use:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "The native library info file contains information on the static libraries added to the binary and the other libraries dynamically linked to the executable:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Even more detail can be obtained by passing in `--verbose` as an additional native-image build argument.\n"
+"This option can be very useful in detecting whether the options that you pass at a high level via Quarkus are being passed down to the native executable production,\n"
+"or whether some third party jar has some native-image configuration embedded in it that is reaching the native-image invocation:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Running with `--verbose` demonstrates how the native-image building process is two sequential java processes:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"The first is a very short Java process that does some basic validation and builds the arguments for the second process\n"
+"(in a stock GraalVM distribution, this is executed as native code)."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"The second Java process is where the main part of the native executable production happens.\n"
+"The `--verbose` option shows the actual Java process executed.\n"
+"You could take the output and run it yourself."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "One may also combine multiple native build options by separating with a comma, e.g.:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Remember that if an argument for `-Dquarkus.native.additional-build-args` includes the `,` symbol,\n"
+"it needs to be escaped to be processed correctly, e.g. `\\\\,`."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Inspecting Native Executables"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Given a native executable, various Linux tools can be used to inspect it.\n"
+"To allow supporting a variety of environments,\n"
+"inspections will be done from within a Linux container.\n"
+"Let's create a Linux container image with all the tools required for this guide:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Using docker in the non-Linux environment, you can create an image using this Dockerfile via:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Then, go to the root of the project and run the Docker container we have just created as:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "`ldd` shows the shared library dependencies of an executable:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "`strings` can be used to look for text messages inside the binary:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Using `strings` you can also get Mandrel information given the binary:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Finally, using `readelf` we can inspect different sections of the binary.\n"
+"For example, we can see how the heap and text sections take most of the binary:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Runtime containers produced by Quarkus to run native executables will not include the tools mentioned above.\n"
+"To explore a native executable within a runtime container,\n"
+"it's best to run the container itself and then `docker cp` the executable locally, e.g.:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "From there, you can either inspect the executable directly or use a tools container like above."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Native Reports"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Optionally, the native build process can generate reports that show what goes into the binary:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"The reports will be created under `target/debugging-native-1.0.0-SNAPSHOT-native-image-source-jar/reports/`.\n"
+"These reports are some of the most useful resources when encountering issues with missing methods/classes, or encountering forbidden methods by Mandrel."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Call Tree Reports"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"`call_tree` csv file reports are some of the default reports generated when the `-Dquarkus.native.enable-reports` option is passed in.\n"
+"These csv files can be imported into a graph database, such as Neo4j,\n"
+"to inspect them more easily and run queries against the call tree.\n"
+"This is useful for getting an approximation on why a method/class is included in the binary."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Let’s see this in action."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "First, start a Neo4j instance:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Once the container is running,\n"
+"you can access the link:http://localhost:7474[Neo4j browser].\n"
+"Use `neo4j` as the username and the value of `NEO_PASS` as the password to log in."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"To import the CSV files,\n"
+"we need the following cypher script which will import the data within the CSV files and create graph database nodes and edges:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Copy and paste the contents of the script into a file called `import.cypher`."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Mandrel 22.0.0 contains a bug where the symbolic links used by the import cypher file are not correctly set when generating reports within a container\n"
+"(for more details see link:https://github.com/oracle/graal/issues/4355[here]).\n"
+"This can be worked around by copying the following script into a file and executing it:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Next, copy the import cypher script and CSV files into Neo4j's import folder:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "After copying all the files, invoke the import script:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Once the import completes (shouldn't take more than a couple of minutes), go to the link:http://localhost:7474[Neo4j browser],\n"
+"and you'll be able to observe a small summary of the data in the graph:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"The data above shows that there are ~60000 methods, and just over ~200000 edges between them.\n"
+"The Quarkus application demonstrated here is very basic, so there’s not a lot we can explore, but here are some example queries you can run to explore the graph in more detail.\n"
+"Typically, you’d start by looking for a given method:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "From there, you can narrow down to a given method on a specific type:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Once you’ve located the node for the specific method you’re after, a typical question you’d want to get an answer for is:\n"
+"why does this method get included in the call tree?\n"
+"To do that, start from the method and look for incoming connections at a given depth,\n"
+"starting from the end method.\n"
+"For example, methods that directly call a method can be located via:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Then you can look for direct calls at depth of 2,\n"
+"so you’d search for methods that call methods that call into the target method:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"You can continue going up layers,\n"
+"but unfortunately if you reach a depth with too many nodes,\n"
+"the Neo4j browser will be unable to visualize them all.\n"
+"When that happens, you can alternatively run the queries directly against the cypher shell:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"For further information, check out this\n"
+"link:https://quarkus.io/blog/quarkus-native-neo4j-call-tree[blog post]\n"
+"that explores the Quarkus Hibernate ORM quickstart using the techniques explained above."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Used Packages/Classes/Methods Reports"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"`used_packages`, `used_classes` and `used_methods` text file reports come in handy when comparing different versions of the application,\n"
+"e.g. why does the image take longer to build? Or why is the image bigger now?"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Further Reports"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Mandrel can produce further reports beyond the ones that are enabled with the `-Dquarkus.native.enable-reports` option.\n"
+"These are called expert options and you can learn more about them by running:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"These expert options are not considered part of the GraalVM native image API,\n"
+"so they might change anytime."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "To use these expert options, add them comma separated to the `-Dquarkus.native.additional-build-args` parameter."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Build-time vs Run-time Initialization"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Quarkus instructs Mandrel to initialize as much as possible at build time,\n"
+"so that runtime startup can be as fast as possible.\n"
+"This is important in containerized environments where the startup speed has a big impact on how quickly an application is ready to do work.\n"
+"Build time initialization also minimizes the risk of runtime failures due to unsupported features becoming reachable through runtime initialization,\n"
+"thus making Quarkus more reliable."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"The most common examples of build-time initialized code are static variables and blocks.\n"
+"Although Mandrel executes those at run-time by default,\n"
+"Quarkus instructs Mandrel to run them at build-time for the reasons given."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"This means that any static variables initialized inline, or initialized in a static block,\n"
+"will keep the same value even if the application is restarted.\n"
+"This is a different behaviour compared to what would happen if executed as Java."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"To see this in action with a very basic example,\n"
+"add a new `TimestampResource` to the application that looks like this:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Rebuild the binary using:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Run the application in one terminal\n"
+"(make sure you stop any other native executable container runs before executing this):"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Send a `GET` request multiple times from another terminal:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"to see how the current time has been baked into the binary.\n"
+"This time was calculated when the binary was being built,\n"
+"hence application restarts have no effect."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"In some situations, built time initializations can lead to errors when building native executables.\n"
+"One example is when a value gets computed at build time which is forbidden to reside in the heap of the JVM that gets baked into the binary.\n"
+"To see this in action, add this REST resource:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "When trying to rebuild the application, you’ll encounter an error:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"So, what the message above is telling us is that our application caches a value that is supposed to be random as a constant.\n"
+"This is not desirable because something that's supposed to be random is no longer so,\n"
+"because the seed is baked in the image.\n"
+"The message above makes it quite clear what is causing this,\n"
+"but in other situations the cause might be more obfuscated.\n"
+"As a next step, we'll add some extra flags to the native executable generation to get more information."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "As suggested by the message, let's start by adding an option to track object instantiation:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"The error messages point to the code in the example,\n"
+"but it can be surprising that a reference to `DnsClient` appears.\n"
+"Why is that?\n"
+"The key is in what happens inside `KeyPairGenerator.initialize()` method call.\n"
+"It uses `JCAUtil.getSecureRandom()` which is why this is problematic,\n"
+"but sometimes the tracing options can show some stack traces that do not represent what happens in reality.\n"
+"The best option is to dig through the source code and use tracing output for guidance but not as full truth."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Moving the `KEY_PAIR_GEN.initialize(1024);` call to the run-time executed method `encryptDecrypt` is enough to solve this particular issue.\n"
+"Rebuild the application and verify that encrypt/decrypt endpoint works as expected by sending any message and check if the reply is the same as the incoming message:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Additional information on which classes are initialized and why can be obtained by passing in the `-H:+PrintClassInitialization` flag via `-Dquarkus.native.additional-build-args`."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Profile Runtime Behaviour"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Single Thread"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"In this exercise, we profile the runtime behaviour of some Quarkus application that was compiled to a native executable to determine where the bottleneck is.\n"
+"Assume that you’re in a scenario where profiling the pure Java version is not possible, maybe because the issue only occurs with the native version of the application."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Add a REST resource with the following code\n"
+"(example courtesy of link:https://github.com/apangin/java-profiling-presentation/blob/master/src/demo1/StringBuilderTest.java[Andrei Pangin's Java Profiling presentation]):"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Recompile the application, rebuild the binary and run it. Attempting a simple curl will never complete, as expected:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"However, the question we’re trying to answer here is:\n"
+"what would be the bottleneck of such code?\n"
+"Is it appending the characters? Is it deleting it? Is it checking whether the thread is alive?"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Since we're dealing with a linux native executable,\n"
+"we can use tools like `perf` directly.\n"
+"To use `perf`,\n"
+"go to the root of the project and start the tools container created earlier as a privileged user:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Note that in order to use `perf` to profile the native executables in the guide,\n"
+"the container needs to run as privileged, or with `--cap-add sys_admin`.\n"
+"Please note that privileged containers are **NOT** recommended in production, so use this flag with caution!"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Once the container is running, you need to ensure that the kernel is ready for the profiling exercises:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"The kernel modifications above also apply to Linux virtual machines.\n"
+"If running on a bare metal Linux machine,\n"
+"tweaking only `perf_event_paranoid` is enough."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Then, from inside the tools container we execute:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"The `perf record` command above takes `1009` samples per second.\n"
+"Increasing this value means more samples are gathered,\n"
+"which can end up affecting the runtime performance.\n"
+"This also increases the amount of data generated.\n"
+"The more data generated, the longer it takes to process it,\n"
+"but the more precision you get on what the application is doing.\n"
+"So, finding the right value is a balancing act."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "While `perf record` is running, open another window and access the endpoint:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"After a few seconds, halt the `perf record` process.\n"
+"This will generate a `perf.data` file.\n"
+"We could use `perf report` to inspect the perf data,\n"
+"but you can often get a better picture showing that data as a flame graph.\n"
+"To generate flame graphs, we will use\n"
+"https://github.com/brendangregg/FlameGraph[FlameGraph GitHub repository],\n"
+"which has already been installed inside the tools container."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Next, generate a flame graph using the data captured via `perf record`:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"The flame graph is a svg file that a web browser, such as Firefox, can easily display.\n"
+"After the above two commands complete one can open `flamegraph.svg` in their browser:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"We see a big majority of time spent in what is supposed to be our main,\n"
+"but we see no trace of the `StringBuilderResource` class,\n"
+"nor the `StringBuilder` class we're calling.\n"
+"We should look at the symbol table of the binary:\n"
+"can we find symbols for our class and `StringBuilder`?\n"
+"We need those in order to get meaningful data.\n"
+"From within the tools container, query the symbol table:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"No output appears when querying the symbol table.\n"
+"This is why we don't see any call graphs in the flame graphs.\n"
+"This is a deliberate decision that native-image makes.\n"
+"By default, it removes symbols from the binary."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"To regain the symbols, we need to rebuild the binary instructing GraalVM not to delete the symbols.\n"
+"On top of that, enable DWARF debug info so that the stack traces can be populated with that information.\n"
+"From outside the tools container, execute:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Next, re-enter the tools container if you exited,\n"
+"and inspect the native executable with `objdump`,\n"
+"and see how the symbols are now present:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "You should see a long list of symbols that match that pattern."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Then, run the executable through perf,\n"
+"*indicating that the call graph is dwarf*:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Run the curl command once again, stop the binary, generate the flamegraphs and open it:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"The flamegraph now shows where the bottleneck is.\n"
+"It's when `StringBuilder.delete()` is called which calls `System.arraycopy()`.\n"
+"The issue is that 1 million characters need to be shifted in very small increments:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Multi-Thread"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Multithreaded programs might require special attention when trying to understand their runtime behaviour.\n"
+"To demonstrate this, add this `MulticastResource` code to your project\n"
+"(example courtesy of link:https://github.com/apangin/java-profiling-presentation/blob/master/src/demo6/DatagramTest.java[Andrei Pangin's Java Profiling presentation]):"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Build the native executable with debug info:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "From inside the tools container (as privileged user) run the native executable through `perf`:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Invoke the endpoint to send the multicast packets:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Make and open a flamegraph:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"The flamegraph produced looks odd. Each thread is treated independently even though they all do the same work.\n"
+"This makes it difficult to have a clear picture of the bottlenecks in the program."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"This is happening because from a `perf` perspective, each thread is a different command.\n"
+"We can see that if we inspect `perf report`:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"This can be worked around by applying some modifications to the perf output,\n"
+"in order to make all threads have the same name. E.g."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"When you open the flamegraph, you will see all threads' work collapsed into a single area.\n"
+"Then, you can clearly see that there's some locking that could affect performance."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Debugging Native Crashes"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"One of the drawbacks of using native executables is that they cannot be debugged using the standard Java debuggers,\n"
+"instead we need to debug them using `gdb`, the GNU Project debugger.\n"
+"To demonstrate how to do this,\n"
+"we are going to generate a native Quarkus application that crashes due to a Segmentation Fault when accessing http://localhost:8080/crash.\n"
+"To achieve this, add the following REST resource to the project:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"This code will try to copy 256 bytes from address `0x0` to `0x80` resulting in a Segmentation Fault.\n"
+"To verify this, compile and run the example application:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "This will result in the following output:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"The omitted output above contains clues to what caused the issue,\n"
+"but in this exercise we are going to assume that no information was provided.\n"
+"Let’s try to debug the segmentation fault using `gdb`.\n"
+"To do that, go to the root of the project and enter the tools container:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Then start the application in `gdb` and execute `run`."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Next, try to access http://localhost:8080/crash:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "This will result in the following message in `gdb`:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "If we try to get more info about the backtrace that led to this crash we will see that there is not enough information available."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"This is because we didn’t compile the Quarkus application with `-Dquarkus.native.debug.enabled`,\n"
+"so `gdb` cannot find debugging symbols for our native executable,\n"
+"as indicated by the \"_No debugging symbols found in ./target/debugging-native-1.0.0-SNAPSHOT-runner_\" message in the beginning of `gdb`."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Recompiling the Quarkus application with `-Dquarkus.native.debug.enabled` and rerunning it through `gdb` we are now able to get a backtrace making clear what caused the crash.\n"
+"On top of that, add `-H:-OmitInlinedMethodDebugLineInfo` option to avoid inlined methods being omitted from the backtrace:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"We already see that `gdb` is able to tell us which method caused the crash and where it’s located in the source code.\n"
+"We can also get a backtrace of the call graph that led us to this state:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Similarly, we can get a backtrace of the call graph of other threads."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "First, we can list the available threads with:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "select the thread we want to inspect, e.g. thread 1:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "and, finally, print the stack trace:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Alternatively, we can list the backtraces of all threads with a single command:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Note, however, that despite being able to get a backtrace we can still not list the source code at point with the `list` command."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"This is because `gdb` is not aware of the location of the source files.\n"
+"We are running the executable outside the target directory.\n"
+"To fix this we can either rerun `gdb` from the target directory or,\n"
+"run `directory target/debugging-native-1.0.0-SNAPSHOT-native-image-source-jar/sources` e.g.:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"We can now examine line `169` and get a first hint of what might be wrong\n"
+"(in this case we see that it fails at the first read from src which contains the address `0x0000`),\n"
+"or walk up the stack using `gdb`’s `up` command to see what part of our code led to this situation.\n"
+"For more information about using `gdb` to debug native executables, see the\n"
+"link:https://www.graalvm.org/{graalvm-docs-version}/reference-manual/native-image/debugging-and-diagnostics/DebugInfo/[GraalVM Debug Info Feature] guide."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Frequently Asked Questions"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Why is the process of generating a native executable slow?"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Native executable generation is a multi-step process.\n"
+"The analysis and compile steps are the most expensive of all and hence the ones that dominate the time spent generating the native executable."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"In the analysis phase, a static points-to analysis starts from the main method of the program to find out what is reachable.\n"
+"As new classes are discovered, some of them will be initialized during this process depending on the configuration.\n"
+"In the next step, the heap is snapshotted and checks are made to see which types need to be available at runtime.\n"
+"The initialization and heap snapshotting can cause new types to be discovered, in which case the process is repeated.\n"
+"The process stops when a fixed point is reached, that is when the reachable program grows no more."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "The compilation step is pretty straightforward, it simply compiles all the reachable code."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"The time spent in analysis and compilation phases depends on how big the application is.\n"
+"The bigger the application, the longer it takes to compile it.\n"
+"However, there are certain features that can have an exponential effect.\n"
+"For example, when registering types and methods for reflection access,\n"
+"the analysis can’t easily see what’s behind those types or methods,\n"
+"so it has to do more work to complete the analysis step."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "I get a warning about using experimental options, what can I do?"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Starting with Mandrel 23.1 and GraalVM for JDK 21, the native executable generation process will warn about the use of experimental options with a message like this:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"If the mentioned option is added by a third party library like in the example above, you should consider opening an issue in the library's repository to ask for the option to be removed.\n"
+"If the option is added by your application, you should consider either removing it (if it's not necessary) or wrapping it between `-H:+UnlockExperimentalVMOptions` and `-H:-UnlockExperimentalVMOptions`."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "I get a `AnalysisError\\$ParsingError` when building a native executable due to an `UnresolvedElementException`, what can I do?"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"When building a native executable Quarkus requires all classes being referenced by the code, no matter if they are build-time or run-time initialized, to be present in the classpath.\n"
+"This way it ensures that there will be no crashes at runtime due to potential `NoClassDefFoundError` exceptions.\n"
+"To achieve this it makes use of GraalVM's `--link-at-build-time` parameter:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"This, however, may result in an `AnalysisError\\$ParsingError` due to an `UnresolvedElementException` at build time.\n"
+"This is often caused because the application references a class from an https://maven.apache.org/guides/introduction/introduction-to-optional-and-excludes-dependencies.html#optional-dependencies[optional dependency]."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "If you have access to the source code responsible for the reference to the missing dependency and can alter it, you should consider one of the following:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Remove the reference if it's not actually necessary."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Move the affected code in a sub-module and make the dependency non-optional (as is the best practice)."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Make the dependency non-optional."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "In the unfortunate case where the reference causing the issue is made by a 3rd party library, that you cannot modify, you should consider one of the following:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Use a class/method substitution to remove the said reference."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Add the optional dependency as a non-optional dependency of your project."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Note that although option (1) is the best choice performance wise, as it minimizes the applications footprint,it might not be trivial to implement.\n"
+"To make matters worse, it's also not easy to maintain as it is tightly coupled to the 3rd party library implementation.\n"
+"Option (2) is a straight forward alternative to work around the issue, but comes at the cost of including possibly never invoked code in the resulting native executable."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "I get an `OutOfMemoryError` (OOME) building native executables, what can I do?"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Building native executables is not only time consuming, but it also takes a fair amount of memory.\n"
+"For example, building a sample native Quarkus Jakarta Persistence application such as the Hibernate ORM quickstart,\n"
+"may use 6GB to 8GB resident set size in memory.\n"
+"A big chunk of this memory is Java heap,\n"
+"but extra memory is required for other aspects of the JVM that runs the native building process.\n"
+"It is still possible to build such applications in environments that have total memory close to the limits,\n"
+"but to do that it is necessary to shrink the maximum heap size of the GraalVM native image process.\n"
+"To do that, set a maximum heap size using the `quarkus.native.native-image-xmx` property.\n"
+"For example, we can instruct GraalVM to use 5GB of maximum heap size by passing in\n"
+"`-Dquarkus.native.native-image-xmx=5g` in the command line."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Building native executables this way might have the side effect of requiring more time to complete.\n"
+"This is due to garbage collection having to work harder for native image generation to have free space to do its job."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Note that typical applications are likely bigger than quickstarts,\n"
+"so the memory requirements will also likely be higher."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Why is runtime performance of a native executable inferior compared to JVM mode?"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"As with most things in life there are some trade-offs involved when choosing native compilation over JVM mode.\n"
+"So depending on the application the runtime performance of a native application might be slower compared to JVM mode,\n"
+"though that’s not always the case."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"JVM execution of an application includes runtime optimization of the code that profits from profile information built up during execution.\n"
+"That includes the opportunities to inline a lot more of the code,\n"
+"locate hot code on direct paths (i.e. ensure better instruction cache locality)\n"
+"and cut out a lot of the code on cold paths (on the JVM a lot of code does not get compiled until something tries to execute it -- it is replaced with a trap that causes deoptimization and recompilation).\n"
+"Removal of cold paths provides many more optimization opportunities than are available for ahead of time compilation because it significantly reduces the branch complexity and combinatorial logic of the smaller amount of hot code that is compiled."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"By contrast, native executable compilation has to cater for all possible execution paths when it compiles code offline since it does not know which are the hot or cold paths and cannot use the trick of planting a trap and recompiling if it is hit. For the same reason it cannot load the dice to ensure that code cache conflicts are minimized by co-locating hot paths adjacent.\n"
+"Native executable generation is able to remove some code because of the closed world hypothesis but that is often not enough to make up for all the benefits that profiling and runtime deopt & recompile provides to the JVM JIT compiler."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Note, however, that there is a price you pay for that potentially higher JVM speed, and that price is in increased resource usage (both CPU and memory) and startup time because:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "it takes some time before the JIT kicks in and fully optimizes the code."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "the JIT compiler consumes resources that could be utilized by the application."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "the JVM has to retain a lot more metadata and compiler/profiler data to support the better optimizations that it can offer."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "The reason for 1) is that code needs to be run interpreted for some time and, possibly, to be compiled several times before all potential optimizations are realized to ensure that:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "it’s worth compiling that code path, i.e. it’s being executed enough times, and that"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "we have enough profiling data to perform meaningful optimizations."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"An implication of 1) is that for small, short-lived applications a native executable may well be a better bet.\n"
+"Although the compiled code is not as well optimized it is available straight away."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"The reason for 2) is that the JVM is essentially running the compiler at runtime in parallel with the application itself.\n"
+"In the case of native executables the compiler is run ahead of time removing the need to run the compiler in parallel with the application."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"There are several reasons for 3). The JVM does not have a closed world assumption.\n"
+"So, it has to be able to recompile code if loading of new classes implies that it needs to revise optimistic assumptions made at compile time.\n"
+"For example, if an interface has only one implementation it can make a call jump directly to that code.\n"
+"However, in the case where a second implementation class is loaded the call site needs to be patched to test the type of the receiver instance and jump to the code that belongs to its class.\n"
+"Supporting optimizations like this one requires keeping track of a lot more details of the class base than a native executable,\n"
+"including recording the full class and interface hierarchy,\n"
+"details of which methods override other methods, all method bytecode etc.\n"
+"In a native executable most of the details of class structure and bytecode can be ignored at run time."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"The JVM also has to cope with changes to the class base or execution profiles that result in a thread going down a previously cold path.\n"
+"At that point the JVM has to jump out of the compiled code into the interpreter and recompile the code to cater for a new execution profile that includes the previously cold path.\n"
+"That requires keeping runtime info that allow a compiled stack frame to be replaced with one or more interpreter frames.\n"
+"It also requires runtime extensible profile counters to be allocated and updated to track what has or has not been executed."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Why are native executables “big”?"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "This can be attributed to a number of different reasons:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Native executables include not only the application code but also, library code, and JDK code.\n"
+"As a result a more fair comparison would be to compare the native executable’s size with the size of the application,\n"
+"plus the size of the libraries it uses, plus the size of the JDK.\n"
+"Especially the JDK part is not negligible even in simple applications like HelloWorld.\n"
+"To get a glance on what is being pulled in the image one can use `-H:+PrintUniverse` when building the native executable."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Some features are always included in a native executable even though they might never be actually used at run time.\n"
+"An example of such a feature is garbage collection.\n"
+"At compile time we can’t be sure whether an application will need to run garbage collection at run time,\n"
+"so garbage collection is always included in native executables increasing their size even if not necessary.\n"
+"Native executable generation relies on static code analysis to identify which code paths are reachable,\n"
+"and static code analysis can be imprecise leading to more code getting into the image than what’s actually needed."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"There is a https://github.com/oracle/graal/issues/287[GraalVM upstream issue]\n"
+"with some interesting discussions about that topic."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "What version of Mandrel was used to generate a binary?"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "One can see which Mandrel version was used to generate a binary by inspecting the binary as follows:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "How do I enable GC logging in native executables?"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "See <<gc-logging,Native Memory Management GC Logging section>> for details."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Can I get a thread dump of a native executable?"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Yes, Quarkus sets up a signal handler for the `SIGQUIT` signal (or `SIGBREAK` on windows) that will result in a thread\n"
+"dump being printed when receiving the `SIGQUIT/SIGBREAK` signal.\n"
+"You may use `kill -SIGQUIT <pid>` to trigger a thread dump."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Quarkus uses its own signal handler, to use GraalVM's default signal handler instead you will need to:\n"
+"1. Add `-H:+DumpThreadStacksOnSignal` to `quarkus.native.additional-build-args` and rebuild the application.\n"
+"2. Set the environment variable `DISABLE_SIGNAL_HANDLERS` before running the app."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Can I get a heap dump of a native executable? e.g. if it runs out of memory"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Starting with GraalVM 22.2.0 it is possible to create heap dumps upon request,\n"
+"e.g. `kill -SIGUSR1 <pid>`.\n"
+"Support for dumping the heap dump upon an out of memory error will follow up."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Can I build and run this examples outside a container in Linux?"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Yes you can.\n"
+"In fact, debugging native executables on a Linux bare metal box offers the best possible experience.\n"
+"In this kind of environments, root access is not needed except to install packages required to run some debug steps,\n"
+"or to enable `perf` to gather events at the kernel."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "These are the packages you'll need on your Linux environment to run through the different debugging sections:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Generating flame graphs is slow, or produces errors, what can I do?"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"There are multiple ways in which a native executable produced by Mandrel can be profiled.\n"
+"All the methods require you to pass in the `-H:-DeleteLocalSymbols` option."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"The method shown in this reference guide generates a binary with DWARF debug information,\n"
+"runs it via `perf record` and then uses `perf script` and flame graph tooling to generate the flamegraphs.\n"
+"However, the `perf script` post-processing step done on this binary can appear to be slow or can show some DWARF errors."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"An alternative method to generate flame graphs is to pass in `-H:+PreserveFramePointer` when generating the native executable instead of generating the DWARF debug information.\n"
+"It instructs the binary to use an extra register for the frame pointer.\n"
+"This enables `perf` to do stack walking to profile the runtime behaviour.\n"
+"To generate the native executable using these flags, do the following:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "To get runtime profiling information out of the native executable, simply do:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"The recommended method for generating runtime profiling information is using the debug information rather than generating a binary that preserves the frame pointer.\n"
+"This is because adding debug information to the native executable build process has no negative runtime performance whereas preserving the frame pointer does."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"DWARF debug info is generated in a separate file and can even be omitted in the default deployment and only be transferred and used on demand,\n"
+"for profiling or debugging purposes.\n"
+"Furthermore, the presence of debug info enables `perf` to show us the relevant source code lines as well,\n"
+"hence it does not bloat the native executable itself.\n"
+"To do that, simply call `perf report` with an extra parameter to show source code lines:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"The performance penalty of preserving the frame pointer is due to using the extra register for stack walking,\n"
+"particularly in `x86_64` compared to `aarch64` where there are fewer registers available.\n"
+"Using this extra register reduces the number of registers that are available for other work,\n"
+"which can lead to performance penalties."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "I think I’ve found a bug in native-image, how can I debug it with the IDE?"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Although it is possible to remote debug processes within containers,\n"
+"it might be easier to step-by-step debug native-image by installing Mandrel locally and adding it to the path of the shell process."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Native executable generation is the result of two Java processes that are executed sequentially.\n"
+"The first process is very short and its main job is to set things up for the second process.\n"
+"The second process is the one that takes care of most of the work.\n"
+"The steps to debug one process or the other vary slightly."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Let’s discuss first how to debug the second process,\n"
+"which is the one you most likely to want to debug.\n"
+"The starting point for the second process is the `com.oracle.svm.hosted.NativeImageGeneratorRunner` class.\n"
+"To debug this process, simply add `--debug-attach=*:8000` as an additional build time argument:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"The starting point for the first process is the `com.oracle.svm.driver.NativeImages` class.\n"
+"In GraalVM CE distributions, this first process is a binary, so debugging it in the traditional way with a Java IDE is not possible.\n"
+"However, Mandrel distributions (or locally built GraalVM CE instances) keep this as a normal Java process,\n"
+"so you can remote debug this process by adding the `--vm.agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:8000` as an additional build argument, e.g."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Can I use JFR/JMC to debug or profile native binaries?"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"https://docs.oracle.com/javacomponents/jmc-5-4/jfr-runtime-guide/about.htm#JFRUH170[Java Flight Recorder (JFR)] and\n"
+"https://www.oracle.com/java/technologies/jdk-mission-control.html[JDK Mission Control (JMC)]\n"
+"can be used to profile native binaries since GraalVM CE 21.2.0.\n"
+"However, JFR in GraalVM is currently limited in capabilities compared to HotSpot.\n"
+"The custom event API is fully supported, but some VM level features are unavailable.\n"
+"More events and JFR features will continue to be added in later releases.\n"
+"The following table outlines Native Image JFR support and limitations by version."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "GraalVM Version"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Supports"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Limitations"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "GraalVM CE 21.3 and Mandrel 21.3"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"* Minimal VM Level events\n"
+"* Custom events API\n"
+"* Start recordings upon executabe run or JFR Recording API"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"* No old object sampling\n"
+"* No stacktrace tracing\n"
+"* No event streaming"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "GraalVM CE 22.3 and Mandrel 22.3"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"* Everything from GraalVM CE 21.3\n"
+"* Additional monitor and thread events"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "GraalVM CE for JDK 17/20 and Mandrel 23.0"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"* Everything from GraalVM CE 22.3\n"
+"* Additional monitor, thread, container, and allocation events\n"
+"* Stacktraces\n"
+"* Sampling based method profiling\n"
+"* Event streaming"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "* No old object sampling"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "GraalVM CE for JDK 23 and Mandrel 24.1"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"* Everything from GraalVM CE for JDK 17/20 and Mandrel 23.0\n"
+"* Additional events\n"
+"* Always on allocation profiling (event throttling)\n"
+"* Partial support for old object sampling (no tracking paths to GC roots)\n"
+"* Support for `-XX:FlightRecorderOptions`"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "* Old object sampling is missing path to GC root support"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"To add JFR support to your Quarkus executable, add the application property: `-Dquarkus.native.monitoring=jfr`.\n"
+"E.g."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Once the image is compiled, enable and start JFR via runtime flags: `-XX:+FlightRecorder` and `-XX:StartFlightRecording`. For example:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "For more information about using JFR, see the link:https://www.graalvm.org/{graalvm-docs-version}/reference-manual/native-image/debugging-and-diagnostics/JFR/[GraalVM JDK Flight Recorder (JFR) with Native Image] guide."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "How can we troubleshoot performance problems only reproducible in production?"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"In this situation, switching to JVM mode would be the best thing to try first.\n"
+"If the performance issues continue after switching to JVM mode,\n"
+"you can use more established and mature tooling to figure out the root cause.\n"
+"If the performance issue is limited to native mode only,\n"
+"you might not be able to use `perf`,\n"
+"so JFR is the only way to gather any information in this situation.\n"
+"As JFR support for native expands,\n"
+"the ability to detect root causes of performance issues directly in production will improve."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "What information helps most debug issues that happen either at build-time or run-time?"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"To fix classpath, class initialization or forbidden API errors at build time it's best to use <<native-reports,build time reports>> to understand the closed world universe.\n"
+"A complete picture of the universe, along with the relationships between the different classes and methods will help uncover and fix most of the issues."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"To fix runtime native specific errors,\n"
+"it's best to have <<debug-info,debug info builds>> of the native executables around,\n"
+"so that `gdb` can be hooked up quickly to debug the issue.\n"
+"If you also add local symbols to the debug info builds,\n"
+"you will obtain precise <<profiling,profiling information>> as well."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Build stalled for minutes, barely using any CPU"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "It might so happen that the build gets stalled and even ends up with:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "One of the possible explanations could be a lack of entropy, e.g. on an entropy constrained VM, if such a source is needed as it is the case with Bouncycastle at build time."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "One can check the available entropy on a Linux system with:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "If the amount is not in hundreds, it could be a problem. A possible workaround is to compromise, acceptable for testing, and set:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "The proper solution is to increase the entropy available for the system. That is specific for each OS vendor and virtualization solution though."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "Work around missing CPU features"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "When building on recent machines and running your native executable on older machines, you may see the following failure when starting the application:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"This error message means that the native compilation used more advanced instruction sets, not supported by the CPU running the application.\n"
+"To work around that issue, add the following line to the `application.properties`:"
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"Then, rebuild your native executable.\n"
+"This setting forces the native compilation to use an older instruction set, increasing the chance of compatibility."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid ""
+"To explicitly define the target architecture run `native-image -march=list` to get the supported configurations and then set `-march` to one of them, e.g., `quarkus.native.additional-build-args=-march=x86-64-v4`.\n"
+"If you are targeting an AMD64 host, `-march=x86-64-v2` would work in most cases."
+msgstr ""
+
+#: _versions/3.27/guides/native-reference.adoc
+msgid "The `march` parameter is only available on GraalVM 23+."
+msgstr ""

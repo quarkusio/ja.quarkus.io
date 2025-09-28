@@ -1,0 +1,397 @@
+msgid ""
+msgstr ""
+"Language: ja_JP\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: jekyll-l10n\n"
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid "Getting Started With Reactive"
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid ""
+"_Reactive_ is a set of principles to build robust, efficient, and concurrent applications and systems.\n"
+"These principles let you handle more load than traditional approaches while using the resources (CPU and memory) more efficiently while also reacting to failures gracefully."
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid ""
+"Quarkus is a _Reactive_ framework.\n"
+"Since the beginning, _Reactive_ has been an essential tenet of the Quarkus architecture.\n"
+"It includes many reactive features and offers a broad ecosystem."
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid ""
+"This guide is not an in-depth article about what _Reactive_ is and how Quarkus enables reactive architectures.\n"
+"If you want to read more about these topics, refer to the xref:quarkus-reactive-architecture.adoc[Reactive Architecture guide], which provides an overview of the Quarkus reactive ecosystem."
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid ""
+"In this guide, we will get you started with some reactive features of Quarkus.\n"
+"We are going to implement a simple CRUD application.\n"
+"Yet, unlike in the xref:hibernate-orm-panache.adoc[Hibernate with Panache guide], it uses the reactive features of Quarkus."
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid "This guide will help you with:"
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid "Bootstrapping a reactive CRUD application with Quarkus"
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid "Using Hibernate Reactive with Panache to interact with a database in a reactive fashion"
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid "Using Quarkus REST (formerly RESTEasy Reactive) to implement HTTP API while enforcing the reactive principle"
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid "Packaging and Running the application"
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid "Prerequisites"
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid ""
+"Verify that Maven is using the Java version you expect.\n"
+"If you have multiple JDKs installed, make sure Maven is using the expected one.\n"
+"You can verify which JDK Maven uses by running `mvn --version`."
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid "Imperative vs. Reactive: a question of threads"
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid ""
+"As mentioned above, in this guide, we are going to implement a reactive CRUD application.\n"
+"But you may wonder what the differences and benefits are in comparison to the traditional and imperative model."
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid ""
+"To better understand the contrast, we need to explain the difference between the reactive and imperative execution models.\n"
+"It's essential to comprehend that _Reactive_ is not just a different execution model, but that distinction is necessary to understand this guide."
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid ""
+"In the traditional and imperative approach, frameworks assign a thread to handle the request.\n"
+"So, the whole processing of the request runs on this worker thread.\n"
+"This model does not scale very well.\n"
+"Indeed, to handle multiple concurrent requests, you need multiple threads; and so your application concurrency is constrained by the number of threads.\n"
+"In addition, these threads are blocked as soon as your code interacts with remote services.\n"
+"So, it leads to inefficient usage of the resources, as you may need more threads, and each thread, as they are mapped to OS threads, has a cost in terms of memory and CPU."
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid ""
+"On the other side, the reactive model relies on non-blocking I/Os and a different execution model.\n"
+"Non-blocking I/O provides an efficient way to deal with concurrent I/O.\n"
+"A minimal amount of threads called I/O threads, can handle many concurrent I/O.\n"
+"With such a model, request processing is not delegated to a worker thread but uses these I/O threads directly.It saves memory and CPU as there is no need to create worker threads to handle the requests.\n"
+"It also improves the concurrency as it removes the constraint on the number of threads.\n"
+"Finally, it also improves response time as it reduces the number of thread switches."
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid "From sequential to continuation style"
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid ""
+"So, with the reactive execution model, the requests are processed using I/O threads.\n"
+"But that's not all.\n"
+"An I/O thread can handle multiple concurrent requests.\n"
+"How? Here is the trick and one of the most significant differences between reactive and imperative."
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid ""
+"When processing a request requires interacting with a remote service, like an HTTP API or a database, it does not block the execution while waiting for the response.\n"
+"Instead, it schedules the I/O operation and attaches a continuation, i.e., the request processing remaining code.\n"
+"This continuation can be passed as a callback (a function invoked with the I/O outcome), or use more advanced constructs such as reactive programming or co-routines.\n"
+"Regardless of how the continuation is expressed, the essential aspect is the release of the I/O thread and, as a consequence, the fact that this thread can be used to process another request.\n"
+"When the scheduled I/O completes, the I/O thread executes the continuation, and the processing of the pending request continues."
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid ""
+"So, unlike the imperative model, where I/O blocks the execution, reactive switches to a continuation-based design, where the I/O threads are released, and continuation invoked when the I/Os complete.\n"
+"As a result, the I/O thread can handle multiple concurrent requests, improving the overall concurrency of the application."
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid ""
+"But, there is a catch.\n"
+"We need a way to write continuation-passing code.\n"
+"There are many ways of doing this.\n"
+"In Quarkus, we propose:"
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid "Mutiny - an intuitive and event-driven reactive programming library"
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid "Kotlin co-routines - a way to write asynchronous code in a sequential manner"
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid ""
+"In this guide, we will use Mutiny.\n"
+"To know more about Mutiny, check the xref:mutiny-primer.adoc[Mutiny documentation]."
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid ""
+"Project Loom is coming to the JDK soon and proposes a virtual thread-based model.\n"
+"The Quarkus architecture is ready to support Loom as soon as it's become globally available."
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid "Bootstrapping the Reactive Fruits application"
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid "With this in mind, let's see how we can develop a CRUD application with Quarkus, which will use the I/O thread to handle the HTTP requests, interact with a database, process the result, and write the HTTP response; in other words: a reactive CRUD application."
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid "While we recommend you to follow the step-by-step instructions, you can find the final solution on https://github.com/quarkusio/quarkus-quickstarts/tree/main/hibernate-reactive-panache-quickstart."
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid "First, go to https://code.quarkus.io[code.quarkus.io] and select the following extensions:"
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid "Quarkus REST Jackson"
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid "Hibernate Reactive with Panache"
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid "Reactive PostgreSQL client"
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid ""
+"The last extension is the reactive database driver for PostgreSQL.\n"
+"Hibernate Reactive uses that driver to interact with the database without blocking the caller thread."
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid "Once selected, click on \"Generate your application\", download the zip file, unzip it and open the code in your favorite IDE."
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid "Reactive Panache Entity"
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid "Let's start with the `Fruit` entity.Create the `src/main/java/org/acme/hibernate/orm/panache/Fruit.java` file with the following content:"
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid "Make sure you import the reactive variant of `PanacheEntity`."
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid ""
+"This class represents `Fruits`.\n"
+"It's a straightforward entity with a single field (`name`).\n"
+"Note that it uses `io.quarkus.hibernate.reactive.panache.PanacheEntity`, the reactive variant of `PanacheEntity`.\n"
+"So, behind the scenes, Hibernate uses the execution model we described above.\n"
+"It interacts with the database without blocking the thread.\n"
+"In addition, this reactive `PanacheEntity` proposes a reactive API.\n"
+"We will use this API to implement the REST endpoint."
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid "Before going further, open the `src/main/resources/application.properties` file and add:"
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid "It instructs the application to use PostgreSQL for the database and to handle the database schema generation."
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid "In the same directory, create an `import.sql` file, which inserts a few fruits, so we don't start with an empty database in dev mode:"
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid ""
+"In a terminal, launch the application in dev mode using: `./mvnw quarkus:dev`.\n"
+"Quarkus automatically starts a database instance for you and configure the application. Now we only need to implement the HTTP endpoint."
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid "Reactive Resource"
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid ""
+"Because the interaction with the database is non-blocking and asynchronous, we need to use asynchronous constructs to implement our HTTP resource.\n"
+"Quarkus uses Mutiny as its central reactive programming model.\n"
+"So, it supports returning Mutiny types (`Uni` and `Multi`) from HTTP endpoints.\n"
+"Also, our Fruit Panache entity exposes methods using these types, so we only need to implement the _glue_."
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid "Create the `src/main/java/org/acme/hibernate/orm/panache/FruitResource.java` file with the following content:"
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid ""
+"Let's start with the `getAll` method. The `getAll` method returns all the fruits stored in the database.\n"
+"In the `FruitResource`, add the following code:"
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid "Open http://localhost:8080/fruits to invoke this method:"
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid ""
+"We get the expected JSON array.\n"
+"Quarkus REST automatically maps the list into a JSON Array, except if instructed otherwise."
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid ""
+"Look at the return type; it returns a `Uni` of `List<Fruit>`.\n"
+"`Uni` is an asynchronous type.\n"
+"It's a bit like a future.\n"
+"It's a placeholder that will get its value (item) later.\n"
+"When it receives the item (Mutiny says it _emits_ its item), you can attach some behavior.\n"
+"That's how we express the continuation: get a uni, and when the uni emits its item, execute the rest of the processing."
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid ""
+"Reactive developers may wonder why we can't return a stream of fruits directly.\n"
+"It tends to be a bad idea when dealing with a database.\n"
+"Relational databases do not handle streaming well.\n"
+"It’s a problem of protocols not designed for this use case.\n"
+"So, to stream rows from the database, you need to keep a connection (and sometimes a transaction) open until all the rows are consumed.\n"
+"If you have slow consumers, you break the golden rule of databases: don’t hold connections for too long.\n"
+"Indeed, the number of connections is rather low, and having consumers keeping them for too long will dramatically reduce the concurrency of your application.\n"
+"So, when possible, use a `Uni<List<T>>` and load the content.\n"
+"If you have a large set of results, implement pagination."
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid "Let's continue our API with `getSingle`:"
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid ""
+"In this case, we use `Fruit.findById` to retrieve the fruit.\n"
+"It returns a `Uni`, which will complete when the database has retrieved the row."
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid "The `create` method allows adding a new fruit to the database:"
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid ""
+"The code is a bit more involved.\n"
+"To write to a database, we need a transaction, therefore we use `Panache.withTransaction` to obtain one (asynchronously) and proceed to call the `persist` method.\n"
+"The `persist` method returns a `Uni` that emits the result of the insertion of the fruit in the database.\n"
+"Once the insertion completes (which plays the role of the continuation), we create a `201 CREATED` HTTP response."
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid "If you have https://curl.se/[curl] on your machine, you can try the endpoint using:"
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid "Following the same ideas, you can implement the other CRUD methods."
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid "Testing and Running"
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid ""
+"Testing a reactive application is similar to testing a non-reactive one: use the HTTP endpoint and verify the HTTP responses.\n"
+"The fact that the application is reactive does not change anything."
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid "In https://github.com/quarkusio/quarkus-quickstarts/blob/main/hibernate-reactive-panache-quickstart/src/test/java/org/acme/hibernate/orm/panache/FruitsEndpointTest.java[FruitsEndpointTest.java] you can see how the test for the fruit application can be implemented."
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid "Packaging and running the application does not change either."
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid "You can use the following command as usual:"
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid "or to build a native executable:"
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid "You can also package the application in a container."
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid "To run the application, don’t forget to start a database and provide the configuration to your application."
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid "For example, you can use Docker to run your database:"
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid "Then, launch the application using:"
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid "Or, if you packaged your application as native executable, use:"
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid ""
+"The parameters passed to the application are described in the datasource guide.\n"
+"There are other ways to configure the application - please check the xref:config-reference.adoc#configuration-sources[configuration guide] to have an overview of the possibilities (such as env variable, .env files and so on)."
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid "Going further"
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid ""
+"This guide is a brief introduction to some reactive features offered by Quarkus.\n"
+"Quarkus is a reactive framework, and so offers a lot of reactive features."
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid "If you want to continue on this topic check:"
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid "xref:quarkus-reactive-architecture.adoc[The Quarkus Reactive Architecture]"
+msgstr ""
+
+#: _versions/3.27/guides/getting-started-reactive.adoc
+msgid "xref:mutiny-primer.adoc[Mutiny - an intuitive reactive programming library]"
+msgstr ""

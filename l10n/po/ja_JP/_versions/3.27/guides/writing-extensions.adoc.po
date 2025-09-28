@@ -1,0 +1,3032 @@
+msgid ""
+msgstr ""
+"Language: ja_JP\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: jekyll-l10n\n"
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Writing Your Own Extension"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Quarkus extensions add a new developer focused behavior to the core offering, and consist of two distinct parts, buildtime augmentation and runtime container. The augmentation part is responsible for all metadata processing, such as reading annotations, XML descriptors etc. The output of this augmentation phase is recorded bytecode which is responsible for directly instantiating the relevant runtime services."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"This means that metadata is only processed once at build time, which both saves on startup time, and also on memory\n"
+"usage as the classes etc that are used for processing are not loaded (or even present) in the runtime JVM."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"This is an in-depth documentation, see the xref:building-my-first-extension.adoc[building my first extension] if you need an introduction,\n"
+"or the xref:extension-faq.adoc[frequently asked questions]."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Extension philosophy"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "This section is a work in progress and gathers the philosophy under which extensions should be designed and written."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Why an extension framework"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"Quarkus’s mission is to transform your entire application including the libraries it uses, into an artifact that uses significantly less resources than traditional approaches. These can then be used to build native applications using GraalVM.\n"
+"To do this you need to analyze and understand the full \"closed world\" of the application.\n"
+"Without the full and complete context, the best that can be achieved is partial and limited generic support.\n"
+"By using the Quarkus extension approach, we can bring Java applications in line with memory footprint constrained environments like Kubernetes or cloud platforms."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"The Quarkus extension framework results in significantly improved resource utilization even when GraalVM is not used (e.g. in HotSpot).\n"
+"Let’s list the actions an extension performs:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Gather build time metadata and generate code"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "This part has nothing to do with GraalVM, it is how Quarkus starts frameworks “at build time”"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "The extension framework facilitates reading metadata, scanning classes as well as generating classes as needed"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "A small part of the extension work is executed at runtime via the generated classes, while the bulk of the work is done at build time (called deployment time)"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Enforce opinionated and sensible defaults based on the close world view of the application (e.g. an application with no `@Entity` does not need to start Hibernate ORM)"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "An extension hosts Substrate VM code substitution so that libraries can run on GraalVM"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Most changes are pushed upstream to help the underlying library run on GraalVM"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Not all changes can be pushed upstream, extensions host Substrate VM substitutions - which is a form of code patching - so that libraries can run"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Host Substrate VM code substitution to help dead code elimination based on the application needs"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "This is application dependent and cannot really be shared in the library itself"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "For example, Quarkus optimizes the Hibernate code because it knows it only needs a specific connection pool and cache provider"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Send metadata to GraalVM for example classes in need of reflection"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "This information is not static per library (e.g. Hibernate) but the framework has the semantic knowledge and knows which classes need to have reflection (for example @Entity classes)"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Favor build time work over runtime work"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"As much as possible favor doing work at build time (deployment part of the extension) as opposed to let the framework do work at startup time (runtime).\n"
+"The more is done there, the smaller Quarkus applications using that extension will be and the faster they will load."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "How to expose configuration"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"Quarkus simplifies the most common usages.\n"
+"This means that its defaults might be different from the library it integrates."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"To make the simple experience easiest, unify the configuration in `application.properties` via SmallRye Config.\n"
+"Avoid library specific configuration files, or at least make them optional: e.g. `persistence.xml` for Hibernate ORM is optional."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"Extensions should see the configuration holistically as a Quarkus application instead of focusing on the library experience.\n"
+"For example `quarkus.database.url` and friends are shared between extensions as defining a database access is a shared task (instead of a `hibernate.` property for example).\n"
+"The most useful configuration options should be exposed as `quarkus.[extension].` instead of the natural namespace of the library.\n"
+"Less common properties can live in the library namespace."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"To fully enable the close world assumptions that Quarkus can optimize best, it is better to consider configuration options as build time settled vs overridable at runtime.\n"
+"Of course properties like host, port, password should be overridable at runtime.\n"
+"But many properties like enable caching or setting the JDBC driver can safely require a rebuild of the application."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Static Init Config"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "If the extension provides additional Config Sources and if these are required during Static Init, these must be registered with `StaticInitConfigBuilderBuildItem`. Configuration in Static Init does not scan for additional sources to avoid double initialization at application startup time."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Expose your components via CDI"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"Since CDI is the central programming model when it comes to component composition, frameworks and extensions should expose their components as beans that are easily consumable by user applications.\n"
+"For example, Hibernate ORM exposes `EntityManagerFactory` and `EntityManager` beans, the connection pool exposes `DataSource` beans etc.\n"
+"Extensions must register these bean definitions at build time."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Beans backed by classes"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "An extension can produce an xref:cdi-integration.adoc#additional_bean_build_item[`AdditionalBeanBuildItem`] to instruct the container to read a bean definition from a class as if it was part of the original application:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Bean Class Registered by `AdditionalBeanBuildItem`"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "If a bean registered by an `AdditionalBeanBuildItem` does not specify a scope then `@Dependent` is assumed."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "All other beans can inject such a bean:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Bean Injecting a Bean Produced by an `AdditionalBeanBuildItem`"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "And vice versa - the extension bean can inject application beans and beans provided by other extensions:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Extension Bean Injection Example"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Inject a bean provided by other extension."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Inject all beans matching the type `List<String>`."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Bean initialization"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"Some components may require additional initialization based on information collected during augmentation.\n"
+"The most straightforward solution is to obtain a bean instance and call a method directly from a build step.\n"
+"However, it is _illegal_ to obtain a bean instance during the augmentation phase.\n"
+"The reason is that the CDI container is not started yet.\n"
+"It's started during the <<bootstrap-three-phases,Static init bootstrap phase>>."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "`BUILD_AND_RUN_TIME_FIXED` and `RUN_TIME` config roots can be injected in any bean. `RUN_TIME` config roots should only be injected after the bootstrap though."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"It is possible to invoke a bean method from a <<bytecode-recording,recorder method>> though.\n"
+"If you need to access a bean in a `@Record(STATIC_INIT)` build step then is must either depend on the `BeanContainerBuildItem` or wrap the logic in a `BeanContainerListenerBuildItem`.\n"
+"The reason is simple - we need to make sure the CDI container is fully initialized and started.\n"
+"However, it is safe to expect that the CDI container is fully initialized and running in a `@Record(RUNTIME_INIT)` build step.\n"
+"You can obtain a reference to the container via `CDI.current()` or Quarkus-specific `Arc.container()`."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Don't forget to make sure the bean state guarantees the visibility, e.g. via the `volatile` keyword."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"There is one significant drawback of this \"late initialization\" approach.\n"
+"An _uninitialized_ bean may be accessed by other extensions or application components that are instantiated during bootstrap.\n"
+"We'll cover a more robust solution in the <<synthetic_beans>>."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Default beans"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"A very useful pattern of creating such beans but also giving application code the ability to easily override some beans with custom implementations, is to use\n"
+"the `@DefaultBean` that Quarkus provides.\n"
+"This is best explained with an example."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Let us assume that the Quarkus extension needs to provide a `Tracer` bean which application code is meant to inject into its own beans."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "If for example application code wants to use `Tracer`, but also needs to use a custom `Reporter` bean, such a requirement could easily be done using something like:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "How to Override a Bean Defined by a Library/Quarkus Extension that doesn't use @DefaultBean"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"Although `@DefaultBean` is the recommended approach, it is also possible for application code to override beans provided by an extension by marking beans as a CDI `@Alternative` and including `@Priority` annotation.\n"
+"Let's show a simple example.\n"
+"Suppose we work on an imaginary \"quarkus-parser\" extension and we have a default bean implementation:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "And our extension also consumes this parser:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Now, if a user or even some other extension needs to override the default implementation of the `Parser` the simplest solution is to use CDI `@Alternative` + `@Priority`:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "`MyParser` is an alternative bean."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Enables the alternative. The priority could be any number to override the default bean but if there are multiple alternatives the highest priority wins."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "CDI alternatives are only considered during injection and type-safe resolution. For example the default implementation would still receive observer notifications."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Synthetic beans"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"Sometimes it is very useful to be able to register a synthetic bean.\n"
+"Bean attributes of a synthetic bean are not derived from a java class, method or field.\n"
+"Instead, the attributes are specified by an extension."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"Since the CDI container does not control the instantiation of a synthetic bean the dependency injection and other services (such as interceptors) are not supported.\n"
+"In other words, it's up to the extension to provide all required services to a synthetic bean instance."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"There are several ways to register a <<cdi-integration.adoc#synthetic_beans,synthetic bean>> in Quarkus.\n"
+"In this chapter, we will cover a use case that can be used to initialize extension beans in a safe manner (compared to <<bean_init>>)."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "The `SyntheticBeanBuildItem` can be used to register a synthetic bean:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "whose instance can be easily produced through a <<bytecode-recording,recorder>>,"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "to provide a \"context\" bean that holds all the information collected during augmentation so that the real components do not need any \"late initialization\" because they can inject the context bean directly."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Instance Produced Through Recorder"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "The string value is recorded in the bytecode and used to initialize the instance of `Foo`."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "\"Context\" Holder"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "The \"real\" components can inject the `TestContext` directly."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Some types of extensions"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "There exist multiple stereotypes of extension, let's list a few."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Bare library running"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"This is the less sophisticated extension.\n"
+"It consists of a set of patches to make sure a library runs on GraalVM.\n"
+"If possible, contribute these patches upstream, not in extensions.\n"
+"Second best is to write Substrate VM substitutions, which are patches applied during native image compilation."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Get a framework running"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"A framework at runtime typically reads configuration, scan the classpath and classes for metadata (annotations, getters etc.), build a metamodel on top of which it runs, find options via the service loader pattern, prepare invocation calls (reflection), proxy interfaces, etc. +\n"
+"These operations should be done at build time and the metamodel be passed to the recorder DSL that will generate classes that will be executed at runtime and boot the framework."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Get a CDI portable extension running"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"The CDI portable extension model is very flexible.\n"
+"Too flexible to benefit from the build time boot promoted by Quarkus.\n"
+"Most extension we have seen do not make use of these extreme flexibility capabilities.\n"
+"The way to port a CDI extension to Quarkus is to rewrite it as a Quarkus extension which will define the various beans at build time (deployment time in extension parlance)."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Levels of capability"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Quarkus extensions can do lots of things. The xref:extension-maturity-matrix.adoc[extension maturity matrix] lays out a path through the various capabilities, with a suggested implementation order."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Technical aspect"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Three Phases of Bootstrap and Quarkus Philosophy"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "There are three distinct bootstrap phases of a Quarkus app:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Augmentation"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"This is the first phase, and is done by the <<build-step-processors>>. These processors have access to Jandex annotation\n"
+"information and can parse any descriptors and read annotations, but should not attempt to load any application classes. The output of these\n"
+"build steps is some recorded bytecode, using an extension of the ObjectWeb ASM project called Gizmo(ext/gizmo), that is used to actually bootstrap the application at runtime.\n"
+"Depending on the `io.quarkus.deployment.annotations.ExecutionTime` value of the `@io.quarkus.deployment.annotations.Record` annotation associated with the build step,\n"
+"the step may be run in a different JVM based on the following two modes."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Static Init"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"If bytecode is recorded with `@Record(STATIC_INIT)` then it will be executed from a static init method on the main\n"
+"class. For a native executable build, this code is executed in a normal JVM as part of the native build\n"
+"process, and any retained objects that are produced in this stage will be directly serialized into the native executable via an image mapped file.\n"
+"This means that if a framework can boot in this phase then it will have its booted state directly written to the\n"
+"image, and so the boot code does not need to be executed when the image is started."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "There are some restrictions on what can be done in this stage as the Substrate VM disallows some objects in the native executable. For example you should not attempt to listen on a port or start threads in this phase. In addition, it is disallowed to read run time configuration during static initialization."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"In non-native pure JVM mode, there is no real difference between Static and Runtime Init, except that Static Init is always executed first. This mode benefits from the same build phase augmentation as native mode as the descriptor parsing and annotation scanning are done\n"
+"at build time and any associated class/framework dependencies can be removed from the build output jar. In servers like\n"
+"WildFly, deployment related classes such as XML parsers hang around for the life of the application, using up valuable\n"
+"memory. Quarkus aims to eliminate this, so that the only classes loaded at runtime are actually used at runtime."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"As an example, the only reason that a Quarkus application should load an XML parser is if the user is using XML in their\n"
+"application. Any XML parsing of configuration should be done in the Augmentation phase."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Runtime Init"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"If bytecode is recorded with `@Record(RUNTIME_INIT)` then it is executed from the application's main method. This code\n"
+"will be run on native executable boot. In general as little code as possible should be executed in this phase, and should\n"
+"be restricted to code that needs to open ports etc."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Pushing as much as possible into the `@Record(STATIC_INIT)` phase allows for two different optimizations:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "In both native executable and pure JVM mode this allows the app to start as fast as possible since processing was done during build time. This also minimizes the classes/native code needed in the application to pure runtime related behaviors."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"Another benefit with native executable mode is that Substrate can more easily eliminate features that are not used. If features are directly initialized via bytecode, Substrate can detect that a method is never called and eliminate\n"
+"that method. If config is read at runtime, Substrate cannot reason about the contents of the config and so needs to keep all features in case they are required."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Project setup"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Your extension project should be setup as a multi-module project with two submodules:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "A deployment time submodule that handles the build time processing and bytecode recording."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "A runtime submodule that contains the runtime behavior that will provide the extension behavior in the native executable or runtime JVM."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"Your runtime artifact should depend on `io.quarkus:quarkus-core`, and possibly the runtime artifacts of other Quarkus\n"
+"modules if you want to use functionality provided by them."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"Your deployment time module should depend on `io.quarkus:quarkus-core-deployment`, your runtime artifact,\n"
+"and the deployment artifacts of any other Quarkus extensions your own extension depends on. This is essential, otherwise any transitively\n"
+"pulled in extensions will not provide their full functionality."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "The Maven and Gradle plugins will validate this for you and alert you to any deployment artifacts you might have forgotten to add."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"Under no circumstances can the runtime module depend on a deployment artifact. This would result\n"
+"in pulling all the deployment time code into runtime scope, which defeats the purpose of having the split."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Using Maven"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "You will need to include the `io.quarkus:quarkus-extension-maven-plugin` and configure the `maven-compiler-plugin` to detect the `quarkus-extension-processor` annotation processor to collect and generate the necessary xref:extension-metadata.adoc[Quarkus extension metadata] for the extension artifacts, if you are using the Quarkus parent pom it will automatically inherit the correct configuration."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "You may want to use the `create-extension` mojo of `{quarkus-platform-groupid}:quarkus-maven-plugin` to create these Maven modules - see the next section."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"By convention the deployment time artifact has the `-deployment` suffix, and the runtime artifact\n"
+"has no suffix (and is what the end user adds to their project)."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "The above `maven-compiler-plugin` configuration requires version 3.5+."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "You will also need to configure the `maven-compiler-plugin` of the deployment module to detect the `quarkus-extension-processor` annotation processor."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Create new Quarkus Core extension modules using Maven"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Quarkus provides `create-extension` Maven Mojo to initialize your extension project."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "It will try to auto-detect its options:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "from `quarkus` (Quarkus Core) or `quarkus/extensions` directory, it will use the 'Quarkus Core' extension layout and defaults."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "with `-DgroupId=io.quarkiverse.[extensionId]`, it will use the 'Quarkiverse' extension layout and defaults."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "in other cases it will use the 'Standalone' extension layout and defaults."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "we may introduce other layout types in the future."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "You may not specify any parameter to use the interactive mode: `mvn {quarkus-platform-groupid}:quarkus-maven-plugin:{quarkus-version}:create-extension -N`"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "As and example, let's add a new extension called `my-ext` to the Quarkus source tree:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "By default, the `groupId`, `version`, `quarkusVersion`, `namespaceId`, and `namespaceName` will be consistent with other Quarkus core extensions."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "The extension description is important as it is displayed on https://code.quarkus.io/, when listing extensions with the Quarkus CLI, etc."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "The above sequence of commands does the following:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Creates four new Maven modules:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "`quarkus-my-ext-parent` in the `extensions/my-ext` directory"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "`quarkus-my-ext` in the `extensions/my-ext/runtime` directory"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "`quarkus-my-ext-deployment` in the `extensions/my-ext/deployment` directory; a basic `MyExtProcessor` class is generated in this module."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "`quarkus-my-ext-integration-test` in the `integration-tests/my-ext/deployment` directory; an empty Jakarta REST Resource class and two test classes (for JVM mode and native mode) are generated in this module."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Links these three modules where necessary:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "`quarkus-my-ext-parent` is added to the `<modules>` of `quarkus-extensions-parent`"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "`quarkus-my-ext` is added to the `<dependencyManagement>` of the Quarkus BOM (Bill of Materials) `bom/application/pom.xml`"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "`quarkus-my-ext-deployment` is added to the `<dependencyManagement>` of the Quarkus BOM (Bill of Materials) `bom/application/pom.xml`"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "`quarkus-my-ext-integration-test` is added to the `<modules>` of `quarkus-integration-tests-parent`"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "You also have to fill the xref:extension-metadata.adoc#quarkus-extension-yaml[quarkus-extension.yaml] template file that describe your extension inside the runtime module `src/main/resources/META-INF` folder."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "This is the `quarkus-extension.yaml` template of the `quarkus-agroal` extension, you can use it as an example:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "the name of the extension that will be displayed to users"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "keywords that can be used to find the extension in the extension catalog"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "link to the extension's guide or documentation"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "categories under which the extension should appear on https://code.quarkus.io[code.quarkus.io], could be omitted, in which case the extension will still be listed but not under any specific category"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "maturity status, which could be `stable`, `preview` or `experimental`, evaluated by extension maintainers"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"The `name` parameter of the mojo is optional.\n"
+"If you do not specify it on the command line, the plugin will derive it from `extensionId` by replacing dashes with spaces and uppercasing each token.\n"
+"So you may consider omitting explicit `name` in some cases."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Please refer to https://github.com/quarkusio/quarkus/blob/{quarkus-version}/devtools/maven/src/main/java/io/quarkus/maven/CreateExtensionMojo.java[CreateExtensionMojo JavaDoc] for all the available options of the mojo."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Using Gradle"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"You will need to apply the `io.quarkus.extension` plugin in the `runtime` module of your extension project.\n"
+"The plugin includes the `extensionDescriptor` task that will generate `META-INF/quarkus-extension.properties` and `META-INF/quarkus-extension.yml` files.\n"
+"The plugin also enables the `io.quarkus:quarkus-extension-processor` annotation processor in both `deployment` and `runtime` modules to collect and generate the rest of the xref:extension-metadata.adoc[Quarkus extension metadata].\n"
+"The name of the deployment module can be configured in the plugin by setting the `deploymentModule` property. The property is set to `deployment` by default:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Build Step Processors"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"Work is done at augmentation time by _build steps_ which produce and consume _build items_.  The build steps found in\n"
+"the deployment modules that correspond to the extensions in the project build are automatically wired together and executed\n"
+"to produce the final build artifact(s)."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Build steps"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"A _build step_ is a non-static method which is annotated with the `@io.quarkus.deployment.annotations.BuildStep` annotation.\n"
+"Each build step may <<consuming-values,consume>> items that are produced by earlier stages, and <<producing-values,produce>> items that can be consumed by later stages. Build steps are normally only run when they produce a build item that is\n"
+"ultimately consumed by another step."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"Build steps are normally placed on plain classes within an extension's deployment module.  The classes are automatically\n"
+"instantiated during the augment process and utilize <<injection,injection>>."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Build items"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"Build items are concrete, final subclasses of the abstract `io.quarkus.builder.item.BuildItem` class.  Each build item represents\n"
+"some unit of information that must be passed from one stage to another.  The base `BuildItem` class may not itself be directly\n"
+"subclassed; rather, there are abstract subclasses for each of the kinds of build item subclasses that _may_ be created:\n"
+"<<simple-build-items,simple>>, <<multi-build-items,multi>>, and <<empty-build-items,empty>>."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Think of build items as a way for different extensions to communicate with one another.  For example, a build item can:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "expose the fact that a database configuration exists"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "consume that database configuration (e.g. a connection pool extension or an ORM extension)"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"ask an extension to do work for another extension: e.g. an extension wanting to define a new CDI bean and asking the ArC extension\n"
+"to do so"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "This is a very flexible mechanism."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"`BuildItem` instances should be immutable, as the producer/consumer model does not allow for mutation to be correctly\n"
+"ordered. This is not enforced but failure to adhere to this rule can result in race conditions."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Build steps are executed if and only if they produce build items that are (transitively) needed by other build steps. Make sure your build step produces a build item, otherwise you should probably produce either `ValidationErrorBuildItem` for build validations, or `ArtifactResultBuildItem` for generated artifacts."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Simple build items"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"Simple build items are final classes which extend `io.quarkus.builder.item.SimpleBuildItem`.  Simple build items may only\n"
+"be produced by one step in a given build; if multiple steps in a build declare that they produce the same simple build item,\n"
+"an error is raised.  Any number of build steps may consume a simple build item.  A build step which consumes a simple\n"
+"build item will always run _after_ the build step which produced that item."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Example of a single build item"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Multi build items"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"Multiple or \"multi\" build items are final classes which extend `io.quarkus.builder.item.MultiBuildItem`.  Any number of\n"
+"multi build items of a given class may be produced by any number of steps, but any steps which consume multi build items\n"
+"will only run _after_ every step which can produce them has run."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Example of a multiple build item"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Example of multiple build item usage"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Empty build items"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"Empty build items are final (usually empty) classes which extend `io.quarkus.builder.item.EmptyBuildItem`.\n"
+"They represent build items that don't actually carry any data, and allow such items to be produced and consumed\n"
+"without having to instantiate empty classes.  They cannot themselves be instantiated."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"As they cannot be instantiated, they cannot be injected by any means, nor be returned by a build step (or via a `BuildProducer`).\n"
+"To produce an empty build item you must annotate the build step with `@Produce(MyEmptyBuildItem.class)` and to consume it by `@Consume(MyEmptyBuildItem.class)`."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Example of an empty build item"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"Empty build items can represent \"barriers\" which can impose ordering between steps.  They can also be used in\n"
+"the same way that popular build systems use \"pseudo-targets\", which is to say that the build item can represent a\n"
+"conceptual goal that does not have a concrete representation."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Example of usage of an empty build item in a \"pseudo-target\" style"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Example of usage of an empty build item in a \"barrier\" style"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Validation Error build items"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "They represent build items with validation errors that make the build fail. These build items are consumed during the initialization of the CDI container."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Example of usage of an validation error build item in a \"pseudo-target\" style"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Artifact Result build items"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"They represent build items containing the runnable artifact generated by the build, such as an uberjar or thin jar.\n"
+"These build items can also be used to always execute a build step without needing to produce anything."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Example of build step that is always executed in a \"pseudo-target\" style"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Injection"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Classes which contain build steps support the following types of injection:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Constructor parameter injection"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Field injection"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Method parameter injection (for build step methods only)"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"Build step classes are instantiated and injected for each build step invocation, and are discarded afterwards.  State\n"
+"should only be communicated between build steps by way of build items, even if the steps are on the same class."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"Final fields are not considered for injection, but can be populated by way of constructor parameter injection\n"
+"if desired.  Static fields are never considered for injection."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "The types of values that can be injected include:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "<<build-items,Build items>> produced by previous build steps"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "<<producing-values,Build producers>> to produce items for subsequent build steps"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "<<configuration,Configuration Mapping>> types"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Template objects for <<bytecode-recording,bytecode recording>>"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"Objects which are injected into a build step method or its class _must not_ be used outside that method's\n"
+"execution."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"Injection is resolved at compile time via an annotation processor,\n"
+"and the resulting code does not have permission to inject private fields or invoke private methods."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Producing values"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "A build step may produce values for subsequent steps in several possible ways:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "By returning a <<simple-build-items,simple build item>> or <<multi-build-items,multi build item>> instance"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "By returning a `List` of a multi build item class"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "By injecting a `BuildProducer` of a simple or multi build item class"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"By annotating the method with `@io.quarkus.deployment.annotations.Produce`, giving the class name of an\n"
+"<<empty-build-items,empty build item>>"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"If a simple build item is declared on a build step, it _must_ be produced during that build step, otherwise an error\n"
+"will result.  Build producers, which are injected into steps, _must not_ be used outside that step."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"Note that a `@BuildStep` method will only be called if it produces something that another consumer or the final output\n"
+"requires. If there is no consumer for a particular item then it will not be produced. What is required will depend on\n"
+"the final target that is being produced.  For example, when running in developer mode the final output will not ask\n"
+"for GraalVM-specific build items such as `ReflectiveClassBuildItem`, so methods that only produce these\n"
+"items will not be invoked."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Consuming values"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "A build step may consume values from previous steps in the following ways:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "By injecting a <<simple-build-items,simple build item>>"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "By injecting an `Optional` of a simple build item class"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "By injecting a `List` of a <<multi-build-items,multi build item>> class"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"By annotating the method with `@io.quarkus.deployment.annotations.Consume`, giving the class name of an\n"
+"<<empty-build-items,empty build item>>"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"Normally it is an error for a step which is included to consume a simple build item that is not produced by any other\n"
+"step.  In this way, it is guaranteed that all the declared values will be present and non-`null` when a step is run."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"Sometimes a value isn't necessary for the build to complete, but might inform some behavior of the build step if it is\n"
+"present.  In this case, the value can be optionally injected."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Multi build values are always considered _optional_.  If not present, an empty list will be injected."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Weak value production"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"Normally a build step is included whenever it produces any build item which is in turn consumed by any other build step.  In this way,\n"
+"only the steps necessary to produce the final artifact(s) are included, and steps which pertain to extensions which are\n"
+"not installed or which only produce build items which are not relevant for the given artifact type are excluded."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"For cases where this is not desired behavior, the `@io.quarkus.deployment.annotations.Weak` annotation may be used.  This\n"
+"annotation indicates that the build step should not automatically be included solely on the basis of producing the annotated value."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Example of producing a build item weakly"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "This method (not provided in this example) would generate the class using the ASM API."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"Certain types of build items are generally always consumed, such as generated classes or resources.\n"
+"An extension might produce a build item along with a generated class to facilitate the usage\n"
+"of that build item.  Such a build step would use the `@Weak` annotation on the generated class build item, while normally\n"
+"producing the other build item.  If the other build item is ultimately consumed by something, then the step would run\n"
+"and the class would be generated.  If nothing consumes the other build item, the step would not be included in the build\n"
+"process."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"In the example above, `GeneratedClassBuildItem` would only be produced if `ExecutorClassBuildItem` is consumed by\n"
+"some other build step."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"Note that when using <<bytecode-recording,bytecode recording>>, the implicitly generated class can be declared to be weak by\n"
+"using the `optional` attribute of the `@io.quarkus.deployment.annotations.Record` annotation."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Example of using a bytecode recorder where the generated class is weakly produced"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Note the `optional` attribute."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "This example is using recorder proxies; see the section on <<bytecode-recording,bytecode recording>> for more information."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Application Archives"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"The `@BuildStep` annotation can also register marker files that determine which archives on the class path are considered\n"
+"to be 'Application Archives', and will therefore get indexed. This is done via the `applicationArchiveMarkers`. For\n"
+"example the ArC extension registers `META-INF/beans.xml`, which means that all archives on the class path with a `beans.xml`\n"
+"file will be indexed."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Using Thread's Context Class Loader"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"The build step will be run with a TCCL that can load user classes from the deployment in a transformer-safe way.\n"
+"This class loader only lasts for the life of the augmentation, and is discarded afterwards.\n"
+"The classes will be loaded again in a different class loader at runtime.\n"
+"This means that loading a class during augmentation does not stop it from being transformed when running in the development/test mode."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Adding external JARs to the indexer with IndexDependencyBuildItem"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"The index of scanned classes will not automatically include your external class dependencies.\n"
+"To add dependencies, create a `@BuildStep` that produces `IndexDependencyBuildItem` objects, for a `groupId` and `artifactId`."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "It is important to specify all the required artifacts to be added to the indexer. No artifacts are implicitly added transitively."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "The `Amazon Alexa` extension adds dependent libraries from the Alexa SDK that are used in Jackson JSON transformations, in order for the reflective classes to identified and included at `BUILD_TIME`."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "With the artifacts added to the `Jandex` indexer, you can now search the index to identify classes implementing an interface, subclasses of a specific class, or classes with a target annotation."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"For example, the `Jackson` extension uses code like below to search for annotations used in JSON deserialization,\n"
+"and add them to the reflective hierarchy for `BUILD_TIME` analysis."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Visualizing build step dependencies"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"It can occasionally be useful to see a visual representation of the interactions between the various build steps. For such cases, adding `-Dquarkus.builder.graph-output=build.dot` when building an application\n"
+"will result in the creation of the `build.dot` file in the project's root directory. See link:https://graphviz.org/resources/[this] for a list of software that can open the file and show the actual visual representation."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Configuration"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"Configuration in Quarkus is based on https://smallrye.io/smallrye-config/Main/[SmallRye Config]. All features provided\n"
+"by https://smallrye.io/smallrye-config/Main/[SmallRye Config] are also available in Quarkus."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"Extensions must use https://smallrye.io/smallrye-config/Main/config/mappings/[SmallRye Config @ConfigMapping] to map\n"
+"the configuration required by the Extension. This will allow Quarkus to automatically expose an instance of the mapping\n"
+"to each configuration phase and generate the configuration documentation."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Config Phases"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"Configuration mappings are strictly bound by configuration phase, and attempting to access a configuration mapping from\n"
+"outside its corresponding phase will result in an error. They dictate when its contained keys are read from the\n"
+"configuration, and when they are available to applications. The phases defined by\n"
+"`io.quarkus.runtime.annotations.ConfigPhase` are as follows:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Phase name"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Read & avail. at build time"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Avail. at run time"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Read during static init"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Re-read during startup (native executable)"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Notes"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "BUILD_TIME"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "✓"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "✗"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Appropriate for things which affect build."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "BUILD_AND_RUN_TIME_FIXED"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Appropriate for things which affect build and must be visible for run time code.  Not read from config at run time."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "RUN_TIME"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Not available at build, read at start in all modes."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "For all cases other than the `BUILD_TIME` case, the configuration mapping interface and all the configuration groups and types contained therein must be located in, or reachable from, the extension's run time artifact. Configuration mappings of phase `BUILD_TIME` may be located in or reachable from either of the extension's run time or deployment artifacts."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Configuration Example"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"A configuration property name can be split into segments. For example, a property name like\n"
+"`quarkus.log.file.enable` can be split into the following segments:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "`quarkus` - a namespace claimed by Quarkus which is a prefix for `@ConfigMapping` interfaces,"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "`log` - a name segment which corresponds to the prefix set in the interface annotated with `@ConfigMapping`,"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "`file` - a name segment which corresponds to the `file` field in this class,"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "`enable` - a name segment which corresponds to `enable` field in `FileConfig`."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"The `@ConfigMapping` annotation indicates that the interface is a configuration mapping, in this case one which\n"
+"corresponds to a `quarkus.log` segment."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "The `@ConfigRoot` annotation indicated to which Config phase, the configuration applies to."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"Here the `LoggingProcessor` injects a `LogConfiguration` instance automatically by detecting the `@ConfigRoot`\n"
+"annotation."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "A corresponding `application.properties` for the above example could be:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Since `format` is not defined in these properties, the default value from `@WithDefault` will be used instead."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"A configuration mapping name can contain an extra suffix segment for the case where there are configuration\n"
+"mappings for multiple <<config-phases>>. Classes which correspond to the `BUILD_TIME` and `BUILD_AND_RUN_TIME_FIXED`\n"
+"may end with `BuildTimeConfig` or `BuildTimeConfiguration`, classes which correspond to the `RUN_TIME` phase\n"
+"may end with `RuntimeConfig`, `RunTimeConfig`, `RuntimeConfiguration` or `RunTimeConfiguration`."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Configuration Reference Documentation"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"The configuration is an important part of each extension and therefore needs to be properly documented. Each\n"
+"configuration property should have a proper Javadoc comment."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"While it is handy to have the documentation available when coding, the configuration documentation must also be\n"
+"available in the extension guides. The Quarkus build automatically generates the configuration documentation based on\n"
+"the Javadoc comments, but it needs to be explicitly included in each guide."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Writing the documentation"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Each configuration property, requires a Javadoc explaining its purpose."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "The first sentence should be meaningful and self-contained as it is included in the summary table."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"While standard Javadoc comments are perfectly fine for simple documentation (recommended even), AsciiDoc is more\n"
+"suitable for tips, source code extracts, lists and more:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"To use AsciiDoc, the Javadoc comment must be annotated with `@asciidoclet` tag. This tag serves two purposes: it is\n"
+"used as a marker for Quarkus generation tool, but it is also used by the `javadoc` process for the Javadoc generation."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "A more detailed example:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"For indentation to be respected in the Javadoc comment (list items spread on multiple lines or indented\n"
+"source code), the automatic Eclipse formatter must be disabled (the formatter is automatically included in the build),\n"
+"with the markers `// @formatter:off`/`// @formatter:on`. These require separate comments and a mandatory space after the\n"
+"`//` marker."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"Open blocks (`--`) are not supported in the AsciiDoc documentation. All the other types of blocks\n"
+"(source, admonitions...) are supported."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"By default, the documentation generator will use the hyphenated field name as the key of a `java.util.Map`. Use the\n"
+"`io.quarkus.runtime.annotations.ConfigDocMapKey` annotation to override the behaviour."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "This will generate a configuration map key named `quarkus.some.\"cache-name\"` instead of `quarkus.some.\"namespace\"`."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "It is possible to write a textual explanation for the documentation default value, this is useful when it is generated: `@ConfigDocDefault(\"explain how this is generated\")`."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "`@ConfigDocEnumValue` gives a way to explicitly customize the string displayed in the documentation when listing accepted values for an enum."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Writing section documentation"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "To generate a configuration section of a given group, use the `@ConfigDocSection` annotation:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"This will add a section documentation for the `configGroup` config item in the generated documentation. The section\n"
+"title and introduction will be derived from the javadoc of the configuration item. The first sentence from the javadoc\n"
+"is considered as the section title and the remaining sentences used as section introduction."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Generating the documentation"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "To generate the documentation:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Execute `./mvnw -DquicklyDocs`"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Can be executed globally or in a specific extension directory (e.g. `extensions/mailer`)."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "The documentation is generated in the global `target/asciidoc/generated/config/` located at the root of the project."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Including the documentation in the extension guide"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "To include the generated configuration reference documentation in a guide, use:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "To include only a specific config group:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"For example, the `io.quarkus.vertx.http.runtime.FormAuthConfig` configuration group will be generated in a file named\n"
+"`quarkus-vertx-http-config-group-form-auth-config.adoc`."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "A few recommendations:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "`opts=optional` is mandatory to not fail the build if only part of the configuration documentation has been generated."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "The documentation is generated with a title level of 2 (i.e. `==`). It may need an adjustment with `leveloffset=+N`."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "The whole configuration documentation should not be included in the middle of the guide."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "If the guide includes an `application.properties` example, a tip must be included just below the code snippet:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "And at the end of the guide, the extensive configuration documentation:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "All documentation should be generated and validated before being committed."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Conditional Step Inclusion"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"It is possible to only include a given `@BuildStep` under certain conditions.  The `@BuildStep` annotation\n"
+"has two optional parameters: `onlyIf` and `onlyIfNot`.  These parameters can be set to one or more classes\n"
+"which implement `BooleanSupplier`.  The build step will only be included when the method returns\n"
+"`true` (for `onlyIf`) or `false` (for `onlyIfNot`)."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"The condition class can inject <<configuration,configuration mappings>> as long as they belong to\n"
+"a build-time phase.  Run time configuration is not available for condition classes."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"The condition class may also inject a value of type `io.quarkus.runtime.LaunchMode`.\n"
+"Constructor parameter and field injection is supported."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "An example of a conditional build step"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"If you need to make your build step conditional on the presence or absence of another extension, you can\n"
+"use <<capabilities>> for that."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "You can also apply a set of conditions to all build steps in a given class with `@BuildSteps`:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Class-wide condition for build step with @BuildSteps"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "This condition will apply to all methods defined in `MyDevModeProcessor`"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "The main build step will only be executed in dev mode."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "The other build step will only be executed in dev mode."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Generating Bytecode"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Bytecode Recording"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"One of the main outputs of the build process is recorded bytecode. This bytecode actually sets up the runtime environment. For example, in order to start Undertow, the resulting application will have some bytecode that directly registers all\n"
+"Servlet instances and then starts Undertow."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"As writing bytecode directly is complex, this is instead done via bytecode recorders. At deployment time,\n"
+"invocations are made on recorder objects that contain the actual runtime logic, but instead of these invocations\n"
+"proceeding as normal they are intercepted and recorded (hence the name). This recording is then used to generate bytecode\n"
+"that performs the same sequence of invocations at runtime. This is essentially a form of deferred execution where invocations\n"
+"made at deployment time get deferred until runtime."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Let's look at the classic 'Hello World' type example. To do this the Quarkus way we would create a recorder as follows:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "And then create a build step that uses this recorder:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"When this build step is run nothing is printed to the console. This is because the `HelloRecorder` that is injected is\n"
+"actually a proxy that records all invocations. Instead, if we run the resulting Quarkus program we will see 'Hello World'\n"
+"printed to the console."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"Methods on a recorder can return a value, which must be proxiable (if you want to return a non-proxiable item wrap it\n"
+"in `io.quarkus.runtime.RuntimeValue`). These proxies may not be invoked directly, however they can be passed\n"
+"into other recorder methods. This can be any recorder method, including from other `@BuildStep` methods, so a common pattern\n"
+"is to produce `BuildItem` instances that wrap the results of these recorder invocations."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"For instance, in order to make arbitrary changes to a Servlet deployment Undertow has a `ServletExtensionBuildItem`,\n"
+"which is a `MultiBuildItem` that wraps a `ServletExtension` instance. I can return a `ServletExtension` from a recorder\n"
+"in another module, and Undertow will consume it and pass it into the recorder method that starts Undertow."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"At runtime the bytecode will be invoked in the order it is generated. This means that build step dependencies implicitly\n"
+"control the order that generated bytecode is run. In the example above we know that the bytecode that produces a\n"
+"`ServletExtensionBuildItem` will be run before the bytecode that consumes it."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "The following objects can be passed to recorders:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Primitives"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "String"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Class<?> objects"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Objects returned from a previous recorder invocation"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Objects with a no-arg constructor and getter/setters for all properties (or public fields)"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Objects with a constructor annotated with `@RecordableConstructor` with parameter names that match field names"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Any arbitrary object via the `io.quarkus.deployment.recording.RecorderContext#registerSubstitution(Class, Class, Class)` mechanism"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Arrays, Lists and Maps of the above"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "In cases where some fields of an object to be recorded should be ignored (i.e. the value that being at build time should not be reflected at runtime), the `@IgnoreProperty` can be placed on the field."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "If the class cannot depend on Quarkus, then Quarkus can use any custom annotation, as long as the extension implements the `io.quarkus.deployment.recording.RecordingAnnotationsProvider` SPI."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "This same SPI can also be used to provide a custom annotation that will substitute for `@RecordableConstructor`."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Injecting Configuration into Recorders"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"Configuration objects with phase `RUNTIME` or `BUILD_AND_RUNTIME_FIXED` can be injected into recorders via constructor\n"
+"injection. The constructor requires a parameter for each configuration object type. If the Configuration object type is\n"
+"declared to be in the `RUNTIME` phase, it must be wrapped in a `RuntimeValue<>` type."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "If the recorder has multiple constructors you can annotate the one you want Quarkus to use with `@Inject`."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "RecorderContext"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"`io.quarkus.deployment.recording.RecorderContext` provides some convenience methods to enhance bytecode recording,\n"
+"this includes the ability to register creation functions for classes without no-arg constructors, to register an object\n"
+"substitution (basically a transformer from a non-serializable object to a serializable one and vice versa), and to create\n"
+"a class proxy. This interface can be directly injected as a method parameter into any `@Record` method."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"Calling `classProxy` with a given fully-qualified class name will create a `Class` instance that can be passed into a recorder\n"
+"method, and at runtime will be substituted with the class whose name was passed in to `classProxy()`.\n"
+"However, this method should not be needed in most use cases because directly loading deployment/application classes at processing time in build steps is safe.\n"
+"Therefore, this method is deprecated.\n"
+"Nonetheless, there are some use cases where this method comes in handy, such as referring to classes that were generated in previous build steps using `GeneratedClassBuildItem`."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Printing step execution time"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"At times, it can be useful to know how the exact time each startup task (which is the result of each bytecode recording) takes when the application is run.\n"
+"The simplest way to determine this information is to launch the Quarkus application with the `-Dquarkus.debug.print-startup-times=true` system property.\n"
+"The output will look something like:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Using Gizmo"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"In some scenarios, more significant manipulation of bytecode may be needed.\n"
+"If bytecode recording isn't sufficient, link:https://github.com/quarkusio/gizmo/blob/main/USAGE.adoc[Gizmo] is a convenient alternative to ASM, with a higher-level API."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Runtime Classpath check"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"Extensions often need a way to determine whether a given class is part of the application's runtime classpath.\n"
+"The proper way for an extension to perform this check is to use `io.quarkus.bootstrap.classloading.QuarkusClassLoader.isClassPresentAtRuntime`."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Generating Resources"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "It is possible to generate resources using extensions, in some scenarios you need to generate a resource into `META-INF` directory, the resource can be a service for SPI or a simple HTML, CSS, Javascript files."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Producing a SPI service implementation as a resource in META-INF/services"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Producing a static resource (e.g., JavaScript file) served by Vertx"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Key Points"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "**`GeneratedResourceBuildItem`**"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Generates resources that are persisted in production mode."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "In development and other non-production modes, the resources are kept in memory and loaded using the `QuarkusClassLoader`."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "**`GeneratedStaticResourceBuildItem`**"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Generates static resources (e.g., files like JavaScript, HTML, or CSS) served by Vertx."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "In development mode, Quarkus serves these resources using a Vertx handler backed by a classloader-based filesystem."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Differences Between `GeneratedResourceBuildItem` and `GeneratedStaticResourceBuildItem`"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "While both are used to generate resources, their purposes and behaviors differ:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "**`GeneratedResourceBuildItem`:**"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Used for resources required at runtime (e.g., SPI service definitions)."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Persisted only in production mode; otherwise, stored in memory."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "**`GeneratedStaticResourceBuildItem`:**"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Designed for serving static resources via HTTP (e.g., JavaScript or CSS files)."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "In development mode, these resources are served dynamically using Vertx."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Generates a `GeneratedResourceBuildItem`."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Generates a `AdditionalStaticResourceBuildItem` only on normal mode."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "By using these build items appropriately, you can generate and manage resources effectively within your Quarkus extension."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Contexts and Dependency Injection"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "The xref:cdi-integration.adoc[CDI integration guide] has more detail on common CDI-related use cases, and example code for solutions."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Extension Points"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"As a CDI based runtime, Quarkus extensions often make CDI beans available as part of the extension behavior.\n"
+"However, Quarkus DI solution does not support CDI Portable Extensions.\n"
+"Instead, Quarkus extensions can make use of various xref:cdi-reference.adoc[Build Time Extension Points]."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Quarkus Dev UI"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "You can make your extension support the xref:dev-ui.adoc[Quarkus Dev UI] for a greater developer experience."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Extension-defined endpoints"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"Your extension can add additional, non-application endpoints to be served alongside endpoints\n"
+"for Health, Metrics, OpenAPI, Swagger UI, etc."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Use a `NonApplicationRootPathBuildItem` to define an endpoint:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"Note that the path above does not start with a '/', indicating it is a relative path. The above\n"
+"endpoint will be served relative to the configured non-application endpoint root. The non-application\n"
+"endpoint root is `/q` by default, which means the resulting endpoint will be found at `/q/custom-endpoint`."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"Absolute paths are handled differently. If the above called `route(\"/custom-endpoint\")`, the resulting\n"
+"endpoint will be found at `/custom-endpoint`."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "If an extension needs nested non-application endpoints:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Given a default non-application endpoint root of `/q`, this will create an endpoint at `/q/custom-endpoint/deep`."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"Absolute paths also have an impact on nested endpoints. If the above called `nestedRoute(\"custom-endpoint\", \"/deep\")`,\n"
+"the resulting endpoint will be found at `/deep`."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"Refer to the xref:all-config.adoc#quarkus-vertx-http_quarkus-http-non-application-root-path[Quarkus Vertx HTTP configuration reference]\n"
+"for details on how the non-application root path is configured."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Extension Health Check"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Health checks are provided via the `quarkus-smallrye-health` extension. It provides both liveness and readiness checks capabilities."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "When writing an extension, it's beneficial to provide health checks for the extension, that can be automatically included without the developer needing to write their own."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "In order to provide a health check, you should do the following:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"Import the `quarkus-smallrye-health` extension as an **optional** dependency in your runtime module so it will not impact the size of the application if\n"
+"health check is not included."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"Create your health check following the xref:smallrye-health.adoc[SmallRye Health] guide. We advise providing only\n"
+"readiness check for an extension (liveness check is designed to express the fact that an application is up and needs to be lightweight)."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Import the `quarkus-smallrye-health-spi` library in your deployment module."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Add a build step in your deployment module that produces a `HealthBuildItem`."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Add a way to disable the extension health check via a config item `quarkus.<extension>.health.enabled` that should be enabled by default."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Following is an example from the Agroal extension that provides a `DataSourceHealthCheck` to validate the readiness of a datasource."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Extension Metrics"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"The `quarkus-micrometer` extension and the `quarkus-smallrye-metrics` extension provide support for collecting metrics.\n"
+"As a compatibility note, the `quarkus-micrometer` extension adapts the MP Metrics API to Micrometer library primitives, so the `quarkus-micrometer` extension can be enabled without breaking code that relies on the MP Metrics API.\n"
+"Note that the metrics emitted by Micrometer are different, see the `quarkus-micrometer` extension documentation for more information."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "The compatibility layer for MP Metrics APIs will move to a different extension in the future."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "There are two broad patterns that extensions can use to interact with an optional metrics extension to add their own metrics:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Consumer pattern: An extension declares a `MetricsFactoryConsumerBuildItem` and uses that to provide a bytecode recorder to the metrics extension. When the metrics extension has initialized, it will iterate over registered consumers to initialize them with a `MetricsFactory`. This factory can be used to declare API-agnostic metrics, which can be a good fit for extensions that provide an instrumentable object for gathering statistics (e.g. Hibernate's `Statistics` class)."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Binder pattern: An extension can opt to use completely different gathering implementations depending on the metrics system. An `Optional<MetricsCapabilityBuildItem> metricsCapability` build step parameter can be used to declare or otherwise initialize API-specific metrics based on the active metrics extension (e.g. \"smallrye-metrics\" or \"micrometer\"). This pattern can be combined with the consumer pattern by using `MetricsFactory::metricsSystemSupported()` to test the active metrics extension within the recorder."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Remember that support for metrics is optional. Extensions can use an `Optional<MetricsCapabilityBuildItem> metricsCapability` parameter in their build step to test for the presence of an enabled metrics extension. Consider using additional configuration to control behavior of metrics. Datasource metrics can be expensive, for example, so additional configuration flags are used enable metrics collection on individual datasources."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "When adding metrics for your extension, you may find yourself in one of the following situations:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "An underlying library used by the extension is using a specific Metrics API directly (either MP Metrics, Micrometer, or some other)."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "An underlying library uses its own mechanism for collecting metrics and makes them available at runtime using its own API, e.g. Hibernate's `Statistics` class, or Vert.x `MetricsOptions`."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "An underlying library does not provide metrics (or there is no library at all) and you want to add instrumentation."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Case 1: The library uses a metrics library directly"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "If the library directly uses a metrics API, there are two options:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Use an `Optional<MetricsCapabilityBuildItem> metricsCapability` parameter to test which metrics API is supported (e.g. \"smallrye-metrics\" or \"micrometer\") in your build step, and use that to selectively declare or initialize API-specific beans or build items."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Create a separate build step that consumes a `MetricsFactory`, and use the `MetricsFactory::metricsSystemSupported()` method within the bytecode recorder to initialize required resources if the desired metrics API is supported (e.g. \"smallrye-metrics\" or \"micrometer\")."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Extensions may need to provide a fallback if there is no active metrics extension or the extension doesn't support the API required by the library."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Case 2: The library provides its own metric API"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "There are two examples of a library providing its own metrics API:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "The extension defines an instrumentable object as Agroal does with `io.agroal.api.AgroalDataSourceMetrics`, or"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "The extension provides its own abstraction of metrics, as Jaeger does with `io.jaegertracing.spi.MetricsFactory`."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Observing instrumentable objects"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Let's take the instrumentable object (`io.agroal.api.AgroalDataSourceMetrics`) case first. In this case, you can do the following:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Define a `BuildStep` that produces a `MetricsFactoryConsumerBuildItem` that uses a `RUNTIME_INIT` or `STATIC_INIT` Recorder to define a `MetricsFactory` consumer. For example, the following creates a `MetricsFactoryConsumerBuildItem` if and only if metrics are enabled both for Agroal generally, and for a datasource specifically:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "The associated recorder should use the provided `MetricsFactory` to register metrics. For Agroal, this means using the `MetricFactory` API to observe `io.agroal.api.AgroalDataSourceMetrics` methods. For example:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "The `MetricsFactory` provides a fluid builder for registration of metrics, with the final step constructing gauges or counters based on a `Supplier` or `ToDoubleFunction`. Timers can either wrap `Callable`, `Runnable`, or `Supplier` implementations, or can use a `TimeRecorder` to accumulate chunks of time. The underlying metrics extension will create appropriate artifacts to observe or measure the defined functions."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Using a Metrics API-specific implementation"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Using metrics-API specific implementations may be preferred in some cases. Jaeger, for example, defines its own metrics interface, `io.jaegertracing.spi.MetricsFactory`, that it uses to define counters and gauges. A direct mapping from that interface to the metrics system will be the most efficient. In this case, it is important to isolate these specialized implementations and to avoid eager classloading to ensure the metrics API remains an optional, compile-time dependency."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "`Optional<MetricsCapabilityBuildItem> metricsCapability` can be used in the build step to selectively control initialization of beans or the production of other build items. The Jaeger extension, for example, can use the following to control initialization of specialized Metrics API adapters:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "+"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "A recorder consuming a `MetricsFactory` can use `MetricsFactory::metricsSystemSupported()` can be used to control initialization of metrics objects during bytecode recording in a similar way."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Case 3: It is necessary to collect metrics within the extension code"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "To define your own metrics from scratch, you have two basic options: Use the generic `MetricFactory` builders, or follow the binder pattern, and create instrumentation specific to the enabled metrics extension."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "To use the extension-agnostic `MetricFactory` API, your processor can define a `BuildStep` that produces a `MetricsFactoryConsumerBuildItem` that uses a `RUNTIME_INIT` or `STATIC_INIT` Recorder to define a `MetricsFactory` consumer."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"+\n"
+"- The associated recorder should use the provided `MetricsFactory` to register metrics, for example"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Remember that metrics extensions are optional. Keep metrics-related initialization isolated from other setup for your extension, and structure your code to avoid eager imports of metrics APIs. Gathering metrics can also be expensive. Consider using additional extension-specific configuration to control behavior of metrics if the presence/absence of metrics support isn't sufficient."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Customizing JSON handling from an extension"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Extensions often need to register serializers and/or deserializers for types the extension provides."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"For this, both Jackson and JSON-B extensions provide a way to register serializer/deserializer from within an\n"
+"extension deployment module."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Keep in mind that not everybody will need JSON, so you need to make it optional."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"If an extension intends to provide JSON related customization,\n"
+"it is strongly advised to provide customization for both Jackson and JSON-B."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Customizing Jackson"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "First, add an *optional* dependency to `quarkus-jackson` on your extension's runtime module."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Then create a serializer or a deserializer (or both) for Jackson, an example of which can be seen in the `mongodb-panache` extension."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Add a dependency to `quarkus-jackson-spi` on your extension's deployment module."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"Add a build step to your processor to register a Jackson module via the `JacksonModuleBuildItem`.\n"
+"You need to name your module in a unique way across all Jackson modules."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "The Jackson extension will then use the produced build item to register a module within Jackson automatically."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"If you need more customization capabilities than registering a module,\n"
+"you can produce a CDI bean that implements `io.quarkus.jackson.ObjectMapperCustomizer` via an `AdditionalBeanBuildItem`.\n"
+"More info about customizing Jackson can be found on the JSON guide xref:rest-json.adoc#json[Configuring JSON support]"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Customizing JSON-B"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "First, add an *optional* dependency to `quarkus-jsonb` on your extension's runtime module."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Then create a serializer and/or a deserializer for JSON-B, an example of which can be seen in the `mongodb-panache` extension."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Add a dependency to `quarkus-jsonb-spi` on your extension's deployment module."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Add a build step to your processor to register the serializer via the `JsonbSerializerBuildItem`."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "The JSON-B extension will then use the produced build item to register your serializer/deserializer automatically."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"If you need more customization capabilities than registering a serializer or a deserializer,\n"
+"you can produce a CDI bean that implements `io.quarkus.jsonb.JsonbConfigCustomizer` via an `AdditionalBeanBuildItem`.\n"
+"More info about customizing JSON-B can be found on the JSON guide xref:rest-json.adoc#json[Configuring JSON support]"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Integrating with Development Mode"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "There are various APIS that you can use to integrate with development mode, and to get information about the current state."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Handling restarts"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"When Quarkus is starting the `io.quarkus.deployment.builditem.LiveReloadBuildItem` is guaranteed to be present that gives\n"
+"information about this start, in particular:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Is this a clean start or a live reload"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "If this is a live reload which changed files / classes triggered the reload"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"It also provides a global context map you can use to store information between restarts, without needing to resort to\n"
+"static fields."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Here is an example of a build step that persists context across live reloads:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "You can retrieve the context from `LiveReloadBuildItem`. This call returns `null` if there is no context for the specified type; otherwise, it returns the stored instance from a previous live reload execution."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "You can check if this is the first execution (not a live reload)."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "The `LiveReloadBuildItem#setContextObject` method allows you to set a context across live reloads."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Triggering Live Reload"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"Live reload is generally triggered by an HTTP request, however not all applications are HTTP applications and some extensions\n"
+"may want to trigger live reload based on other events. To do this you need to implement `io.quarkus.dev.spi.HotReplacementSetup`\n"
+"in your runtime module, and add a `META-INF/services/io.quarkus.dev.spi.HotReplacementSetup` that lists your implementation."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"On startup the `setupHotDeployment` method will be called, and you can use the provided `io.quarkus.dev.spi.HotReplacementContext`\n"
+"to initiate a scan for changed files."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Dev Services"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"Where extensions use an external service, adding a Dev Service can improve the user experience in development and test modes.\n"
+"See xref:extension-writing-dev-service.adoc[how to write a Dev Service] for more details."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Testing Extensions"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"Testing of Quarkus extensions should be done with the `io.quarkus.test.QuarkusUnitTest` JUnit 5 extension.\n"
+"This extension allows for Arquillian-style tests that test specific functionalities.\n"
+"It is not intended for testing user applications, as this should be done via `io.quarkus.test.junit.QuarkusTest`.\n"
+"The main difference is that `QuarkusTest` simply boots the application once at the start of the run, while `QuarkusUnitTest` deploys a custom\n"
+"Quarkus application for each test class."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"These tests should be placed in the deployment module, if additional Quarkus modules are required for testing\n"
+"their deployment modules should also be added as test scoped dependencies."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Note that `QuarkusUnitTest` is in the `quarkus-junit5-internal` module."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "An example test class may look like:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "The `QuarkusUnitTest` extension must be used with a static field. If used with a non-static field, the test application is not started."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "This producer is used to build the application to be tested. It uses Shrinkwrap to create a JavaArchive to test"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "It is possible to inject beans from our test deployment directly into the test case"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "This method directly invokes the health check Servlet and verifies the response"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "This method uses the injected health check bean to verify it is returning the expected result"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "If you want to test that an extension properly fails at build time, use the `setExpectedException` method:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "This tells JUnit that the Quarkus deployment should fail with a specific exception"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Testing hot reload"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"It is also possible to write tests that verify an extension works correctly in development mode and can correctly\n"
+"handle updates."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"For most extensions this will just work 'out of the box', however it is still a good idea to have a smoke test to\n"
+"verify that this functionality is working as expected. To test this we use `QuarkusDevModeTest`:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"This starts the deployment, your test can modify it as part of the test suite. Quarkus will be restarted between\n"
+"each test method so every method starts with a clean deployment."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"This method allows you to modify the source of a class file. The old source is passed into the function, and the updated\n"
+"source is returned."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"This method adds a new class file to the deployment. The source that is used will be the original source that is part\n"
+"of the current project."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "This method modifies a static resource"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "This method adds a new static resource"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Native Executable Support"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"There Quarkus provides a lot of build items that control aspects of the native executable build. This allows for extensions\n"
+"to programmatically perform tasks such as registering classes for reflection or adding static resources to the native\n"
+"executable. Some of these build items are listed below:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "`io.quarkus.deployment.builditem.nativeimage.NativeImageResourceBuildItem`"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Includes static resources into the native executable."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "`io.quarkus.deployment.builditem.nativeimage.NativeImageResourceDirectoryBuildItem`"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Includes directory's static resources into the native executable."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "`io.quarkus.deployment.builditem.nativeimage.RuntimeReinitializedClassBuildItem`"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "A class that will be reinitialized at runtime by Substrate. This will result in the static initializer running twice."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "`io.quarkus.deployment.builditem.nativeimage.NativeImageSystemPropertyBuildItem`"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "A system property that will be set at native executable build time."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "`io.quarkus.deployment.builditem.nativeimage.NativeImageResourceBundleBuildItem`"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Includes a resource bundle in the native executable."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "`io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem`"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Registers a class for reflection in Substrate. Constructors are always registered, while methods and fields are optional."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "`io.quarkus.deployment.builditem.nativeimage.RuntimeInitializedClassBuildItem`"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "A class that will be initialized at runtime rather than build time. This will cause the build to fail if the class is initialized as part of the native executable build process, so care must be taken."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "`io.quarkus.deployment.builditem.nativeimage.NativeImageConfigBuildItem`"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "A convenience feature that allows you to control most of the above features from a single build item."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "`io.quarkus.deployment.builditem.NativeImageEnableAllCharsetsBuildItem`"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Indicates that all charsets should be enabled in native image."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "`io.quarkus.deployment.builditem.ExtensionSslNativeSupportBuildItem`"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"A convenient way to tell Quarkus that the extension requires SSL, and it should be enabled during native image build.\n"
+"When using this feature, remember to add your extension to the list of extensions that offer SSL support automatically on the https://github.com/quarkusio/quarkus/blob/main/docs/src/main/asciidoc/native-and-ssl.adoc[native and ssl guide]."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "IDE support tips"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Writing Quarkus extensions in Eclipse"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "The only particular aspect of writing Quarkus extensions in Eclipse is that APT (Annotation Processing Tool) is required as part of extension builds, which means you need to:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Install `m2e-apt` from https://marketplace.eclipse.org/content/m2e-apt"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Define this property in your `pom.xml`: `<m2e.apt.activation>jdt_apt</m2e.apt.activation>`, although if you rely on `io.quarkus:quarkus-build-parent` you will get it for free."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "If you have the `io.quarkus:quarkus-extension-processor` project open at the same time in your IDE (for example, if you have the Quarkus sources checked out and open in your IDE) you will need to close that project. Otherwise, Eclipse will not invoke the APT plugin that it contains."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "If you just closed the extension processor project, be sure to do `Maven > Update Project` on the other projects in order for Eclipse to pick up the extension processor from the Maven repository."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Troubleshooting / Debugging Tips"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Inspecting the Generated/Transformed Classes"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"Quarkus generates a lot of classes during the build phase and in many cases also transforms existing classes.\n"
+"It is often extremely useful to see the generated bytecode and transformed classes during the development of an extension."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"If you set the `quarkus.package.jar.decompiler.enabled` property to `true` then Quarkus will download and invoke the https://github.com/Vineflower/vineflower[Vineflower decompiler] and dump the result in the `decompiled` directory of the build tool output (`target/decompiled` for Maven for example).\n"
+"The output directory can be changed with `quarkus.package.jar.decompiler.output-dir`."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "This property only works during a normal production build (i.e. not for dev mode/tests) and when `fast-jar` packaging type is used (the default behavior)."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "There are also three system properties that allow you to dump the generated/transformed classes to the filesystem and inspect them later, for example via a decompiler in your IDE."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "`quarkus.debug.generated-classes-dir` - to dump the generated classes, such as bean metadata"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "`quarkus.debug.transformed-classes-dir` - to dump the transformed classes, e.g. Panache entities"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "`quarkus.debug.generated-sources-dir` - to dump the ZIG files; ZIG file is a textual representation of the generated code that is referenced in the stack traces"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "These properties are especially useful in the development mode or when running the tests where the generated/transformed classes are only held in memory in a class loader."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "For example, you can specify the `quarkus.debug.generated-classes-dir` system property to have these classes written out to disk for inspection in the development mode:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "The property value could be either an absolute path, such as `/home/foo/dump` on a Linux machine, or a path relative to the user working directory, i.e. `dump` corresponds to the `{user.dir}/target/dump` in the dev mode and `{user.dir}/dump` when running the tests."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "You should see a line in the log for each class written to the directory:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "The property is also honored when running tests:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Analogously, you can use the `quarkus.debug.transformed-classes-dir` and `quarkus.debug.generated-sources-dir` properties to dump the relevant output."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Inspecting Generated/Transformed Classes in `QuarkusUnitTest`"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"When <<testing-extensions,using `QuarkusUnitTest`>>,\n"
+"as an alternative to <<dump-the-generated-classes-to-the-file-system,setting `quarkus.debug.*-dir` manually>>,\n"
+"you may simply call `QuarkusUnitTest#debugBytecode`:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"This will automatically set up these configuration properties so that classes/sources\n"
+"are dumped to `target/debug`, for that test class only,\n"
+"in a subdirectory that is unique to each test execution.\n"
+"See the javadoc of `QuarkusUnitTest#debugBytecode` for details."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"This is handy to debug flaky tests that happen only in the CI environment, in particular;\n"
+"for example the GitHub Actions CI at https://github.com/quarkusio/quarkus/\n"
+"is set up so that such `target/debug` directories are\n"
+"collected into build artifacts available for download after each CI run."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Enabling trace logs for a particular test only"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"When <<testing-extensions,using `QuarkusUnitTest`>>,\n"
+"if you need to enable trace logs for a particular test class,\n"
+"you may simply call `QuarkusUnitTest#traceCategories` and pass the logging categories in argument:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "See the javadoc of `QuarkusUnitTest#traceCategories` for details."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"This is handy to debug flaky tests that happen only in the CI environment, in particular,\n"
+"as this will only increase the verbosity of logs in the particular test where the option is enabled."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Multi-module Maven Projects and the Development Mode"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "It's not uncommon to develop an extension in a multi-module Maven project that also contains an \"example\" module."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "In multi-module Maven projects we recommend to have an explicit `compile` call to ensure compilation happens before the `quarkus:dev` goal is executed."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Indexer does not include your external dependency"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Remember to add `IndexDependencyBuildItem` artifacts to your `@BuildStep`."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Sample Test Extension"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"We have an extension that is used to test for regressions in the extension processing. It is located in {quarkus-tree-url}/integration-tests/test-extension/extension directory. In this section we touch on some tasks an extension\n"
+"author will typically need to perform using the test-extension code to illustrate how the task could be done."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Features and Capabilities"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Features"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"A _feature_ represents a functionality provided by an extension.\n"
+"The name of the feature gets displayed in the log during application bootstrap."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Example Startup Lines"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "A list of features installed in the runtime image"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "A feature can be registered in a <<build-step-processors>> method that produces a `FeatureBuildItem`:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "TestProcessor#feature()"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"The name of the feature should only contain lowercase characters, words are separated by dash; e.g. `security-jpa`.\n"
+"An extension should provide at most one feature and the name must be unique.\n"
+"If multiple extensions register a feature of the same name the build fails."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"The feature name should also map to a label in the extension's `devtools/common/src/main/filtered/extensions.json` entry so that\n"
+"the feature name displayed by the startup line matches a label that one can use to select the extension when creating a project\n"
+"using the Quarkus maven plugin as shown in this example taken from the xref:rest-json.adoc[Writing JSON REST Services] guide where the `rest-jackson` feature is referenced:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Capabilities"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"A _capability_ represents a technical capability that can be queried by other extensions.\n"
+"An extension may provide multiple capabilities and multiple extensions can provide the same capability.\n"
+"By default, capabilities are not displayed to users.\n"
+"Capabilities should be used when checking for the presence of an extension rather than class path based checks."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Capabilities can be registered in a <<build-step-processors>> method that produces a `CapabilityBuildItem`:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "TestProcessor#capability()"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Extensions can consume registered capabilities using the `Capabilities` build item:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "TestProcessor#doSomeCoolStuff()"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"Capabilities should follow the naming conventions of Java packages; e.g. `io.quarkus.security.jpa`.\n"
+"Capabilities provided by core extensions should be listed in the `io.quarkus.deployment.Capability` enum and their name should always start with the `io.quarkus` prefix."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Bean Defining Annotations"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "The CDI layer processes CDI beans that are either explicitly registered or that it discovers based on bean defining annotations as defined in https://jakarta.ee/specifications/cdi/4.1/jakarta-cdi-spec-4.1.html#bean_defining_annotations[2.5.1. Bean defining annotations]. You can expand this set of annotations to include annotations your extension processes using a `BeanDefiningAnnotationBuildItem` as shown in this `TestProcessor#registerBeanDefinningAnnotations` example:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Register a Bean Defining Annotation"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Register the annotation class and CDI default scope using the Jandex `DotName` class."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "`ConfiguredBean` will be processed by the CDI layer the same as a bean annotated with the CDI standard @ApplicationScoped."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Parsing Config to Objects"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"One of the main things an extension is likely to do is completely separate the configuration phase of behavior from the runtime phase.\n"
+"Frameworks often do parsing/load of configuration on startup that can be done during build time to both reduce the runtime dependencies on frameworks like xml parsers as well as reducing the startup time the parsing incurs."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "An example of parsing an XML config file using JAXB is shown in the `TestProcessor#parseServiceXmlConfig` method:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Parsing an XML Configuration into Runtime XmlConfig Instance"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Look for a config.xml classpath resource"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "If found, parse using JAXB context for `XmlConfig.class`"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "If there was no /config.xml resource available in the build environment, then a null `RuntimeServiceBuildItem` would be returned and no subsequent logic based on a `RuntimeServiceBuildItem` being produced would execute."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Typically, one is loading a configuration to create some runtime component/service as `parseServiceXmlConfig` is doing. We will come back to the rest of the behavior in `parseServiceXmlConfig` in the following <<manage-non-cdi-service>> section."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "If for some reason you need to parse the config and use it in other build steps in an extension processor, you would need to create an `XmlConfigBuildItem` to pass the parsed XmlConfig instance around."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"If you look at the XmlConfig code you will see that it does carry around the JAXB annotations. If you don't want these in the runtime image, you could clone the XmlConfig instance into some POJO object graph and then replace XmlConfig with the POJO class.\n"
+"We will do this in <<replacing-classes-in-native-image>>."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Scanning Deployments Using Jandex"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "If your extension defines annotations or interfaces that mark beans needing to be processed, you can locate these beans using the Jandex API, a Java annotation indexer and offline reflection library. The following `TestProcessor#scanForBeans` method shows how to find the beans annotated with our `@TestAnnotation` that also implement the `IConfigConsumer` interface:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Example Jandex Usage"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Depend on a `BeanArchiveIndexBuildItem` to have the build step be run after the deployment has been indexed."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Retrieve the index."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Find all beans annotated with `@TestAnnotation`."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Determine which of these beans also has the `IConfigConsumer` interface."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Save the bean class in a `TestBeanBuildItem` for use in a latter RUNTIME_INIT build step that will interact with the bean instances."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Interacting With Extension Beans"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "You can use the `io.quarkus.arc.runtime.BeanContainer` interface to interact with your extension beans. The following `configureBeans` methods illustrate interacting with the beans scanned for in the previous section:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Using CDI BeanContainer Interface"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Consume the `TestBeanBuildItem`s produced from the scanning build step."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Consume the `BeanContainerBuildItem` to order this build step to run after the CDI bean container has been created."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Call the runtime recorder to record the bean interactions."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Runtime recorder retrieves the bean using its type."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Runtime recorder invokes the `IConfigConsumer#loadConfig(...)` method passing in the configuration objects with runtime information."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Manage Non-CDI Service"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"A common purpose for an extension is to integrate a non-CDI aware service into the CDI based Quarkus runtime.\n"
+"Step 1 of this task is to load any configuration needed in a STATIC_INIT build step as we did in <<parsing-config-to-objects>>.\n"
+"Now we need to create an instance of the service using the configuration.\n"
+"Let's return to the `TestProcessor#parseServiceXmlConfig` method to see how this can be done."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Creating a Non-CDI Service"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Call into the runtime recorder to record the creation of the service."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Using the parsed `XmlConfig` instance, create an instance of `RuntimeXmlConfigService` and wrap it in a `RuntimeValue`. Use a `RuntimeValue` wrapper for non-interface objects that are non-proxiable."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Wrap the return service value in a `RuntimeServiceBuildItem` for use in a RUNTIME_INIT build step that will start the service."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Starting a Service"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"Now that you have recorded the creation of a service during the build phase, you need to record how to start the service at runtime during booting.\n"
+"You do this with a RUNTIME_INIT build step as shown in the `TestProcessor#startRuntimeService` method."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Starting/Stopping a Non-CDI Service"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "We consume a ShutdownContextBuildItem to register the service shutdown."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "We consume the previously initialized service captured in `RuntimeServiceBuildItem`."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Call the runtime recorder to record the service start invocation."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Produce a `ServiceStartBuildItem` to indicate the startup of a service. See <<startup-shutdown-events>> for details."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Runtime recorder retrieves the service instance reference and calls its `startService` method."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Runtime recorder registers an invocation of the service instance `stopService` method with the Quarkus `ShutdownContext`."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"The code for the `RuntimeXmlConfigService` can be viewed here:\n"
+"{quarkus-blob-url}/integration-tests/test-extension/extension/runtime/src/main/java/io/quarkus/extest/runtime/RuntimeXmlConfigService.java[RuntimeXmlConfigService.java]"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "The testcase for validating that the `RuntimeXmlConfigService` has started can be found in the `testRuntimeXmlConfigService` test of `ConfiguredBeanTest` and `NativeImageIT`."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Startup and Shutdown Events"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"The Quarkus container supports startup and shutdown lifecycle events to notify components of the container startup\n"
+"and shutdown. There are CDI events fired that components can observe are illustrated in this example:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Observing Container Startup"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Observe a `StartupEvent` to be notified the runtime has started."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Observe a `ShutdownEvent` to be notified when the runtime is going to shut down."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"What is the relevance of startup and shutdown events for extension authors? We have already seen the use of a `ShutdownContext`\n"
+"to register a callback to perform shutdown tasks in the <<starting-service>> section.\n"
+"These shutdown tasks would be called\n"
+"after a `ShutdownEvent` had been sent."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"A `StartupEvent` is fired after all `io.quarkus.deployment.builditem.ServiceStartBuildItem` producers have been consumed.\n"
+"The implication of this is that if an extension has services that application components would expect to have been\n"
+"started when they observe a `StartupEvent`, the build steps that invoke the runtime code to start those services needs\n"
+"to produce a `ServiceStartBuildItem` to ensure that the runtime code is run before the `StartupEvent` is sent. Recall that\n"
+"we saw the production of a `ServiceStartBuildItem` in the previous section, and it is repeated here for clarity:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Example of Producing a ServiceStartBuildItem"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Produce a `ServiceStartBuildItem` to indicate that this is a service starting step that needs to run before the `StartupEvent` is sent."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Register Resources for Use in Native Image"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Not all configuration or resources can be consumed at build time. If you have classpath resources that the runtime needs to access, you need to inform the build phase that these resources need to be copied into the native image. This is done by producing one or more `NativeImageResourceBuildItem` or `NativeImageResourceBundleBuildItem` in the case of resource bundles. Examples of this are shown in this sample `registerNativeImageResources` build step:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Registering Resources and ResourceBundles"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Indicate that the /security/runtime.keys classpath resource should be copied into native image."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Indicate that the `META-INF/my-descriptor.xml` resource should be copied into native image"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Indicate that the \"jakarta.xml.bind.Messages\" resource bundle should be copied into native image."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Service files"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"If you are using `META-INF/services` files you need to register the files as resources so that your native image can find them,\n"
+"but you also need to register each listed class for reflection so they can be instantiated or inspected at run-time:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"`ServiceProviderBuildItem` takes a list of service implementation classes as parameters: if\n"
+"you are not reading them from the service file, make sure that they correspond to the service file contents\n"
+"because the service file will still be read and used at run-time. This is not a substitute for writing a service\n"
+"file."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"This only registers the implementation classes for instantiation via reflection (you will not be able\n"
+"to inspect its fields and methods). If you need to do that, you can do it this way:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"While this is the easiest way to get your services running natively, it's less efficient than scanning the implementation\n"
+"classes at build time and generating code that registers them at static-init time instead of relying on reflection."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"You can achieve that by adapting the previous build step to use a static-init recorder instead of registering\n"
+"classes for reflection:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Object Substitution"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Objects created during the build phase that are passed into the runtime need to have a default constructor in order for them to be created and configured at startup of the runtime from the build time state. If an object does not have a default constructor you will see an error similar to the following during generation of the augmented artifacts:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "DSAPublicKey Serialization Error"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "There is a `io.quarkus.runtime.ObjectSubstitution` interface that can be implemented to tell Quarkus how to handle such classes. An example implementation for the `DSAPublicKey` is shown here:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "DSAPublicKeyObjectSubstitution Example"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "The serialize method takes the object without a default constructor and creates a `KeyProxy` that contains the information necessary to recreate the `DSAPublicKey`."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "The deserialize method uses the `KeyProxy` to recreate the `DSAPublicKey` from its encoded form using the key factory."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "An extension registers this substitution by producing an `ObjectSubstitutionBuildItem` as shown in this `TestProcessor#loadDSAPublicKey` fragment:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Registering an Object Substitution"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Replacing Classes in the Native Image"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"The Graal SDK supports substitutions of classes in the native image.\n"
+"An example of how one could replace the `XmlConfig/XmlData` classes with versions that have no JAXB annotation dependencies is shown in these example classes:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Substitution of XmlConfig/XmlData Classes Example"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Ecosystem integration"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"Some extensions may be private, and some may wish to be part of the\n"
+"broader Quarkus ecosystem, and link:https://quarkus.io/extensions/[available for community re-use].\n"
+"Inclusion in the Quarkiverse Hub is a convenient mechanism for handling\n"
+"continuous testing and publication.\n"
+"The link:https://hub.quarkiverse.io/home/#getting-an-extension-onboarded[Quarkiverse Hub wiki] has instructions\n"
+"for on-boarding your extension."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Alternatively, continuous testing and publication can be handled manually."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Continuous testing of your extension"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid ""
+"In order to make it easy for extension authors to test their extensions daily against the latest snapshot of Quarkus, Quarkus has introduced\n"
+"the notion of Ecosystem CI. The Ecosystem CI link:https://github.com/quarkusio/quarkus-ecosystem-ci/blob/main/README.adoc[README]\n"
+"has all the details on how to set up a GitHub Actions job to take advantage of this capability, while this link:https://www.youtube.com/watch?v=VpbRA1n0hHQ[video] provides an overview\n"
+"of what the process looks like."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Publish your extension in registry.quarkus.io"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Before publishing your extension to the xref:tooling.adoc[Quarkus tooling], make sure that the following requirements are met:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "The xref:extension-metadata.adoc#quarkus-extension-yaml[quarkus-extension.yaml] file (in the extension's `runtime/` module) has the minimum metadata set:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "`name`"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "`description` (unless you have it already set in the ``runtime/pom.xml``'s `<description>` element, which is the recommended approach)"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Your extension is published in Maven Central"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Your extension repository is configured to use the <<ecosystem-ci,Ecosystem CI>>."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "Then you must create a pull request adding a `your-extension.yaml` file in the `extensions/` directory in the link:https://github.com/quarkusio/quarkus-extension-catalog[Quarkus Extension Catalog]. The YAML must have the following structure:"
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "When your repository contains multiple extensions, you need to create a separate file for each individual extension, not just one file for the entire repository."
+msgstr ""
+
+#: _versions/3.27/guides/writing-extensions.adoc
+msgid "That's all. Once the pull request is merged, a scheduled job will check Maven Central for new versions and update the xref:extension-registry-user.adoc[Quarkus Extension Registry]."
+msgstr ""
