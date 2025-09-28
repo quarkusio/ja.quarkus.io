@@ -8,276 +8,280 @@ msgstr ""
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "Generating CycloneDX BOMs"
-msgstr ""
+msgstr "CycloneDX BOM の生成"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid ""
 "An SBOM (Software Bill of Material) is a manifest that describes what a given software distribution consists of in terms of components. In addition to that, it may include a lot more information such as relationships between those components, licenses, provenance, etc.\n"
 "SBOMs would typically be used by software security and software supply chain risk management tools to perform vulnerability and compliance related analysis."
 msgstr ""
+"SBOM (ソフトウェア部品表) は、特定のソフトウェアディストリビューションを構成するコンポーネントを記述したマニフェストです。さらに、コンポーネント間の関係、ライセンス、来歴など、さらに多くの情報が含まれる場合もあります。\n"
+"SBOM は通常、ソフトウェアセキュリティーおよびソフトウェアサプライチェーンリスク管理ツールが、脆弱性およびコンプライアンス関連の分析を実行するために使用します。"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "This guide describes Quarkus SBOM generation capabilities following https://cyclonedx.org/[CycloneDX] specification."
-msgstr ""
+msgstr "このガイドでは、 https://cyclonedx.org/[CycloneDX] 仕様に準拠した Quarkus SBOM 生成機能について説明します。"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "Why Quarkus-specific tooling?"
-msgstr ""
+msgstr "Quarkus 固有ツールを使用する理由"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "While Quarkus integrates with build tools such as https://maven.apache.org/[Maven] and https://gradle.org/[Gradle], it could itself be categorized as a build tool with its own component and dependency model, build steps, and build outcomes. One of the essential component types of a Quarkus application is a Quarkus extension, which consists of a runtime and a build time artifacts, and their dependencies."
-msgstr ""
+msgstr "Quarkus は、 https://maven.apache.org/[Maven] や https://gradle.org/[Gradle] などのビルドツールと連携しますが、Quarkus 自体が独自のコンポーネントと依存関係モデル、ビルドステップ、ビルド出力を持つビルドツールとして分類される場合もあります。Quarkus アプリケーションの重要なコンポーネントタイプの 1 つが、ランタイムとビルド時のアーティファクト、およびそれらの依存関係で構成される Quarkus エクステンションです。"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "To properly resolve Quarkus extension and other application dependencies Quarkus uses its own dependency resolver, which is implemented on top of the dependency resolver provided by the underlying build tool: Maven or Gradle."
-msgstr ""
+msgstr "Quarkus エクステンションやその他のアプリケーションの依存関係を適切に解決するために、Quarkus は独自の依存関係リゾルバーを使用します。この依存関係リゾルバーは、基盤となるビルドツール (Maven または Gradle) によって提供される依存関係リゾルバーの上に実装されています。"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "As a consequence, in case of Maven, for example, the results of `dependency:tree` will not include all the dependencies Quarkus will use to build an application. A similar issue will affect other dependency analysis tools that assume a project adheres to the standard Maven dependency model: they will not be able to capture the effective Quarkus application dependency graph. Unfortunately, that includes the implementation of the https://github.com/CycloneDX/cyclonedx-maven-plugin[CycloneDX Maven plugin]."
-msgstr ""
+msgstr "その結果、たとえば Maven の場合、Quarkus がアプリケーションの構築に使用するすべての依存関係は `dependency:tree` の結果に含まれません。プロジェクトが標準の Maven 依存関係モデルに準拠していると想定する他の依存関係分析ツールも、同様の問題から影響を受け、有効な Quarkus アプリケーション依存関係グラフをキャプチャーできません。残念ながら、これには https://github.com/CycloneDX/cyclonedx-maven-plugin[CycloneDX Maven プラグイン] の実装も含まれます。"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "Besides the dependencies, that are an input to a build process, there is also an outcome of the build that is the final distribution of an application. Users of an application may request an SBOM manifesting not only the dependencies (the input to a build) but also the final distribution (the outcome of the build) before they agree to deploy the application. Quarkus allows application developers to choose various packaging types for their applications, some of which are Quarkus-specific. Providing certain Quarkus-specific details about components included in a distribution may help better evaluate the impact of potential security-related issues."
-msgstr ""
+msgstr "ビルドプロセスへの入力となる依存関係のほかに、アプリケーションの最終的なディストリビューションであるビルドの出力もあります。アプリケーションユーザーは、アプリケーションのデプロイに同意する前に、依存関係 (ビルドへの入力) だけでなく最終的なディストリビューション (ビルドの出力) も明示する SBOM をリクエストする場合があります。アプリケーション開発者は、Quarkus 固有のものも含むさまざまなパッケージタイプを Quarkus でアプリケーションに対して選択できます。ディストリビューションに含まれるコンポーネントに関する Quarkus 固有の詳細を提供することで、潜在的なセキュリティー関連問題の影響をより適切に評価できるようになります。"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "Dependency SBOMs"
-msgstr ""
+msgstr "依存関係 SBOM"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "This chapter describes how to generate SBOMs manifesting only the dependencies of an application before it is built. In other words, these SBOMs will manifest the input into a build. These SBOMs could be used to perform vulnerability and compliance related analysis before building applications."
-msgstr ""
+msgstr "この章では、ビルド前にアプリケーションの依存関係のみを明示する SBOM の生成ｂｂｂｂｂｂ方法について説明します。つまり、これらの SBOM は、ビルドへの入力を明示しており、アプリケーションのビルド前に脆弱性およびコンプライアンス関連の分析を実行するために使用できます。"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "Maven Dependency SBOMs"
-msgstr ""
+msgstr "Maven 依存関係 SBOM"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "For Quarkus Maven projects dependency SBOMs can be generated with the `quarkus:dependency-sbom` goal. The outcome of the goal will be saved in a `target/<artifactId>-<version>-dependency-cyclonedx.json` file (which can be changed by setting the `outputFile` goal parameter or the `quarkus.dependency.sbom.output-file` property). The complete Quarkus build and runtime dependency graphs will be recorded in the https://cyclonedx.org/[CycloneDX] `JSON` format."
-msgstr ""
+msgstr "Quarkus Maven プロジェクトの依存関係 SBOM は、 `quarkus:dependency-sbom` ゴールを使用して生成できます。ゴールの出力は、 `target/<artifactId>-<version>-dependency-cyclonedx.json` ファイルに保存されます (`outputFile` ゴールパラメーター、または `quarkus.dependency.sbom.output-file` プロパティーを設定することで変更できます)。完全な Quarkus ビルドおよびランタイム依存関係グラフは、 https://cyclonedx.org/[CycloneDX] `JSON` 形式で記録されます。"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "`XML` format can be requested by setting `format` goal parameter (or `quarkus.dependency.sbom.format` property) to `xml`."
-msgstr ""
+msgstr "`XML` 形式は、 `format` ゴールパラメーター (または `quarkus.dependency.sbom.format` プロパティー) を `xml` に設定することでリクエストできます。"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "Each component in the generated SBOM will include the `quarkus:component:scope` property that will indicate whether this component is used at runtime or only development/build time."
-msgstr ""
+msgstr "生成された SBOM 内の各コンポーネントには `quarkus:component:scope` プロパティーが含まれています。これは、そのコンポーネントが実行時に使用されるのか、あるいは開発/ビルド時のみに使用されるのかを示しています。"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "By default, `quarkus:dependency-sbom` captures the dependencies of a production build. Quarkus supports three application bootstrap modes: normal (production), test, and dev. In all three modes, an application may have different dependency graphs. The `mode` parameter can be used to indicate which dependency graph should be recorded. If the `mode` is set to `test` or `dev`, the target file name will become `target/<artifactId>-<version>-<mode>-dependency-cyclonedx.json`."
-msgstr ""
+msgstr "デフォルトでは、 `quarkus:dependency-sbom` はプロダクションビルドの依存関係をキャプチャーします。Quarkus は、normal (プロダクション)、test、dev の 3 つのアプリケーションブートストラップモードをサポートしています。アプリケーションは、モードごとに異なる依存関係グラフを持つことができます。 `mode` パラメーターを使用して、どの依存関係グラフを記録するかを指定できます。 `mode` が `test` または `dev` に設定されている場合、ターゲットファイル名は `target/<artifactId>-<version>-<mode>-dependency-cyclonedx.json` になります。"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "The complete set of parameters and their description can be obtained by executing `mvn help:describe -Dcmd=quarkus:dependency-sbom -Ddetail`."
-msgstr ""
+msgstr "`mvn help:describe -Dcmd=quarkus:dependency-sbom -Ddetail` を実行すると、完全なパラメーターセットとその説明を取得できます。"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "Gradle Dependency SBOMs"
-msgstr ""
+msgstr "Gradle 依存関係 SBOM"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "Unlike Maven, the https://github.com/CycloneDX/cyclonedx-gradle-plugin[Gradle CycloneDX plugin implementation] can be used in Quarkus projects to generate dependency SBOMs, since the implementation manifests dependency configurations registered by configured plugins."
-msgstr ""
+msgstr "Maven とは異なり、 https://github.com/CycloneDX/cyclonedx-gradle-plugin[Gradle CycloneDX プラグイン実装] は、設定済みプラグインにより登録された依存関係設定を明示するため、Quarkus プロジェクトで依存関係 SBOM を生成するために使用できます。"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "Please, refer to the https://github.com/CycloneDX/cyclonedx-gradle-plugin[Gradle CycloneDX plugin] documentation for its configuration options. Here is a list of Quarkus dependency configurations that would be relevant for manifesting:"
-msgstr ""
+msgstr "設定オプションについては、 https://github.com/CycloneDX/cyclonedx-gradle-plugin[Gradle CycloneDX プラグイン] のドキュメントを参照してください。以下に、マニフェストの作成に関連する Quarkus 依存関係設定をリストしています:"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "`quarkusProdRuntimeClasspathConfiguration` - Quarkus application production runtime dependencies;"
-msgstr ""
+msgstr "`quarkusProdRuntimeClasspathConfiguration` - Quarkus アプリケーションのプロダクションランタイム依存関係"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "`quarkusProdRuntimeClasspathConfigurationDeployment` - Quarkus application production runtime and build time dependencies;"
-msgstr ""
+msgstr "`quarkusProdRuntimeClasspathConfigurationDeployment` - Quarkus アプリケーションのプロダクションランタイムとビルドタイムの依存関係"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "`quarkusTestRuntimeClasspathConfiguration` - Quarkus application test runtime dependencies;"
-msgstr ""
+msgstr "`quarkusTestRuntimeClasspathConfiguration` - Quarkus アプリケーションのテストランタイム依存関係"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "`quarkusTestRuntimeClasspathConfigurationDeployment` - Quarkus application test runtime and build time dependencies;"
-msgstr ""
+msgstr "`quarkusTestRuntimeClasspathConfigurationDeployment` - Quarkus アプリケーションのテストランタイムとビルドタイムの依存関係"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "`quarkusDevRuntimeClasspathConfiguration` - Quarkus application dev mode runtime dependencies;"
-msgstr ""
+msgstr "`quarkusDevRuntimeClasspathConfiguration` - Quarkus アプリケーション開発モードのランタイム依存関係"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "`quarkusDevRuntimeClasspathConfigurationDeployment` - Quarkus application dev mode runtime and build time dependencies."
-msgstr ""
+msgstr "`quarkusDevRuntimeClasspathConfigurationDeployment` - Quarkus アプリケーション開発モードのランタイムおよびビルドタイムの依存関係"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "Given that the plugin is not aware of how Quarkus uses these dependencies, it will not be able to set the `quarkus:component:scope` property for components. On the other hand, the requested configuration name can be used indicate which scope to target."
-msgstr ""
+msgstr "プラグインは Quarkus がこれらの依存関係をどのように使用するかを認識しないため、コンポーネントの `quarkus:component:scope` プロパティーを設定することはできません。一方で、リクエストされた設定名を使用して、ターゲットとするスコープを示すことはできます。"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "Distribution SBOMs"
-msgstr ""
+msgstr "ディストリビューション SBOM"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "This chapter describes SBOMs that manifest outcomes of Quarkus builds that are final application distributions."
-msgstr ""
+msgstr "この章では、最終的なアプリケーションディストリビューションである Quarkus ビルドの出力を明示する SBOM について説明します。"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "During an application build and package assembly process, Quarkus captures certain details about the produced distribution and then allows an SBOM generator to consume and record that information in an SBOM format."
-msgstr ""
+msgstr "アプリケーションビルドおよびパッケージアセンブリのプロセス中に、Quarkus は生成されたディストリビューションに関する特定の詳細をキャプチャーし、SBOM ジェネレーターがその情報を SBOM 形式で使用および記録できるようにします。"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "At this point, the only SBOM generator available for Quarkus users that can manifest application distributions is `io.quarkus:quarkus-cyclonedx`. Once it's added as a project dependency it will generate SBOMs every time an application is built. SBOMs will be saved in the project's build output directory under `<executable-name>-cyclonedx.<format>` name, where"
-msgstr ""
+msgstr "現時点で Quarkus ユーザーが利用できる、アプリケーションディストリビューションのマニフェストを作成できる唯一の SBOM ジェネレーターは `io.quarkus:quarkus-cyclonedx` です。これをプロジェクトの依存関係として追加すると、アプリケーションがビルドされるたびに SBOM が生成されます。SBOM は、プロジェクトのビルド出力ディレクトリーに `<executable-name>-cyclonedx.<format>` の名前で保存されます。"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "`<executable-name>` is the base file name (without the extension) of the executable that launches an application;"
-msgstr ""
+msgstr "この場合の `<executable-name>` は、アプリケーションを起動する実行可能ファイルの基本ファイル名 (拡張子なし) です。"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "`<format>` is either `json` (the default) or `xml`, which can be configured using `quarkus.cyclonedx.format` property. If both formats are desired `quarkus.cyclonedx.format` can be set to `all`."
-msgstr ""
+msgstr "`<format>` は `json` (デフォルト) または `xml` のいずれかで、 `quarkus.cyclonedx.format` プロパティーを使用して設定できます。両方の形式が必要な場合は、 `quarkus.cyclonedx.format` を `all` に設定します。"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "Fast JAR"
-msgstr ""
+msgstr "Fast JAR"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "Fast JAR packaging uses a Quarkus-specific filesystem directory layout that contains files generated by Quarkus and Maven artifacts that are runtime dependencies of an application."
-msgstr ""
+msgstr "Fast JAR パッケージングでは、Quarkus 固有のファイルシステムディレクトリーレイアウトが使用されます。これには、Quarkus によって生成されたファイルと、アプリケーションのランタイム依存関係である Maven アーティファクトが含まれています。"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "SBOMs for Fast JAR packaging type will use the executable JAR file as their main component and record both runtime and build time Quarkus application dependencies."
-msgstr ""
+msgstr "Fast JAR パッケージングタイプの SBOM は、実行可能な JAR ファイルをメインコンポーネントとして使用し、ランタイムとビルドタイムの Quarkus アプリケーション依存関係を記録します。"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "Runtime Components"
-msgstr ""
+msgstr "実行時コンポーネント"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "Every file in the resulting Fast JAR distribution will appear in the SBOM with the `quarkus:component:scope` property set to `runtime` and `evidence.occurrences.location` field pointing to the location of the component in the application distribution directory, for example"
-msgstr ""
+msgstr "結果として得られる Fast JAR ディストリビューション内のすべてのファイルは、SBOM に表示されます。その場合、 `quarkus:component:scope` プロパティーは `runtime` に設定され、 `evidence.occurrences.location` フィールドはアプリケーションディストリビューションディレクトリー内のコンポーネントの場所を指しています。"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "`evidence.occurrences.location` was introduced in CycloneDX schema version 1.5, for older versions the location will be indicated using the `quarkus:component:location` property."
-msgstr ""
+msgstr "たとえば、 `evidence.occurrences.location` は CycloneDX スキーマバージョン 1.5 で導入されました。古いバージョンでは、場所は `quarkus:component:location` プロパティーを使用して示されます。"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "Pedigree"
-msgstr ""
+msgstr "系譜（Pedigree）"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "Pedigree is a way to provide information that certain patches, or changes in general, have been applied to a certain component."
-msgstr ""
+msgstr "系譜は、特定のパッチ、または一般的な変更が特定のコンポーネントに適用されたという情報を提供するために使用されます。"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "In certain cases, Quarkus may copy modified versions of dependency artifacts to an application distribution. Manipulating the original content of a component will change its hash sums which may get highlighted as suspicious by the tools comparing original component hash sums to those found in the distribution."
-msgstr ""
+msgstr "Quarkus が、依存関係アーティファクトの変更されたバージョンをアプリケーションディストリビューションにコピーする場合もあります。コンポーネントの元のコンテンツを操作するとハッシュサムが変更され、元のコンポーネントハッシュサムとディストリビューションで見つかったハッシュサムを比較するツールによって疑わしいものとして強調表示される可能性があります。"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid ""
 "When Quarkus applies modifications to artifacts resolved from Maven repositories, it can manifest these changes as pedigree notes in the generated SBOM.\n"
 "For example, if an application developer decided to remove certain classpath resources from a dependency, such as"
 msgstr ""
+"Quarkus が Maven リポジトリーから解決されたアーティファクトに変更を適用した場合、生成された SBOM にこれらの変更を系譜ノートとして表示できます。\n"
+"たとえばアプリケーション開発者が、以下のように依存関係から特定のクラスパスリソースを削除することにしたとします。"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "The resulting SBOM will include"
-msgstr ""
+msgstr "結果として得られる SBOM には以下が含まれます。"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "Build time dependencies"
-msgstr ""
+msgstr "ビルドタイム依存関係"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "Build time dependencies will be recorded with the `quarkus:component:scope` property set to `development`:"
-msgstr ""
+msgstr "ビルドタイム依存関係は、 `quarkus:component:scope` プロパティーが `development` に設定されて記録されます。"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "They will not include `evidence.occurrences.location` since they will not be found in the distribution."
-msgstr ""
+msgstr "ディストリビューション内に見つからないため、 `evidence.occurrences.location` は含まれません。"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "Uber JAR"
-msgstr ""
+msgstr "Uber JAR"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "SBOMs for Uber JARs will use the Uber JAR Maven artifact as their main component."
-msgstr ""
+msgstr "Uber JAR の SBOM は、Uber JAR Maven アーティファクトをメインコンポーネントとして使用します。"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "Since an Uber JAR is published as a Maven artifact itself, SBOMs generated for Uber JARs will also be automatically published as Maven artifacts. This, however, can be disabled by setting the `attachSboms` parameter of the `quarkus:build` goal to `false`."
-msgstr ""
+msgstr "Uber JAR は Maven アーティファクトとして公開されるため、Uber JAR 用に生成された SBOM も自動的に Maven アーティファクトとして公開されます。ただし、 `quarkus:build` ゴールの `attachSboms` パラメーターを `false` に設定することで、これを無効にできます。"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "Gradle users will have to explicitly configure a publishing plugin to deploy SBOMs as Maven artifacts."
-msgstr ""
+msgstr "Gradle ユーザーが SBOM を Maven アーティファクトとしてデプロイする場合は、公開プラグインを明示的に設定する必要があります。"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "Runtime components in an SBOM generated for an Uber JAR will not include `evidence.occurrences.location` since their content is merged in a single JAR file."
-msgstr ""
+msgstr "Uber JAR 用に生成された SBOM 内のランタイムコンポーネントに `evidence.occurrences.location` は含まれません。これは、コンテンツが単一の JAR ファイルにマージされるためです。"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "Native image"
-msgstr ""
+msgstr "ネイティブイメージ"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "SBOMs for native images will use the native executable file as their main component."
-msgstr ""
+msgstr "ネイティブイメージの SBOM は、ネイティブ実行可能ファイルをメインコンポーネントとして使用します。"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "Since native executables are not currently attached to projects as Maven artifacts, their SBOMs will not be attached as Maven artifacts either."
-msgstr ""
+msgstr "現在、ネイティブ実行可能ファイルは Maven アーティファクトとしてプロジェクトにアタッチされないため、その SBOM も Maven アーティファクトとしてアタッチされません。"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "As in the case of an Uber JAR, runtime components in an SBOM generated for an native executable will not include `evidence.occurrences.location` since their corresponding code and resources are included in a single native executable file."
-msgstr ""
+msgstr "Uber JAR の場合と同様に、ネイティブ実行可能ファイル用に生成された SBOM 内のランタイムコンポーネントに `evidence.occurrences.location` は含まれません。これは、対応するコードとリソースが単一のネイティブ実行可能ファイルに含まれているためです。"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "Mutable JAR"
-msgstr ""
+msgstr "Mutable JAR"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "Mutable JAR distribution is similar to the Fast JAR one except it also includes build time dependencies to support re-augmentation (re-building) of an application."
-msgstr ""
+msgstr "Mutable JAR ディストリビューションは Fast JAR ディストリビューションと似ていますが、アプリケーションの再拡張 (再構築) をサポートするためのビルドタイム依存関係も含まれている点が異なります。"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "SBOMs generated for Mutable JAR distributions will also record locations of components that will be used during re-augmentation process using `evidence.occurrences.location` but keeping their `quarkus:component:scope` property set to `development`. For example:"
-msgstr ""
+msgstr "Mutable JAR ディストリビューション用に生成された SBOM は、再拡張プロセス中に使用されるコンポーネントの場所も `evidence.occurrences.location` を使用して記録しますが、 `quarkus:component:scope` プロパティー設定は `development` のまま保持されます。以下はその例です。"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "Quarkus Property Taxonomy"
-msgstr ""
+msgstr "Quarkus プロパティータクソノミー"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "Name"
-msgstr ""
+msgstr "名前"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "Value range"
-msgstr ""
+msgstr "値の範囲"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "Description"
-msgstr ""
+msgstr "説明"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "`quarkus:component:scope`"
-msgstr ""
+msgstr "`quarkus:component:scope`"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "`runtime` or `development`"
-msgstr ""
+msgstr "`runtime` または `development`"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "Indicates whether a component is a runtime or a build/development time dependency of an application."
-msgstr ""
+msgstr "コンポーネントがアプリケーション実行時の依存関係であるか、ビルド/開発時の依存関係であるかを示します。"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "`quarkus:component:location`"
-msgstr ""
+msgstr "`quarkus:component:location`"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "String representing a file system path using `/` as a path element"
-msgstr ""
+msgstr "パス要素として `/` を使用してファイルシステムパスを表す文字列"
 
 #: _versions/3.27/guides/cyclonedx.adoc
 msgid "Used in SBOMs with schema versions 1.4 or older. Starting from schema 1.5, `evidence.occurrences.location` is used instead. This property is used only if a component is found in the distribution. The value is a relative path to a file pointing to the location of a component in a distribution using `/` as a path element separator."
-msgstr ""
+msgstr "スキーマバージョン 1.4 以前の SBOM で使用されます。スキーマ 1.5 以降では、代わりに `evidence.occurrences.location` が使用されます。このプロパティーは、ディストリビューション内にコンポーネントが見つかった場合にのみ使用されます。値は、パス要素の区切り文字として `/` を使用してディストリビューション内のコンポーネントの場所を指すファイルへの相対パスです。"

@@ -8,7 +8,7 @@ msgstr ""
 
 #: _versions/3.27/guides/software-transactional-memory.adoc
 msgid "Using Software Transactional Memory in Quarkus"
-msgstr ""
+msgstr "Quarkus でのソフトウェアトランザクショナルメモリーの使用"
 
 #: _versions/3.27/guides/software-transactional-memory.adoc
 msgid ""
@@ -21,18 +21,18 @@ msgid ""
 "or at least made optional. This is not the situation with JTA, where state changes are made durable\n"
 "to a relational database which supports https://pubs.opengroup.org/onlinepubs/009680699/toc.pdf[the X/Open XA\n"
 "standard]."
-msgstr ""
+msgstr "ソフトウェアトランザクショナルメモリー (STM) は、1990 年代後半から研究されており、最近になって製品やさまざまなプログラミング言語に登場し始めました。STM の背後にあるすべての詳細については触れませんが、興味のある方は https://groups.csail.mit.edu/tds/papers/Shavit/ShavitTouitou-podc95.pdf[この論文] を参照してください。ただし、STM は、おそらく JTA を通じて既に使用したことがあるACID トランザクションと同じ特性をいくつか備えた高度な並行環境でトランザクション アプリケーションを開発するためのアプローチを提供する、とだけ言っておけば十分でしょう。重要なのは、STM の実装では、Durability プロパティーが緩和 （削除） されているか、少なくともオプションになっていることです。これは、link:https://pubs.opengroup.org/onlinepubs/009680699/toc.pdf[X/Open XA 標準] をサポートするリレーショナルデータベースに対して状態の変更を耐久性のあるものにするという JTA の状況とは異なります。"
 
 #: _versions/3.27/guides/software-transactional-memory.adoc
 msgid ""
 "Note that the STM implementation provided by Quarkus is based on the https://narayana.io/docs/project/index.html#d0e16066[Narayana STM] implementation. This document isn't meant to be a replacement for that project's documentation, so you may want\n"
 "to look at it for more detail. However, we will try to focus more on how you can combine some key capabilities\n"
 "into Quarkus when developing Kubernetes native applications and microservices."
-msgstr ""
+msgstr "Quarkus が提供する STM の実装は、 link:https://narayana.io/docs/project/index.html#d0e16066[Narayana STM] の実装に基づいています。このドキュメントは、そのプロジェクトのドキュメントに代わるものではありません。そのため、その詳細についてはそちらを参照してください。しかし、Kubernetes ネイティブアプリケーションやマイクロサービスを開発する際に、主要な機能のいくつかを Quarkus にどのように組み合わせることができるかについて、より焦点を当ててみたいと思います。"
 
 #: _versions/3.27/guides/software-transactional-memory.adoc
 msgid "Why use STM with Quarkus?"
-msgstr ""
+msgstr "なぜQuarkusでSTMを使うのか?"
 
 #: _versions/3.27/guides/software-transactional-memory.adoc
 msgid ""
@@ -40,7 +40,7 @@ msgid ""
 "to STM that I don't get from JTA?\" Let's try to answer those or similar questions, with\n"
 "a particular focus on why we think they're great for Quarkus, microservices and Kubernetes\n"
 "native applications. So in no specific order ..."
-msgstr ""
+msgstr "今、あなたはまだ「なぜJTAではなくSTMなのか?」や「JTAでは得られないSTMのメリットは何か?」と自問自答しているかもしれません。ここでは、Quarkus、マイクロサービス、Kubernetesネイティブアプリケーションに最適だと思う理由を中心に、これらの質問や似たような質問に答えてみましょう。ということで、順不同で ..."
 
 #: _versions/3.27/guides/software-transactional-memory.adoc
 msgid ""
@@ -52,7 +52,7 @@ msgid ""
 "has completed its updates (committed or aborted the transaction); then there's the optimistic\n"
 "approach which allows all the threads to proceed and checks for conflicts at commit time, where\n"
 "one or more of the threads may be forced to abort if there have been conflicting updates."
-msgstr ""
+msgstr "STM の目的は、オブジェクト読み込みを簡素化し、複数のスレッドから書き込みを行い、同時更新からの状態を保護することです。Quarkus の STM 実装では、特定のステートインスタンス (Quarkus の場合はオブジェクト) を保護するために選択された分離モデルを使用して、これらのスレッド間の競合を安全に管理します。Quarkus STM で は、2つの分離実装があります。ペシミスティックアプローチ (デフォルト) では、元のスレッドが更新を完了する (コミットまたはトランザクションを中止する) まで競合するスレッドがブロックされます。一方、オプティミスティックアプローチでは、すべてのスレッドの続行を許可し、同時に競合をチェックします。ここでは、競合更新がある場合は、1 つ以上のスレッドが強制的に中止されることがあります。"
 
 #: _versions/3.27/guides/software-transactional-memory.adoc
 msgid ""
@@ -69,7 +69,7 @@ msgid ""
 "and isolation in the presence of concurrent threads/users (common in distributed microservices architectures).\n"
 "Furthermore, not all stateful applications need to be durable - even when JTA transactions are used, it tends to be the\n"
 "exception and not the rule. And as you'll see later, because applications can optionally start and control transactions, it's possible to build microservices which can undo state changes and try alternative paths."
-msgstr ""
+msgstr "STM オブジェクトには状態 (state) がありますが、永続的 (durable) である必要はありません。実際、デフォルトの動作は、トランザクションメモリー内で管理されているオブジェクトが揮発性になるためのものです。使用されているサービスやマイクロサービスがクラッシュしたり、スケジューラーなどによって別の場所で生成されたりすると、メモリー内のすべてのステートが失われ、オブジェクトはゼロからスタートします。しかし、これは確かに発生する (JTA (と適切なトランザクションデータストア) では特に) ことですが、アプリケーションの再起動を心配する必要はないのでしょうか?そうではありません。ここではトレードオフがあります。永続的な状態と、各トランザクション中にデータストアから読み込み、そして書き込み (および同期) というオーバーヘッドを排除しています。これにより、(揮発性) ステートへの更新は非常に高速になりますが、複数の STM オブジェクト (例えば、自分のチームが書いたオブジェクトが、他のチームから継承したオブジェクトを呼び出して、all-or-nothing 方式の更新を行う必要がある場合など) にまたがるアトミックな更新の利点、同時スレッドユーザーの存在下 (分散マイクロサービスアーテクチャーでは一般的) で一貫性と分離を確立することができます。さらに、すべてのステートフルアプリケーションが耐久性を必要とするわけではありません。これは JTA トランザクションが使用される場合でも、それは例外であってルールではない傾向があります。後述するように、アプリケーションは任意でトランザクションを起動したり制御したりできるので、状態変化を元に戻したり、別のパスを試したりできるマイクロサービスを構築することが可能です。"
 
 #: _versions/3.27/guides/software-transactional-memory.adoc
 msgid ""
@@ -79,7 +79,7 @@ msgid ""
 "written weeks, months or years earlier, and have A, C and I properties can be hugely beneficial. Furthermore, some\n"
 "STM implementations, including the one Quarkus uses, support nested transactions and these allow changes made within\n"
 "the context of a nested (sub) transaction to later be rolled back by the parent transaction."
-msgstr ""
+msgstr "STM のもう 1 つの利点は、構成可能性とモジュール性です。オブジェクト/サービスの実装詳細を公開することなく、STM を使用して構築された他の任意のサービスと簡単に構成することができる Quarkus オブジェクト/サービスを並行して書くことができます。先ほど説明したように、他のチームと一緒に書いたオブジェクトを、数週間、数ヶ月、数年前に書いたかもしれない、A、C、I のプロパティーのあるオブジェクトをコンパイルできるこの機能は、非常に有益です。さらに、Quarkus が使用しているものを含むいくつかの STM 実装では、入れ子になったトランザクションをサポートしており、入れ子になった (サブ) トランザクションのコンテキスト内で行われた変更を、後で親トランザクションによってロールバックすることができます。"
 
 #: _versions/3.27/guides/software-transactional-memory.adoc
 msgid ""
@@ -87,18 +87,18 @@ msgid ""
 "such that an object's state is durable. Although it's possible to configure Narayana such that different\n"
 "backend datastores can be used, including relational databases, the default is the local operating system\n"
 "file system, which means you don't need to configure anything else with Quarkus such as a database."
-msgstr ""
+msgstr "STMオ ブジェクトステートのデフォルトは揮発性ですが、オブジェクトの状態が耐久性を持つように STM の実装を構成することができます。リレーショナルデータベースなど、さまざまなバックエンドのデータストアを使用できるように Narayana を設定することは可能です。ただし、デフォルトはローカルのオペレーティングシステムのファイルシステムであり、データベースのように、Quarkus で他の何かを設定する必要はありません。"
 
 #: _versions/3.27/guides/software-transactional-memory.adoc
 msgid ""
 "Many STM implementations allow \"plain old language objects\" to be made STM-aware with little or no changes to\n"
 "the application code. You can build, test and deploy applications without wanting them to be STM-aware and\n"
 "then later add those capabilities if they become necessary and without much development overhead at all."
-msgstr ""
+msgstr "多くの STM 実装では、アプリケーションコードをほとんど変更することなく、「古い言語オブジェクト」を STM 対応させることができます。アプリケーションを STM に対応させずに、アプリケーションの構築、テスト、デプロイし、必要になっときに、開発のオーバーヘッドがほとんどない状態で、これらの機能を後で追加することができます。"
 
 #: _versions/3.27/guides/software-transactional-memory.adoc
 msgid "Building STM applications"
-msgstr ""
+msgstr "STM アプリケーションの構築"
 
 #: _versions/3.27/guides/software-transactional-memory.adoc
 msgid ""
@@ -107,7 +107,7 @@ msgid ""
 "Look for the `software-transactional-memory-quickstart` example. This will help to understand how you\n"
 "can build STM-aware applications with Quarkus. However, before we do so there are a few basic concepts\n"
 "which we need to cover."
-msgstr ""
+msgstr "Quickstarts には完全に動作する例もあり、Git リポジトリーを複製してアクセスすることができます。 `git clone {quickstarts-clone-url}` あるいは {quickstarts-archive-url}[archive] をダウンロードしてください。 `software-transactional-memory-quickstart` の例を見てください。これで、Quarkus を使って STM を意識したアプリケーションを構築する方法を説明しています。しかし、その前に、いくつかの基本的な概念を知っておく必要があります。"
 
 #: _versions/3.27/guides/software-transactional-memory.adoc
 msgid ""
@@ -116,27 +116,27 @@ msgid ""
 "understand what these may be. Please refer to the https://narayana.io/docs/project/index.html#d0e16066[Narayana STM manual]\n"
 "and the https://narayana.io//docs/project/index.html#d0e16133[STM annotations guide] for more details on\n"
 "all the annotations Narayana STM provides."
-msgstr ""
+msgstr "ご覧のように、Quarkus の STM は、動作を定義するために多くのアノテーションに依存しています。これらのアノテーションがないために、適切なデフォルトが仮定されますが、開発者はこれらのアノテーションが何であるかを理解することが重要です。Narayana STM が提供するすべてのアノテーションの詳細については、 https://narayana.io/docs/project/index.html#d0e16066[Narayana STM manual] と https://narayana.io//docs/project/index.html#d0e16133[STM アノテーションガイド] を参照してください。"
 
 #: _versions/3.27/guides/software-transactional-memory.adoc
 msgid "Setting it up"
-msgstr ""
+msgstr "設定"
 
 #: _versions/3.27/guides/software-transactional-memory.adoc
 msgid "To use the extension include it as a dependency in your build file:"
-msgstr ""
+msgstr "このエクステンションを使用するには、アプリケーションの依存関係として以下をビルドファイルにインクルードしてください:"
 
 #: _versions/3.27/guides/software-transactional-memory.adoc
 msgid "pom.xml"
-msgstr ""
+msgstr "pom.xml"
 
 #: _versions/3.27/guides/software-transactional-memory.adoc
 msgid "build.gradle"
-msgstr ""
+msgstr "build.gradle"
 
 #: _versions/3.27/guides/software-transactional-memory.adoc
 msgid "Defining STM-aware classes"
-msgstr ""
+msgstr "STM を意識したクラスの定義"
 
 #: _versions/3.27/guides/software-transactional-memory.adoc
 msgid ""
@@ -146,13 +146,13 @@ msgid ""
 "must be instances of classes which inherit from interfaces that themselves have been annotated to identify them\n"
 "as STM-aware. Any other objects (and their classes) which do not follow this rule will not be managed by the\n"
 "STM subsystem and hence any of their state changes will not be rolled back, for example."
-msgstr ""
+msgstr "STM サブシステムが、トランザクションメモリーのコンテキスト内でどのクラスが管理されるべきかを認識するには最低限の手段を提供する必要があります。これは、STM を意識したクラス STM を意識しないクラスをインターフェース境界で分類することで行います。特に、すべての STM 対応オブジェクトは、STM 対応として識別するためのアノテーションが付けられているインターフェースから継承するクラスのインストタンスである必要があります。このルールに従わない他のオブジェクト (およびそのクラス) は、STM サブシステムによって管理されません。そのため、それらの状態の変更はロールバックされません。"
 
 #: _versions/3.27/guides/software-transactional-memory.adoc
 msgid ""
 "The specific annotation that STM-aware application interfaces must use is `org.jboss.stm.annotations.Transactional`.\n"
 "For example:"
-msgstr ""
+msgstr "STM を意識したアプリケーションインターフェースが使用しなければならない特定のアノテーションは、 `org.jboss.stm.annotations.Transactional` です。例を以下に示します。"
 
 #: _versions/3.27/guides/software-transactional-memory.adoc
 msgid ""
@@ -161,7 +161,7 @@ msgid ""
 "within the class should be managed transactionally, e.g., some instance variables may not need to be rolled back\n"
 "if a transaction aborts. As mentioned earlier, if those annotations are not present then defaults are chosen to\n"
 "guarantee safety, such as assuming all methods will modify state."
-msgstr ""
+msgstr "このインターフェースを実装したクラスは、Narayana からの追加のアノテーションを使用して、メソッドがオブジェクトの状態を変更するかどうかや、クラス内のどの状態変数をトランザクション的に管理すべきか (例えば、トランザクションが中断した場合にロールバックする必要のないインスタンス変数があるなど) を STM サブシステムに伝えることができます。前述のように、これらのアノテーションが存在しない場合は、すべてのメソッドが状態を変更すると仮定するなど、安全性を保証するためにデフォルトが選択されます。"
 
 #: _versions/3.27/guides/software-transactional-memory.adoc
 msgid ""
@@ -169,17 +169,17 @@ msgid ""
 "STM subsystem that no state modifications will occur in this object when it is used in the transactional\n"
 "memory. Also, the `@NotState` annotation tells the system to ignore `timesCalled` when transactions commit or\n"
 "abort, so this value only changes due to application code."
-msgstr ""
+msgstr "例えば、 `getNumberOfBookings` メソッドに `@ReadLock` アノテーションを使用することで、このオブジェクトがトランザクションメモリーで使用されているときに、状態の変更がこのオブジェクトでは発生しないことを STM サブシステムに伝えることができます。また、 `@NotState` アノテーションは、トランザクションがコミットまたは中止されたときに `timesCalled` を無視するようにシステムに指示するので、この値はアプリケーションコードによってのみ変化します。"
 
 #: _versions/3.27/guides/software-transactional-memory.adoc
 msgid ""
 "Please refer to the Narayana guide for details of how to exert finer grained control over the transactional\n"
 "behaviour of objects that implement interfaces marked with the `@Transactional` annotation."
-msgstr ""
+msgstr "`@Transactional` アノテーションでマークされたインターフェースを実装したオブジェクトのトランザクション動作をより細かく制御する方法の詳細は、Narayana を参照してください。"
 
 #: _versions/3.27/guides/software-transactional-memory.adoc
 msgid "Creating STM objects"
-msgstr ""
+msgstr "STM オブジェクトの作成"
 
 #: _versions/3.27/guides/software-transactional-memory.adoc
 msgid ""
@@ -187,14 +187,14 @@ msgid ""
 "does this by providing containers of transactional memory within which these object instances reside. Until an object\n"
 "is placed within one of these STM containers it cannot be managed within transactions and any state changes will\n"
 "not possess the A, C, I (or even D) properties."
-msgstr ""
+msgstr "STM サブシステムは、どのオブジェクトを管理すべきかを伝える必要があります。Quarkus (別名 Narayana) の STM 実装は、これらのオブジェクトインスタンスが存在するトランザクションメモリーのコンテナーを提供することでこれを行います。オブジェクトがこれらの STM コンテナー内に置かれるまでは、トランザクション内で管理することはできず、状態の変更は A、C、I (あるいは D) のプロパティーを持たないことになります。"
 
 #: _versions/3.27/guides/software-transactional-memory.adoc
 msgid ""
 "Note, the term \"container\" was defined within the STM implementation years before Linux containers came along. It may\n"
 "be confusing to use especially in a Kubernetes native environment such as Quarkus, but hopefully\n"
 "the reader can do the mental mapping."
-msgstr ""
+msgstr "注意: \"コンテナー\" という用語は、Linux コンテナーが登場する何年も前に STM の実装で定義されていました。特に Quarkus のような Kubernetes ネイティブ環境で使用すると混乱するかもしれませんが、読者の方には柔軟に理解していただければと思います。"
 
 #: _versions/3.27/guides/software-transactional-memory.adoc
 msgid ""
@@ -203,40 +203,40 @@ msgid ""
 "through which that object should then be used in the future. It is important to use this handle as continuing to access\n"
 "the object through the original reference will not allow the STM subsystem to track access and manage state and\n"
 "concurrency control."
-msgstr ""
+msgstr "デフォルトの STM コンテナー (`org.jboss.stm.Container`) は、同じマイクロサービス/JVM インスタンス内のスレッド間でのみ共有可能な揮発性オブジェクトをサポートしています。STM を意識したオブジェクトがコンテナーに置かれると、そのオブジェクトが将来的に使用されるべきハンドルを返します。元の参照を介してオブジェクトにアクセスし続けると、STM サブシステムがアクセスを追跡したり、状態や同時実行制御を管理したりすることができなくなるため、このハンドルを使用することが重要です。"
 
 #: _versions/3.27/guides/software-transactional-memory.adoc
 msgid ""
 "You need to tell each Container about the type of objects for which it will be responsible. In this example\n"
 "it will be instances that implement the FlightService interface."
-msgstr ""
+msgstr "各コンテナーに、処理するオブジェクトの種類を伝える必要があります。この例では、FlightService インターフェースを実装したインスタンスになります。"
 
 #: _versions/3.27/guides/software-transactional-memory.adoc
 msgid ""
 "Then you create an instance that implements `FlightService`. You should not use it directly at this stage because\n"
 "access to it is not being managed by the STM subsystem."
-msgstr ""
+msgstr "次に、 `FlightService` を実装したインスタンスを作成します。この段階では、STM サブシステムによってアクセスが管理されていないため、直接使用してはいけません。"
 
 #: _versions/3.27/guides/software-transactional-memory.adoc
 msgid ""
 "To obtain a managed instance, pass the original object to the STM `container` which then returns a reference\n"
 "through which you will be able to perform transactional operations. This reference can be used safely from multiple threads."
-msgstr ""
+msgstr "管理されたインスタンスを取得するには、元のオブジェクトを STM `container` に渡します。すると、トランザクション的な操作を実行できるようになる参照を返します。この参照は、複数のスレッドから安全に使用することができます。"
 
 #: _versions/3.27/guides/software-transactional-memory.adoc
 msgid "Defining transaction boundaries"
-msgstr ""
+msgstr "トランザクションの境界の定義"
 
 #: _versions/3.27/guides/software-transactional-memory.adoc
 msgid ""
 "Once an object is placed within an STM container the application developer can manage the scope of transactions\n"
 "within which it is used. There are some annotations which can be applied to the STM-aware class to have the\n"
 "container automatically create a transaction whenever a specific method is invoked."
-msgstr ""
+msgstr "一度オブジェクトをSTMコンテナー内に配置すると、アプリケーション開発者はそれが使用されるトランザクションの範囲を管理することができます。特定のメソッドが呼び出されたときにコンテナーが自動的にトランザクションを作成するように、STM-aware クラスに適用できるアノテーションがいくつかあります。"
 
 #: _versions/3.27/guides/software-transactional-memory.adoc
 msgid "Declarative approach"
-msgstr ""
+msgstr "宣言的アプローチ"
 
 #: _versions/3.27/guides/software-transactional-memory.adoc
 msgid ""
@@ -247,52 +247,52 @@ msgid ""
 "transaction does not behave as a parent, i.e., the nested top-level transaction will commit or abort independently; the\n"
 "latter annotation will create a transaction with is properly nested within the calling transaction, i.e., that\n"
 "transaction acts as the parent of this newly created transaction."
-msgstr ""
+msgstr "`@NestedTopLevel` または `@Nested` アノテーションがメソッドのシグネチャーに配置されている場合、STM コンテナーは、そのメソッドが呼び出されたときに新しいトランザク ションを開始し、そのメソッドが戻ってきたときにコミットを試みます。呼び出したスレッドに既にトランザクションが関連付けられている場合、これらのアノテーションの動作はそれぞれ若干異なります。前者のアノテーションでは、メソッドが実行される新しいトップレベルのトランザクションが常に作成されるため、周囲のトランザクションは親として動作せず、入れ子になったトップレベルのトランザクションは独立してコミットまたはアボートします。後者のアノテーションでは、呼び出したトランザクションの中に適切に入れ子になったトランザクションが作成され、そのトランザクションが新しく作成されたトランザクションの親として動作します。"
 
 #: _versions/3.27/guides/software-transactional-memory.adoc
 msgid "Programmatic approach"
-msgstr ""
+msgstr "プログラム的アプローチ"
 
 #: _versions/3.27/guides/software-transactional-memory.adoc
 msgid "The application can programmatically start a transaction before accessing the methods of STM objects:"
-msgstr ""
+msgstr "アプリケーションは、STM オブジェクトのメソッドにアクセスする前に、プログラム的にトランザクションを開始することができます。"
 
 #: _versions/3.27/guides/software-transactional-memory.adoc
 msgid ""
 "An object for manually controlling transaction boundaries (AtomicAction and many other useful\n"
 "classes are included in the extension).\n"
 "Refer https://narayana.io//docs/api/com/arjuna/ats/arjuna/AtomicAction.html[to the javadoc] for more detail."
-msgstr ""
+msgstr "トランザクションの境界を手動で制御するためのオブジェクト (AtomicAction と他の多くの便利なクラスがエクステンションに含まれています)。詳細は https://narayana.io//docs/api/com/arjuna/ats/arjuna/AtomicAction.html[to the javadoc] を参照してください。"
 
 #: _versions/3.27/guides/software-transactional-memory.adoc
 msgid "Programmatically begin a transaction."
-msgstr ""
+msgstr "プログラムでトランザクションを開始します。"
 
 #: _versions/3.27/guides/software-transactional-memory.adoc
 msgid ""
 "Notice that object updates can be composed which means that updates to multiple objects can be committed together as a single action.\n"
 "[Note that it is also possible to begin nested transactions so that you can perform speculative work which may then be abandoned\n"
 "without abandoning other work performed by the outer transaction]."
-msgstr ""
+msgstr "また、オブジェクトの更新を構成することが可能です。つまり、複数のオブジェクトの更新を 1 つのアクションとしてまとめてコミットすることができます。[なお、ネストしたトランザクションを開始することで、推論的な作業を行うことも可能です。これは、その後、外側のトランザクションで行われた他の作業を放棄することなく、破棄できます。"
 
 #: _versions/3.27/guides/software-transactional-memory.adoc
 msgid "Since the transaction has not yet been committed the changes made by the flight and taxi services are not visible outside the transaction."
-msgstr ""
+msgstr "このトランザクションはまだコミットされていないため、フライトやタクシーサービスによって行われた変更は、トランザクションの外からは見えません。"
 
 #: _versions/3.27/guides/software-transactional-memory.adoc
 msgid ""
 "Since the commit was successful the changes made by the flight and taxi services are now visible to other threads.\n"
 "Note that other transactions that relied on the old state may or may not now incur conflicts when they commit (the STM library\n"
 "provides a number of features for managing conflicting behaviour and these are covered in the Narayana STM manual)."
-msgstr ""
+msgstr "コミットが成功したので、フライトサービスやタクシーサービスで行われた変更が他のスレッドからも見えるようになりました。古い状態に依存していた他のトランザクションがコミットする際に競合が発生する可能性があることに注意してください (STM ライブラリーは競合する動作を管理するための多くの機能を提供しており、これらについては Narayana STM マニュアルに記載されています)。"
 
 #: _versions/3.27/guides/software-transactional-memory.adoc
 msgid "Programmatically decide to abort the transaction which means that the changes made by the flight and taxi services are discarded."
-msgstr ""
+msgstr "プログラム的には、フライトやタクシーサービスによって行われた変更が破棄されることを意味するトランザクションの中止を決定します。"
 
 #: _versions/3.27/guides/software-transactional-memory.adoc
 msgid "Distributed transactions"
-msgstr ""
+msgstr "分散型トランザクション"
 
 #: _versions/3.27/guides/software-transactional-memory.adoc
 msgid ""
@@ -300,4 +300,4 @@ msgid ""
 "an advanced use case only and the Narayana documentation should be consulted\n"
 "if this behaviour is required. In particular, STM does not yet support the features\n"
 "described in the xref:context-propagation.adoc[Context Propagation guide]."
-msgstr ""
+msgstr "複数のサービス間でトランザクションを共有することは可能ですが、これは現在のところ高度なユースケースであり、この動作が必要な場合はNarayanaのドキュメントを参照してください。特に、STM は link:context-propagation.html[Context Propagation ガイド]で説明されている機能をまだサポートしていません。"
