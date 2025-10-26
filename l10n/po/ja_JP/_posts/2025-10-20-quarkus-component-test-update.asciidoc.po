@@ -1,0 +1,248 @@
+msgid ""
+msgstr ""
+"Language: ja_JP\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: jekyll-l10n\n"
+
+#: _posts/2025-10-20-quarkus-component-test-update.asciidoc
+msgid "Quarkus - a component testing update"
+msgstr ""
+
+#: _posts/2025-10-20-quarkus-component-test-update.asciidoc
+msgid "It has been a while since we introduced the component testing in Quarkus. What’s new? What new functionalities are available?"
+msgstr ""
+
+#: _posts/2025-10-20-quarkus-component-test-update.asciidoc
+msgid ""
+"It's been a while since we https://quarkus.io/blog/quarkus-component-test/[introduced the component testing] in Quarkus.\n"
+"In this blogpost, we will first quickly summarize the basic principles and then describe some of the new interesting features."
+msgstr ""
+
+#: _posts/2025-10-20-quarkus-component-test-update.asciidoc
+msgid "Quick summary"
+msgstr ""
+
+#: _posts/2025-10-20-quarkus-component-test-update.asciidoc
+msgid ""
+"First, just a quick summary.\n"
+"The component model of Quarkus is built on top of CDI.\n"
+"An idiomatic way to test a Quarkus application is to use the `quarkus-junit5` module and `@QuarkusTest`.\n"
+"However, in this case, a full Quarkus application needs to be built and started.\n"
+"In order to avoid unnecessary rebuilds and restarts the application is shared for multiple tests, unless a https://quarkus.io/guides/getting-started-testing#testing_different_profiles[different test profile] is used.\n"
+"One of the consequences is that some components (typically `@ApplicationScoped` and `@Singleton` CDI beans) are shared as well.\n"
+"What if you need to test the business logic of a component in isolation, with different states and inputs?\n"
+"For this use case, a plain unit test would make a lot of sense.\n"
+"However, writing unit tests for CDI beans without a running CDI container is often a tedious work.\n"
+"Dependency injection, events, interceptors - all the work has to be done manually and everything needs to be wired together by hand.\n"
+"In Quarkus 3.2, we introduced an experimental feature to ease the testing of CDI components and mocking of their dependencies.\n"
+"It's a JUnit 5 extension that does not start a full Quarkus application but merely the CDI container and the Configuration service."
+msgstr ""
+
+#: _posts/2025-10-20-quarkus-component-test-update.asciidoc
+msgid "The lifecycle"
+msgstr ""
+
+#: _posts/2025-10-20-quarkus-component-test-update.asciidoc
+msgid ""
+"So when exactly does the `QuarkusComponentTest` start the CDI container?\n"
+"It depends on the value of `@org.junit.jupiter.api.TestInstance#lifecycle`.\n"
+"If the test instance lifecycle is `Lifecycle#PER_METHOD` (default) then the container is started during the _before each_ test phase and stopped during the _after each_ test phase.\n"
+"If the test instance lifecycle is `Lifecycle#PER_CLASS`` then the container is started during the _before all_ test phase and stopped during the _after all_ test phase."
+msgstr ""
+
+#: _posts/2025-10-20-quarkus-component-test-update.asciidoc
+msgid "Components under test"
+msgstr ""
+
+#: _posts/2025-10-20-quarkus-component-test-update.asciidoc
+msgid ""
+"When writing a component test, it's essential to understand how the set of _tested components_ is built.\n"
+"It's because the _tested components_ are treated as real beans, but all _unsatisfied dependencies_ are mocked automatically.\n"
+"What does it mean?\n"
+"Imagine that we have a bean `Foo` like this:"
+msgstr ""
+
+#: _posts/2025-10-20-quarkus-component-test-update.asciidoc
+msgid ""
+"It has one dependency - a bean `Charlie`.\n"
+"Now if you want to write a unit test for `Foo` you need to make sure the `Charlie` dependency is injected and functional.\n"
+"In `QuarkusComponentTest`, if you include `Foo` in the set of tested components but `Charlie` is not included, then a mock is automatically injected into `Foo.charlie`.\n"
+"What's also important is that you can inject the mock directly in the test using the `@InjectMock` annotation and configure the mock in a test method:"
+msgstr ""
+
+#: _posts/2025-10-20-quarkus-component-test-update.asciidoc
+msgid "The `QuarkusComponentTest` annotation registers the JUnit extension."
+msgstr ""
+
+#: _posts/2025-10-20-quarkus-component-test-update.asciidoc
+msgid "The test injects `Foo` - it's included in the set of tested components. In other words, it's treated as a real CDI bean."
+msgstr ""
+
+#: _posts/2025-10-20-quarkus-component-test-update.asciidoc
+msgid "The test also injects a mock for `Charlie`. `Charlie` is an _unsatisfied_ dependency for which a synthetic `@Singleton` bean is registered automatically. The injected reference is an \"unconfigured\" Mockito mock."
+msgstr ""
+
+#: _posts/2025-10-20-quarkus-component-test-update.asciidoc
+msgid "We can leverage the Mockito API in a test method to configure the behavior."
+msgstr ""
+
+#: _posts/2025-10-20-quarkus-component-test-update.asciidoc
+msgid "The initial set of tested components is derived from the test class:"
+msgstr ""
+
+#: _posts/2025-10-20-quarkus-component-test-update.asciidoc
+msgid "First, the types of all fields annotated with `@jakarta.inject.Inject` are considered the component types."
+msgstr ""
+
+#: _posts/2025-10-20-quarkus-component-test-update.asciidoc
+msgid "The types of test methods parameters that are not annotated with `@InjectMock`, `@SkipInject`, or `@org.mockito.Mock` are also considered the component types."
+msgstr ""
+
+#: _posts/2025-10-20-quarkus-component-test-update.asciidoc
+msgid "Finally, if `@QuarkusComponentTest#addNestedClassesAsComponents()` is set to `true` (it is by default) then all static nested classes declared on the test class are components too."
+msgstr ""
+
+#: _posts/2025-10-20-quarkus-component-test-update.asciidoc
+msgid "Additional component classes can be set using `@QuarkusComponentTest#value()` or `QuarkusComponentTestExtensionBuilder#addComponentClasses()`."
+msgstr ""
+
+#: _posts/2025-10-20-quarkus-component-test-update.asciidoc
+msgid "What's new?"
+msgstr ""
+
+#: _posts/2025-10-20-quarkus-component-test-update.asciidoc
+msgid "Quarkus 3.13"
+msgstr ""
+
+#: _posts/2025-10-20-quarkus-component-test-update.asciidoc
+msgid "Removed the experimental status"
+msgstr ""
+
+#: _posts/2025-10-20-quarkus-component-test-update.asciidoc
+msgid "Quarkus 3.21"
+msgstr ""
+
+#: _posts/2025-10-20-quarkus-component-test-update.asciidoc
+msgid "Basic support for nested tests"
+msgstr ""
+
+#: _posts/2025-10-20-quarkus-component-test-update.asciidoc
+msgid "Quarkus 3.29"
+msgstr ""
+
+#: _posts/2025-10-20-quarkus-component-test-update.asciidoc
+msgid "Class loading refactoring"
+msgstr ""
+
+#: _posts/2025-10-20-quarkus-component-test-update.asciidoc
+msgid "`QuarkusComponentTestCallbacks`"
+msgstr ""
+
+#: _posts/2025-10-20-quarkus-component-test-update.asciidoc
+msgid "Integration with `quarkus-panache-mock`"
+msgstr ""
+
+#: _posts/2025-10-20-quarkus-component-test-update.asciidoc
+msgid "Support `@InjectMock` for built-in `Event`"
+msgstr ""
+
+#: _posts/2025-10-20-quarkus-component-test-update.asciidoc
+msgid ""
+"In the previous versions of `QuarkusComponentTest` it wasn't possible to perform bytecode transformations.\n"
+"As a result, features like https://quarkus.io/guides/cdi-reference#simplified-constructor-injection[simplified constructor injection] or ability to https://quarkus.io/guides/cdi-reference#unproxyable_classes_transformation[handle final classes and methods] were not supported.\n"
+"That wasn't ideal because the tested CDI beans may have required changes before being used in a `QuarkusComponentTest`.\n"
+"This limitation is gone!\n"
+"The class loading is now more similar to a real Quarkus application."
+msgstr ""
+
+#: _posts/2025-10-20-quarkus-component-test-update.asciidoc
+msgid "QuarkusComponentTestCallbacks"
+msgstr ""
+
+#: _posts/2025-10-20-quarkus-component-test-update.asciidoc
+msgid ""
+"We also introduced a new SPI - `QuarkusComponentTestCallbacks` - that can be used to contribute additional logic to the `QuarkusComponentTest` extension.\n"
+"There are several callbacks that can be used to modify the behavior before the container is built, after the container is started, etc.\n"
+"It is a service provider, so all you have to do is to create a file located in `META-INF/services/io.quarkus.test.component.QuarkusComponentTestCallbacks` that contains the fully qualified name of your implementation class."
+msgstr ""
+
+#: _posts/2025-10-20-quarkus-component-test-update.asciidoc
+msgid ""
+"Thanks to class loading refactoring and `QuarkusComponentTestCallbacks` SPI, we're now able to do interesting stuff.\n"
+"Previously, whenever we got a question like:\n"
+"_\"What if I use Panache entities with the active record pattern? How I do write a test for a component that is using such entities?\"_, we had to admit that it wasn't possible.\n"
+"But it's no longer true.\n"
+"Once you add the `quarkus-panache-mock` module in your application you can write the component test in a similar way as with the https://quarkus.io/guides/hibernate-orm-panache#using-the-active-record-pattern[`PanacheMock` API]."
+msgstr ""
+
+#: _posts/2025-10-20-quarkus-component-test-update.asciidoc
+msgid "Given this simple entity:"
+msgstr ""
+
+#: _posts/2025-10-20-quarkus-component-test-update.asciidoc
+msgid "That is used in a simple bean:"
+msgstr ""
+
+#: _posts/2025-10-20-quarkus-component-test-update.asciidoc
+msgid "You can write a component test like:"
+msgstr ""
+
+#: _posts/2025-10-20-quarkus-component-test-update.asciidoc
+msgid "`@MockPanacheEntities` installs mocks for the given entity classes."
+msgstr ""
+
+#: _posts/2025-10-20-quarkus-component-test-update.asciidoc
+msgid "The test injects the component under the test - `PersonService`."
+msgstr ""
+
+#: _posts/2025-10-20-quarkus-component-test-update.asciidoc
+msgid "It is now possible to mock the built-in bean for `jakarta.enterprise.event.Event`."
+msgstr ""
+
+#: _posts/2025-10-20-quarkus-component-test-update.asciidoc
+msgid "Given this simple CDI bean:"
+msgstr ""
+
+#: _posts/2025-10-20-quarkus-component-test-update.asciidoc
+msgid "Install the mock for the built-in `Event`."
+msgstr ""
+
+#: _posts/2025-10-20-quarkus-component-test-update.asciidoc
+msgid "Call the `register()` method that should trigger an event."
+msgstr ""
+
+#: _posts/2025-10-20-quarkus-component-test-update.asciidoc
+msgid "Verify that the `Event#fire()` method was called exactly once."
+msgstr ""
+
+#: _posts/2025-10-20-quarkus-component-test-update.asciidoc
+msgid "Nested tests"
+msgstr ""
+
+#: _posts/2025-10-20-quarkus-component-test-update.asciidoc
+msgid ""
+"JUnit `@Nested` tests may help to structure more complex test scenarios.\n"
+"However, its support has proven more troublesome than we expected.\n"
+"Still, we do support and test the basic use cases like this:"
+msgstr ""
+
+#: _posts/2025-10-20-quarkus-component-test-update.asciidoc
+msgid "The test injects the component under the test. `Foo` injects `Charlie`."
+msgstr ""
+
+#: _posts/2025-10-20-quarkus-component-test-update.asciidoc
+msgid "The test also injects a mock for `Charlie`. The injected reference is an \"unconfigured\" Mockito mock."
+msgstr ""
+
+#: _posts/2025-10-20-quarkus-component-test-update.asciidoc
+msgid "Conclusion"
+msgstr ""
+
+#: _posts/2025-10-20-quarkus-component-test-update.asciidoc
+msgid ""
+"If you want to test the business logic of your components in isolation, with different configurations and inputs, then `QuarkusComponentTest` is a good choice.\n"
+"It's fast, integrated with continuous testing, and extensible.\n"
+"As always, we are looking forward to your feedback!"
+msgstr ""
