@@ -9,69 +9,75 @@ on:
 jobs:
   build:
     name: Sync
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        # Checkout target revision from git repository
-        uses: actions/checkout@v3
-      - name: Setup build env
-        # Setup build environment(install runtime, library, etc.)
-        run: |
-          bin/setup-build-env-on-ubuntu
-      - name: Set up JDK 11
-        # Setup JDK 11
-        uses: actions/setup-java@v3
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: 11
+          java-version: '21'
+          cache: 'gradle'
+
+      - name: Setup build env
+        run: bin/setup-build-env-on-ubuntu
 
       - name: Sync submodule
-        # Sync submodule, which points the upstream repository to a latest revision
-        run: vendor/quarkus-l10n-utils/bin/sync-submodule
-      - name: Push changes
-        # Commit and Push the upstream submodule change
-        run: vendor/quarkus-l10n-utils/bin/push-changes "Update upstream"
+        run: |
+          cd upstream
+          git fetch origin main
+          git reset --hard origin/main
+          cd ..
+
+      - name: Push changes (upstream)
+        uses: ./.github/actions/push-changes
+        with:
+          message: "Update upstream"
 
       - name: Update po files
-        # Extract texts from the original source files and update .po files
-        run: |
-          vendor/quarkus-l10n-utils/bin/update-po-files
+        run: ./tsujiw jekyll extract
 
-      - name: Push changes
-        # Commit and Push the updated .po files
-        run: vendor/quarkus-l10n-utils/bin/push-changes "Update .po files"
+      - name: Push changes (po files)
+        uses: ./.github/actions/push-changes
+        with:
+          message: "Update .po files"
 
-      - name: Update translation stats
-        # Update the translation stats .csv file, which is used as an simplified dashboard ( <L10N_HOME>/l10n/stats/translation.csv )
-        run: vendor/quarkus-l10n-utils/bin/update-translation-stats
+      - name: Update all stats
+        run: ./tsujiw jekyll update-stats
 
-      - name: Push changes
-        # Commit and Push the translation stats .csv file
-        run: vendor/quarkus-l10n-utils/bin/push-changes "Update translation stats"
+      - name: Push changes (translation stats)
+        uses: ./.github/actions/push-changes
+        with:
+          message: "Update translation stats"
 
       - name: Apply fuzzy tmx
-        # Apply fuzzy tmx to .po files to fill fuzzy translation candidates
-        run: vendor/quarkus-l10n-utils/bin/translate-po-files-with-fuzzy-tmx
+        run: ./tsujiw po apply-fuzzy-tmx --tmx=l10n/tmx/fuzzy.tmx
 
-      - name: Push changes
-        # Commit and Push the .po files updated by fuzzy tmx
-        run: vendor/quarkus-l10n-utils/bin/push-changes "Apply fuzzy translation memory"
+      - name: Push changes (fuzzy translation memory)
+        uses: ./.github/actions/push-changes
+        with:
+          message: "Apply fuzzy translation memory"
 
       - name: Apply tmx
-        # Apply tmx file to .po files to fill known translations
-        run: vendor/quarkus-l10n-utils/bin/translate-po-files-with-tmx
+        run: ./tsujiw po apply-tmx --tmx=l10n/tmx/quarkus.tmx
 
-      - name: Push changes
-        # Commit and Push the .po files updated by tmx
-        run: vendor/quarkus-l10n-utils/bin/push-changes "Apply translation memory"
+      - name: Push changes (translation memory)
+        uses: ./.github/actions/push-changes
+        with:
+          message: "Apply translation memory"
 
       - name: Machine translate
-        # Machine translate with DeepL API
-        run: vendor/quarkus-l10n-utils/bin/translate-po-files-with-deepl
-        continue-on-error: true # The translated files need to be pushed even if the process ends with an error to reduce DeepL costs even in a situation where repeated failures occur
+        run: ./tsujiw po machine-translate
+        continue-on-error: true
         env:
-          TRANSLATOR_DEEPL_APIKEY: ${{ secrets.TRANSLATOR_DEEPL_APIKEY }}
+          TSUJI_TRANSLATOR_DEEPL_API_KEY: ${{ secrets.TRANSLATOR_DEEPL_APIKEY }}
 
-      - name: Push changes
-        # Commit and Push the .po files updated by DeepL machine-translation
-        run: vendor/quarkus-l10n-utils/bin/push-changes "Add machine translation"
+      - name: Push changes (machine translation)
+        uses: ./.github/actions/push-changes
+        with:
+          message: "Add machine translation"

@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+set -e
+
+#
+# tsuji wrapper script (tsujiw)
+# This script ensures the correct version of tsuji.jar is downloaded and executed.
+#
+
+# Get the script directory
+SCRIPT_DIR=$(cd $(dirname $0); pwd)
+L10N_HOME="$SCRIPT_DIR"
+cd "$L10N_HOME"
+
+# Configuration file path - support both YAML and properties
+if [ -f "config/application.yaml" ]; then
+    CONFIG_FILE="config/application.yaml"
+elif [ -f "config/application.properties" ]; then
+    CONFIG_FILE="config/application.properties"
+else
+    echo "Error: config/application.yaml or config/application.properties not found."
+    exit 1
+fi
+
+# Extract version from config file
+if [[ "$CONFIG_FILE" == *.yaml ]]; then
+    # YAML format: "  version: 0.5.5"
+    VERSION=$(grep "^  version:" "$CONFIG_FILE" | sed 's/.*: *//' | tr -d ' ')
+else
+    # Properties format: "tsuji.version=0.5.5"
+    VERSION=$(grep "^tsuji.version=" "$CONFIG_FILE" | cut -d'=' -f2 | tr -d '')
+fi
+
+if [ -z "$VERSION" ]; then
+    echo "Error: tsuji.version not defined in $CONFIG_FILE"
+    exit 1
+fi
+
+JAR_DIR="vendor/tsuji"
+JAR_PATH="$JAR_DIR/tsuji-$VERSION.jar"
+
+# Download tsuji.jar if it doesn't exist
+if [ ! -f "$JAR_PATH" ]; then
+    echo "tsuji.jar (version $VERSION) not found. Downloading..."
+    mkdir -p "$JAR_DIR"
+    
+    # Use GitHub release URL
+    URL="https://github.com/doc-l10n-kit/tsuji/releases/download/v$VERSION/tsuji.jar"
+    
+    if ! curl -L --fail "$URL" -o "$JAR_PATH"; then
+        echo "Error: Failed to download tsuji.jar from $URL"
+        exit 1
+    fi
+    echo "Successfully downloaded tsuji-$VERSION.jar"
+fi
+
+# Execute tsuji with passed arguments
+exec java -Dquarkus.config.locations="$CONFIG_FILE" -jar "$JAR_PATH" "$@"

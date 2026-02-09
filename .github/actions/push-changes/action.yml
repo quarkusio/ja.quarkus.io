@@ -1,0 +1,28 @@
+name: 'Push Changes'
+description: 'Commits and pushes changes in l10n and upstream directories'
+inputs:
+  message:
+    description: 'Commit message'
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: Commit and Push
+      shell: bash
+      run: |
+        GIT_USER_NAME=$(./tsujiw config get tsuji.git.user.name)
+        GIT_USER_EMAIL=$(./tsujiw config get tsuji.git.user.email)
+        
+        git add upstream l10n
+        
+        # Check if there are staged changes
+        if ! git diff --cached --exit-code --quiet; then
+          git config user.name "$GIT_USER_NAME"
+          git config user.email "$GIT_USER_EMAIL"
+          git commit -m "${{ inputs.message }}"
+          git fetch origin main
+          git rebase origin/main
+          git push origin main
+        else
+          echo "No changes to push"
+        fi
