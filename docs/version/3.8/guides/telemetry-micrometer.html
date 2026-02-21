@@ -1,0 +1,2562 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+
+
+
+
+
+
+<head>
+  <title>Micrometerメトリクス - 3.8 - Quarkus</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="
+  connect-src 'self' https://dpm.demdex.net https://adobedc.demdex.net https://analytics.ossupstream.org/ https://search.quarkus.io https://smetrics.redhat.com https://ajax.googleapis.com; 
+  script-src 'self' 'unsafe-inline' 'unsafe-eval'
+      
+      https://assets.adobedtm.com
+      js.bizographics.com
+      https://www.redhat.com
+      https://static.redhat.com
+      https://app.requestly.io/
+      jsonip.com
+      https://ajax.googleapis.com
+      https://use.fontawesome.com
+      http://www.youtube.com
+      http://www.googleadservices.com
+      https://googleads.g.doubleclick.net
+      https://giscus.app
+      https://analytics.ossupstream.org/
+      https://app.mailjet.com;
+
+  style-src 'self' https://fonts.googleapis.com https://use.fontawesome.com; 
+  img-src 'self' * data:; 
+  media-src 'self'; 
+  frame-src https://redhat.demdex.net https://www.youtube.com https://player.restream.io https://app.mailjet.com http://xy0p2.mjt.lu https://mj.quarkus.io https://giscus.app; 
+  base-uri 'none'; 
+  object-src 'none'; 
+  form-action 'none'; 
+  font-src 'self' https://use.fontawesome.com https://fonts.gstatic.com;" />
+
+  <script id="adobe_dtm" src="https://www.redhat.com/dtm.js" type="text/javascript"></script>
+  <script src="/assets/javascript/highlight.pack.js" type="text/javascript"></script>
+  <META HTTP-EQUIV='X-XSS-Protection' CONTENT="1; mode=block">
+  <META HTTP-EQUIV='X-Content-Type-Options' CONTENT="nosniff">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Quarkus: Supersonic Subatomic Java">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@QuarkusIO"> 
+  <meta name="twitter:creator" content="@QuarkusIO">
+  <meta property="og:url" content="https://quarkus.io/version/3.8/guides/telemetry-micrometer" />
+  <meta property="og:title" content="Micrometerメトリクス - 3.8" />
+  <meta property="og:description" content="Quarkus: Supersonic Subatomic Java" />
+  <meta property="og:image" content="https://quarkus.io/assets/images/quarkus_card.png" />
+  
+  <link rel="canonical" href="https://quarkus.io/guides/telemetry-micrometer">
+  <link rel="shortcut icon" type="image/png" href="/favicon.ico" >
+  <link rel="stylesheet" href="/guides/stylesheet/config.css" />
+  <link rel="stylesheet" href="/assets/css/main.css?2021-07-29" />
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.5.2/css/all.css" crossorigin="anonymous">
+  <link rel="alternate" type="application/rss+xml"  href="/feed.xml" title="Quarkus">
+  <script src="/assets/javascript/hl.js" type="text/javascript"></script>
+  
+  
+  
+  
+  <link rel="alternate" hreflang="x-default" href="https://quarkus.io/" />  
+  <script src="/assets/javascript/tracking.js"></script>
+  
+  <script src="/assets/javascript/colormode.js" type="text/javascript"></script>
+
+</head>
+
+<body class="guides">
+
+  
+
+
+<div class="grid-wrapper communitysite">
+  <div class="grid__item width-12-12">The <a href="https://quarkus.io/version/3.8/guides/telemetry-micrometer">English version of quarkus.io</a> is the official project site. Translated sites are community supported on a best-effort basis.</div>
+</div>
+
+
+  <div class="nav-wrapper">
+  <div class="grid-wrapper">
+    <div class="width-12-12">
+      <input type="checkbox" id="checkbox" />
+      <nav id="main-nav" class="main-nav">
+        <div class="logo-wrapper">
+           <a href="/"><img src="/assets/images/quarkus_logo_horizontal_rgb_600px_reverse.png" class="project-logo" title="Quarkus"></a>
+        </div>
+    <label class="nav-toggle" for="checkbox"> <i class="fa fa-bars"></i>
+</label>
+    <ul id="menu" class="menu">
+      <li class="dropdown">
+        <span href="#">Why<i class="fas fa-chevron-down firsti"></i></span>
+        <ul class="submenu">
+          <li><a href="/about" class="">QUARKUSとは何か?</a></li>
+          <li><a href="/developer-joy" class="">開発者満足</a></li>
+          <li><a href="/performance" class="">パフォーマンス</a></li>
+          <li><a href="/kubernetes-native" class="">KUBERNETES NATIVE</a></li>
+          <li><a href="/standards" class="">標準</a></li>
+          <li><a href="/versatility" class="">多用途性</a></li>
+          <li><a href="/container-first" class="">コンテナ・ファースト</a></li>
+          <li><a href="/spring" class="">USING SPRING?</a></li>
+          <li class="tertiarydropdown">
+            <span href="#">AI<i class="fas fa-chevron-down"></i></span>
+            <ul class="tertiarymenu">
+              <li><a href="/ai" class="">AI OVERVIEW</a></li>
+              <li><a href="/java-for-ai" class="">JAVA FOR AI</a></li>
+              <li><a href="/quarkus-for-ai" class="">WHY QUARKUS FOR AI</a></li>
+              <li><a href="/ai-blueprints" class="">AI BLUEPRINTS</a></li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+      <li class="dropdown">
+        <span href="#">Learn<i class="fas fa-chevron-down firsti"></i></span>
+        <ul class="submenu">
+          <li><a href="/get-started" class="">入門</a></li>
+          <li><a href="/guides" class="active">ドキュメント</a></li>
+          <li><a href="/userstories/" class="">ユーザーストーリー</a></li>  
+          <li><a href="/qtips" class="">"Q" Tipsビデオ</a></li>          
+          <li><a href="/books" class="">書籍</a></li>
+          </ul>
+      </li>
+      <li class="dropdown">
+        <span href="#">Extensions<i class="fas fa-chevron-down firsti"></i></span>
+        <ul class="submenu">
+          
+          <!-- Note that quarkus.io is hardcoded here, because it is the only url which supports extensions -->
+<li><a href="https://quarkus.io/extensions/" class="">エクステンションを探す</a></li>
+          <li><a href="/faq/#what-is-a-quarkus-extension" class="">エクステンションの使用</a></li>
+          <li><a href="/guides/writing-extensions" class="">エクステンションの作成</a></li>
+          <li><a href="https://hub.quarkiverse.io" class="">エクステンションの共有</a></li>
+        </ul>
+      </li>
+      <li class="dropdown">
+        <span href="#">Community<i class="fas fa-chevron-down firsti"></i></span>
+        <ul class="submenu">
+          <li><a href="/support/" class="">サポート</a></li>
+          <li><a href="/blog" class="">ブログ</a></li>
+          <li><a href="/discussion" class="">ディスカッション</a></li>
+          <li><a href="/working-groups" class="">ワーキンググループ</a></li>
+          <li><a href="/insights" class="">ポッドキャスト</a></li>
+          <li><a href="/events" class="">イベント</a></li>
+          <li><a href="/newsletter" class="">ニュースレター</a></li>
+          <li><a href="https://github.com/orgs/quarkusio/projects/13/views/1" class="">ロードマップ</a></li>
+          <li><a href="/benefactors" class="">BENEFACTORS</a></li>
+          </ul>
+      </li>
+      <li>
+        <a href="https://code.quarkus.io" class="button-cta secondary
+white">コーディングを開始</a>
+      </li>
+      <li class="dropdown">
+        <span href="/language/"><div class="fas fa-globe langicon"></div><i class="fas fa-chevron-down"></i></span>
+        <ul class="submenu">
+          <li><a href="https://quarkus.io/version/3.8/guides/telemetry-micrometer" >OFFICIAL (ENGLISH)</a></li>
+          <li><a href="https://pt.quarkus.io/version/3.8/guides/telemetry-micrometer">ポルトガル（BR）</a></li>
+          <li><a href="https://es.quarkus.io/version/3.8/guides/telemetry-micrometer">ESPAÑOL</a></li>
+          <li><a href="https://cn.quarkus.io/version/3.8/guides/telemetry-micrometer">简体中文</a></li>
+          <li><a href="https://ja.quarkus.io/version/3.8/guides/telemetry-micrometer">日本語</a></li>
+          </ul>
+      </li>
+      <li>
+        <span href="#" class="modeswitcher" id='theme-toggle'><i class="fas
+fa-sun"></i><i class="fas fa-moon"></i><i class="fas fa-cog"></i></span>
+      </li>
+    </ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+  <div class="content">
+    
+
+
+
+
+
+
+
+<section class="full-width-version-bg flexfilterbar guides">
+  <div class="guideflexcontainer">
+    <div class="docslink">
+      <a class="returnlink" href="/version/3.8/guides/"> Back to Guides</a>
+    </div>
+    <div class="flexlabel">
+      <label>バージョン:</label>
+    </div>
+    <div class="guidepulldown version">
+    <select id="guide-version-dropdown">
+      
+        
+        
+        <option value="main" >Main - SNAPSHOT</option>
+        
+        
+        
+        <option value="latest" >3.31.3 - Latest</option>
+        
+        
+        
+        <option value="3.27" >3.27</option>
+        
+        
+        
+        <option value="3.20" >3.20</option>
+        
+        
+        
+        <option value="3.15" >3.15</option>
+        
+        
+        
+        <option value="3.8" selected>3.8</option>
+        </select>
+    </div>
+  </div>
+</section>
+
+<div class="guide">
+  <div class="grid-wrapper">
+    <div class="grid__item width-8-12 width-12-12-m">
+      
+      <h1 class="text-caps">Micrometerメトリクス </h1>
+      <div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>micrometerは、メトリクス収集のための抽象化レイヤーを提供します。
+カウンタ、ゲージ、タイマ、ディストリビューション・サマリなどの基本的なメータ・タイプの API と、さまざまなバックエンド監視システムのメトリクスの収集と伝達を一般化する <code>MeterRegistry</code> API を定義します。</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+Micrometerは、Quarkusのメトリクスとして推奨されるアプローチです。
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+デフォルトでは、メトリクスはメインの HTTP サーバで公開されます。
+別の管理ポートからメトリッ クを表示したい場合は、 <a href="#management-interface">管理インターフェイス</a> のセクションを参照してください。
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="micrometer-and-monitoring-system-extensions"><a class="anchor" href="#micrometer-and-monitoring-system-extensions"></a>Micrometerとモニタリングシステムのエクステンション</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Quarkus Micrometerエクステンションは、Micrometerプロジェクトと同じ構造になっています。 
+<code>quarkus-micrometer</code> エクステンションは、Micrometerのコアサポートとランタイムの統合を提供します。
+他のQuarkusやQuarkiverseのエクステンションは、Quarkus Micrometerエクステンションを使用して、他のモニタリングシステムのサポートを提供します。</p>
+</div>
+<div class="paragraph">
+<p>Quarkus エクステンション:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>micrometer</p>
+</li>
+<li>
+<p>micrometer-registry-prometheus</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><a href="https://github.com/quarkiverse/quarkus-micrometer-registry">Quarkiverse エクステンション</a> (このリストは完全でない可能性あり): </p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>micrometer-registry-azure-monitor</p>
+</li>
+<li>
+<p>micrometer-registry-datadog</p>
+</li>
+<li>
+<p>micrometer-registry-graphite</p>
+</li>
+<li>
+<p>micrometer-registry-influx</p>
+</li>
+<li>
+<p>micrometer-registry-jmx</p>
+</li>
+<li>
+<p>micrometer-registry-newrelic-telemetry</p>
+</li>
+<li>
+<p>micrometer-registry-otlp</p>
+</li>
+<li>
+<p>micrometer-registry-signalfx</p>
+</li>
+<li>
+<p>micrometer-registry-stackdriver</p>
+</li>
+<li>
+<p>micrometer-registry-statsd</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>例えば、アプリケーションに Prometheus メトリクスのサポートを追加するには、 <code>micrometer-registry-prometheus</code> エクステンションを使用します。
+これにより、Quarkus MicrometerエクステンションとMicrometerコアライブラリが依存ライブラリとして追加されます。</p>
+</div>
+<div class="paragraph">
+<p>（プロジェクトディレクトリで）以下のコマンドを使用して、エクステンションをプロジェクトに追加します：</p>
+</div>
+<div class="listingblock primary asciidoc-tabs-sync-cli">
+<div class="title">コマンドラインインタフェース</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">quarkus extension add micrometer-registry-prometheus</code></pre>
+</div>
+</div>
+<div class="listingblock secondary asciidoc-tabs-sync-maven">
+<div class="title">Maven</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">./mvnw quarkus:add-extension -Dextensions='micrometer-registry-prometheus'</code></pre>
+</div>
+</div>
+<div class="listingblock secondary asciidoc-tabs-sync-gradle">
+<div class="title">Gradle</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">./gradlew addExtension --extensions='micrometer-registry-prometheus'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>これにより、以下がビルドファイルに追加されます。</p>
+</div>
+<div class="listingblock primary asciidoc-tabs-target-sync-cli asciidoc-tabs-target-sync-maven">
+<div class="title">pom.xml</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;dependency&gt;
+    &lt;groupId&gt;io.quarkus&lt;/groupId&gt;
+    &lt;artifactId&gt;quarkus-micrometer-registry-prometheus&lt;/artifactId&gt;
+&lt;/dependency&gt;</code></pre>
+</div>
+</div>
+<div class="listingblock secondary asciidoc-tabs-target-sync-gradle">
+<div class="title">build.gradle</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-gradle hljs" data-lang="gradle">implementation("io.quarkus:quarkus-micrometer-registry-prometheus")</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>これで準備完了です!</p>
+</div>
+<div class="paragraph">
+<p>他のメーターレジストリーエクステンションにも同様のプロセスが適用されます。
+たとえば、Micrometer StackDriver MeterRegistry を使用するには、
+Quarkiverse の <code>quarkus-micrometer-registry-stackdriver</code> エクステンションを使用します。</p>
+</div>
+<div class="listingblock primary asciidoc-tabs-sync-cli">
+<div class="title">コマンドラインインタフェース</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">quarkus extension add io.quarkiverse.micrometer.registry:quarkus-micrometer-registry-stackdriver</code></pre>
+</div>
+</div>
+<div class="listingblock secondary asciidoc-tabs-sync-maven">
+<div class="title">Maven</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">./mvnw quarkus:add-extension -Dextensions='io.quarkiverse.micrometer.registry:quarkus-micrometer-registry-stackdriver'</code></pre>
+</div>
+</div>
+<div class="listingblock secondary asciidoc-tabs-sync-gradle">
+<div class="title">Gradle</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">./gradlew addExtension --extensions='io.quarkiverse.micrometer.registry:quarkus-micrometer-registry-stackdriver'</code></pre>
+</div>
+</div>
+<div class="listingblock primary asciidoc-tabs-target-sync-cli asciidoc-tabs-target-sync-maven">
+<div class="title">pom.xml</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;dependency&gt;
+    &lt;groupId&gt;io.quarkiverse.micrometer.registry&lt;/groupId&gt;
+    &lt;artifactId&gt;quarkus-micrometer-registry-stackdriver&lt;/artifactId&gt;
+&lt;/dependency&gt;</code></pre>
+</div>
+</div>
+<div class="listingblock secondary asciidoc-tabs-target-sync-gradle">
+<div class="title">build.gradle</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-gradle hljs" data-lang="gradle">implementation("io.quarkiverse.micrometer.registry:quarkus-micrometer-registry-stackdriver")</code></pre>
+</div>
+</div>
+<div class="sect2">
+<h3 id="other-registry-implementations"><a class="anchor" href="#other-registry-implementations"></a>その他のレジストリ実装</h3>
+<div class="paragraph">
+<p>使用する Micrometer レジストリに関連エクステンションがない場合は、 
+<code>quarkus-micrometer</code> エクステンションを使用し、Micrometer メーターレジストリの依存関係を直接取り込んでください：</p>
+</div>
+<div class="listingblock primary asciidoc-tabs-target-sync-cli asciidoc-tabs-target-sync-maven">
+<div class="title">pom.xml</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;dependency&gt;
+    &lt;groupId&gt;io.quarkus&lt;/groupId&gt;
+    &lt;artifactId&gt;quarkus-micrometer&lt;/artifactId&gt;
+&lt;/dependency&gt;
+&lt;dependency&gt;
+    &lt;groupId&gt;com.acme&lt;/groupId&gt;
+    &lt;artifactId&gt;custom-micrometer-registry&lt;/artifactId&gt;
+    &lt;version&gt;...&lt;/version&gt;
+&lt;/dependency&gt;</code></pre>
+</div>
+</div>
+<div class="listingblock secondary asciidoc-tabs-target-sync-gradle">
+<div class="title">build.gradle</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-gradle hljs" data-lang="gradle">implementation("io.quarkus:quarkus-micrometer")
+implementation("com.acme:custom-micrometer-registry")</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>次に、次のセクションで説明するように、MeterRegistry を設定して初期化するために、独自のプロバイダを指定する必要があります。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="create-a-customized-meterregistry"><a class="anchor" href="#create-a-customized-meterregistry"></a>カスタマイズされたMeterRegistryの作成</h3>
+<div class="paragraph">
+<p>必要に応じて、カスタム <code>@Produces</code> メソッドを使用し、独自の <code>MeterRegistry</code> を作成および設定します。</p>
+</div>
+<div class="paragraph">
+<p>以下の例では、StatsDで使用される行フォーマットをカスタマイズしています。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">@Produces
+@Singleton <i class="conum" data-value="1"></i><b>(1)</b>
+public StatsdMeterRegistry createStatsdMeterRegistry(StatsdConfig statsdConfig, Clock clock) { <i class="conum" data-value="2"></i><b>(2)</b>
+    // define what to do with lines
+    Consumer&lt;String&gt; lineLogger = line -&gt; logger.info(line);
+
+    // inject a configuration object, and then customize the line builder
+    return StatsdMeterRegistry.builder(statsdConfig)
+          .clock(clock)
+          .lineSink(lineLogger)
+          .build();
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>メソッドは <code>@Singleton</code> を返します。</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>このメソッドは、特定のタイプの <code>MeterRegistry</code> を返します。</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>この例は、Micrometer ドキュメントの <a href="https://micrometer.io/docs/registry/statsD#_customizing_the_metrics_sink">Micrometer StatsD: Customizing the Metrics Sink</a> の手順に対応しています。</p>
+</div>
+<div class="paragraph">
+<p>MicroProfile Config を使用して、レジストリーを設定するために必要な設定属性を挿入します。
+<code>quarkus-micrometer-registry-statsd</code> などのほとんどの Micrometer レジストリーエクステンションは、Quarkus 設定モデルと統合されたレジストリー固有の設定オブジェクトを提供します。
+<a href="https://github.com/quarkiverse/quarkus-micrometer-registry">Quarkiverse GitHub リポジトリー</a> は、便利な実装リファレンスになります。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="create-your-own-metrics"><a class="anchor" href="#create-your-own-metrics"></a>独自のメトリクスの作成</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>メトリクスデータは、時間の経過に伴うデータの変化を観察するために集計されて使用されます。
+このデータは、傾向分析、異常検出、アラートに使用されます。
+データは、バックエンドモニタリングシステムによって時系列データベースに保存され、新しい値が系列の末尾に追加されます。</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+メトリクスは遅延して構築されます。エンドポイントへのアクセスなど、メトリクスを作成するアクションを実行するまで、探しているメトリクスのデータが表示されない場合があります。
+</td>
+</tr>
+</table>
+</div>
+<div class="sect2">
+<h3 id="naming-conventions"><a class="anchor" href="#naming-conventions"></a>命名規則</h3>
+<div class="paragraph">
+<p>メーター名では、ドットを使用してセグメントを区切る必要があります (例: <code>a.name.like.this</code>)。
+Micrometer は命名規則を適用し、登録されたメーター名をバックエンドモニタリングシステムの期待に一致するように変換します。</p>
+</div>
+<div class="paragraph">
+<p>タイマーの <code>registry.timer("http.server.requests")</code> 宣言に基づいて、適用された命名規則により、さまざまな監視システム向けに以下のメトリクスが発行されます。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Prometheus: <code>http_server_requests_duration_seconds</code></p>
+</li>
+<li>
+<p>Atlas: <code>httpServerRequests</code></p>
+</li>
+<li>
+<p>Graphite: <code>http.server.requests</code></p>
+</li>
+<li>
+<p>InfluxDB: <code>http_server_requests</code></p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="define-tags"><a class="anchor" href="#define-tags"></a>集計のディメンションを定義する</h3>
+<div class="paragraph">
+<p>Metrics, single numerical measurements, often have additional data captured with them. This ancillary data is used to group or aggregate metrics for analysis.
+The Micrometer API refers to this dimensional data as tags, but you may it referred to as "labels" or "attributes" in other documentation sources.</p>
+</div>
+<div class="paragraph">
+<p>Micrometer is built primariliy for backend monitoring systems that support dimensional data (metric names that are enchriched with key/value pairs).
+For heirarchical systems that only support a flat metric name, Micrometer will flatten the set of key/value pairs (sorted by key) and add them to the name.</p>
+</div>
+<div class="paragraph">
+<p>タグは、メーターが <code>MeterRegistry</code> に登録されるとき、または<a href="#meter-filter">Meter Filter</a> を使用して指定できます。</p>
+</div>
+<div class="paragraph">
+<p>追加のアドバイスについては、Micrometer ドキュメントの <a href="https://micrometer.io/docs/concepts#_tag_naming">tag naming</a> を参照してください。</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+メトリクス名とディメンションの一意の組み合わせごとに、一意の時系列が生成されます。
+無制限のディメンションデータセットを使用すると、「カーディナリティーの爆発」、つまり新しい時系列の作成が指数関数的に増加する可能性があります。
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="obtain-a-reference-to-a-meterregistry"><a class="anchor" href="#obtain-a-reference-to-a-meterregistry"></a>MeterRegistry への参照を取得する</h3>
+<div class="paragraph">
+<p>メーターを登録するには、Micrometer エクステンションによって設定および維持される <code>MeterRegistry</code> への参照が必要です。</p>
+</div>
+<div class="paragraph">
+<p><code>MeterRegistry</code> への参照を取得するには、次のいずれかの方法を使用します。</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>CDIコンストラクタ注入の使用：</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">package org.acme.micrometer;
+
+import io.micrometer.core.instrument.MeterRegistry;
+
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+
+@Path("/example")
+@Produces("text/plain")
+public class ExampleResource {
+
+    private final MeterRegistry registry;
+
+    ExampleResource(MeterRegistry registry) {
+        this.registry = registry;
+    }
+}</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p><code>MeterRegistry</code> メンバー変数を使用し、<code>@Inject</code> を使用します。</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">    @Inject
+    MeterRegistry registry;</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>グローバル <code>MeterRegistry</code> を使用します。</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">    MeterRegistry registry = Metrics.globalRegistry;</code></pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="gauges"><a class="anchor" href="#gauges"></a>ゲージ</h3>
+<div class="paragraph">
+<p>ゲージは、車のスピードメーターのように、時間の経過とともに増加または減少する値を測定します。
+ゲージは、キャッシュまたはコレクションの統計を監視するときに役立ちます。</p>
+</div>
+<div class="paragraph">
+<p>ゲージの値は設定されずにサンプリングされます。
+測定間でゲージに関連付けられた値がどのように変化したかについての記録はありません。</p>
+</div>
+<div class="paragraph">
+<p>Micrometer はゲージを作成するためのいくつかのメカニズムを提供します。</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>コレクションのサイズを監視するためにコレクションの構築をラップします。</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">List&lt;String&gt; list = registry.gaugeCollectionSize("fantastic.list", <i class="conum" data-value="1"></i><b>(1)</b>
+        Tags.of("key", "value") // optional <i class="conum" data-value="2"></i><b>(2)</b>
+        new ArrayList&lt;&gt;());  <i class="conum" data-value="3"></i><b>(3)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>ドット区切りの規則を使用して、新しいゲージ <code>list.size</code> を作成します。</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>ゲージに <a href="#define-tags">tags</a> を関連付けます。
+ゲージタグの値は一定であり、構築時に割り当てる必要があります。</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>サイズを監視する必要のある配列リストを構築します。</td>
+</tr>
+</table>
+</div>
+</li>
+<li>
+<p>ビルダーを使用して、関数を呼び出すゲージを作成します。</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Gauge.builder("jvm.threads.peak", threadBean, ThreadMXBean::getPeakThreadCount) <i class="conum" data-value="1"></i><b>(1)</b>
+    .baseUnit(BaseUnits.THREADS) // optional <i class="conum" data-value="2"></i><b>(2)</b>
+    .description("The peak live thread count...") // optional <i class="conum" data-value="3"></i><b>(3)</b>
+    .tags("key", "value") // optional <i class="conum" data-value="4"></i><b>(4)</b>
+    .register(registry); <i class="conum" data-value="5"></i><b>(5)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td><code>jvm.threads.peak</code> という新しいゲージを作成し、<code>threadBean</code> (<code>ThreadMXBean</code> のインスタンス) で <code>getPeakThreadCount</code> を呼び出します。</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>基本単位を定義します。事前定義された値については <a href="https://github.com/micrometer-metrics/micrometer/blob/main/micrometer-core/src/main/java/io/micrometer/core/instrument/binder/BaseUnits.java">BaseUnits.java</a> を参照してください。</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>ゲージの説明を入力してください</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>ゲージに <a href="#define-tags">tags</a> を関連付けます。</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>MeterRegistry にゲージを登録する</td>
+</tr>
+</table>
+</div>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>詳細と例については、Micrometer ドキュメントの <a href="https://micrometer.io/docs/concepts#_gauges">Gauges</a> を参照してください。
+注目すべきは、時間を測定する <code>TimeGauge</code> と、複数の基準をまとめて報告する <code>MultiGauge</code> という 2 つの特殊なケースです。</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Micrometer は、デフォルトでは監視対象のオブジェクトに対して強い参照を作成しません。
+レジストリーによっては、Micrometer はガベージコレクションが設定されたオブジェクトを監視するゲージを完全に省略するか、
+監視値として <code>NaN</code> (not a number) を使用します。
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>ゲージはいつ使用したらよいですか?
+他のものを使用できない場合にのみゲージを使用してください。
+ゲージは他のメーターに比べて使い方が簡単ではない場合があります。
+測定対象をカウントできる場合 (値が常に増加するため) は、代わりにカウンターを使用します。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="counters"><a class="anchor" href="#counters"></a>カウンター</h3>
+<div class="paragraph">
+<p>カウンターは増加する値のみを測定します。
+カウンターを作成するには、以下のいずれかの方法を使用します。</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><code>MeterRegistry</code> の便利なメソッドを使用します。</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">registry.counter("example.prime.number", "type", "prime"); <i class="conum" data-value="1"></i><b>(1)</b> <i class="conum" data-value="2"></i><b>(2)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td><code>example.prime.number</code> はカウンター名です。</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td><code>type</code> は、値が <code>prime</code> であるディメンションタグです。</td>
+</tr>
+</table>
+</div>
+</li>
+<li>
+<p>説明と単位を指定するには、<code>Counter.builder</code> を使用します。</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Counter.builder("count.me") <i class="conum" data-value="1"></i><b>(1)</b>
+    .baseUnit("beans")            // optional <i class="conum" data-value="2"></i><b>(2)</b>
+    .description("a description") // optional <i class="conum" data-value="3"></i><b>(3)</b>
+    .tags("region", "test")       // optional <i class="conum" data-value="4"></i><b>(4)</b>
+    .register(registry);</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td><code>count.me</code> という新しいカウンターを作成します。</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>カスタムベースユニットを定義します。事前定義された値については <a href="https://github.com/micrometer-metrics/micrometer/blob/main/micrometer-core/src/main/java/io/micrometer/core/instrument/binder/BaseUnits.java">BaseUnits.java</a> を参照してください。</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>カウンターの説明を入力してください</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>カウンターに <a href="#define-tags">タグ</a> を関連付けます。</td>
+</tr>
+</table>
+</div>
+</li>
+<li>
+<p>メソッドに <a href="#annotations">アノテーションを付与</a> します。</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">@Counted(value = "counted.method", extraTags = { "extra", "annotated" }) <i class="conum" data-value="1"></i><b>(1)</b> <i class="conum" data-value="2"></i><b>(2)</b>
+void countThisMethod(){
+    ...
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>CDI インターセプターは <code>counted.method</code> というカウンターを作成して登録します。</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>インターセプターが作成したカウンターには、値が "annotated" の "extra" ディメンションタグが付きます。</td>
+</tr>
+</table>
+</div>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>詳細や例については、Micrometer ドキュメントの <a href="https://micrometer.io/docs/concepts#_counters">Counters</a> を参照してください。このドキュメントには、常に増加する関数によって返される結果を測定するために使用できる、あまり一般的ではない <code>FunctionCounter</code> についても説明されています。</p>
+</div>
+<div class="paragraph">
+<p>カウンターはいつ使用したらよいですか?
+時間を計ったり要約したりできない作業の場合は、カウンターを使用します。
+値がどのように変化しているかを詳しく知りたい場合は、
+タイマー (測定の基本単位が時間の場合) またはディストリビューションサマリーの方が、
+より適切な場合もあります。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="summaries-and-timers"><a class="anchor" href="#summaries-and-timers"></a>サマリーとタイマー</h3>
+<div class="paragraph">
+<p>Micrometer のタイマーとディストリビューションサマリーは非常に似ています。両方のメーターはデータを記録し、追加のヒストグラムまたはパーセンタイルデータを取得できます。ディストリビューションサマリーは任意のタイプのデータに使用できますが、タイマーは時間と期間の測定に最適化されています。</p>
+</div>
+<div class="paragraph">
+<p>タイマーとディストリビューションサマリーは、少なくとも 3 つの値を内部に保存します。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>記録されたすべての値の合計としての集計</p>
+</li>
+<li>
+<p>記録された値の数 (カウンター)</p>
+</li>
+<li>
+<p>減少する時間ウィンドウ内で見られる最高値 (ゲージ)</p>
+</li>
+</ul>
+</div>
+<div class="sect3">
+<h4 id="create-a-distribution-summary"><a class="anchor" href="#create-a-distribution-summary"></a>ディストリビューションサマリーを作成する</h4>
+<div class="paragraph">
+<p>ディストリビューションサマリーを使用して、時間ではなく値を記録します。
+ディストリビューションサマリーを作成するには、次のいずれかの方法を使用します。</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><code>MeterRegistry</code> の便利なメソッドを使用します。</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">registry.summary("bytes.written", "protocol", "http"); <i class="conum" data-value="1"></i><b>(1)</b> <i class="conum" data-value="2"></i><b>(2)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td><code>bytes.written</code> はサマリー名です</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td><code>protocol</code> は、値が <code>http</code> のディメンションタグです。</td>
+</tr>
+</table>
+</div>
+</li>
+<li>
+<p>説明と単位を指定するには、<code>DistributionSummary.builder</code> を使用します。</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">DistributionSummary.builder("response.size") <i class="conum" data-value="1"></i><b>(1)</b>
+    .baseUnit("bytes")            // optional <i class="conum" data-value="2"></i><b>(2)</b>
+    .description("a description") // optional <i class="conum" data-value="3"></i><b>(3)</b>
+    .tags("protocol", "http")     // optional <i class="conum" data-value="4"></i><b>(4)</b>
+    .register(registry);</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td><code>response.size</code> という新しいディストリビューションサマリーを作成します。</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>基本単位として <code>bytes</code> を使用します。事前定義された値については <a href="https://github.com/micrometer-metrics/micrometer/blob/main/micrometer-core/src/main/java/io/micrometer/core/instrument/binder/BaseUnits.java">BaseUnits.java</a> を参照してください。</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>ディストリビューションサマリーの説明を入力します</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>ディストリビューションサマリーに <a href="#define-tags">tags</a> を関連付けます。</td>
+</tr>
+</table>
+</div>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect3">
+<h4 id="create-a-timer"><a class="anchor" href="#create-a-timer"></a>タイマーの作成</h4>
+<div class="paragraph">
+<p>Timers measure short-duration latencies and how often they occur. Negative values are not supported, and longer durations could cause an overflow of the total time (Long.MAX_VALUE nanoseconds (292.3 years)).</p>
+</div>
+<div class="paragraph">
+<p>Use one of the following methods to construct a timer.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><code>MeterRegistry</code> の便利なメソッドを使用します。</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">registry.timer("fabric.selection", "primary", "blue"); <i class="conum" data-value="1"></i><b>(1)</b> <i class="conum" data-value="2"></i><b>(2)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>`fabric.selection`はサマリー名です。</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td><code>primary</code> は、値が <code>blue</code> のディメンションタグです。</td>
+</tr>
+</table>
+</div>
+</li>
+<li>
+<p>説明と単位を指定するには、<code>Timer.builder</code> を使用します。</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Timer.builder("my.timer")        <i class="conum" data-value="1"></i><b>(1)</b> <i class="conum" data-value="2"></i><b>(2)</b>
+    .description("description ") // optional <i class="conum" data-value="3"></i><b>(3)</b>
+    .tags("region", "test")      // optional <i class="conum" data-value="4"></i><b>(4)</b>
+    .register(registry);</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td><code>my.timer</code> という新しいタイマーを作成します。</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>タイマーは時間を測定し、それをモニタリングバックエンドに必要な単位に変換します。</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>ディストリビューションサマリーの説明を入力します</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>タイマーに <a href="#define-tags">tags</a> を関連付けます。</td>
+</tr>
+</table>
+</div>
+</li>
+<li>
+<p>メソッドに <a href="#annotations">アノテーションを付与</a> します。</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">@Timed(value = "call", extraTags = {"region", "test"}) <i class="conum" data-value="1"></i><b>(1)</b> <i class="conum" data-value="2"></i><b>(2)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>CDI インターセプターは <code>call</code> と呼ばれるタイマーを作成して登録します。</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>インターセプターが作成したタイマーには、値が "test" の "region" ディメンションタグが付きます。</td>
+</tr>
+</table>
+</div>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect3">
+<h4 id="measure-durations-with-timers"><a class="anchor" href="#measure-durations-with-timers"></a>タイマーで時間を計測する</h4>
+<div class="paragraph">
+<p>Micrometer provides the following convenience mechanisms for recording durations.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><code>Runnable</code> の呼び出しをラップします。</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">timer.record(() -&gt; noReturnValue());</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p><code>Callable</code> の呼び出しをラップします。</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">timer.recordCallable(() -&gt; returnValue());</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>繰り返される呼び出し用にラップされた <code>Runnable</code> を作成します。</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Runnable r = timer.wrap(() -&gt; noReturnValue());</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>繰り返される呼び出し用にラップされた <code>Callable</code> を作成します。</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Callable c = timer.wrap(() -&gt; returnValue());</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>より複雑なコードパスには <code>Sample</code> を使用します。</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Sample sample = Timer.start(registry); <i class="conum" data-value="1"></i><b>(1)</b>
+
+doStuff; <i class="conum" data-value="2"></i><b>(2)</b>
+
+sample.stop(registry.timer("my.timer", "response", response.status())); <i class="conum" data-value="3"></i><b>(3)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>タイマーの開始を記録するサンプルを作成します。</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>サンプルはコンテキストとして渡すことができます。</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>サンプルが停止されるときのタイマーを選択できます。この例では、タイマーを識別するタグとしてレスポンスステータスを使用しますが、これは処理が完了するまでわかりません。</td>
+</tr>
+</table>
+</div>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect3">
+<h4 id="histograms-and-percentiles"><a class="anchor" href="#histograms-and-percentiles"></a>ヒストグラムとパーセンタイル</h4>
+<div class="paragraph">
+<p>タイマーとディストリビューションサマリーの両方は、ヒストグラムデータ、事前計算されたパーセンタイル、またはサービスレベル目標 (SLO) 境界などの追加の統計情報を発行するように設定できます。
+詳細や例については、Micrometer ドキュメントの <a href="https://micrometer.io/docs/concepts#_timers">Timers</a> および <a href="https://micrometer.io/docs/concepts#_distribution_summaries">Distribution Summaries</a> を参照してください。これらのドキュメントには、両方のタイプのメモリー使用量の推定についても説明されています。</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>タイマーとディストリビューションサマリーに関連付けられたカウント、合計、およびヒストグラムデータは、ディメンション全体 (または一連のインスタンス全体) にわたって再集計できます。</p>
+</div>
+<div class="paragraph">
+<p>事前計算されたパーセンタイル値は再集計できません。パーセンタイルはデータセットごとに一意です (この測定値のコレクションの 90 パーセンタイルなど)。</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="automatically-generated-metrics"><a class="anchor" href="#automatically-generated-metrics"></a>自動的に生成されたメトリクス</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Micrometerエクステンションは、HTTPサーバーのリクエストの時間を自動的に計測します。Prometheus のタイマーの命名規則に従い、 <code>http_server_requests_seconds_count</code> 、 <code>http_server_requests_seconds_sum</code> 、 <code>http_server_requests_seconds_max</code> を参照してください。要求された URI、HTTP メソッド (GET、POST など)、ステータスコード (200、302、404 など)、そしてより一般的な結果フィールドのための次元ラベルが追加されました。</p>
+</div>
+<div class="paragraph">
+<div class="title">エンドポイントの無視</div>
+<p><code>quarkus.micrometer.binder.http-server.ignore-patterns</code> プロパティを使用して、HTTP エンドポイントの測定を無効にすることができます。このプロパティには、無視すべきURIパスを特定する単純な正規表現のマッチパターンをコンマで区切ったリストを指定できます。例えば、 <code>quarkus.micrometer.binder.http-server.ignore-patterns=/example/prime/[0-9]+</code> を設定すると、以下へのリクエストが無視されます。 <code><a href="http://localhost:8080/example/prime/7919" class="bare">http://localhost:8080/example/prime/7919</a></code> へのリクエストは無視されます。 <code><a href="http://localhost:8080/example/gauge/7919" class="bare">http://localhost:8080/example/gauge/7919</a></code> へのリクエストは、依然として計測されます。</p>
+</div>
+<div class="paragraph">
+<div class="title">URIテンプレート</div>
+<p>micrometerエクステンションでは、パスパラメータを含むURIをテンプレート化して表現することに最善の努力を払います。上の例を使うと、次のようなリクエストは <code><a href="http://localhost:8080/example/prime/7919" class="bare">http://localhost:8080/example/prime/7919</a></code> へのリクエストは、 <code>http_server_requests_seconds_*</code> メトリクスの属性として、 <code>uri=/example/prime/{number}</code> という値で表示されます。</p>
+</div>
+<div class="paragraph">
+<p>正しいURLが特定できない場合は、 <code>quarkus.micrometer.binder.http-server.match-patterns</code> プロパティを使用します。このプロパティには、単純な正規表現パターンと置換文字列の関連性を定義するコンマ区切りのリストを指定できます。例えば、 <code>quarkus.micrometer.binder.http-server.match-patterns=/example/prime/[0-9]+=/example/{jellybeans}</code> を設定すると、要求された uri が <code>/example/prime/[0-9]+</code> に一致した場合、uri 属性に <code>/example/{jellybeans}</code> の値が使用されます。</p>
+</div>
+<div class="paragraph">
+<div class="title">エクスポートされるメトリクス形式</div>
+<p>デフォルトでは、メトリクスはPrometheusのフォーマット <code>application/openmetrics-text</code> を使用してエクスポートされます。 <code>Accept</code> リクエストヘッダを <code>plain/text</code> ( <code>curl -H "Accept: plain/text" localhost:8080/q/metrics/</code> ) に指定することで、以前のフォーマットに戻すことも可能です。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="customizing-micrometer"><a class="anchor" href="#customizing-micrometer"></a>Micrometer のカスタマイズ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Quarkus provides a variety of way to customize Micrometer.</p>
+</div>
+<div class="sect2">
+<h3 id="meter-filter"><a class="anchor" href="#meter-filter"></a><code>MeterFilter</code> を使用して、発行されるタグとメトリクスをカスタマイズします。</h3>
+<div class="paragraph">
+<p>Micrometerは <code>MeterFilter</code> インスタンスを使って、 <code>MeterRegistry</code> インスタンスが出力するメトリクスをカスタマイズします。 Micrometer エクステンションは、 <code>MeterFilter</code> のCDI Beanを検出して、 <code>MeterRegistry</code> インスタンスを初期化するときにそれを使います。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">@Singleton
+public class CustomConfiguration {
+
+    @ConfigProperty(name = "deployment.env")
+    String deploymentEnv;
+
+    /** Define common tags that apply only to a Prometheus Registry */
+    @Produces
+    @Singleton
+    @MeterFilterConstraint(applyTo = PrometheusMeterRegistry.class)
+    public MeterFilter configurePrometheusRegistries() {
+        return MeterFilter.commonTags(Arrays.asList(
+                Tag.of("registry", "prometheus")));
+    }
+
+    /** Define common tags that apply globally */
+    @Produces
+    @Singleton
+    public MeterFilter configureAllRegistries() {
+        return MeterFilter.commonTags(Arrays.asList(
+                Tag.of("env", deploymentEnv)));
+    }
+
+    /** Enable histogram buckets for a specific timer */
+    @Produces
+    @Singleton
+    public MeterFilter enableHistogram() {
+        return new MeterFilter() {
+            @Override
+            public DistributionStatisticConfig configure(Meter.Id id, DistributionStatisticConfig config) {
+                if(id.getName().startsWith("myservice")) {
+                    return DistributionStatisticConfig.builder()
+                        .percentiles(0.5, 0.95)     // median and 95th percentile, not aggregable
+                        .percentilesHistogram(true) // histogram buckets (e.g. prometheus histogram_quantile)
+                        .build()
+                        .merge(config);
+                }
+                return config;
+            }
+        };
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>この例では、シングルトン CDI Beanは、2 つの異なる <code>MeterFilter</code> Beanを生成します。1 つは Prometheus <code>MeterRegistry</code> インスタンスのみに適用され ( <code>@MeterFilterConstraint</code> 修飾子を使用)、もう 1 つはすべての <code>MeterRegistry</code> インスタンスに適用されます。アプリケーション設定プロパティーも注入され、タグ値として使用されます。MeterFiltersのその他の例は、次のリンクにあります：<a href="https://micrometer.io/docs/concepts">公式ドキュメント</a> 。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="use-httpservermetricstagscontributor-for-server-http-requests"><a class="anchor" href="#use-httpservermetricstagscontributor-for-server-http-requests"></a>サーバーの HTTP リクエストに <code>HttpServerMetricsTagsContributor</code> を使用する</h3>
+<div class="paragraph">
+<p>By providing CDI beans that implement <code>io.quarkus.micrometer.runtime.HttpServerMetricsTagsContributor</code>, user code can contribute arbitrary tags based on the details of HTTP request</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="use-meterregistrycustomizer-for-arbitrary-customizations-to-meter-registries"><a class="anchor" href="#use-meterregistrycustomizer-for-arbitrary-customizations-to-meter-registries"></a>メーターレジストリーを任意にカスタマイズする <code>MeterRegistryCustomizer</code> の使用</h3>
+<div class="paragraph">
+<p><code>io.quarkus.micrometer.runtime.MeterRegistryCustomizer</code> を実装する CDI Bean を提供することで、ユーザーコードはアクティブ化された任意の <code>MeterRegistry</code> の設定を変更できます。
+実装に <code>@io.quarkus.micrometer.runtime.MeterRegistryCustomizerConstraint</code> アノテーションが付与されていない限り、このカスタマイズはすべての <code>MeterRegistry</code> インスタンスに適用されます。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="annotations"><a class="anchor" href="#annotations"></a>Micrometerはアノテーションをサポートしていますか？</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Micrometerでは、メソッドに追加できる2つのアノテーション、 <code>@Counted</code> と <code>@Timed</code> が定義されています。 <code>@Timed</code> アノテーションは、メソッドの実行をラップし、アノテーション自体に定義されているタグに加えて、次のタグを出力します：class、method、exception（"none "または検出された例外のシンプルなクラス名）。</p>
+</div>
+<div class="paragraph">
+<p><code>@Counted</code> および <code>@Timed</code> へのパラメーターに <code>@MeterTag</code> アノテーションを付けて、意味のあるタグ値を動的に割り当てることができます。</p>
+</div>
+<div class="paragraph">
+<p><code>MeterTag.resolver</code> can be used to extract a tag from a method parameter, by creating a bean
+implementing <code>io.micrometer.common.annotation.ValueResolver</code> and referring to this class: `@MeterTag(resolver=CustomResolver.class)</p>
+</div>
+<div class="paragraph">
+<p><code>MeterTag.expression</code> もサポートされていますが、式の評価が可能な 
+<code>io.micrometer.common.annotation.ValueExpressionResolver</code> を実装する Bean を作成し、式を評価する必要があります。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">enum Currency { USD, EUR }
+
+@Singleton
+class EnumOrdinalResolver implements ValueResolver {
+    @Override
+    public String resolve(Object parameter) {
+        if(parameter instanceof Enum) {
+            return String.valueOf(((Enum&lt;?&gt;) parameter).ordinal());
+        }
+        return null;
+    }
+}
+
+@Singleton
+public class MyExpressionResolver implements ValueExpressionResolver {
+    @Override
+    public String resolve(String expression, Object parameter) {
+        return someParser.parse(expression).evaluate(parameter);
+    }
+}
+
+// tags = type=with_enum, currency=${currency.toString()}
+@Timed(value="time_something", extraTags = {"type", "with_enum"})
+public Something calculateSomething(@MeterTag Currency currency) { ... }
+
+// tags = type=with_enum, the_currency=${currency.toString()}
+@Timed(value="time_something", extraTags = {"type", "with_enum"})
+public Something calculateSomething(@MeterTag(key="the_currency") Currency currency) { ... }
+
+// tags = type=with_enum, currency=${currency.ordinal()}
+@Timed(value="time_something", extraTags = {"type", "with_enum"})
+public Something calculateSomething(@MeterTag(resolver=EnumOrdinalResolver.class) Currency currency) { ... }
+
+// tags = type=with_enum, currency=${currency.ordinal()}
+@Timed(value="time_something", extraTags = {"type", "with_enum"})
+public Something calculateSomething(@MeterTag(expression="currency.ordinal()") Currency currency) { ... }</code></pre>
+</div>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+提供されるタグ値は、低いカーディナリティーである必要があります。
+カーディナリティー値が高いと、メトリクスのバックエンドでパフォーマンスとストレージの問題が発生する可能性があります (「カーディナリティーの爆発」)。
+タグ値にはエンドユーザーデータは使用しないでください。これらは、カーディナリティーが高い可能性があるためです。
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>REST エンドポイントメソッドや Vert.x ルートなどの多くのメソッドは、すぐに使用できる Micrometer エクステンションによってカウントされ、時間が計測されます。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="support-for-the-microprofile-metrics-api"><a class="anchor" href="#support-for-the-microprofile-metrics-api"></a>MicroProfile Metrics API のサポート</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>アプリケーションで MicroProfile Metrics API を使用する場合、
+Micrometer エクステンションは、これらのメトリクスを Micrometer レジストリーにマッピングするための適応レイヤーを作成します。
+2 つのシステム間の命名規則が異なるため、Micrometer で MP Metrics を使用する際に生成されるメトリクスが変わることに注意してください。</p>
+</div>
+<div class="paragraph">
+<p>Use a <code>MeterFilter</code> to remap names or tags according to your conventions.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">@Produces
+@Singleton
+public MeterFilter renameApplicationMeters() {
+    final String targetMetric = MPResourceClass.class.getName() + ".mpAnnotatedMethodName";
+
+    return MeterFilter() {
+        @Override
+        public Meter.Id map(Meter.Id id) {
+            if (id.getName().equals(targetMetric)) {
+                // Drop the scope tag (MP Registry type: application, vendor, base)
+                List&lt;Tag&gt; tags = id.getTags().stream().filter(x -&gt; !"scope".equals(x.getKey()))
+                        .collect(Collectors.toList());
+                // rename the metric
+                return id.withName("my.metric.name").replaceTags(tags);
+            }
+            return id;
+        }
+    };
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>MicroProfile Metrics API が必要な場合は、次の依存関係が存在することを確認してください。</p>
+</div>
+<div class="listingblock primary asciidoc-tabs-target-sync-cli asciidoc-tabs-target-sync-maven">
+<div class="title">pom.xml</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;dependency&gt;
+    &lt;groupId&gt;org.eclipse.microprofile.metrics&lt;/groupId&gt;
+    &lt;artifactId&gt;microprofile-metrics-api&lt;/artifactId&gt;
+&lt;/dependency&gt;</code></pre>
+</div>
+</div>
+<div class="listingblock secondary asciidoc-tabs-target-sync-gradle">
+<div class="title">build.gradle</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-gradle hljs" data-lang="gradle">implementation("org.eclipse.microprofile.metrics:microprofile-metrics-api")</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+MP Metrics API 互換性レイヤーは、将来的に別のエクステンションに移動される可能性があります。
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="management-interface"><a class="anchor" href="#management-interface"></a>マネジメントインターフェース</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>By default, the metrics are exposed on the main HTTP server.</p>
+</div>
+<div class="paragraph">
+<p>アプリケーション設定で <code>quarkus.management.enabled=true</code> を設定することで、それらを別のネットワークインターフェイスとポートで公開できます。
+このプロパティーはビルド時のプロパティーである点に注意してください。
+値は、実行時にオーバーライドできません。</p>
+</div>
+<div class="paragraph">
+<p>If you enable the management interface without customizing the management network interface and port, the metrics are exposed under: <code><a href="http://0.0.0.0:9000/q/metrics" class="bare">http://0.0.0.0:9000/q/metrics</a></code>.</p>
+</div>
+<div class="paragraph">
+<p>公開される各形式のパスは、以下を使用して設定できます。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-properties hljs" data-lang="properties">quarkus.micrometer.export.json.enabled=true # Enable json metrics
+quarkus.micrometer.export.json.path=metrics/json
+quarkus.micrometer.export.prometheus.path=metrics/prometheus</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>このような設定にすることで、json メトリクスが <code><a href="http://0.0.0.0:9000/q/metrics/json" class="bare">http://0.0.0.0:9000/q/metrics/json</a></code> で利用可能になります。prometheus メトリクスは、 <code><a href="http://0.0.0.0:9000/q/metrics/prometheus" class="bare">http://0.0.0.0:9000/q/metrics/prometheus</a></code> で利用可能になります。</p>
+</div>
+<div class="paragraph">
+<p>詳しくは、 <a href="./management-interface-reference">マネジメントインターフェイスのリファレンス</a> を参照してください。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="quarkus-extensions-using-micrometer"><a class="anchor" href="#quarkus-extensions-using-micrometer"></a>Micrometerで計測されたQuarkusのコアエクステンション</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://quarkus.io/extensions/io.quarkus/quarkus-agroal"><code>quarkus-agroal</code></a></p>
+</li>
+<li>
+<p><a href="https://quarkus.io/guides/cache"><code>quarkus-cache</code></a></p>
+</li>
+<li>
+<p><a href="https://quarkus.io/extensions/io.quarkus/quarkus-caffeine"><code>quarkus-caffeine</code></a></p>
+</li>
+<li>
+<p><a href="https://quarkus.io/guides/smallrye-fault-tolerance"><code>quarkus-smallrye-fault-tolerance</code></a></p>
+</li>
+<li>
+<p><a href="https://quarkus.io/guides/grpc-getting-started"><code>quarkus-grpc</code></a></p>
+</li>
+<li>
+<p><a href="https://quarkus.io/guides/hibernate-orm"><code>quarkus-hibernate-orm</code></a></p>
+</li>
+<li>
+<p><a href="https://quarkus.io/extensions/io.quarkus/quarkus-jaxrs-client-reactive"><code>quarkus-jaxrs-client-reactive</code></a></p>
+</li>
+<li>
+<p><a href="https://quarkus.io/guides/deploying-to-kubernetes"><code>quarkus-kubernetes</code></a></p>
+</li>
+<li>
+<p><a href="https://quarkus.io/guides/logging"><code>jboss-logging</code></a> (Quarkusのlogging API)</p>
+</li>
+<li>
+<p><a href="https://quarkus.io/guides/mongodb"><code>quarkus-mongodb-client</code></a></p>
+</li>
+<li>
+<p><a href="https://quarkus.io/extensions/io.quarkus/quarkus-netty"><code>quarkus-netty</code></a></p>
+</li>
+<li>
+<p><a href="https://quarkus.io/guides/redis"><code>quarkus-redis-client</code></a></p>
+</li>
+<li>
+<p><a href="https://quarkus.io/guides/resteasy-client"><code>quarkus-resteasy-client</code></a></p>
+</li>
+<li>
+<p><a href="https://quarkus.io/guides/resteasy"><code>quarkus-resteasy-jackson</code></a></p>
+</li>
+<li>
+<p><a href="https://quarkus.io/guides/resteasy-reactive"><code>quarkus-resteasy-reactive</code></a></p>
+</li>
+<li>
+<p><a href="https://quarkus.io/guides/scheduler"><code>quarkus-scheduler</code></a></p>
+</li>
+<li>
+<p><a href="https://quarkus.io/guides/smallrye-graphql"><code>quarkus-smallrye-graphql</code></a></p>
+</li>
+<li>
+<p><a href="https://quarkus.io/extensions/io.quarkus/quarkus-smallrye-reactive-messaging"><code>quarkus-smallrye-reactive-messaging</code></a></p>
+<div class="ulist">
+<ul>
+<li>
+<p>AMQP 1.0</p>
+</li>
+<li>
+<p>RabbitMQ</p>
+</li>
+<li>
+<p>Kafka</p>
+</li>
+<li>
+<p>Pulsar</p>
+</li>
+<li>
+<p>JMS</p>
+</li>
+<li>
+<p>MQTT</p>
+</li>
+<li>
+<p>Camel Messaging</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><a href="https://quarkus.io/guides/stork-reference"><code>quarkus-smallrye-stork</code></a></p>
+</li>
+<li>
+<p><a href="https://quarkus.io/guides/vertx">quarkus-vertx</a> (httpリクエスト)</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="configuration-reference"><a class="anchor" href="#configuration-reference"></a>設定リファレンス</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><span class="icon"><i class="fa fa-lock" title="ビルド時に固定"></i></span>ビルド時に固定される設定プロパティ - 他のすべての設定プロパティは実行時にオーバーライド可能 <input type="search" id="config-search-0" placeholder="FILTER CONFIGURATION" disabled></p>
+</div>
+<table class="tableblock frame-all grid-all stretch configuration-reference searchable configuration-reference-all-rows">
+<colgroup>
+<col style="width: 80%;">
+<col style="width: 10%;">
+<col style="width: 10%;">
+</colgroup>
+<tbody>
+<tr>
+<th class="tableblock halign-left valign-top"><p class="tableblock"><a id="quarkus-micrometer_configuration"></a><a href="#quarkus-micrometer_configuration">Configuration property</a></p></th>
+<th class="tableblock halign-left valign-middle"><p class="tableblock">タイプ</p></th>
+<th class="tableblock halign-left valign-middle"><p class="tableblock">デフォルト</p></th>
+</tr>
+<tr class="row-collapsible row-collapsed row-with-desc odd">
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><span class="icon"><i class="fa fa-lock" title="Fixed at build time"></i></span> <a id="quarkus-micrometer_quarkus-micrometer-enabled"></a><code><a href="#quarkus-micrometer_quarkus-micrometer-enabled">quarkus.micrometer.enabled</a></code></p>
+</div>
+<div id="conf-collapsible-desc-1" class="openblock description description-collapsed">
+<div class="content">
+<div class="paragraph">
+<p>Micrometer metrics support.</p>
+</div>
+<div class="paragraph">
+<p>Micrometer metrics support is enabled by default.</p>
+</div>
+<div class="paragraph">
+<p>Environment variable: <code id="env-var-65316">QUARKUS_MICROMETER_ENABLED</code><button class="btn-copy fa fa-clipboard inline-btn-copy" data-clipboard-action="copy" data-clipboard-target="#env-var-65316" title="Copy to clipboard" do-not-collapse="true"></button></p>
+</div>
+</div>
+</div>
+<div class="paragraph description-decoration">
+<p><i class="fa fa-chevron-down"></i><span>Show more</span></p>
+</div></div></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock">boolean</p></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock"><code>true</code></p></td>
+</tr>
+<tr class="row-collapsible row-collapsed row-with-desc">
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><span class="icon"><i class="fa fa-lock" title="Fixed at build time"></i></span> <a id="quarkus-micrometer_quarkus-micrometer-registry-enabled-default"></a><code><a href="#quarkus-micrometer_quarkus-micrometer-registry-enabled-default">quarkus.micrometer.registry-enabled-default</a></code></p>
+</div>
+<div id="conf-collapsible-desc-2" class="openblock description description-collapsed">
+<div class="content">
+<div class="paragraph">
+<p>Micrometer MeterRegistry discovery.</p>
+</div>
+<div class="paragraph">
+<p>Micrometer MeterRegistry implementations discovered on the classpath will be enabled automatically by default.</p>
+</div>
+<div class="paragraph">
+<p>Environment variable: <code id="env-var-65317">QUARKUS_MICROMETER_REGISTRY_ENABLED_DEFAULT</code><button class="btn-copy fa fa-clipboard inline-btn-copy" data-clipboard-action="copy" data-clipboard-target="#env-var-65317" title="Copy to clipboard" do-not-collapse="true"></button></p>
+</div>
+</div>
+</div>
+<div class="paragraph description-decoration">
+<p><i class="fa fa-chevron-down"></i><span>Show more</span></p>
+</div></div></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock">boolean</p></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock"><code>true</code></p></td>
+</tr>
+<tr class="row-collapsible row-collapsed row-with-desc odd">
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><span class="icon"><i class="fa fa-lock" title="Fixed at build time"></i></span> <a id="quarkus-micrometer_quarkus-micrometer-binder-enabled-default"></a><code><a href="#quarkus-micrometer_quarkus-micrometer-binder-enabled-default">quarkus.micrometer.binder-enabled-default</a></code></p>
+</div>
+<div id="conf-collapsible-desc-3" class="openblock description description-collapsed">
+<div class="content">
+<div class="paragraph">
+<p>Micrometer MeterBinder discovery.</p>
+</div>
+<div class="paragraph">
+<p>Micrometer MeterBinder implementations discovered on the classpath will be enabled automatically by default.</p>
+</div>
+<div class="paragraph">
+<p>Environment variable: <code id="env-var-65318">QUARKUS_MICROMETER_BINDER_ENABLED_DEFAULT</code><button class="btn-copy fa fa-clipboard inline-btn-copy" data-clipboard-action="copy" data-clipboard-target="#env-var-65318" title="Copy to clipboard" do-not-collapse="true"></button></p>
+</div>
+</div>
+</div>
+<div class="paragraph description-decoration">
+<p><i class="fa fa-chevron-down"></i><span>Show more</span></p>
+</div></div></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock">boolean</p></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock"><code>true</code></p></td>
+</tr>
+<tr class="row-collapsible row-collapsed row-with-desc">
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><span class="icon"><i class="fa fa-lock" title="Fixed at build time"></i></span> <a id="quarkus-micrometer_quarkus-micrometer-binder-http-client-enabled"></a><code><a href="#quarkus-micrometer_quarkus-micrometer-binder-http-client-enabled">quarkus.micrometer.binder.http-client.enabled</a></code></p>
+</div>
+<div id="conf-collapsible-desc-4" class="openblock description description-collapsed">
+<div class="content">
+<div class="paragraph">
+<p>Outbound HTTP request metrics support.</p>
+</div>
+<div class="paragraph">
+<p>Support for HTTP client metrics will be enabled if Micrometer support is enabled, the REST client feature is enabled, and either this value is true, or this value is unset and <code>quarkus.micrometer.binder-enabled-default</code> is true.</p>
+</div>
+<div class="paragraph">
+<p>Environment variable: <code id="env-var-65319">QUARKUS_MICROMETER_BINDER_HTTP_CLIENT_ENABLED</code><button class="btn-copy fa fa-clipboard inline-btn-copy" data-clipboard-action="copy" data-clipboard-target="#env-var-65319" title="Copy to clipboard" do-not-collapse="true"></button></p>
+</div>
+</div>
+</div>
+<div class="paragraph description-decoration">
+<p><i class="fa fa-chevron-down"></i><span>Show more</span></p>
+</div></div></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock">boolean</p></td>
+<td class="tableblock halign-left valign-middle"></td>
+</tr>
+<tr class="row-collapsible row-collapsed row-with-desc odd">
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><span class="icon"><i class="fa fa-lock" title="Fixed at build time"></i></span> <a id="quarkus-micrometer_quarkus-micrometer-binder-http-server-enabled"></a><code><a href="#quarkus-micrometer_quarkus-micrometer-binder-http-server-enabled">quarkus.micrometer.binder.http-server.enabled</a></code></p>
+</div>
+<div id="conf-collapsible-desc-5" class="openblock description description-collapsed">
+<div class="content">
+<div class="paragraph">
+<p>Inbound HTTP metrics support.</p>
+</div>
+<div class="paragraph">
+<p>Support for HTTP server metrics will be enabled if Micrometer support is enabled, an extension serving HTTP traffic is enabled, and either this value is true, or this value is unset and <code>quarkus.micrometer.binder-enabled-default</code> is true.</p>
+</div>
+<div class="paragraph">
+<p>Environment variable: <code id="env-var-65320">QUARKUS_MICROMETER_BINDER_HTTP_SERVER_ENABLED</code><button class="btn-copy fa fa-clipboard inline-btn-copy" data-clipboard-action="copy" data-clipboard-target="#env-var-65320" title="Copy to clipboard" do-not-collapse="true"></button></p>
+</div>
+</div>
+</div>
+<div class="paragraph description-decoration">
+<p><i class="fa fa-chevron-down"></i><span>Show more</span></p>
+</div></div></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock">boolean</p></td>
+<td class="tableblock halign-left valign-middle"></td>
+</tr>
+<tr class="row-collapsible row-collapsed row-with-desc">
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><span class="icon"><i class="fa fa-lock" title="Fixed at build time"></i></span> <a id="quarkus-micrometer_quarkus-micrometer-binder-jvm"></a><code><a href="#quarkus-micrometer_quarkus-micrometer-binder-jvm">quarkus.micrometer.binder.jvm</a></code></p>
+</div>
+<div id="conf-collapsible-desc-6" class="openblock description description-collapsed">
+<div class="content">
+<div class="paragraph">
+<p>Micrometer JVM metrics support.</p>
+</div>
+<div class="paragraph">
+<p>Support for JVM metrics will be enabled if Micrometer support is enabled, and either this value is true, or this value is unset and <code>quarkus.micrometer.binder-enabled-default</code> is true.</p>
+</div>
+<div class="paragraph">
+<p>Environment variable: <code id="env-var-65321">QUARKUS_MICROMETER_BINDER_JVM</code><button class="btn-copy fa fa-clipboard inline-btn-copy" data-clipboard-action="copy" data-clipboard-target="#env-var-65321" title="Copy to clipboard" do-not-collapse="true"></button></p>
+</div>
+</div>
+</div>
+<div class="paragraph description-decoration">
+<p><i class="fa fa-chevron-down"></i><span>Show more</span></p>
+</div></div></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock">boolean</p></td>
+<td class="tableblock halign-left valign-middle"></td>
+</tr>
+<tr class="row-collapsible row-collapsed row-with-desc odd">
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><span class="icon"><i class="fa fa-lock" title="Fixed at build time"></i></span> <a id="quarkus-micrometer_quarkus-micrometer-binder-kafka-enabled"></a><code><a href="#quarkus-micrometer_quarkus-micrometer-binder-kafka-enabled">quarkus.micrometer.binder.kafka.enabled</a></code></p>
+</div>
+<div id="conf-collapsible-desc-7" class="openblock description description-collapsed">
+<div class="content">
+<div class="paragraph">
+<p>Kafka metrics support.</p>
+</div>
+<div class="paragraph">
+<p>Support for Kafka metrics will be enabled if Micrometer support is enabled, the Kafka Consumer or Producer interface is on the classpath and either this value is true, or this value is unset and <code>quarkus.micrometer.binder-enabled-default</code> is true.</p>
+</div>
+<div class="paragraph">
+<p>Environment variable: <code id="env-var-65322">QUARKUS_MICROMETER_BINDER_KAFKA_ENABLED</code><button class="btn-copy fa fa-clipboard inline-btn-copy" data-clipboard-action="copy" data-clipboard-target="#env-var-65322" title="Copy to clipboard" do-not-collapse="true"></button></p>
+</div>
+</div>
+</div>
+<div class="paragraph description-decoration">
+<p><i class="fa fa-chevron-down"></i><span>Show more</span></p>
+</div></div></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock">boolean</p></td>
+<td class="tableblock halign-left valign-middle"></td>
+</tr>
+<tr class="row-collapsible row-collapsed row-with-desc">
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><span class="icon"><i class="fa fa-lock" title="Fixed at build time"></i></span> <a id="quarkus-micrometer_quarkus-micrometer-binder-redis-enabled"></a><code><a href="#quarkus-micrometer_quarkus-micrometer-binder-redis-enabled">quarkus.micrometer.binder.redis.enabled</a></code></p>
+</div>
+<div id="conf-collapsible-desc-8" class="openblock description description-collapsed">
+<div class="content">
+<div class="paragraph">
+<p>Redis client metrics support.</p>
+</div>
+<div class="paragraph">
+<p>Support for Redis metrics will be enabled if Micrometer support is enabled, the Quarkus Redis client extension is on the classpath and either this value is true, or this value is unset and <code>quarkus.micrometer.binder-enabled-default</code> is true.</p>
+</div>
+<div class="paragraph">
+<p>Environment variable: <code id="env-var-65323">QUARKUS_MICROMETER_BINDER_REDIS_ENABLED</code><button class="btn-copy fa fa-clipboard inline-btn-copy" data-clipboard-action="copy" data-clipboard-target="#env-var-65323" title="Copy to clipboard" do-not-collapse="true"></button></p>
+</div>
+</div>
+</div>
+<div class="paragraph description-decoration">
+<p><i class="fa fa-chevron-down"></i><span>Show more</span></p>
+</div></div></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock">boolean</p></td>
+<td class="tableblock halign-left valign-middle"></td>
+</tr>
+<tr class="row-collapsible row-collapsed row-with-desc odd">
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><span class="icon"><i class="fa fa-lock" title="Fixed at build time"></i></span> <a id="quarkus-micrometer_quarkus-micrometer-binder-stork-enabled"></a><code><a href="#quarkus-micrometer_quarkus-micrometer-binder-stork-enabled">quarkus.micrometer.binder.stork.enabled</a></code></p>
+</div>
+<div id="conf-collapsible-desc-9" class="openblock description description-collapsed">
+<div class="content">
+<div class="paragraph">
+<p>Stork metrics support.</p>
+</div>
+<div class="paragraph">
+<p>Support for Stork metrics will be enabled if Micrometer support is enabled, the Quarkus Stork extension is on the classpath and either this value is true, or this value is unset and <code>quarkus.micrometer.binder-enabled-default</code> is true.</p>
+</div>
+<div class="paragraph">
+<p>Environment variable: <code id="env-var-65324">QUARKUS_MICROMETER_BINDER_STORK_ENABLED</code><button class="btn-copy fa fa-clipboard inline-btn-copy" data-clipboard-action="copy" data-clipboard-target="#env-var-65324" title="Copy to clipboard" do-not-collapse="true"></button></p>
+</div>
+</div>
+</div>
+<div class="paragraph description-decoration">
+<p><i class="fa fa-chevron-down"></i><span>Show more</span></p>
+</div></div></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock">boolean</p></td>
+<td class="tableblock halign-left valign-middle"></td>
+</tr>
+<tr class="row-collapsible row-collapsed row-with-desc">
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><span class="icon"><i class="fa fa-lock" title="Fixed at build time"></i></span> <a id="quarkus-micrometer_quarkus-micrometer-binder-grpc-server-enabled"></a><code><a href="#quarkus-micrometer_quarkus-micrometer-binder-grpc-server-enabled">quarkus.micrometer.binder.grpc-server.enabled</a></code></p>
+</div>
+<div id="conf-collapsible-desc-10" class="openblock description description-collapsed">
+<div class="content">
+<div class="paragraph">
+<p>gRPC Server metrics support.</p>
+</div>
+<div class="paragraph">
+<p>Support for gRPC server metrics will be enabled if Micrometer support is enabled, the gRPC server interfaces are on the classpath and either this value is true, or this value is unset and <code>quarkus.micrometer.binder-enabled-default</code> is true.</p>
+</div>
+<div class="paragraph">
+<p>Environment variable: <code id="env-var-65325">QUARKUS_MICROMETER_BINDER_GRPC_SERVER_ENABLED</code><button class="btn-copy fa fa-clipboard inline-btn-copy" data-clipboard-action="copy" data-clipboard-target="#env-var-65325" title="Copy to clipboard" do-not-collapse="true"></button></p>
+</div>
+</div>
+</div>
+<div class="paragraph description-decoration">
+<p><i class="fa fa-chevron-down"></i><span>Show more</span></p>
+</div></div></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock">boolean</p></td>
+<td class="tableblock halign-left valign-middle"></td>
+</tr>
+<tr class="row-collapsible row-collapsed row-with-desc odd">
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><span class="icon"><i class="fa fa-lock" title="Fixed at build time"></i></span> <a id="quarkus-micrometer_quarkus-micrometer-binder-grpc-client-enabled"></a><code><a href="#quarkus-micrometer_quarkus-micrometer-binder-grpc-client-enabled">quarkus.micrometer.binder.grpc-client.enabled</a></code></p>
+</div>
+<div id="conf-collapsible-desc-11" class="openblock description description-collapsed">
+<div class="content">
+<div class="paragraph">
+<p>gRPC Client metrics support.</p>
+</div>
+<div class="paragraph">
+<p>Support for gRPC client metrics will be enabled if Micrometer support is enabled, the gRPC client interfaces are on the classpath and either this value is true, or this value is unset and <code>quarkus.micrometer.binder-enabled-default</code> is true.</p>
+</div>
+<div class="paragraph">
+<p>Environment variable: <code id="env-var-65326">QUARKUS_MICROMETER_BINDER_GRPC_CLIENT_ENABLED</code><button class="btn-copy fa fa-clipboard inline-btn-copy" data-clipboard-action="copy" data-clipboard-target="#env-var-65326" title="Copy to clipboard" do-not-collapse="true"></button></p>
+</div>
+</div>
+</div>
+<div class="paragraph description-decoration">
+<p><i class="fa fa-chevron-down"></i><span>Show more</span></p>
+</div></div></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock">boolean</p></td>
+<td class="tableblock halign-left valign-middle"></td>
+</tr>
+<tr class="row-collapsible row-collapsed row-with-desc">
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><span class="icon"><i class="fa fa-lock" title="Fixed at build time"></i></span> <a id="quarkus-micrometer_quarkus-micrometer-binder-messaging-enabled"></a><code><a href="#quarkus-micrometer_quarkus-micrometer-binder-messaging-enabled">quarkus.micrometer.binder.messaging.enabled</a></code></p>
+</div>
+<div id="conf-collapsible-desc-12" class="openblock description description-collapsed">
+<div class="content">
+<div class="paragraph">
+<p>Kafka metrics support.</p>
+</div>
+<div class="paragraph">
+<p>Support for Reactive Messaging metrics will be enabled if Micrometer support is enabled, MessageObservationCollector interface is on the classpath and either this value is true, or this value is unset and <code>quarkus.micrometer.binder-enabled-default</code> is true.</p>
+</div>
+<div class="paragraph">
+<p>Environment variable: <code id="env-var-65327">QUARKUS_MICROMETER_BINDER_MESSAGING_ENABLED</code><button class="btn-copy fa fa-clipboard inline-btn-copy" data-clipboard-action="copy" data-clipboard-target="#env-var-65327" title="Copy to clipboard" do-not-collapse="true"></button></p>
+</div>
+</div>
+</div>
+<div class="paragraph description-decoration">
+<p><i class="fa fa-chevron-down"></i><span>Show more</span></p>
+</div></div></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock">boolean</p></td>
+<td class="tableblock halign-left valign-middle"></td>
+</tr>
+<tr class="row-collapsible row-collapsed row-with-desc odd">
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><span class="icon"><i class="fa fa-lock" title="Fixed at build time"></i></span> <a id="quarkus-micrometer_quarkus-micrometer-binder-mp-metrics-enabled"></a><code><a href="#quarkus-micrometer_quarkus-micrometer-binder-mp-metrics-enabled">quarkus.micrometer.binder.mp-metrics.enabled</a></code></p>
+</div>
+<div id="conf-collapsible-desc-13" class="openblock description description-collapsed">
+<div class="content">
+<div class="paragraph">
+<p>Eclipse MicroProfile Metrics support.</p>
+</div>
+<div class="paragraph">
+<p>Support for MicroProfile Metrics will be enabled if Micrometer
+support is enabled and the MicroProfile Metrics dependency is present:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;dependency&gt;
+  &lt;groupId&gt;org.eclipse.microprofile.metrics&lt;/groupId&gt;
+  &lt;artifactId&gt;microprofile-metrics-api&lt;/artifactId&gt;
+&lt;/dependency&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The Micrometer extension currently provides a compatibility layer that supports the MP Metrics API,
+but metric names and recorded values will be different.
+Note that the MP Metrics compatibility layer will move to a different extension in the future.</p>
+</div>
+<div class="paragraph">
+<p>Environment variable: <code id="env-var-65328">QUARKUS_MICROMETER_BINDER_MP_METRICS_ENABLED</code><button class="btn-copy fa fa-clipboard inline-btn-copy" data-clipboard-action="copy" data-clipboard-target="#env-var-65328" title="Copy to clipboard" do-not-collapse="true"></button></p>
+</div>
+</div>
+</div>
+<div class="paragraph description-decoration">
+<p><i class="fa fa-chevron-down"></i><span>Show more</span></p>
+</div></div></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock">boolean</p></td>
+<td class="tableblock halign-left valign-middle"></td>
+</tr>
+<tr class="row-collapsible row-collapsed row-with-desc">
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><span class="icon"><i class="fa fa-lock" title="Fixed at build time"></i></span> <a id="quarkus-micrometer_quarkus-micrometer-binder-system"></a><code><a href="#quarkus-micrometer_quarkus-micrometer-binder-system">quarkus.micrometer.binder.system</a></code></p>
+</div>
+<div id="conf-collapsible-desc-14" class="openblock description description-collapsed">
+<div class="content">
+<div class="paragraph">
+<p>Micrometer System metrics support.</p>
+</div>
+<div class="paragraph">
+<p>Support for System metrics will be enabled if Micrometer support is enabled, and either this value is true, or this value is unset and <code>quarkus.micrometer.binder-enabled-default</code> is true.</p>
+</div>
+<div class="paragraph">
+<p>Environment variable: <code id="env-var-65329">QUARKUS_MICROMETER_BINDER_SYSTEM</code><button class="btn-copy fa fa-clipboard inline-btn-copy" data-clipboard-action="copy" data-clipboard-target="#env-var-65329" title="Copy to clipboard" do-not-collapse="true"></button></p>
+</div>
+</div>
+</div>
+<div class="paragraph description-decoration">
+<p><i class="fa fa-chevron-down"></i><span>Show more</span></p>
+</div></div></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock">boolean</p></td>
+<td class="tableblock halign-left valign-middle"></td>
+</tr>
+<tr class="row-collapsible row-collapsed row-with-desc odd">
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><span class="icon"><i class="fa fa-lock" title="Fixed at build time"></i></span> <a id="quarkus-micrometer_quarkus-micrometer-binder-vertx-enabled"></a><code><a href="#quarkus-micrometer_quarkus-micrometer-binder-vertx-enabled">quarkus.micrometer.binder.vertx.enabled</a></code></p>
+</div>
+<div id="conf-collapsible-desc-15" class="openblock description description-collapsed">
+<div class="content">
+<div class="paragraph">
+<p>Vert.x metrics support.</p>
+</div>
+<div class="paragraph">
+<p>Support for Vert.x metrics will be enabled if Micrometer support is enabled, Vert.x MetricsOptions is on the classpath and either this value is true, or this value is unset and <code>quarkus.micrometer.binder-enabled-default</code> is true.</p>
+</div>
+<div class="paragraph">
+<p>Environment variable: <code id="env-var-65330">QUARKUS_MICROMETER_BINDER_VERTX_ENABLED</code><button class="btn-copy fa fa-clipboard inline-btn-copy" data-clipboard-action="copy" data-clipboard-target="#env-var-65330" title="Copy to clipboard" do-not-collapse="true"></button></p>
+</div>
+</div>
+</div>
+<div class="paragraph description-decoration">
+<p><i class="fa fa-chevron-down"></i><span>Show more</span></p>
+</div></div></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock">boolean</p></td>
+<td class="tableblock halign-left valign-middle"></td>
+</tr>
+<tr class="row-collapsible row-collapsed row-with-desc">
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><span class="icon"><i class="fa fa-lock" title="Fixed at build time"></i></span> <a id="quarkus-micrometer_quarkus-micrometer-binder-netty-enabled"></a><code><a href="#quarkus-micrometer_quarkus-micrometer-binder-netty-enabled">quarkus.micrometer.binder.netty.enabled</a></code></p>
+</div>
+<div id="conf-collapsible-desc-16" class="openblock description description-collapsed">
+<div class="content">
+<div class="paragraph">
+<p>Netty metrics support.</p>
+</div>
+<div class="paragraph">
+<p>Support for Netty metrics will be enabled if Micrometer support is enabled, the Netty allocator classes are on the classpath and either this value is true, or this value is unset and <code>quarkus.micrometer.binder-enabled-default</code> is true.</p>
+</div>
+<div class="paragraph">
+<p>Environment variable: <code id="env-var-65331">QUARKUS_MICROMETER_BINDER_NETTY_ENABLED</code><button class="btn-copy fa fa-clipboard inline-btn-copy" data-clipboard-action="copy" data-clipboard-target="#env-var-65331" title="Copy to clipboard" do-not-collapse="true"></button></p>
+</div>
+</div>
+</div>
+<div class="paragraph description-decoration">
+<p><i class="fa fa-chevron-down"></i><span>Show more</span></p>
+</div></div></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock">boolean</p></td>
+<td class="tableblock halign-left valign-middle"></td>
+</tr>
+<tr class="row-collapsible row-collapsed row-with-desc odd">
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><span class="icon"><i class="fa fa-lock" title="Fixed at build time"></i></span> <a id="quarkus-micrometer_quarkus-micrometer-export-json-enabled"></a><code><a href="#quarkus-micrometer_quarkus-micrometer-export-json-enabled">quarkus.micrometer.export.json.enabled</a></code></p>
+</div>
+<div id="conf-collapsible-desc-17" class="openblock description description-collapsed">
+<div class="content">
+<div class="paragraph">
+<p>Support for export to JSON format. Off by default.</p>
+</div>
+<div class="paragraph">
+<p>Environment variable: <code id="env-var-65332">QUARKUS_MICROMETER_EXPORT_JSON_ENABLED</code><button class="btn-copy fa fa-clipboard inline-btn-copy" data-clipboard-action="copy" data-clipboard-target="#env-var-65332" title="Copy to clipboard" do-not-collapse="true"></button></p>
+</div>
+</div>
+</div>
+<div class="paragraph description-decoration">
+<p><i class="fa fa-chevron-down"></i><span>Show more</span></p>
+</div></div></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock">boolean</p></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock"><code>false</code></p></td>
+</tr>
+<tr class="row-collapsible row-collapsed row-with-desc">
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><span class="icon"><i class="fa fa-lock" title="Fixed at build time"></i></span> <a id="quarkus-micrometer_quarkus-micrometer-export-json-path"></a><code><a href="#quarkus-micrometer_quarkus-micrometer-export-json-path">quarkus.micrometer.export.json.path</a></code></p>
+</div>
+<div id="conf-collapsible-desc-18" class="openblock description description-collapsed">
+<div class="content">
+<div class="paragraph">
+<p>The path for the JSON metrics endpoint. The default value is <code>metrics</code>. By default, this value will be resolved as a path relative to <code>${quarkus.http.non-application-root-path}</code>. If the management interface is enabled, the value will be resolved as a path relative to <code>${quarkus.management.root-path}</code>.</p>
+</div>
+<div class="paragraph">
+<p>Environment variable: <code id="env-var-65333">QUARKUS_MICROMETER_EXPORT_JSON_PATH</code><button class="btn-copy fa fa-clipboard inline-btn-copy" data-clipboard-action="copy" data-clipboard-target="#env-var-65333" title="Copy to clipboard" do-not-collapse="true"></button></p>
+</div>
+</div>
+</div>
+<div class="paragraph description-decoration">
+<p><i class="fa fa-chevron-down"></i><span>Show more</span></p>
+</div></div></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock">string</p></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock"><code>metrics</code></p></td>
+</tr>
+<tr class="row-collapsible row-collapsed row-with-desc odd">
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><span class="icon"><i class="fa fa-lock" title="Fixed at build time"></i></span> <a id="quarkus-micrometer_quarkus-micrometer-export-json-buffer-length"></a><code><a href="#quarkus-micrometer_quarkus-micrometer-export-json-buffer-length">quarkus.micrometer.export.json.buffer-length</a></code></p>
+</div>
+<div id="conf-collapsible-desc-19" class="openblock description description-collapsed">
+<div class="content">
+<div class="paragraph">
+<p>Statistics like max, percentiles, and histogram counts decay over time to give greater weight to recent samples. Samples are accumulated to such statistics in ring buffers which rotate after the expiry, with this buffer length.</p>
+</div>
+<div class="paragraph">
+<p>Environment variable: <code id="env-var-65334">QUARKUS_MICROMETER_EXPORT_JSON_BUFFER_LENGTH</code><button class="btn-copy fa fa-clipboard inline-btn-copy" data-clipboard-action="copy" data-clipboard-target="#env-var-65334" title="Copy to clipboard" do-not-collapse="true"></button></p>
+</div>
+</div>
+</div>
+<div class="paragraph description-decoration">
+<p><i class="fa fa-chevron-down"></i><span>Show more</span></p>
+</div></div></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock">int</p></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock"><code>3</code></p></td>
+</tr>
+<tr class="row-collapsible row-collapsed row-with-desc">
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><span class="icon"><i class="fa fa-lock" title="Fixed at build time"></i></span> <a id="quarkus-micrometer_quarkus-micrometer-export-json-expiry"></a><code><a href="#quarkus-micrometer_quarkus-micrometer-export-json-expiry">quarkus.micrometer.export.json.expiry</a></code></p>
+</div>
+<div id="conf-collapsible-desc-20" class="openblock description description-collapsed">
+<div class="content">
+<div class="paragraph">
+<p>Statistics like max, percentiles, and histogram counts decay over time to give greater weight to recent samples. Samples are accumulated to such statistics in ring buffers which rotate after this expiry, with a particular buffer length.</p>
+</div>
+<div class="paragraph">
+<p>Environment variable: <code id="env-var-65335">QUARKUS_MICROMETER_EXPORT_JSON_EXPIRY</code><button class="btn-copy fa fa-clipboard inline-btn-copy" data-clipboard-action="copy" data-clipboard-target="#env-var-65335" title="Copy to clipboard" do-not-collapse="true"></button></p>
+</div>
+</div>
+</div>
+<div class="paragraph description-decoration">
+<p><i class="fa fa-chevron-down"></i><span>Show more</span></p>
+</div></div></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock"><a href="https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html">Duration</a>
+  <a href="#duration-note-anchor-{summaryTableId}"><span class="icon"><i class="fa fa-question-circle" title="More information about the Duration format"></i></span></a></p></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock"><code>P3D</code></p></td>
+</tr>
+<tr class="row-collapsible row-collapsed row-with-desc odd">
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><span class="icon"><i class="fa fa-lock" title="Fixed at build time"></i></span> <a id="quarkus-micrometer_quarkus-micrometer-export-prometheus-enabled"></a><code><a href="#quarkus-micrometer_quarkus-micrometer-export-prometheus-enabled">quarkus.micrometer.export.prometheus.enabled</a></code></p>
+</div>
+<div id="conf-collapsible-desc-21" class="openblock description description-collapsed">
+<div class="content">
+<div class="paragraph">
+<p>Support for export to Prometheus.</p>
+</div>
+<div class="paragraph">
+<p>Support for Prometheus will be enabled if Micrometer support is enabled, the PrometheusMeterRegistry is on the classpath and either this value is true, or this value is unset and <code>quarkus.micrometer.registry-enabled-default</code> is true.</p>
+</div>
+<div class="paragraph">
+<p>Environment variable: <code id="env-var-65336">QUARKUS_MICROMETER_EXPORT_PROMETHEUS_ENABLED</code><button class="btn-copy fa fa-clipboard inline-btn-copy" data-clipboard-action="copy" data-clipboard-target="#env-var-65336" title="Copy to clipboard" do-not-collapse="true"></button></p>
+</div>
+</div>
+</div>
+<div class="paragraph description-decoration">
+<p><i class="fa fa-chevron-down"></i><span>Show more</span></p>
+</div></div></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock">boolean</p></td>
+<td class="tableblock halign-left valign-middle"></td>
+</tr>
+<tr class="row-collapsible row-collapsed row-with-desc">
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><span class="icon"><i class="fa fa-lock" title="Fixed at build time"></i></span> <a id="quarkus-micrometer_quarkus-micrometer-export-prometheus-path"></a><code><a href="#quarkus-micrometer_quarkus-micrometer-export-prometheus-path">quarkus.micrometer.export.prometheus.path</a></code></p>
+</div>
+<div id="conf-collapsible-desc-22" class="openblock description description-collapsed">
+<div class="content">
+<div class="paragraph">
+<p>The path for the prometheus metrics endpoint (produces text/plain). The default value is
+<code>metrics</code> and is resolved relative to the non-application endpoint (<code>q</code>), e.g.
+<code>${quarkus.http.root-path}/${quarkus.http.non-application-root-path}/metrics</code>.
+If an absolute path is specified (<code>/metrics</code>), the prometheus endpoint will be served
+from the configured path.</p>
+</div>
+<div class="paragraph">
+<p>If the management interface is enabled, the value will be resolved as a path relative to
+<code>${quarkus.management.root-path}</code> (<code>q</code> by default), e.g.
+<code><a href="http://${quarkus.management.host}:${quarkus.management.port}/${quarkus.management.root-path}/metrics" class="bare">http://${quarkus.management.host}:${quarkus.management.port}/${quarkus.management.root-path}/metrics</a></code>.
+If an absolute path is specified (<code>/metrics</code>), the prometheus endpoint will be served from the configured path, e.g.
+<code><a href="http://${quarkus.management.host}:${quarkus.management.port}/metrics" class="bare">http://${quarkus.management.host}:${quarkus.management.port}/metrics</a></code>.</p>
+</div>
+<div class="paragraph">
+<p>Environment variable: <code id="env-var-65337">QUARKUS_MICROMETER_EXPORT_PROMETHEUS_PATH</code><button class="btn-copy fa fa-clipboard inline-btn-copy" data-clipboard-action="copy" data-clipboard-target="#env-var-65337" title="Copy to clipboard" do-not-collapse="true"></button></p>
+</div>
+</div>
+</div>
+<div class="paragraph description-decoration">
+<p><i class="fa fa-chevron-down"></i><span>Show more</span></p>
+</div></div></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock">string</p></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock"><code>metrics</code></p></td>
+</tr>
+<tr class="row-collapsible row-collapsed row-with-desc odd">
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><span class="icon"><i class="fa fa-lock" title="Fixed at build time"></i></span> <a id="quarkus-micrometer_quarkus-micrometer-export-prometheus-default-registry"></a><code><a href="#quarkus-micrometer_quarkus-micrometer-export-prometheus-default-registry">quarkus.micrometer.export.prometheus.default-registry</a></code></p>
+</div>
+<div id="conf-collapsible-desc-23" class="openblock description description-collapsed">
+<div class="content">
+<div class="paragraph">
+<p>By default, this extension will create a Prometheus MeterRegistry instance.</p>
+</div>
+<div class="paragraph">
+<p>Use this attribute to veto the creation of the default Prometheus MeterRegistry.</p>
+</div>
+<div class="paragraph">
+<p>Environment variable: <code id="env-var-65338">QUARKUS_MICROMETER_EXPORT_PROMETHEUS_DEFAULT_REGISTRY</code><button class="btn-copy fa fa-clipboard inline-btn-copy" data-clipboard-action="copy" data-clipboard-target="#env-var-65338" title="Copy to clipboard" do-not-collapse="true"></button></p>
+</div>
+</div>
+</div>
+<div class="paragraph description-decoration">
+<p><i class="fa fa-chevron-down"></i><span>Show more</span></p>
+</div></div></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock">boolean</p></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock"><code>true</code></p></td>
+</tr>
+<tr class="row-collapsible row-collapsed row-with-desc">
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><a id="quarkus-micrometer_quarkus-micrometer-binder-http-client-match-patterns"></a><code><a href="#quarkus-micrometer_quarkus-micrometer-binder-http-client-match-patterns">quarkus.micrometer.binder.http-client.match-patterns</a></code></p>
+</div>
+<div id="conf-collapsible-desc-24" class="openblock description description-collapsed">
+<div class="content">
+<div class="paragraph">
+<p>Comma-separated list of regular expressions used to specify uri
+labels in http metrics.</p>
+</div>
+<div class="paragraph">
+<p>Outbount HTTP client instrumentation will attempt to transform parameterized
+resource paths, <code>/item/123</code>, into a generic form, <code>/item/{id}</code>,
+to reduce the cardinality of uri label values.</p>
+</div>
+<div class="paragraph">
+<p>Patterns specified here will take precedence over those computed
+values.</p>
+</div>
+<div class="paragraph">
+<p>For example, if <code>/item/\\\\d+=/item/custom</code> or
+<code>/item/[0-9]+=/item/custom</code> is specified in this list,
+a request to a matching path (<code>/item/123</code>) will use the specified
+replacement value (<code>/item/custom</code>) as the value for the uri label.
+Note that backslashes must be double escaped as <code>\\\\</code>.</p>
+</div>
+<div class="paragraph">
+<p>Environment variable: <code id="env-var-65339">QUARKUS_MICROMETER_BINDER_HTTP_CLIENT_MATCH_PATTERNS</code><button class="btn-copy fa fa-clipboard inline-btn-copy" data-clipboard-action="copy" data-clipboard-target="#env-var-65339" title="Copy to clipboard" do-not-collapse="true"></button></p>
+</div>
+</div>
+</div>
+<div class="paragraph description-decoration">
+<p><i class="fa fa-chevron-down"></i><span>Show more</span></p>
+</div></div></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock">list of string</p></td>
+<td class="tableblock halign-left valign-middle"></td>
+</tr>
+<tr class="row-collapsible row-collapsed row-with-desc odd">
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><a id="quarkus-micrometer_quarkus-micrometer-binder-http-client-ignore-patterns"></a><code><a href="#quarkus-micrometer_quarkus-micrometer-binder-http-client-ignore-patterns">quarkus.micrometer.binder.http-client.ignore-patterns</a></code></p>
+</div>
+<div id="conf-collapsible-desc-25" class="openblock description description-collapsed">
+<div class="content">
+<div class="paragraph">
+<p>Comma-separated list of regular expressions defining uri paths that should be ignored (not measured).</p>
+</div>
+<div class="paragraph">
+<p>Environment variable: <code id="env-var-65340">QUARKUS_MICROMETER_BINDER_HTTP_CLIENT_IGNORE_PATTERNS</code><button class="btn-copy fa fa-clipboard inline-btn-copy" data-clipboard-action="copy" data-clipboard-target="#env-var-65340" title="Copy to clipboard" do-not-collapse="true"></button></p>
+</div>
+</div>
+</div>
+<div class="paragraph description-decoration">
+<p><i class="fa fa-chevron-down"></i><span>Show more</span></p>
+</div></div></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock">list of string</p></td>
+<td class="tableblock halign-left valign-middle"></td>
+</tr>
+<tr class="row-collapsible row-collapsed row-with-desc">
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><a id="quarkus-micrometer_quarkus-micrometer-binder-http-client-max-uri-tags"></a><code><a href="#quarkus-micrometer_quarkus-micrometer-binder-http-client-max-uri-tags">quarkus.micrometer.binder.http-client.max-uri-tags</a></code></p>
+</div>
+<div id="conf-collapsible-desc-26" class="openblock description description-collapsed">
+<div class="content">
+<div class="paragraph">
+<p>Maximum number of unique URI tag values allowed. After the max number of tag values is reached, metrics with additional tag values are denied by filter.</p>
+</div>
+<div class="paragraph">
+<p>Environment variable: <code id="env-var-65341">QUARKUS_MICROMETER_BINDER_HTTP_CLIENT_MAX_URI_TAGS</code><button class="btn-copy fa fa-clipboard inline-btn-copy" data-clipboard-action="copy" data-clipboard-target="#env-var-65341" title="Copy to clipboard" do-not-collapse="true"></button></p>
+</div>
+</div>
+</div>
+<div class="paragraph description-decoration">
+<p><i class="fa fa-chevron-down"></i><span>Show more</span></p>
+</div></div></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock">int</p></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock"><code>100</code></p></td>
+</tr>
+<tr class="row-collapsible row-collapsed row-with-desc odd">
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><a id="quarkus-micrometer_quarkus-micrometer-binder-http-server-match-patterns"></a><code><a href="#quarkus-micrometer_quarkus-micrometer-binder-http-server-match-patterns">quarkus.micrometer.binder.http-server.match-patterns</a></code></p>
+</div>
+<div id="conf-collapsible-desc-27" class="openblock description description-collapsed">
+<div class="content">
+<div class="paragraph">
+<p>Comma-separated list of regular expressions used to specify uri
+labels in http metrics.</p>
+</div>
+<div class="paragraph">
+<p>Vertx instrumentation will attempt to transform parameterized
+resource paths, <code>/item/123</code>, into a generic form, <code>/item/{id}</code>,
+to reduce the cardinality of uri label values.</p>
+</div>
+<div class="paragraph">
+<p>Patterns specified here will take precedence over those computed
+values.</p>
+</div>
+<div class="paragraph">
+<p>For example, if <code>/item/\\\\d+=/item/custom</code> or
+<code>/item/[0-9]+=/item/custom</code> is specified in this list,
+a request to a matching path (<code>/item/123</code>) will use the specified
+replacement value (<code>/item/custom</code>) as the value for the uri label.
+Note that backslashes must be double escaped as <code>\\\\</code>.</p>
+</div>
+<div class="paragraph">
+<p>Environment variable: <code id="env-var-65342">QUARKUS_MICROMETER_BINDER_HTTP_SERVER_MATCH_PATTERNS</code><button class="btn-copy fa fa-clipboard inline-btn-copy" data-clipboard-action="copy" data-clipboard-target="#env-var-65342" title="Copy to clipboard" do-not-collapse="true"></button></p>
+</div>
+</div>
+</div>
+<div class="paragraph description-decoration">
+<p><i class="fa fa-chevron-down"></i><span>Show more</span></p>
+</div></div></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock">list of string</p></td>
+<td class="tableblock halign-left valign-middle"></td>
+</tr>
+<tr class="row-collapsible row-collapsed row-with-desc">
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><a id="quarkus-micrometer_quarkus-micrometer-binder-http-server-ignore-patterns"></a><code><a href="#quarkus-micrometer_quarkus-micrometer-binder-http-server-ignore-patterns">quarkus.micrometer.binder.http-server.ignore-patterns</a></code></p>
+</div>
+<div id="conf-collapsible-desc-28" class="openblock description description-collapsed">
+<div class="content">
+<div class="paragraph">
+<p>Comma-separated list of regular expressions defining uri paths that should be ignored (not measured).</p>
+</div>
+<div class="paragraph">
+<p>Environment variable: <code id="env-var-65343">QUARKUS_MICROMETER_BINDER_HTTP_SERVER_IGNORE_PATTERNS</code><button class="btn-copy fa fa-clipboard inline-btn-copy" data-clipboard-action="copy" data-clipboard-target="#env-var-65343" title="Copy to clipboard" do-not-collapse="true"></button></p>
+</div>
+</div>
+</div>
+<div class="paragraph description-decoration">
+<p><i class="fa fa-chevron-down"></i><span>Show more</span></p>
+</div></div></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock">list of string</p></td>
+<td class="tableblock halign-left valign-middle"></td>
+</tr>
+<tr class="row-collapsible row-collapsed row-with-desc odd">
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><a id="quarkus-micrometer_quarkus-micrometer-binder-http-server-suppress-non-application-uris"></a><code><a href="#quarkus-micrometer_quarkus-micrometer-binder-http-server-suppress-non-application-uris">quarkus.micrometer.binder.http-server.suppress-non-application-uris</a></code></p>
+</div>
+<div id="conf-collapsible-desc-29" class="openblock description description-collapsed">
+<div class="content">
+<div class="paragraph">
+<p>Suppress non-application uris from metrics collection.
+This will suppress all metrics for non-application endpoints using
+<code>${quarkus.http.root-path}/${quarkus.http.non-application-root-path}</code>.</p>
+</div>
+<div class="paragraph">
+<p>Suppressing non-application uris is enabled by default.</p>
+</div>
+<div class="paragraph">
+<p>Environment variable: <code id="env-var-65344">QUARKUS_MICROMETER_BINDER_HTTP_SERVER_SUPPRESS_NON_APPLICATION_URIS</code><button class="btn-copy fa fa-clipboard inline-btn-copy" data-clipboard-action="copy" data-clipboard-target="#env-var-65344" title="Copy to clipboard" do-not-collapse="true"></button></p>
+</div>
+</div>
+</div>
+<div class="paragraph description-decoration">
+<p><i class="fa fa-chevron-down"></i><span>Show more</span></p>
+</div></div></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock">boolean</p></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock"><code>true</code></p></td>
+</tr>
+<tr class="row-collapsible row-collapsed row-with-desc">
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><a id="quarkus-micrometer_quarkus-micrometer-binder-http-server-max-uri-tags"></a><code><a href="#quarkus-micrometer_quarkus-micrometer-binder-http-server-max-uri-tags">quarkus.micrometer.binder.http-server.max-uri-tags</a></code></p>
+</div>
+<div id="conf-collapsible-desc-30" class="openblock description description-collapsed">
+<div class="content">
+<div class="paragraph">
+<p>Maximum number of unique URI tag values allowed. After the max number of tag values is reached, metrics with additional tag values are denied by filter.</p>
+</div>
+<div class="paragraph">
+<p>Environment variable: <code id="env-var-65345">QUARKUS_MICROMETER_BINDER_HTTP_SERVER_MAX_URI_TAGS</code><button class="btn-copy fa fa-clipboard inline-btn-copy" data-clipboard-action="copy" data-clipboard-target="#env-var-65345" title="Copy to clipboard" do-not-collapse="true"></button></p>
+</div>
+</div>
+</div>
+<div class="paragraph description-decoration">
+<p><i class="fa fa-chevron-down"></i><span>Show more</span></p>
+</div></div></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock">int</p></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock"><code>100</code></p></td>
+</tr>
+<tr class="row-collapsible row-collapsed row-with-desc row-hidden odd">
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><a id="quarkus-micrometer_quarkus-micrometer-export-prometheus-prometheus"></a><code><a href="#quarkus-micrometer_quarkus-micrometer-export-prometheus-prometheus">quarkus.micrometer.export.prometheus</a></code></p>
+</div>
+<div id="conf-collapsible-desc-31" class="openblock description description-collapsed">
+<div class="content">
+<div class="paragraph">
+<p>Prometheus registry configuration properties.</p>
+</div>
+<div class="paragraph">
+<p>A property source for configuration of the Prometheus MeterRegistry,
+see <a href="https://micrometer.io/docs/registry/prometheus" class="bare">https://micrometer.io/docs/registry/prometheus</a>.</p>
+</div>
+<div class="paragraph">
+<p>Environment variable: <code id="env-var-65346">QUARKUS_MICROMETER_EXPORT_PROMETHEUS</code><button class="btn-copy fa fa-clipboard inline-btn-copy" data-clipboard-action="copy" data-clipboard-target="#env-var-65346" title="Copy to clipboard" do-not-collapse="true"></button></p>
+</div>
+</div>
+</div>
+<div class="paragraph description-decoration">
+<p><i class="fa fa-chevron-down"></i><span>Show more</span></p>
+</div></div></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock"><code>Map&lt;String,String&gt;</code></p></td>
+<td class="tableblock halign-left valign-middle"></td>
+</tr>
+</tbody>
+</table>
+<div id="duration-note-anchor-quarkus-micrometer" class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="title">期間フォーマットについて</div>
+<div class="paragraph">
+<p>期間の値を書くには、標準の <code>java.time.Duration</code> フォーマットを使います。
+詳細は <a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html#parse(java.lang.CharSequence)">Duration#parse() Java API documentation</a> を参照してください。</p>
+</div>
+<div class="paragraph">
+<p>数字で始まる簡略化した書式を使うこともできます:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>数値のみの場合は、秒単位の時間を表します。</p>
+</li>
+<li>
+<p>数値の後に <code>ms</code> が続く場合は、ミリ秒単位の時間を表します。</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>その他の場合は、簡略化されたフォーマットが解析のために <code>java.time.Duration</code> フォーマットに変換されます：</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>数値の後に <code>h</code> 、 <code>m</code> 、 <code>s</code> が続く場合は、その前に <code>PT</code> が付けられます。</p>
+</li>
+<li>
+<p>数値の後に <code>d</code> が続く場合は、その前に <code>P</code> が付けられます。</p>
+</li>
+</ul>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+    </div>
+    <div class="grid__item width-4-12 width-12-12-m tocwrapper">
+      <div class="hide-mobile toc"><ul class="sectlevel1">
+<li><a href="#micrometer-and-monitoring-system-extensions">Micrometerとモニタリングシステムのエクステンション</a>
+<ul class="sectlevel2">
+<li><a href="#other-registry-implementations">その他のレジストリ実装</a></li>
+<li><a href="#create-a-customized-meterregistry">カスタマイズされたMeterRegistryの作成</a></li>
+</ul>
+</li>
+<li><a href="#create-your-own-metrics">独自のメトリクスの作成</a>
+<ul class="sectlevel2">
+<li><a href="#naming-conventions">命名規則</a></li>
+<li><a href="#define-tags">集計のディメンションを定義する</a></li>
+<li><a href="#obtain-a-reference-to-a-meterregistry">MeterRegistry への参照を取得する</a></li>
+<li><a href="#gauges">ゲージ</a></li>
+<li><a href="#counters">カウンター</a></li>
+<li><a href="#summaries-and-timers">サマリーとタイマー</a></li>
+</ul>
+</li>
+<li><a href="#automatically-generated-metrics">自動的に生成されたメトリクス</a></li>
+<li><a href="#customizing-micrometer">Micrometer のカスタマイズ</a>
+<ul class="sectlevel2">
+<li><a href="#meter-filter"><code>MeterFilter</code> を使用して、発行されるタグとメトリクスをカスタマイズします。</a></li>
+<li><a href="#use-httpservermetricstagscontributor-for-server-http-requests">サーバーの HTTP リクエストに <code>HttpServerMetricsTagsContributor</code> を使用する</a></li>
+<li><a href="#use-meterregistrycustomizer-for-arbitrary-customizations-to-meter-registries">メーターレジストリーを任意にカスタマイズする <code>MeterRegistryCustomizer</code> の使用</a></li>
+</ul>
+</li>
+<li><a href="#annotations">Micrometerはアノテーションをサポートしていますか？</a></li>
+<li><a href="#support-for-the-microprofile-metrics-api">MicroProfile Metrics API のサポート</a></li>
+<li><a href="#management-interface">マネジメントインターフェース</a></li>
+<li><a href="#quarkus-extensions-using-micrometer">Micrometerで計測されたQuarkusのコアエクステンション</a></li>
+<li><a href="#configuration-reference">設定リファレンス</a></li>
+</ul></div>
+    </div>
+  </div>
+  <h2>関連コンテンツ</h2>
+  <div class="grid-wrapper relations">
+    <div class="grid__item width-6-12 width-12-12-m">
+      <h3>同じエクステンションについて</h3>
+      <ul class="related-content">
+      
+        
+        <li class="tutorial"><a href="/version/3.8/guides/telemetry-micrometer-tutorial">Micrometerを用いたメトリクスの収集</a></li>
+      </ul>
+    </div>
+    <div class="grid__item width-6-12 width-12-12-m">
+      <h3>同じトピックについて</h3>
+      <ul class="related-content">
+      
+        
+        <li class="tutorial"><a href="/version/3.8/guides/telemetry-micrometer-tutorial">Micrometerを用いたメトリクスの収集</a></li>
+      
+        
+        <li class="guide"><a href="/version/3.8/guides/centralized-log-management">ログの一元管理（Graylog、Logstash、Fluentd）</a></li>
+      
+        
+        <li class="reference"><a href="/version/3.8/guides/logging">ロギング設定</a></li>
+      
+        
+        <li class="reference"><a href="/version/3.8/guides/management-interface-reference">マネジメントインターフェースリファレンス</a></li>
+      
+        
+        <li class="tutorial"><a href="/version/3.8/guides/telemetry-opentracing-to-otel-tutorial">OpenTracingからOpenTelemetry tracingへの移行</a></li>
+      
+        
+        <li class="guide"><a href="/version/3.8/guides/smallrye-health">SmallRye Health</a></li>
+      
+        
+        <li class="guide"><a href="/version/3.8/guides/smallrye-metrics">SmallRye Metrics</a></li>
+      
+        
+        <li class="guide"><a href="/version/3.8/guides/opentelemetry">OpenTelemetryの使用</a></li>
+      </ul>
+    </div>
+    </div>
+  </div>
+
+  </div>
+
+  <div class="content project-footer">
+  <div class="footer-section">
+    <div class="logo-wrapper">
+      <a href="/"><img src="/assets/images/quarkus_logo_horizontal_rgb_reverse.svg" class="project-logo" title="Quarkus"></a>
+    </div>
+  </div>
+  <div class="grid-wrapper">
+    <p class="grid__item width-3-12">Quarkus is open. All dependencies of this project are available under the <a href='https://www.apache.org/licenses/LICENSE-2.0' target='_blank'>Apache Software License 2.0</a> or compatible license. <i class='fab fa-creative-commons'></i><i class='fab fa-creative-commons-by'></i> <a href='https://creativecommons.org/licenses/by/3.0/' target='_blank'>CC by 3.0</a><br /><br />This website was built with <a href='https://jekyllrb.com/' target='_blank'>Jekyll</a>, is hosted on <a href='https://pages.github.com/' target='_blank'>GitHub Pages</a> and is completely open source. If you want to make it better, <a href='https://github.com/quarkusio/quarkusio.github.io' target='_blank'>fork the website</a> and show us what you’ve got.</p>
+
+    
+      <div class="width-1-12 project-links">
+        <span>ナビゲーション</span>
+        <ul class="footer-links">
+          
+          
+            <li><a href="/" target="_blank">ホーム</a></li>
+          
+          
+          
+            <li><a href="/about" target="_blank">Quarkusについて</a></li>
+          
+          
+          
+            <li><a href="/blog" target="_blank">ブログ</a></li>
+          
+          
+          
+            <li><a href="/insights" target="_blank">ポッドキャスト</a></li>
+          
+          
+          
+            <li><a href="/events" target="_blank">イベント</a></li>
+          
+          
+          
+            <li><a href="/newsletter" target="_blank">ニュースレター</a></li>
+          
+          
+          
+            <li><a href="/userstories" target="_blank">ユーザーストーリー</a></li>
+          
+          
+          
+            <li><a href="https://github.com/orgs/quarkusio/projects/13/views/1" target="_blank">ロードマップ</a></li>
+          
+          
+          
+            <li><a href="/security" target="_blank">セキュリティ&nbsp;ポリシー</a></li>
+          
+          
+          
+            <li><a href="/usage" target="_blank">使用方法</a></li>
+          
+          
+          
+            <li><a href="https://github.com/commonhaus/artwork/tree/main/projects/quarkus" target="_blank">Brand</a></li>
+          
+          
+          
+            <li><a href="/desktopwallpapers" target="_blank">Wallpapers</a></li>
+          
+          
+          
+            <li><a href="https://www.redhat.com/en/about/privacy-policy" target="_blank">Privacy Policy</a></li>
+          
+          
+        </ul>
+      </div>
+    
+      <div class="width-1-12 project-links">
+        <span>フォローする</span>
+        <ul class="footer-links">
+          
+          
+            <li><a href="https://x.com/quarkusio" target="_blank">X</a></li>
+          
+          
+          
+            <li><a href="https://bsky.app/profile/quarkus.io" target="_blank">Bluesky</a></li>
+          
+          
+          
+            <li><a rel="me" href="https://fosstodon.org/@quarkusio" target="_blank">Mastodon</a></li>
+            
+          
+          
+            <li><a href="https://www.threads.com/@quarkusio" target="_blank">Threads</a></li>
+          
+          
+          
+            <li><a href="https://www.facebook.com/quarkusio" target="_blank">Facebook</a></li>
+          
+          
+          
+            <li><a href="https://www.linkedin.com/company/quarkusio/" target="_blank">Linkedin</a></li>
+          
+          
+          
+            <li><a href="https://www.youtube.com/channel/UCaW8QG_QoIk_FnjLgr5eOqg" target="_blank">Youtube</a></li>
+          
+          
+          
+            <li><a href="https://github.com/quarkusio" target="_blank">GitHub</a></li>
+          
+          
+        </ul>
+      </div>
+    
+      <div class="width-2-12 project-links">
+        <span>ヘルプ</span>
+        <ul class="footer-links">
+          
+          
+            <li><a href="/support" target="_blank">サポート</a></li>
+          
+          
+          
+            <li><a href="/guides" target="_blank">ガイド</a></li>
+          
+          
+          
+            <li><a href="/faq" target="_blank">FAQ</a></li>
+          
+          
+          
+            <li><a href="/get-started" target="_blank">入門</a></li>
+          
+          
+          
+            <li><a href="https://stackoverflow.com/questions/tagged/quarkus" target="_blank">Stack Overflow</a></li>
+          
+          
+          
+            <li><a href="https://github.com/quarkusio/quarkus/discussions" target="_blank">ディスカッション</a></li>
+          
+          
+          
+            <li><a href="https://groups.google.com/forum/#!forum/quarkus-dev" target="_blank">開発メーリングリスト</a></li>
+          
+          
+          
+            <li><a href="https://stats.uptimerobot.com/ze1PfweT2p" target="_blank">Quarkus Service Status</a></li>
+          
+          
+        </ul>
+      </div>
+    
+      <div class="width-1-12 project-links">
+        <span>言語</span>
+        <ul class="footer-links">
+          
+          
+            <li><a href=" https://quarkus.io/ " target="_blank">English</a></li>
+          
+          
+          
+            <li><a href="https://pt.quarkus.io/" target="_blank">Português&nbsp;(Brasileiro)</a></li>
+          
+          
+          
+            <li><a href=" https://es.quarkus.io/ " target="_blank">Español</a></li>
+          
+          
+          
+            <li><a href="https://cn.quarkus.io/" target="_blank">简体中文</a></li>
+          
+          
+          
+            <li><a href=" https://ja.quarkus.io/ " target="_blank">日本語</a></li>
+          
+          
+        </ul>
+      </div>
+    
+
+    
+      <div class="width-4-12 more-links">
+        <span>Quarkusはコミュニティプロジェクトで構成されています</span>
+        <ul class="footer-links">
+          
+            <li><a blah href="https://vertx.io/" target="_blank">Eclipse Vert.x</a></li>
+          
+            <li><a blah href="https://smallrye.io" target="_blank">SmallRye</a></li>
+          
+            <li><a blah href="https://hibernate.org" target="_blank">Hibernate ORM</a></li>
+          
+            <li><a blah href="https://netty.io" target="_blank">Netty</a></li>
+          
+            <li><a blah href="https://resteasy.github.io" target="_blank">RESTEasy</a></li>
+          
+            <li><a blah href="https://camel.apache.org" target="_blank">Apache Camel</a></li>
+          
+            <li><a blah href="https://microprofile.io" target="_blank">Eclipse MicroProfile</a></li>
+          
+            <li><a blah href="https://code.quarkus.io/" target="_blank">その他多数...</a></li>
+          
+        </ul>
+      </div>
+    
+  </div>
+</div>
+
+  <div class="content cf-footer">
+  <div class="flexcontainer">
+    <div class="cf-logo">
+      <a class="cf-logo" href="https://www.commonhaus.org/" target="_blank"><img src="https://raw.githubusercontent.com/commonhaus/artwork/main/foundation/brand/svg/CF_logo_horizontal_single_reverse.svg"/></a>
+    </div>
+    <div class="license">
+      Copyright © Quarkus. All rights reserved. For details on our trademarks, please visit our <a href="https://www.commonhaus.org/policies/trademark-policy/">Trademark Policy</a> and <a href="https://www.commonhaus.org/trademarks/">Trademark List</a>. Trademarks of third parties are owned by their respective holders and their mention here does not suggest any endorsement or association.
+    </div>
+  </div>
+</div>
+
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js" integrity="sha384-8gBf6Y4YYq7Jx97PIqmTwLPin4hxIzQw5aDmUg/DDhul9fFpbbLcLh3nTIIDJKhx" crossorigin="anonymous"></script>
+  <script type="text/javascript" src="/assets/javascript/mobile-nav.js"></script>
+  <script type="text/javascript" src="/assets/javascript/scroll-down.js"></script>
+  <script src="/assets/javascript/satellite.js" type="text/javascript"></script>
+  <script src="/guides/javascript/config.js" type="text/javascript"></script>
+  <script src="/assets/javascript/guides-version-dropdown.js" type="text/javascript"></script>
+  <script src="/assets/javascript/back-to-top.js" type="text/javascript"></script>
+  <script src="/assets/javascript/clipboard.min.js" type="text/javascript"></script>
+  <script src="/assets/javascript/copy.js" type="text/javascript"></script>
+  <script src="/assets/javascript/asciidoc-tabs.js" type="text/javascript"></script>
+  <script src="/assets/javascript/future-date.js" type="text/javascript"></script>
+  <script src="/assets/javascript/randomize.js" type="text/javascript"></script>
+  <script src="/assets/javascript/time.js" type="text/javascript"></script>
+</body>
+
+</html>
