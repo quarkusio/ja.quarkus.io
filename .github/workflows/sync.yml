@@ -70,13 +70,25 @@ jobs:
         with:
           message: "Apply translation memory"
 
+      # Machine translation with DeepL API
+      # Note: continue-on-error allows pushing partial results to reduce DeepL costs,
+      # but we still check the result at the end to fail the workflow if errors occurred.
       - name: Machine translate
+        id: machine-translate
         run: ./tsujiw po machine-translate
         continue-on-error: true
         env:
           TSUJI_TRANSLATOR_DEEPL_API_KEY: ${{ secrets.TRANSLATOR_DEEPL_APIKEY }}
 
       - name: Push changes (machine translation)
+        if: always()
         uses: ./.github/actions/push-changes
         with:
           message: "Add machine translation"
+
+      # Fail the workflow if machine translation had errors
+      - name: Check machine translation result
+        if: steps.machine-translate.outcome == 'failure'
+        run: |
+          echo "Machine translation failed. Please check the logs above."
+          exit 1
