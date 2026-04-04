@@ -46,19 +46,23 @@ When the pull-request is merged into `master`, it is automatically deployed to t
 If you would like to build a site in your local environment, first you need to install some tools.
 `bin/setup-build-env-on-ubuntu` is a silent setup script for GitHub Actions(Ubuntu).
 Please install tools by just executing it, or execute equivalent your package manager commands.
-```
+```bash
 bin/setup-build-env-on-ubuntu
 ```
-After that, run the following command to build the site. 
-```
-vendor/quarkus-l10n-utils/bin/build
-```
-The site is built in `doc` directory.
 
-You can start local server to preview the site.
+After that, run the following command to build the site:
+```bash
+./tsujiw jekyll build
 ```
-vendor/quarkus-l10n-utils/bin/exec-jekyll-serve
+The site is built in the `docs` directory.
+
+You can start a local server to preview the site:
+```bash
+./tsujiw jekyll serve
 ```
+This will start a Jekyll server at http://localhost:4000.
+
+**Note**: The `tsujiw` wrapper script automatically downloads the appropriate version of tsuji from GitHub releases based on `config/application.yaml`.
 
 ### HTML templates localization
 

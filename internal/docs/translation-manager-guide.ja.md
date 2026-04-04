@@ -1,97 +1,174 @@
 # quarkus.io 翻訳プロジェクト 翻訳マネージャー向けガイド
 
-※ このガイドは、ローカライゼーションチームの翻訳マネージャー向けのガイドです。 一般の翻訳参加者は [翻訳ガイド](../../translation-guide.ja.md) を参照して下さい。
+※ このガイドは、ローカライゼーションチームの翻訳マネージャー向けのガイドです。一般の翻訳参加者は [翻訳ガイド](../../translation-guide.ja.md) を参照して下さい。
 
 ## 翻訳方式
 
-[quarkus.io](https://quarkus.io)はJekyllを用いた静的サイトであり、そのコンテンツはコンテンツは asciidoctor (.adoc) で記述されています。
-レポジトリは [quarkusio/quarkusio.github.io](https://github.com/quarkusio/quarkusio.github.io ) に存在し、CC BY 3.0 に基づき公開されています。
-本プロジェクトでは、.adocファイルからpo4aというユーティリティを用いてテキストを抽出し、翻訳して.adocファイルに書き戻してビルドすることで日本語版サイトを構築する方式を採っています。
-po4aを用いたテキストの抽出、翻訳メモリを用いた訳文の適用、機械翻訳による下訳、書き戻し処理のワークフローは、本レポジトリのGitHub Actionsによって自動化されており、
-抽出されたテキストは翻訳テキストを管理するファイル形式である、.poファイルとして、[l10nディレクトリ](../../l10n) 以下に保存されています。
+[quarkus.io](https://quarkus.io)はJekyllを用いた静的サイトであり、そのコンテンツはasciidoctor (.adoc) で記述されています。
+本プロジェクトでは、[tsuji](https://github.com/doc-l10n-kit/tsuji) というツールを使用し、.adocファイルから po4a ユーティリティでテキストを抽出し、
+翻訳して.adocファイルに書き戻してビルドすることで日本語版サイトを構築しています。
 
-## 翻訳対象の選定
+## 自動化されたワークフロー
 
-[l10nディレクトリ](../../l10n) 配下の.poファイルすべてを将来的には翻訳していきたいところですが、まずは主要なコンテンツである「ガイド」と
-「ブログ」を翻訳する為に、[l10n/po/ja_JP/_guidesディレクトリ](../../l10n/po/ja_JP/_guides) と
-[l10n/po/ja_JP/_postsディレクトリ](../../l10n/po/ja_JP/_posts) ディレクトリを中心に翻訳を進めています。
+ほとんどのプロセスは GitHub Actions により自動化されています:
 
-ローカライゼーションチームは、未翻訳Word数の多いファイルを中心に取り組むという方針になりましたが、
-[未翻訳Word数順にファイル名をソートしたリスト](../../l10n/stats/translation-sorted-by-fuzzy-words.csv)を用意したので、こちらのリストの上から着手下さい。
+### 1. 同期ワークフロー (sync-upstream)
 
-## 翻訳マネージャーのワークフロー
+**実行タイミング:** 毎週日曜日 8:00 AM UTC (または手動実行)
+
+**処理内容:**
+1. upstream リポジトリ（quarkusio/quarkusio.github.io）を最新版に同期
+2. `./tsujiw jekyll extract` で新規・更新ファイルから PO ファイルを抽出
+3. `./tsujiw po apply-tmx` で確定翻訳メモリを適用
+4. `./tsujiw po apply-fuzzy-tmx` でファジー翻訳メモリを適用
+5. `./tsujiw po machine-translate` で DeepL API による機械翻訳を実行
+6. `./tsujiw jekyll update-stats` で翻訳統計を更新
+
+**結果:** 新しいコンテンツが翻訳用の PO ファイルとして l10n/po/ja_JP/ に追加されます。
+
+### 2. ビルド・デプロイワークフロー (build)
+
+**実行タイミング:** 毎日 9:00 AM UTC、main ブランチへの push 後、または手動実行
+
+**処理内容:**
+1. `./tsujiw tmx generate` で翻訳メモリ（TMX）ファイルを更新
+2. `./tsujiw jekyll update-stats` で翻訳統計を更新
+3. override.csv をチェックし、古い override ファイルがあれば Issue を作成
+4. `./tsujiw jekyll build` でローカライズされたサイトをビルド
+5. GitHub Pages (docs ブランチ) へデプロイ
+
+**結果:** https://ja.quarkus.io が最新の翻訳内容で更新されます。
+
+### 3. Pull Request プレビューワークフロー (pull-request)
+
+**実行タイミング:** Pull Request 作成・更新時
+
+**処理内容:**
+1. PR の変更内容でサイトをビルド
+2. surge.sh へ一時デプロイ (`pr-preview-{PR番号}-ja-quarkusio.surge.sh`)
+3. PR コメントにプレビュー URL を投稿
+
+**結果:** レビュアーが変更内容を実際のサイトで確認できます。
+
+## 翻訳マネージャーの作業フロー
 
 ### 翻訳着手の宣言
 
 同じファイルを複数のメンバが同時に作業着手し、重複して作業して無駄が発生するのを避ける為、翻訳作業に着手する際は、
 GitHubのIssueで、どのファイル、範囲を対象に作業着手するか宣言をお願いします。
-Issueを立てる際は逆に既存のIssueで既に誰かが対象に対して作業着手を宣言していないか、ご確認下さい。
+Issueを立てる際は既存のIssueで既に誰かが対象に対して作業着手を宣言していないか、ご確認下さい。
 
-### gitレポジトリの最新化
+### Git レポジトリの最新化
 
-作業着手にあたり、手元にダウンロードした.poファイルをGitHub上のファイルと同期し、最新化する必要があります。
-以下のコマンドを実行し、手元のレポジトリの `main` ブランチををGitHub上のja.quarkus.ioレポジトリの `main` ブランチと同期してください。
+作業着手にあたり、手元のレポジトリを最新化します:
 
-```
-# 手元のja.quarkus.ioレポジトリのディレクトリで作業して下さい
-#
-# 手元のja.quarkus.ioレポジトリのブランチをmainブランチに切替
+```bash
+# ja.quarkus.io レポジトリのディレクトリで実行
 git checkout main
-# GitHub上の ja.quarkus.io レポジトリの変更内容をダウンロード
 git fetch origin
-# 手元のja.quarkus.ioレポジトリの内容を GitHub上の ja.quarkus.io レポジトリの `main` ブランチと同期
 git reset --hard origin/main
 ```
 
 ### 翻訳作業
 
-.poファイルは、テキストファイルですが、様々な翻訳補助ツールが編集に対応しています。
-Memsourceを利用し、Memsource上のワークフローで翻訳作業を進められる場合は、
-.poファイルをMemsourceにアップロードし、翻訳作業を進め、翻訳が完了したらダウンロードして元のファイルを更新して下さい。
-
-Memsourceをご利用される場合、各センテンスの「翻訳要確認」フラグの除去が行われないようなので、
-翻訳作業後の.poファイルをPOEditで開き、全翻訳センテンスを選択の上、「編集」メニューから「翻訳要確認」フラグを外して下さい。
+PO ファイルは [POEdit](https://poedit.net/) などの翻訳支援ツールで編集できます。
+機械翻訳による下訳が "fuzzy" マークと共に挿入されているので、レビュー・修正して fuzzy マークを外してください。
 
 ### 翻訳結果の送信
 
-翻訳した成果物は、GitHub上にアップロードし、レビューを受けた上で元のja.quarkus.ioレポジトリに取り込んでもらい、サイトを更新する必要があります。
-GitHubでは、レポジトリに対して変更を取り込んでもらうよう提案する為の単位を「Pull-Request」と呼称しており、「Pull-Request」を作成する必要があります。
-「Pull-Request」を作成するには、変更が含まれた「ブランチ」が必要であり、「ブランチ」にはファイルの変更をまとめた「コミット」で構成されています。
+#### 1. ブランチの作成
 
-#### ブランチの作成
-
-ブランチを以下の手順に従い、作成してください。
-
-```
-# "gitレポジトリの最新化"の手順が完了しており、"main"ブランチにいる前提
-#
-# 手元のja.quarkus.ioレポジトリで新たに <ブランチ名> というブランチを作成。<ブランチ名>は対象のファイル名等、適宜被らない名称とする必要があります。
-git checkout -b <ブランチ名>
-# GitHub上の ja.quarkus.io レポジトリの変更内容をダウンロード
+```bash
+# 作業用ブランチを作成（ブランチ名は翻訳対象ファイル名等、適宜設定）
+git checkout -b translate-example-guide
 ```
 
-#### コミットの作成
+#### 2. 変更のコミット
 
-コミットを以下の手順に従い、作成してください。これにより、現在のブランチにコミットが追加されます。
+```bash
+# 変更をステージング
+git add l10n/po/ja_JP/_guides/example.adoc.po
 
-```
-# コミットを作成。<コミット メッセージ>は"Translate <翻訳対象ファイル名>"等が適当でしょう
-git commit -a -m "<コミット メッセージ>"  
-```
-
-#### ブランチの送信
-
-続いて、GIｔHub上にブランチを以下のコマンドで送信して下さい。
-
-```
-git push origin <ブランチ名>
+# コミット作成
+git commit -m "Translate example guide"
 ```
 
-#### Pull-Requestの作成
+#### 3. ブランチの送信と Pull Request 作成
 
-ブランチの送信が完了したら、 [GitHub上のPull-Request一覧ページ](https://github.com/quarkusio/ja.quarkus.io/pulls) に移動して下さい。
-ブランチの送信がされた旨の通知が出ていると思いますので、その通知の「Compare & pull request」ボタンを押下し、Pull-Request作成画面から
-Pull-Requestを作成して下さい。
+```bash
+# GitHub へブランチを送信
+git push origin translate-example-guide
+```
 
+その後、[Pull Request 一覧ページ](https://github.com/quarkusio/ja.quarkus.io/pulls) から Pull Request を作成してください。
+数分後、自動的にプレビューサイトが構築され、PR コメントに URL が投稿されます。
 
+## ローカルでのビルド・プレビュー
 
+GitHub Actions を待たずに手元で確認したい場合:
+
+### セットアップ
+
+```bash
+# 必要なツールのインストール（Ubuntu の場合）
+bin/setup-build-env-on-ubuntu
+```
+
+### ビルド
+
+```bash
+# サイトをビルド
+./tsujiw jekyll build
+
+# ビルド結果は docs/ ディレクトリに生成されます
+```
+
+### プレビューサーバー起動
+
+```bash
+# ローカルサーバー起動
+./tsujiw jekyll serve
+
+# ブラウザで http://localhost:4000 にアクセス
+```
+
+## 翻訳統計の確認
+
+翻訳進捗状況は以下のファイルで確認できます:
+
+- `l10n/stats/translation.csv` - 全体統計
+- `l10n/stats/latest-guides-translation.csv` - 最新ガイド
+- `l10n/stats/{version}-guides-translation.csv` - バージョン別ガイド
+- `l10n/stats/posts-translation.csv` - ブログ記事
+- `l10n/stats/misc-translation.csv` - その他（_includes, _data など）
+
+## override ファイルの管理
+
+HTML テンプレート（po4a で処理不可能）は `l10n/override/ja_JP/` に手動翻訳版を配置します。
+upstream 側のファイルが更新された場合、`l10n/stats/override.csv` に NG ステータスが記録され、
+自動的に GitHub Issue が作成されます。
+
+## トラブルシューティング
+
+### tsuji のバージョン更新
+
+tsujiw スクリプトは `config/application.yaml` の version 設定を参照して自動ダウンロードします。
+手動で更新したい場合:
+
+```bash
+rm -rf vendor/tsuji
+./tsujiw --help  # 再ダウンロードされます
+```
+
+### DeepL API エラー
+
+機械翻訳がエラーになる場合、環境変数 `TSUJI_TRANSLATOR_DEEPL_API_KEY` が設定されているか確認してください。
+GitHub Actions では Secrets に登録済みです。
+
+### ビルドエラー
+
+Jekyll や po4a のエラーが発生する場合、セットアップスクリプトを再実行してください:
+
+```bash
+bin/setup-build-env-on-ubuntu
+```
