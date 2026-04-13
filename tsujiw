@@ -53,5 +53,16 @@ if [ ! -f "$JAR_PATH" ]; then
     echo "Successfully downloaded tsuji-$VERSION.jar" >&2
 fi
 
+# Separate JVM options (-D, -X, -XX) from tsuji arguments
+JVM_OPTS=()
+TSUJI_ARGS=()
+for arg in "$@"; do
+    if [[ "$arg" == -D* || "$arg" == -X* ]]; then
+        JVM_OPTS+=("$arg")
+    else
+        TSUJI_ARGS+=("$arg")
+    fi
+done
+
 # Execute tsuji with passed arguments
-exec java -Dquarkus.config.locations="$CONFIG_FILE" -jar "$JAR_PATH" "$@"
+exec java "${JVM_OPTS[@]}" -jar "$JAR_PATH" "${TSUJI_ARGS[@]}"
