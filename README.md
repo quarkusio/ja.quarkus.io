@@ -64,6 +64,40 @@ This will start a Jekyll server at http://localhost:4000.
 
 **Note**: The `tsujiw` wrapper script automatically downloads the appropriate version of tsuji from GitHub releases based on `config/application.yaml`.
 
+### Local configuration
+
+For local development, you can override settings using a `.env` file (git-ignored):
+
+```bash
+# Copy the example file
+cp .env.example .env
+
+# Edit with your settings
+vim .env
+```
+
+Example - setting up Gemini API key for translation:
+
+```bash
+# .env
+TSUJI_TRANSLATOR_GEMINI_KEY=your-api-key-here
+```
+
+The `.env` file is automatically loaded by the `tsujiw` script.
+
+### Using a custom API endpoint
+
+If you need to use a custom endpoint instead of the standard public Gemini API 
+(for example, routing through a company metering proxy), add the base URL to your `.env` file:
+
+```bash
+# .env
+TSUJI_TRANSLATOR_GEMINI_KEY=your-api-key-here
+QUARKUS_LANGCHAIN4J_AI_GEMINI_BASE_URL=https://your-company-proxy.example.com/api/gemini
+```
+
+This overrides the default Gemini API endpoint while using the tsuji configuration system.
+
 ### HTML templates localization
 
 Most contents of [quarkus.io](https://quarkus.io) are in .adoc files, but a few texts are in its HTML templates.
