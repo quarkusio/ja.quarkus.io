@@ -1,0 +1,251 @@
+msgid ""
+msgstr ""
+"Language: ja_JP\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: jekyll-l10n\n"
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid "Tree-shaking JAR dependencies"
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid "This feature is experimental and subject to change. Please provide feedback if you encounter issues."
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid ""
+"Tree-shaking analyzes your application's bytecode at build time to determine which classes from runtime dependencies are actually reachable.\n"
+"Unreachable classes are excluded from the produced JAR, reducing its size."
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid "This applies to `fast-jar`, `uber-jar`, `legacy-jar`, and `aot-jar` package types."
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid "Enabling tree-shaking"
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid ""
+"Tree-shaking is disabled by default.\n"
+"To enable it, add the following property to your `application.properties`:"
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid "To explicitly disable it (if it was enabled elsewhere, e.g., in a parent profile):"
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid "How it works"
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid ""
+"When tree-shaking is enabled, Quarkus determines which dependency classes are actually reachable and excludes the rest from the final JAR.\n"
+"The algorithm runs in several stages:"
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid "Root collection"
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid ""
+"The analysis starts by collecting root classes — classes that must be preserved regardless of bytecode references.\n"
+"Roots include: the application main class, all generated classes, classes registered for reflection or JNI access, service provider implementations, runtime-initialized classes, classes referenced in `META-INF/native-image` configuration files, and classes containing GraalVM substitution annotations (`@TargetClass`, `@Substitute`)."
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid "BFS reachability"
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid ""
+"Starting from roots, a breadth-first search walks bytecode references to discover all reachable dependency classes.\n"
+"The BFS recognizes the following patterns:"
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid "Direct class references"
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid "Superclasses, implemented interfaces, field types, method parameter and return types, and exception types in `throws` clauses."
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid "Annotations and generics"
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid "Class references appearing in annotation values and generic type signatures."
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid "ServiceLoader / SPI"
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid "`ServiceLoader.load()` calls where the service interface is a compile-time constant, and implementations listed in `META-INF/services` files."
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid "Dynamic class loading"
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid "`Class.forName()`, `ClassLoader.loadClass()`, and `MethodHandles.Lookup.findClass()` calls where the class name is a string constant in the bytecode. For cases where class names are constructed at runtime (e.g., via `StringBuilder` or `invokedynamic` string concatenation), the tree-shaker traces the call chain up to the class whose constructor or static initializer triggers the loading, then executes it in a forked JVM with an isolated class loader to dynamically capture which classes are loaded. This handles libraries like BouncyCastle that build class names from package prefixes and algorithm name arrays."
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid "Reflection, JNI, and service provider registrations"
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid "Classes registered by extensions for reflection (`ReflectiveClassBuildItem`, `ReflectiveFieldBuildItem`, `ReflectiveMethodBuildItem`), JNI runtime access (`JniRuntimeAccessBuildItem`, `JniRuntimeAccessFieldBuildItem`, `JniRuntimeAccessMethodBuildItem`), and service providers (`ServiceProviderBuildItem`) are treated as root classes. Weak reflective registrations are excluded — they are only preserved if bytecode analysis independently reaches them. Conditional registrations (`ReflectiveClassConditionBuildItem`) are evaluated to a fixed point: a conditionally registered class becomes a root only when its condition type is reachable."
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid "String constants"
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid "When a method contains a string constant that exactly matches a fully-qualified dependency class name, that class is marked reachable. Comma- or colon-delimited lists of class names (as used by some frameworks) are also handled by splitting and matching each part."
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid "Inner and outer classes"
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid "If an outer class is reachable, its inner classes are preserved."
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid "Multi-release JAR entries"
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid "`META-INF/versions/N/` entries are analyzed, picking the highest version compatible with the application's target Java version. Entries targeting newer Java versions are also preserved when they are referenced by reachable higher-version code, ensuring the JAR works correctly when run on a newer JVM (e.g., native image built with Mandrel 25 while the app was compiled with JDK 21)."
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid "JBoss Logging companions"
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid "`_$logger` and `_$bundle` companion classes are automatically included when their owning class is reachable."
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid "Sisu named components"
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid "Classes discovered through Eclipse Sisu's named component loading are preserved."
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid "Class-loading chain analysis"
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid ""
+"Some libraries construct class names at runtime — for example, by concatenating a package prefix with an algorithm name via `StringBuilder` or `invokedynamic` — and load them via `ClassLoader.loadClass()` during static initialization.\n"
+"Because the class name strings are computed dynamically, the BFS over bytecode references cannot trace them."
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid "To handle this, the tree-shaker runs a class-loading chain analysis after the BFS:"
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid "**Seed propagation**: Builds a reverse caller index (callee to callers) during the BFS bytecode scan and identifies methods that transitively call `ClassLoader.loadClass(String)`, `Class.forName(String)`, or `MethodHandles.Lookup.findClass(String)` using an efficient worklist algorithm. The caller index is extended incrementally across iterations."
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid "**Entry point discovery**: Walks up the caller chain to find classes whose constructor (`<init>`) or static initializer (`<clinit>`) triggers the class-loading chain."
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid "**Dynamic execution**: Each entry point class is executed in a forked JVM process with an isolated `RecordingClassLoader` that captures every class load attempt — including failed attempts. After instantiation, if the object is a `Map` (e.g., a JCA security provider), its values are also inspected for class name strings that are stored for deferred loading. Running in a separate process ensures complete isolation of global JVM state and is safe for parallel Maven builds (`-T2C`)."
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid "The chain analysis runs in an incremental fixed-point loop: the reverse caller index is extended as new classes are discovered. Only new entry points are executed in each iteration, avoiding redundant work. The loop terminates when no new classes are found."
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid ""
+"For example, BouncyCastle's `BouncyCastleProvider` constructor calls `setup()` which calls `loadAlgorithms()` which calls `loadServiceClass()` which calls `ClassUtil.loadClass()`.\n"
+"The tree-shaker identifies `BouncyCastleProvider` as the entry point, instantiates it in the recording class loader, and captures all dynamically loaded algorithm classes."
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid "Excluding artifacts from tree-shaking"
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid "Some libraries may not work correctly if classes are removed — for example, libraries that perform self-integrity checks (e.g., BouncyCastle FIPS) or that load classes through mechanisms the tree-shaker cannot detect."
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid "To exclude specific dependency artifacts from tree-shaking, use:"
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid "All classes from excluded artifacts are preserved regardless of reachability analysis."
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid "Extensions can also exclude artifacts programmatically by producing a `JarTreeShakeExcludedArtifactBuildItem`."
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid "Limitations"
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid "Tree-shaking is not supported for the `mutable-jar` package type, since re-augmentation requires all classes to be present."
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid "Only classes from runtime dependencies are candidates for removal. Application classes are never removed."
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid "The `classes` level only removes class files. Other resources (such as configuration files, property files, and `META-INF` entries) are preserved. Dependencies from which all classes have been removed are still included in the final JAR, since they may contain resources required at runtime."
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid "Troubleshooting"
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid "When tree-shaking is enabled, the build log includes a one-line summary at info level:"
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid "For a detailed per-dependency breakdown, enable debug logging for the tree shaker. The debug output includes total/reachable/removed class counts and a list of affected dependencies."
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid ""
+"If your application throws a `ClassNotFoundException` or `NoClassDefFoundError` at runtime after enabling tree-shaking, a needed class may have been incorrectly identified as unreachable.\n"
+"To resolve this:"
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid "Disable tree-shaking by setting `quarkus.package.jar.tree-shake.mode=none` to verify the issue goes away."
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid "If it does, identify the artifact containing the missing class and exclude it from tree-shaking:"
+msgstr ""
+
+#: _versions/main/guides/jar-tree-shaking.adoc
+msgid "Please also report the issue so the analysis can be improved."
+msgstr ""
