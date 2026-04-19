@@ -38,7 +38,7 @@ please remove "fuzzy" mark and correct inappropriate sentences if needed.
 When you send a pull-request, GitHub Actions workflow automatically applies translations in .po files to .adoc files,
 build a localized site and deploys it to surge.sh with preview domain. When the deploy finish, GitHub Actions comment 
 the URL to the pull-request. Reviewers can check the deployed site for review.
-When the pull-request is merged into `master`, it is automatically deployed to the production site (https://ja.quarkus.io).
+When the pull-request is merged into `main`, it is automatically deployed to the production site (https://ja.quarkus.io).
 
 
 ### Local build
