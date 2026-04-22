@@ -18,6 +18,7 @@ msgstr "Redisジョブキュー - Reloaded"
 msgid "How to implement a more reliable job queue with Redis, including fault tolerance, de-duplication, and poison pill."
 msgstr "フォールトトレランス、重複排除、ポイズンピルなど、より信頼性の高いジョブキューをRedisで実装する方法。"
 
+#. type: Plain text
 #: _posts/2022-11-22-redis-job-queue-reloaded.adoc
 #, fuzzy
 msgid ""
@@ -31,6 +32,7 @@ msgstr "link:https://quarkus.io/blog/redis-job-queue/[Redisでジョブキュー
 msgid "In this post, we explain how to improve the reliability of the job queue to handle failures, enable retry and use a _dead-letter queue_ to avoid poison pills."
 msgstr "この記事では、ジョブキューの信頼性を高めて障害に対応する方法、リトライを有効にする方法、毒薬を避けるために _デッドレターキューを_ 使用する方法について解説しています。"
 
+#. type: Title =
 #: _posts/2022-11-22-redis-job-queue-reloaded.adoc
 #, fuzzy
 msgid "Recap & Problem"
@@ -42,6 +44,7 @@ msgstr "総括と課題"
 msgid "In the https://quarkus.io/blog/redis-job-queue/[previous blog post], we implemented the following system."
 msgstr "link:https://quarkus.io/blog/redis-job-queue/[前回のブログ記事] で、以下のシステムを導入しました。"
 
+#. type: Plain text
 #: _posts/2022-11-22-redis-job-queue-reloaded.adoc
 #, fuzzy
 msgid ""
@@ -50,6 +53,7 @@ msgid ""
 "The outcomes of the _fights_ were communicated using Redis Pub/Sub."
 msgstr "アプリケーションは _戦闘要求を_ 受け取り、これらの要求をRedisのリストに書き込みます。複数のシミュレータがこのリストを処理。 _試合の_ 結果はRedisのPub/Subを使って伝えられました。"
 
+#. type: Plain text
 #: _posts/2022-11-22-redis-job-queue-reloaded.adoc
 #, fuzzy
 msgid ""
@@ -57,6 +61,7 @@ msgid ""
 "This command pops the item from the queue in an atomic manner and ensure that the other simulators can't process it too."
 msgstr "このアーキテクチャーは、シミュレーターのコードで使われる `brpop` コマンドのおかげで、戦いが一度しか実行されないことを保証します。このコマンドはアトミックな方法でキューからアイテムを取り出し、他のシミュレータが処理できないようにします。"
 
+#. type: Plain text
 #: _posts/2022-11-22-redis-job-queue-reloaded.adoc
 #, fuzzy
 msgid ""
@@ -65,11 +70,13 @@ msgid ""
 "No other simulator would be able to process it, and if the simulator that failed restarts, it will not reprocess the same request."
 msgstr "しかし、このアーキテクチャには欠点があります。ポップファイト要求の処理に失敗すると、要求は失われます。他のシミュレータはそれを処理できないでしょうし、失敗したシミュレータが再起動しても、同じ要求を再処理することはできません。"
 
+#. type: Title =
 #: _posts/2022-11-22-redis-job-queue-reloaded.adoc
 #, fuzzy
 msgid "Introducing more queues"
 msgstr "さらなるキューの導入"
 
+#. type: Plain text
 #: _posts/2022-11-22-redis-job-queue-reloaded.adoc
 #, fuzzy
 msgid ""
@@ -90,6 +97,7 @@ msgstr "これらのプライベートキューは、セーフティネットを
 msgid "So, the simulator does use not only the _main queue_ but also its private queue:"
 msgstr "つまり、シミュレータは _メインキューだけ_ でなく、そのプライベートキューも使っているのです："
 
+#. type: Plain text
 #: _posts/2022-11-22-redis-job-queue-reloaded.adoc
 #, fuzzy
 msgid ""
@@ -111,6 +119,7 @@ msgstr "そこで、以下のコードでメインキューからプライベー
 msgid "Now, the simulator does not simulate the requests from the main queue but needs to process the ones added to its private queue."
 msgstr "さて、シミュレータはメインキューからのリクエストをシミュレートするのではなく、プライベートキューに追加されたリクエストを処理する必要があります。"
 
+#. type: Plain text
 #: _posts/2022-11-22-redis-job-queue-reloaded.adoc
 #, fuzzy
 msgid ""
@@ -120,6 +129,7 @@ msgid ""
 "We do this until the queue is empty."
 msgstr "このコードは前回のブログのコードとは少し違います。今回はポップしません。キューから最後の項目を取得し（インデックス `-1` が最後の項目です）、それを処理してからキューから削除します。これをキューが空になるまで続けます。"
 
+#. type: Plain text
 #: _posts/2022-11-22-redis-job-queue-reloaded.adoc
 #, fuzzy
 msgid ""
@@ -128,11 +138,13 @@ msgid ""
 "2. once the private queue is empty, it gets new requests from the main queue. It will not process them directly but re-trigger the processing of the private queue until the queue is empty."
 msgstr "すべてをまとめてみましょう：1. シミュレータが起動すると、プライベートキューからアイテムを処理するはずです。そのため、もしクラッシュしても、再試行します。2. プライベートキューが空になったら、メインキューから新しいリクエストを受け取ります。それは直接それらを処理しませんが、キューが空になるまでプライベートキューの処理を再トリガーします。"
 
+#. type: Title =
 #: _posts/2022-11-22-redis-job-queue-reloaded.adoc
 #, fuzzy
 msgid "New architecture, new problems"
 msgstr "新しいアーキテクチャ、新しい問題"
 
+#. type: Plain text
 #: _posts/2022-11-22-redis-job-queue-reloaded.adoc
 #, fuzzy
 msgid ""
@@ -159,11 +171,13 @@ msgstr "_重複_ ：処理が成功しても、何らかの理由（ネットワ
 msgid "_Poison pill_: if a request cannot be processed successfully, it will retry to process it forever."
 msgstr "_毒薬_ ：リクエストを正常に処理できない場合、永遠に処理をやり直します。"
 
+#. type: Title ==
 #: _posts/2022-11-22-redis-job-queue-reloaded.adoc
 #, fuzzy
 msgid "De-duplication"
 msgstr "重複排除"
 
+#. type: Plain text
 #: _posts/2022-11-22-redis-job-queue-reloaded.adoc
 #, fuzzy
 msgid ""
@@ -171,11 +185,13 @@ msgid ""
 "In other words, if all our requests have a unique id, we can check if that id has already been processed (for example, by storing the processed ids in another list or a hash). If the item has already been processed, ignore it (remove it from the queue) and process it to the next one:"
 msgstr "_重複を_ 処理するには、リクエストを一意に識別して、手動で重複を除外する方法が必要です。言い換えると、すべてのリクエストが一意な ID を持っている場合、その ID がすでに処理されているかどうかを (たとえば、処理された ID を別のリストやハッシュに保存することで) チェックすることができます。すでに処理済みの場合は、それを無視して (キューから削除して) 次の処理に移ります："
 
+#. type: Title ==
 #: _posts/2022-11-22-redis-job-queue-reloaded.adoc
 #, fuzzy
 msgid "Avoiding swallowing the poison pill"
 msgstr "毒薬を飲み込まないために"
 
+#. type: Plain text
 #: _posts/2022-11-22-redis-job-queue-reloaded.adoc
 #, fuzzy
 msgid ""
@@ -185,6 +201,7 @@ msgid ""
 "Retrying, in this case, will not help; we are not facing a transient issue."
 msgstr "_毒薬の_ 処理はより複雑です。 _毒薬とは_ 、処理が必ず失敗するリクエストのことです。処理コードのバグや予期せぬ何かが原因かもしれませんが、必ず失敗します。この場合、リトライは役に立ちません。"
 
+#. type: Plain text
 #: _posts/2022-11-22-redis-job-queue-reloaded.adoc
 #, fuzzy
 msgid ""
@@ -199,6 +216,7 @@ msgstr "では、どうすればいいのでしょうか？そのリクエスト
 msgid "The counter is a specific Redis integer value that we increment and reset once we succeed or give up."
 msgstr "カウンターは特定のRedis整数値で、成功したりあきらめたりしたらインクリメントしてリセットします。"
 
+#. type: Plain text
 #: _posts/2022-11-22-redis-job-queue-reloaded.adoc
 #, fuzzy
 msgid ""
@@ -207,10 +225,12 @@ msgid ""
 "Another approach requires that a human administrator looks at these requests before re-injecting them into the system; maybe it was just a formatting issue..."
 msgstr "DLQ からのアイテムは失われるのではなく、将来の処理のために保存されます。これらのアイテムは、(一過性の問題でないか、バグが修正されたかを確認するために) メインキューに再追加することができます。別のアプローチでは、システムに再投入する前に、人間の管理者がこれらのリクエストに目を通す必要があります。"
 
+#. type: Title =
 #: _posts/2022-11-22-redis-job-queue-reloaded.adoc
 msgid "Summary"
 msgstr "まとめ"
 
+#. type: Plain text
 #: _posts/2022-11-22-redis-job-queue-reloaded.adoc
 #, fuzzy
 msgid ""
@@ -220,6 +240,7 @@ msgid ""
 "But, nothing comes for free, and the resulting code is slightly more complex."
 msgstr "この投稿では、 link:https://quarkus.io/blog/redis-job-queue/[Redisでジョブキューを実装] する方法で実装したジョブキューを改善する方法を探ります。この最初の実装はシンプルですが、処理に失敗するとリクエストを失ってしまいます。この投稿では、このようなケースに対応し、重複や毒薬も処理する、より複雑な別のアーキテクチャを提案します。しかし、タダで手に入るものはありません。"
 
+#. type: Plain text
 #: _posts/2022-11-22-redis-job-queue-reloaded.adoc
 #, fuzzy
 msgid ""
