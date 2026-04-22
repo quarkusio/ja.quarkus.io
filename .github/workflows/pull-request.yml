@@ -89,7 +89,40 @@ jobs:
         with:
           script: |
             const suffix = "${{ steps.config.outputs.surge_domain_suffix }}";
-            let body = `Site preview(ja): https://pr-preview-${context.issue.number}-${suffix}`
+            const baseUrl = `https://pr-preview-${context.issue.number}-${suffix}`;
+            let body = `Site preview(ja): ${baseUrl}`;
+
+            // Get changed files in this PR
+            const files = await github.paginate(github.rest.pulls.listFiles, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+              per_page: 100
+            });
+
+            // Derive URL path from filename, or return null if not possible
+            function toPagePath(filename) {
+              const guideMatch = filename.match(/^l10n\/po\/ja_JP\/_guides\/([^/]+)\.adoc\.po$/);
+              if (guideMatch) return `/guides/${guideMatch[1]}`;
+              const postMatch = filename.match(/^l10n\/po\/ja_JP\/_posts\/\d{4}-\d{2}-\d{2}-([^/]+)\.adoc\.po$/);
+              if (postMatch) return `/blog/${postMatch[1]}/`;
+              return null;
+            }
+
+            // Build file list: link if URL derivable, plain text otherwise
+            const updatedFiles = files
+              .map(f => f.filename)
+              .filter(f => f.startsWith('l10n/'))
+              .map(f => {
+                const path = toPagePath(f);
+                return path ? `- [${f}](${baseUrl}${path})` : `- ${f}`;
+              });
+
+            if (updatedFiles.length > 0) {
+              body += '\n\nUpdated files:\n';
+              body += updatedFiles.join('\n');
+            }
+
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
