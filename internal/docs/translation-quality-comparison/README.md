@@ -13,7 +13,7 @@
   - tsujiツールでGemini（OpenAI互換API経由）を使用して翻訳
   - 翻訳時間: 425秒（約7分）
   - サイズ: 257KB
-  - コマンド: `./tsujiw po machine-translate --isAsciidoc -p <file>`
+  - コマンド: `./tsujiw po machine-translate --asciidoc -p <file>`
   
 - **deepl.po** - DeepL翻訳版
   - tsujiツールでDeepL APIを使用して翻訳
