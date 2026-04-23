@@ -1,68 +1,327 @@
-#!/usr/bin/env bash
-set -e
+#!/usr/bin/java --source 11
+import java.io.*;
+import java.nio.file.*;
+import java.util.*;
 
-#
-# tsuji wrapper script (tsujiw)
-# This script ensures the correct version of tsuji.jar is downloaded and executed.
-#
+/**
+ * Tsuji wrapper with full SmallRye Config support
+ *
+ * Execution flow:
+ * 1. Download bootstrap tsuji.jar (fixed version) if needed
+ * 2. Re-launch with bootstrap JAR in classpath
+ * 3. Use SmallRye Config to read full configuration (YAML, properties, env vars, etc.)
+ * 4. Resolve target tsuji.jar from URI
+ * 5. Execute target tsuji.jar
+ *
+ * Configuration (SmallRye Config standard):
+ *   tsuji.jar - URI to tsuji.jar (required)
+ *     - file:///path/to/tsuji.jar (local file, standard)
+ *     - file:/path/to/tsuji.jar (local file, also works)
+ *     - https://example.com/tsuji.jar (download)
+ *
+ * Priority:
+ * 1. System properties: -Dtsuji.jar=file:///path/to/tsuji.jar
+ * 2. Environment variables: TSUJI_JAR
+ * 3. config/application-local.properties: tsuji.jar
+ * 4. config/application.yaml: tsuji.jar (full YAML parsing)
+ *
+ * Examples:
+ *   TSUJI_JAR=file:///home/user/tsuji/build/tsuji.jar ./tsujiw po normalize
+ *   ./tsujiw -Dtsuji.jar=https://example.com/tsuji.jar po normalize
+ *   echo "tsuji.jar=file:///home/user/tsuji.jar" >> config/application-local.properties
+ */
+public class tsujiw {
 
-# Get the script directory
-SCRIPT_DIR=$(cd $(dirname $0); pwd)
-L10N_HOME="$SCRIPT_DIR"
-cd "$L10N_HOME"
+    /**
+     * Bootstrap version - used to load SmallRye Config
+     * This JAR is downloaded once and reused
+     */
+    private static final String BOOTSTRAP_VERSION = "0.8.12";
 
-# Configuration file path - support both YAML and properties
-if [ -f "config/application.yaml" ]; then
-    CONFIG_FILE="config/application.yaml"
-elif [ -f "config/application.properties" ]; then
-    CONFIG_FILE="config/application.properties"
-else
-    echo "Error: config/application.yaml or config/application.properties not found." >&2
-    exit 1
-fi
+    private static final String BOOTSTRAP_ENV_VAR = "TSUJIW_BOOTSTRAPPED";
+    private static final String JVM_OPTS_ENV_VAR = "TSUJIW_JVM_OPTS";
 
-# Extract version from config file
-if [[ "$CONFIG_FILE" == *.yaml ]]; then
-    # YAML format: "  version: 0.5.5"
-    VERSION=$(grep "^  version:" "$CONFIG_FILE" | sed 's/.*: *//' | tr -d ' ')
-else
-    # Properties format: "tsuji.version=0.5.5"
-    VERSION=$(grep "^tsuji.version=" "$CONFIG_FILE" | cut -d'=' -f2 | tr -d '')
-fi
+    public static void main(String[] args) throws Exception {
+        if (System.getenv(BOOTSTRAP_ENV_VAR) != null) {
+            // Phase 2: Bootstrap JAR is in classpath, SmallRye Config available
+            runWithSmallRyeConfig(args);
+        } else {
+            // Phase 1: Initial launch, need to bootstrap
+            bootstrap(args);
+        }
+    }
 
-if [ -z "$VERSION" ]; then
-    echo "Error: tsuji.version not defined in $CONFIG_FILE" >&2
-    exit 1
-fi
+    /**
+     * Phase 1: Ensure bootstrap JAR exists and re-launch with it in classpath
+     */
+    private static void bootstrap(String[] args) throws Exception {
+        String bootstrapJar = ensureBootstrapJar();
 
-JAR_DIR="vendor/tsuji"
-JAR_PATH="$JAR_DIR/tsuji-$VERSION.jar"
+        // Parse -D options from args and separate them
+        List<String> jvmOpts = new ArrayList<>();
+        List<String> scriptArgs = new ArrayList<>();
+        for (String arg : args) {
+            if (arg.startsWith("-D") || arg.startsWith("-X")) {
+                jvmOpts.add(arg);
+            } else {
+                scriptArgs.add(arg);
+            }
+        }
 
-# Download tsuji.jar if it doesn't exist
-if [ ! -f "$JAR_PATH" ]; then
-    echo "tsuji.jar (version $VERSION) not found. Downloading..." >&2
-    mkdir -p "$JAR_DIR"
+        // Re-launch with bootstrap JAR in classpath
+        List<String> command = new ArrayList<>();
+        command.add("java");
+        command.addAll(jvmOpts);
+        command.add("-cp");
+        command.add(bootstrapJar);
+        command.add("--source");
+        command.add("11");
+        command.add(getScriptPath());
+        command.addAll(scriptArgs);
 
-    # Use GitHub release URL
-    URL="https://github.com/doc-l10n-kit/tsuji/releases/download/v$VERSION/tsuji.jar"
+        ProcessBuilder pb = new ProcessBuilder(command);
+        pb.environment().put(BOOTSTRAP_ENV_VAR, "true");
 
-    if ! curl -L --fail "$URL" -o "$JAR_PATH"; then
-        echo "Error: Failed to download tsuji.jar from $URL" >&2
-        exit 1
-    fi
-    echo "Successfully downloaded tsuji-$VERSION.jar" >&2
-fi
+        // Store non-tsujiw JVM options for phase 2
+        List<String> targetJvmOpts = new ArrayList<>();
+        for (String opt : jvmOpts) {
+            if (!opt.startsWith("-Dtsuji.jar=") && !opt.startsWith("-Dtsujiw.")) {
+                targetJvmOpts.add(opt);
+            }
+        }
+        if (!targetJvmOpts.isEmpty()) {
+            pb.environment().put(JVM_OPTS_ENV_VAR, String.join(" ", targetJvmOpts));
+        }
 
-# Separate JVM options (-D, -X, -XX) from tsuji arguments
-JVM_OPTS=()
-TSUJI_ARGS=()
-for arg in "$@"; do
-    if [[ "$arg" == -D* || "$arg" == -X* ]]; then
-        JVM_OPTS+=("$arg")
-    else
-        TSUJI_ARGS+=("$arg")
-    fi
-done
+        pb.inheritIO();
+        System.exit(pb.start().waitFor());
+    }
 
-# Execute tsuji with passed arguments
-exec java "${JVM_OPTS[@]}" -jar "$JAR_PATH" "${TSUJI_ARGS[@]}"
+    /**
+     * Phase 2: Use SmallRye Config to read configuration and execute target tsuji.jar
+     */
+    private static void runWithSmallRyeConfig(String[] args) throws Exception {
+        // SmallRye Config is now available via bootstrap JAR
+        Class<?> configBuilderClass = Class.forName("io.smallrye.config.SmallRyeConfigBuilder");
+        Object configBuilder = configBuilderClass.getDeclaredConstructor().newInstance();
+
+        // Add default sources (env vars, system props)
+        configBuilder.getClass().getMethod("addDefaultSources").invoke(configBuilder);
+        configBuilder.getClass().getMethod("addDefaultInterceptors").invoke(configBuilder);
+
+        // Add YAML config sources explicitly
+        addYamlConfigSources(configBuilder);
+
+        // Build config
+        Object config = configBuilder.getClass().getMethod("build").invoke(configBuilder);
+
+        // Get target JAR URI (required)
+        String jarUri = getConfigValue(config, "tsuji.jar")
+            .orElseThrow(() -> new IllegalStateException(
+                "tsuji.jar is not defined. Please set tsuji.jar in config/application.yaml or use:\n" +
+                "  TSUJI_JAR=file:///path/to/tsuji.jar ./tsujiw\n" +
+                "  ./tsujiw -Dtsuji.jar=https://example.com/tsuji.jar"));
+
+        // Resolve JAR from URI
+        String targetJar = resolveJarFromUri(jarUri);
+
+        // Execute target tsuji.jar
+        List<String> command = new ArrayList<>();
+        command.add("java");
+
+        // Add JVM options from environment (set in phase 1)
+        String jvmOptsEnv = System.getenv(JVM_OPTS_ENV_VAR);
+        if (jvmOptsEnv != null && !jvmOptsEnv.isEmpty()) {
+            for (String opt : jvmOptsEnv.split(" ")) {
+                command.add(opt);
+            }
+        }
+
+        command.add("-jar");
+        command.add(targetJar);
+
+        // Add all args (non-JVM options from original command)
+        command.addAll(Arrays.asList(args));
+
+        ProcessBuilder pb = new ProcessBuilder(command);
+        pb.inheritIO();
+        System.exit(pb.start().waitFor());
+    }
+
+    /**
+     * Get config value using reflection (SmallRye Config API)
+     */
+    private static Optional<String> getConfigValue(Object config, String key) throws Exception {
+        Object optionalValue = config.getClass()
+            .getMethod("getOptionalValue", String.class, Class.class)
+            .invoke(config, key, String.class);
+
+        boolean isPresent = (Boolean) optionalValue.getClass()
+            .getMethod("isPresent")
+            .invoke(optionalValue);
+
+        if (isPresent) {
+            String value = (String) optionalValue.getClass()
+                .getMethod("get")
+                .invoke(optionalValue);
+            return Optional.of(value);
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * Resolve JAR path from URI
+     * Supports:
+     *   - file:///path/to/tsuji.jar (standard)
+     *   - file:/path/to/tsuji.jar (also works)
+     *   - https://example.com/tsuji.jar
+     */
+    private static String resolveJarFromUri(String jarUri) throws Exception {
+        if (jarUri.startsWith("file:")) {
+            // Local file
+            java.net.URI uri = new java.net.URI(jarUri);
+            String path = uri.getPath();
+
+            if (!Files.exists(Paths.get(path))) {
+                throw new IllegalStateException("tsuji.jar not found at: " + path);
+            }
+
+            return path;
+
+        } else if (jarUri.startsWith("https://") || jarUri.startsWith("http://")) {
+            // Download from URL
+            String fileName = jarUri.substring(jarUri.lastIndexOf('/') + 1);
+            if (!fileName.endsWith(".jar")) {
+                fileName = "tsuji-downloaded.jar";
+            }
+
+            String jarPath = "vendor/tsuji/" + fileName;
+
+            // Download if not exists
+            if (!Files.exists(Paths.get(jarPath))) {
+                downloadJarFromUrl(jarUri, jarPath);
+            }
+
+            return jarPath;
+
+        } else {
+            throw new IllegalArgumentException(
+                "Invalid tsuji.jar URI: " + jarUri + "\n" +
+                "Supported schemes: file: (file:///path or file:/path), https://, http://");
+        }
+    }
+
+    /**
+     * Download JAR from URL
+     */
+    private static void downloadJarFromUrl(String url, String jarPath) throws Exception {
+        System.err.println("Downloading tsuji.jar from " + url + "...");
+        Files.createDirectories(Paths.get(jarPath).getParent());
+
+        ProcessBuilder pb = new ProcessBuilder("curl", "-L", "--fail", url, "-o", jarPath);
+        int exitCode = pb.inheritIO().start().waitFor();
+
+        if (exitCode != 0) {
+            Files.deleteIfExists(Paths.get(jarPath));
+            throw new IOException("Failed to download tsuji.jar from " + url);
+        }
+
+        System.err.println("Successfully downloaded to " + jarPath);
+    }
+
+    /**
+     * Ensure bootstrap JAR exists, download if needed
+     */
+    private static String ensureBootstrapJar() throws Exception {
+        String jarPath = "vendor/tsuji/tsuji-" + BOOTSTRAP_VERSION + ".jar";
+
+        if (!Files.exists(Paths.get(jarPath))) {
+            downloadJar(BOOTSTRAP_VERSION, jarPath);
+        }
+
+        return jarPath;
+    }
+
+    /**
+     * Download tsuji.jar from GitHub releases
+     */
+    private static void downloadJar(String version, String jarPath) throws Exception {
+        System.err.println("Downloading tsuji.jar version " + version + "...");
+        Files.createDirectories(Paths.get(jarPath).getParent());
+
+        String url = "https://github.com/doc-l10n-kit/tsuji/releases/download/v"
+            + version + "/tsuji.jar";
+
+        ProcessBuilder pb = new ProcessBuilder("curl", "-L", "--fail", url, "-o", jarPath);
+        int exitCode = pb.inheritIO().start().waitFor();
+
+        if (exitCode != 0) {
+            Files.deleteIfExists(Paths.get(jarPath));
+            throw new IOException("Failed to download tsuji.jar from " + url);
+        }
+
+        System.err.println("Successfully downloaded tsuji-" + version + ".jar");
+    }
+
+    /**
+     * Add YAML config sources to builder
+     */
+    private static void addYamlConfigSources(Object configBuilder) throws Exception {
+        // Add config/application.yaml if exists
+        Path yamlPath = Paths.get("config/application.yaml");
+        if (Files.exists(yamlPath)) {
+            addYamlSource(configBuilder, yamlPath, 250);
+        }
+
+        // Add config/application-local.yaml if exists (higher priority)
+        Path localYamlPath = Paths.get("config/application-local.yaml");
+        if (Files.exists(localYamlPath)) {
+            addYamlSource(configBuilder, localYamlPath, 260);
+        }
+    }
+
+    /**
+     * Add a YAML file as config source
+     */
+    private static void addYamlSource(Object configBuilder, Path yamlPath, int ordinal) throws Exception {
+        Class<?> yamlSourceClass = Class.forName("io.smallrye.config.source.yaml.YamlConfigSource");
+        Class<?> configSourceClass = Class.forName("org.eclipse.microprofile.config.spi.ConfigSource");
+
+        // YamlConfigSource constructor: (URL, int ordinal)
+        Object yamlSource = yamlSourceClass
+            .getDeclaredConstructor(java.net.URL.class, int.class)
+            .newInstance(yamlPath.toAbsolutePath().toUri().toURL(), ordinal);
+
+        // Add to builder using varargs
+        Object configSourceArray = java.lang.reflect.Array.newInstance(configSourceClass, 1);
+        java.lang.reflect.Array.set(configSourceArray, 0, yamlSource);
+
+        configBuilder.getClass()
+            .getMethod("withSources", configSourceArray.getClass())
+            .invoke(configBuilder, configSourceArray);
+    }
+
+    /**
+     * Get script path for re-launch
+     */
+    private static String getScriptPath() throws Exception {
+        // Get the path of this script file
+        // In shebang execution, we need to find ourselves
+        String scriptDir = System.getProperty("user.dir");
+        String scriptName = "tsujiw";
+
+        Path scriptPath = Paths.get(scriptDir, scriptName);
+        if (Files.exists(scriptPath)) {
+            return scriptPath.toString();
+        }
+
+        // Fallback: try current directory
+        scriptPath = Paths.get(scriptName);
+        if (Files.exists(scriptPath)) {
+            return scriptPath.toString();
+        }
+
+        throw new IllegalStateException("Cannot find tsujiw script");
+    }
+}
