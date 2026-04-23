@@ -1,5 +1,7 @@
 #!/usr/bin/java --source 11
 import java.io.*;
+import java.net.URI;
+import java.net.http.*;
 import java.nio.file.*;
 import java.util.*;
 
@@ -36,7 +38,7 @@ public class tsujiw {
      * Bootstrap version - used to load SmallRye Config
      * This JAR is downloaded once and reused
      */
-    private static final String BOOTSTRAP_VERSION = "0.8.12";
+    private static final String BOOTSTRAP_VERSION = "0.8.13";
 
     private static final String BOOTSTRAP_ENV_VAR = "TSUJIW_BOOTSTRAPPED";
     private static final String JVM_OPTS_ENV_VAR = "TSUJIW_JVM_OPTS";
@@ -213,18 +215,26 @@ public class tsujiw {
     }
 
     /**
-     * Download JAR from URL
+     * Download JAR from URL using Java HttpClient
      */
     private static void downloadJarFromUrl(String url, String jarPath) throws Exception {
         System.err.println("Downloading tsuji.jar from " + url + "...");
         Files.createDirectories(Paths.get(jarPath).getParent());
 
-        ProcessBuilder pb = new ProcessBuilder("curl", "-L", "--fail", url, "-o", jarPath);
-        int exitCode = pb.inheritIO().start().waitFor();
+        HttpClient client = HttpClient.newBuilder()
+            .followRedirects(HttpClient.Redirect.NORMAL)
+            .build();
 
-        if (exitCode != 0) {
+        HttpRequest request = HttpRequest.newBuilder()
+            .uri(URI.create(url))
+            .GET()
+            .build();
+
+        HttpResponse<Path> response = client.send(request, HttpResponse.BodyHandlers.ofFile(Paths.get(jarPath)));
+
+        if (response.statusCode() >= 400) {
             Files.deleteIfExists(Paths.get(jarPath));
-            throw new IOException("Failed to download tsuji.jar from " + url);
+            throw new IOException("Failed to download tsuji.jar from " + url + " (HTTP " + response.statusCode() + ")");
         }
 
         System.err.println("Successfully downloaded to " + jarPath);
@@ -244,23 +254,14 @@ public class tsujiw {
     }
 
     /**
-     * Download tsuji.jar from GitHub releases
+     * Download tsuji.jar from GitHub releases using Java HttpClient
      */
     private static void downloadJar(String version, String jarPath) throws Exception {
-        System.err.println("Downloading tsuji.jar version " + version + "...");
-        Files.createDirectories(Paths.get(jarPath).getParent());
-
         String url = "https://github.com/doc-l10n-kit/tsuji/releases/download/v"
             + version + "/tsuji.jar";
 
-        ProcessBuilder pb = new ProcessBuilder("curl", "-L", "--fail", url, "-o", jarPath);
-        int exitCode = pb.inheritIO().start().waitFor();
-
-        if (exitCode != 0) {
-            Files.deleteIfExists(Paths.get(jarPath));
-            throw new IOException("Failed to download tsuji.jar from " + url);
-        }
-
+        System.err.println("Downloading tsuji.jar version " + version + "...");
+        downloadJarFromUrl(url, jarPath);
         System.err.println("Successfully downloaded tsuji-" + version + ".jar");
     }
 
