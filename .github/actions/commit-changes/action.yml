@@ -1,0 +1,25 @@
+name: 'Commit Changes'
+description: 'Commits changes in l10n and upstream directories without pushing'
+inputs:
+  message:
+    description: 'Commit message'
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: Commit
+      shell: bash
+      run: |
+        GIT_USER_NAME=$(./tsujiw config get tsuji.git.user.name)
+        GIT_USER_EMAIL=$(./tsujiw config get tsuji.git.user.email)
+
+        git add upstream l10n
+
+        # Check if there are staged changes
+        if ! git diff --cached --exit-code --quiet; then
+          git config user.name "$GIT_USER_NAME"
+          git config user.email "$GIT_USER_EMAIL"
+          git commit -m "${{ inputs.message }}"
+        else
+          echo "No changes to commit"
+        fi
