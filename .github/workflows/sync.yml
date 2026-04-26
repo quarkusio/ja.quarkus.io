@@ -39,40 +39,40 @@ jobs:
           git reset --hard origin/main
           cd ..
 
-      - name: Push changes (upstream)
-        uses: ./.github/actions/push-changes
+      - name: Commit changes (upstream)
+        uses: ./.github/actions/commit-changes
         with:
           message: "Update upstream"
 
       - name: Update po files
         run: ./tsujiw jekyll extract
 
-      - name: Push changes (po files)
-        uses: ./.github/actions/push-changes
+      - name: Commit changes (po files)
+        uses: ./.github/actions/commit-changes
         with:
           message: "Update .po files"
 
       - name: Update all stats
         run: ./tsujiw jekyll update-stats
 
-      - name: Push changes (translation stats)
-        uses: ./.github/actions/push-changes
+      - name: Commit changes (translation stats)
+        uses: ./.github/actions/commit-changes
         with:
           message: "Update translation stats"
 
       - name: Apply tmx
         run: ./tsujiw po apply-tmx --tmx=l10n/tmx/quarkus.tmx
 
-      - name: Push changes (translation memory)
-        uses: ./.github/actions/push-changes
+      - name: Commit changes (translation memory)
+        uses: ./.github/actions/commit-changes
         with:
           message: "Apply translation memory"
 
       - name: Apply fuzzy tmx
         run: ./tsujiw po apply-fuzzy-tmx --tmx=l10n/tmx/fuzzy.tmx
 
-      - name: Push changes (fuzzy translation memory)
-        uses: ./.github/actions/push-changes
+      - name: Commit changes (fuzzy translation memory)
+        uses: ./.github/actions/commit-changes
         with:
           message: "Apply fuzzy translation memory"
 
@@ -86,11 +86,19 @@ jobs:
         env:
           TSUJI_TRANSLATOR_DEEPL_KEY: ${{ secrets.TRANSLATOR_DEEPL_APIKEY }}
 
-      - name: Push changes (machine translation)
+      - name: Commit changes (machine translation)
         if: always()
-        uses: ./.github/actions/push-changes
+        uses: ./.github/actions/commit-changes
         with:
           message: "Add machine translation"
+
+      - name: Push all changes
+        if: always()
+        shell: bash
+        run: |
+          git fetch origin main
+          git rebase origin/main
+          git push origin main
 
       # Fail the workflow if machine translation had errors
       - name: Check machine translation result
