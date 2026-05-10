@@ -31,20 +31,74 @@ msgstr "xref:building-my-first-extension.adoc[エクステンション構造]"
 msgid "A containerised version of your external service (not all Dev Services rely on containers, but most do)"
 msgstr "外部サービスのコンテナ化バージョン（すべてのDev Serviceがコンテナに依存しているわけではありませんが、ほとんどのDev Serviceはコンテナに依存しています。）"
 
+#. type: Plain text
+#: _versions/main/guides/extension-writing-dev-service.adoc
+msgid ""
+"If your extension provides APIs for connecting to an external service, it's a good idea to provide a Dev Service implementation.\n"
+"This allows your extension to be used for development and testing in a frictionless way, without the hassle of standing up and configuring external services."
+msgstr ""
+
+#. type: Title =
+#: _versions/main/guides/extension-writing-dev-service.adoc
+msgid "Key concepts"
+msgstr ""
+
+#. type: Title ==
+#: _versions/main/guides/extension-writing-dev-service.adoc
+msgid "Concept: Understanding the service lifecycle"
+msgstr ""
+
+#. type: Plain text
+#: _versions/main/guides/extension-writing-dev-service.adoc
+msgid "Dev Services can be created by an extension, or the extension can discover and re-use external services."
+msgstr ""
+
+#. type: Title ===
+#: _versions/main/guides/extension-writing-dev-service.adoc
+msgid "Starting and stopping services"
+msgstr ""
+
+#. type: Plain text
+#: _versions/main/guides/extension-writing-dev-service.adoc
+msgid ""
+"For both discovered and owned services, the services are prepared at build time.\n"
+"Discovered services are already started, and will not be started or stopped by the Dev Services infrastructure.\n"
+"For an owned service, the service is started by the Quarkus framework after the build, and before runtime.\n"
+"Extension code should never start or stop a service directly.\n"
+"Instead, extensions provide a `Startable` to a service builder, so that Quarkus can manage the lifecycle."
+msgstr ""
+
+#. type: Title ===
+#: _versions/main/guides/extension-writing-dev-service.adoc
+msgid "Reuse"
+msgstr ""
+
+#. type: Plain text
+#: _versions/main/guides/extension-writing-dev-service.adoc
+msgid ""
+"Services can be re-used between test profiles and across live reload restarts, or a fresh service can be created each time.\n"
+"The extension implementation controls how much reuse there is by setting a `serviceConfig(Object)` with a uniqueness key each build."
+msgstr ""
+
 #. type: Title =
 #: _versions/main/guides/extension-writing-dev-service.adoc
 msgid "Creating a Dev Service"
 msgstr "Dev Service の作成"
 
-#. type: Plain text
+#. type: Title ==
 #: _versions/main/guides/extension-writing-dev-service.adoc
-msgid "If your extension provides APIs for connecting to an external service, it's a good idea to provide a dev service implementation."
-msgstr "エクステンションが外部サービスに接続するためのAPIを提供する場合、devサービスの実装を提供するのはよい考えです。"
+msgid "Dependencies"
+msgstr ""
 
 #. type: Plain text
 #: _versions/main/guides/extension-writing-dev-service.adoc
-msgid "First, you must add the following dependency to the build file, in your xref:writing-extensions.adoc#project-setup[deployement] module :"
-msgstr "まず、 xref:writing-extensions.adoc#project-setup[デプロイメント] モジュールの ビルド・ファイルに、以下の依存関係を追加してください："
+msgid "Add the following dependencies to your extension's build file."
+msgstr ""
+
+#. type: Plain text
+#: _versions/main/guides/extension-writing-dev-service.adoc
+msgid "In your xref:writing-extensions.adoc#project-setup[deployment] module:"
+msgstr ""
 
 #. type: Block title
 #: _versions/main/guides/extension-writing-dev-service.adoc
@@ -58,47 +112,26 @@ msgstr "build.gradle"
 
 #. type: Plain text
 #: _versions/main/guides/extension-writing-dev-service.adoc
-msgid ""
-"Then, add a new build step into the extension processor class that returns a `DevServicesResultBuildItem`.\n"
-"Here, the https://hub.docker.com/_/hello-world[`hello-world`] image is used, but you should set up the right image for your service."
-msgstr "次に、 `DevServicesResultBuildItem` を返す新しいビルドステップをエクステンションプロセッサクラスに追加します。 link:https://hub.docker.com/_/hello-world[hello-world] イメージを使いますが、あなたのサービスに適したイメージを設定してください。"
-
-#. type: Plain text
-#: _versions/main/guides/extension-writing-dev-service.adoc
-msgid ""
-"With this code, you should be able to see your container starting if you add your extension to a test application and run `quarkus dev`.\n"
-"However, the application will not be able to connect to it, because no ports are exposed.\n"
-"To expose ports, add `withExposedPorts` to the container construction.\n"
-"For example,"
+msgid "In your runtime module:"
 msgstr ""
-"このコードを使用すると、エクステンションをテストアプリケーションに追加して `quarkus dev` を実行すると、コンテナーの起動を確認できるはずです。\n"
-"ただし、ポートが公開されていないため、アプリケーションは接続できません。ポートを公開するには、コンテナー構造に `withExposedPorts` を追加します。\n"
-"以下に例を示します。"
+
+#. type: Title ==
+#: _versions/main/guides/extension-writing-dev-service.adoc
+msgid "Implementing a `Startable`"
+msgstr ""
 
 #. type: Plain text
 #: _versions/main/guides/extension-writing-dev-service.adoc
 msgid ""
-"`Testcontainers` will map these ports to random ports on the host.\n"
-"This avoids port conflicts, but presents a new problem – how do applications connect to the service in the container?"
+"Provide an implementation of `io.quarkus.deployment.builditem.Startable` which knows how to start and stop the service.\n"
+"For container-based services, extending `GenericContainer` and implementing `Startable` is the recommended pattern.\n"
+"In that case, `GenericContainer` already provides a `start()` method, so the only method that needs to be implemented is `close()` (which can delegate to the superclass)."
 msgstr ""
-"`Testcontainers` は、これらのポートをホスト上のランダムなポートにマッピングします。\n"
-"これはポートの競合を回避しますが、コンテナ内のサービスにアプリケーションがどのように接続するかという新たな問題を引き起こします。"
 
 #. type: Plain text
 #: _versions/main/guides/extension-writing-dev-service.adoc
-msgid ""
-"To allow applications to connect, the extension should override the default configuration for the service with the mapped ports.\n"
-"This must be done after starting the container.\n"
-"For example,"
+msgid "For example, a minimal `Startable` implementation might look something like this:"
 msgstr ""
-"アプリケーションが接続できるようにするには、エクステンションはマッピングされたポートを使用してサービスのデフォルト設定をオーバーライドする必要があります。\n"
-"これはコンテナーを起動した後に実行する必要があります。\n"
-"以下に例を示します。"
-
-#. type: Plain text
-#: _versions/main/guides/extension-writing-dev-service.adoc
-msgid "Other configuration overrides may be included in the same map."
-msgstr "他の設定のオーバーライドも同じマップに含めることができます。"
 
 #. type: Title =
 #: _versions/main/guides/extension-writing-dev-service.adoc
@@ -108,9 +141,10 @@ msgstr "コンテナーの起動を待機する"
 #. type: Plain text
 #: _versions/main/guides/extension-writing-dev-service.adoc
 msgid ""
-"You should add a `.waitingFor` call to the container construction, to wait for the container to start.\n"
-"For example"
-msgstr "コンテナーが起動するまで待つには、コンテナー構築に `.waitingFor` 呼び出しを追加する必要があります。以下に例を示します。"
+"You should add a `.waitingFor` call to the container, to wait for it to be ready.\n"
+"This is typically done in the `configure()` method of the `GenericContainer` subclass.\n"
+"For example:"
+msgstr ""
 
 #. type: Plain text
 #: _versions/main/guides/extension-writing-dev-service.adoc
@@ -121,6 +155,143 @@ msgstr ""
 "ポートが開くのを待つという方法もあります。\n"
 "待機方法については link:https://java.testcontainers.org/features/startup_and_waits/[Testcontainers のドキュメント] を参照してください。"
 
+#. type: Title ==
+#: _versions/main/guides/extension-writing-dev-service.adoc
+msgid "Configuring ports"
+msgstr ""
+
+#. type: Plain text
+#: _versions/main/guides/extension-writing-dev-service.adoc
+msgid ""
+"If you're extending `GenericContainer`, you should also tell TestContainers what ports to expose.\n"
+"This is also typically done in the `configure()` override.\n"
+"For example:"
+msgstr ""
+
+#. type: Plain text
+#: _versions/main/guides/extension-writing-dev-service.adoc
+msgid ""
+"By default, TestContainers will map service ports to random ones on the host.\n"
+"In the above code, users can configure a fixed port for the container image, which is then passed to `MyContainer` as a `fixedExposedPort` `OptionalInt`.\n"
+"Allowing users to set a fixed port makes it easier to attach external tools to the running container, but increases the risk of port conflicts."
+msgstr ""
+
+#. type: Title ==
+#: _versions/main/guides/extension-writing-dev-service.adoc
+msgid "Declaring a Build Step"
+msgstr ""
+
+#. type: Plain text
+#: _versions/main/guides/extension-writing-dev-service.adoc
+msgid ""
+"Add a build step that returns a `DevServicesResultBuildItem`, using the `owned()` builder.\n"
+"Do *not* call `start()` on the `Startable` – Quarkus will start it at the right time."
+msgstr ""
+
+#. type: Plain text
+#: _versions/main/guides/extension-writing-dev-service.adoc
+msgid "With this code, you should be able to see your container starting if you add your extension to a test application and run `quarkus dev`."
+msgstr ""
+
+#. type: Plain text
+#: _versions/main/guides/extension-writing-dev-service.adoc
+msgid ""
+"To allow applications to connect to the service, the build step needs to provide configuration overrides.\n"
+"This is done lazily, since the actual service port is usually only known at runtime.\n"
+"To configure the port, use `.configProvider(\n"
+"Map.of(\"the-config-key-for-the-base-url\",\n"
+"s -> \"http://\" + s.getConnectionInfo())`."
+msgstr ""
+
+#. type: Plain text
+#: _versions/main/guides/extension-writing-dev-service.adoc
+msgid ""
+"If you need to tell the application where the service is living without using Quarkus configuration,\n"
+"you can pass information about the service using\n"
+"https://quarkus.io/guides/writing-extensions#injecting-configuration-into-recorders[recorders]."
+msgstr ""
+
+#. type: Title ==
+#: _versions/main/guides/extension-writing-dev-service.adoc
+msgid "Understanding the builder"
+msgstr ""
+
+#. type: Plain text
+#: _versions/main/guides/extension-writing-dev-service.adoc
+msgid ""
+"The `owned()` builder has several methods.\n"
+"Not all are required, but `feature()`, `serviceConfig()`, `startable()`, and `configProvider()` are needed in most cases."
+msgstr ""
+
+#. type: Plain text
+#: _versions/main/guides/extension-writing-dev-service.adoc
+msgid "`feature(String)`"
+msgstr ""
+
+#. type: Plain text
+#: _versions/main/guides/extension-writing-dev-service.adoc
+msgid "Identifies the owning feature. Used for identification and lifecycle management."
+msgstr ""
+
+#. type: Plain text
+#: _versions/main/guides/extension-writing-dev-service.adoc
+msgid "`serviceName(String)`"
+msgstr ""
+
+#. type: Plain text
+#: _versions/main/guides/extension-writing-dev-service.adoc
+msgid "If the feature provides multiple Dev Services, this distinguishes them. Optional."
+msgstr ""
+
+#. type: Plain text
+#: _versions/main/guides/extension-writing-dev-service.adoc
+msgid "`serviceConfig(Object)`"
+msgstr ""
+
+#. type: Plain text
+#: _versions/main/guides/extension-writing-dev-service.adoc
+msgid ""
+"The configuration object for this service. It is compared reflectively to the previous configuration on each restart.\n"
+"If the config has changed, the service is restarted; if it is the same, the running service is reused. This controls service reuse, and should be considered carefully."
+msgstr ""
+
+#. type: Plain text
+#: _versions/main/guides/extension-writing-dev-service.adoc
+msgid "`startable(Supplier<S>)`"
+msgstr ""
+
+#. type: Plain text
+#: _versions/main/guides/extension-writing-dev-service.adoc
+msgid "A supplier that creates the `Startable` instance. The service is created at build time, but it is not started until the right point during Quarkus startup."
+msgstr ""
+
+#. type: Plain text
+#: _versions/main/guides/extension-writing-dev-service.adoc
+msgid "`configProvider(Map<String, Function<T, String>>)`"
+msgstr ""
+
+#. type: Plain text
+#: _versions/main/guides/extension-writing-dev-service.adoc
+msgid ""
+"Provides configuration values that are only known after the service is started, such as mapped ports.\n"
+"The key in the map is the config property name; the value is a function that receives the started `Startable` and returns the config value."
+msgstr ""
+
+#. type: Plain text
+#: _versions/main/guides/extension-writing-dev-service.adoc
+msgid "For config values that are known at build time, use `config(Map<String, String>)` instead."
+msgstr ""
+
+#. type: Plain text
+#: _versions/main/guides/extension-writing-dev-service.adoc
+msgid "`postStartHook(Consumer<T>)`"
+msgstr ""
+
+#. type: Plain text
+#: _versions/main/guides/extension-writing-dev-service.adoc
+msgid "An action to perform after the service starts. Any methods used here will be invoked at runtime, not build time, and will affect startup times. Optional."
+msgstr ""
+
 #. type: Title =
 #: _versions/main/guides/extension-writing-dev-service.adoc
 msgid "Configuring the Dev Service"
@@ -129,16 +300,16 @@ msgstr "Dev Service の設定"
 #. type: Plain text
 #: _versions/main/guides/extension-writing-dev-service.adoc
 msgid ""
-"To configure the Dev Service launch process, your build step can accept a `ConfigPhase.BUILD_TIME` config class in its constructor.\n"
+"To configure the Dev Service launch process, your build step can accept a `ConfigPhase.BUILD_TIME` config class.\n"
 "For example,"
 msgstr ""
-"Dev Service の起動プロセスを設定するには、ビルドステップのコンストラクターで `ConfigPhase.BUILD_TIME` 設定クラスを受け入れます。\n"
-"以下に例を示します。"
 
 #. type: Plain text
 #: _versions/main/guides/extension-writing-dev-service.adoc
-msgid "You may wish to use this config to set a fixed port, or set an image name, for example."
-msgstr "たとえば、この設定を使用して固定ポートを設定したり、イメージ名を設定したりすることができます。"
+msgid ""
+"You may wish to use this config to set a fixed port, or set an image name.\n"
+"Pass the config object to `serviceConfig()` on the builder so that Quarkus can detect config changes and restart the service when needed."
+msgstr ""
 
 #. type: Title =
 #: _versions/main/guides/extension-writing-dev-service.adoc
@@ -150,21 +321,63 @@ msgstr "再利用の制御"
 msgid ""
 "In dev mode, with live reload, Quarkus may restart frequently.\n"
 "By default, this will also restart test containers.\n"
-"Quarkus restarts are usually very fast, but containers may take much longer to restart.\n"
-"To prevent containers restarting on every code change, you can mark the container as reusable:"
+"Quarkus restarts are usually very fast, but containers may take much longer to restart."
 msgstr ""
-"開発モードでは、ライブリロードにより、Quarkus が頻繁に再起動する場合があります。デフォルトでは、これによりテストコンテナーも再起動されます。\n"
-"Quarkus の再起動は通常非常に高速ですが、コンテナーの再起動にはさらに長い時間がかかる場合があります。\n"
-"コードを変更するたびにコンテナーが再起動するのを防ぐには、コンテナーを再利用可能としてマークします。"
 
 #. type: Plain text
 #: _versions/main/guides/extension-writing-dev-service.adoc
 msgid ""
-"Some Dev Services implement sophisticated reuse logic in which they track the state of the container in the processor itself.\n"
-"You may need this if your service has more complex requirements, or needs sharing across instances."
+"Re-use of services between live reloads is handled centrally by Quarkus based on the `serviceConfig()` value.\n"
+"If the config object passed to `serviceConfig()` is the same as the previous run (compared reflectively), the running service is reused.\n"
+"If it has changed, the service is restarted."
 msgstr ""
-"一部の Dev Service は、プロセッサー自体のコンテナーの状態を追跡する高度な再利用ロジックを実装しています。\n"
-"サービスに複雑な要件がある場合や、インスタンス間で共有する必要がある場合は、これが必要になることがあります。"
+
+#. type: Plain text
+#: _versions/main/guides/extension-writing-dev-service.adoc
+msgid "It is an anti-pattern (and unlikely to work) to use static fields on the processor to store service state or handle service reuse."
+msgstr ""
+
+#. type: Title =
+#: _versions/main/guides/extension-writing-dev-service.adoc
+msgid "Discovered services"
+msgstr ""
+
+#. type: Plain text
+#: _versions/main/guides/extension-writing-dev-service.adoc
+msgid ""
+"Rather than starting services, the Dev Services infrastructure can be used to surface existing external services, not managed by Quarkus.\n"
+"To make an externally-managed service available for use as a Dev Service, use the `discovered()` builder instead:"
+msgstr ""
+
+#. type: Title =
+#: _versions/main/guides/extension-writing-dev-service.adoc
+msgid "Integrating with the Dev UI"
+msgstr ""
+
+#. type: Plain text
+#: _versions/main/guides/extension-writing-dev-service.adoc
+msgid ""
+"It is a nice practice to include links to your Dev Service(s) on the Dev UI card for your extension.\n"
+"This is particularly useful when the service has been started on a random port, and users might want to connect to an admin console.\n"
+"Because the service url is not known at build time, the `dynamicUrlJsonRPCMethodName` method should be used, link:/guides/dev-ui#runtime-external-links[passing in an RPC method name]."
+msgstr ""
+
+#. type: Plain text
+#: _versions/main/guides/extension-writing-dev-service.adoc
+msgid "If needed, you can also pass through parameters on the method call. For example,"
+msgstr ""
+
+#. type: Plain text
+#: _versions/main/guides/extension-writing-dev-service.adoc
+msgid "You will need to use a build step to register the providing class:"
+msgstr ""
+
+#. type: Plain text
+#: _versions/main/guides/extension-writing-dev-service.adoc
+msgid ""
+"The `MyJsonRPCService` class with a `getMyUrl` method should live in your extension's runtime module.\n"
+"It can use injected configuration or injected beans to provide the url."
+msgstr ""
 
 #. type: Title =
 #: _versions/main/guides/extension-writing-dev-service.adoc
