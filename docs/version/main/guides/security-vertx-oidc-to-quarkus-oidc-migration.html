@@ -1,0 +1,1658 @@
+<!DOCTYPE html>
+<html lang="ja-JP">
+
+
+
+
+
+
+
+<head>
+  <title>Vert.x OIDC から Quarkus OIDC への移行 - main - Quarkus</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="
+  connect-src 'self' https://dpm.demdex.net https://adobedc.demdex.net https://analytics.ossupstream.org/ https://search.quarkus.io https://smetrics.redhat.com https://ajax.googleapis.com; 
+  script-src 'self' 'unsafe-inline' 'unsafe-eval'
+      
+      https://assets.adobedtm.com
+      js.bizographics.com
+      https://www.redhat.com
+      https://static.redhat.com
+      https://app.requestly.io/
+      jsonip.com
+      https://ajax.googleapis.com
+      https://use.fontawesome.com
+      http://www.youtube.com
+      http://www.googleadservices.com
+      https://googleads.g.doubleclick.net
+      https://giscus.app
+      https://analytics.ossupstream.org/
+      https://app.mailjet.com;
+
+  style-src 'self' https://fonts.googleapis.com https://use.fontawesome.com; 
+  img-src 'self' * data:; 
+  media-src 'self'; 
+  frame-src https://redhat.demdex.net https://www.youtube.com https://player.restream.io https://app.mailjet.com http://xy0p2.mjt.lu https://mj.quarkus.io https://giscus.app; 
+  base-uri 'none'; 
+  object-src 'none'; 
+  form-action 'none'; 
+  font-src 'self' https://use.fontawesome.com https://fonts.gstatic.com;" />
+
+  <script id="adobe_dtm" src="https://www.redhat.com/dtm.js" type="text/javascript"></script>
+  <script src="/assets/javascript/highlight.pack.js" type="text/javascript"></script>
+  <META HTTP-EQUIV='X-XSS-Protection' CONTENT="1; mode=block">
+  <META HTTP-EQUIV='X-Content-Type-Options' CONTENT="nosniff">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Quarkus: Supersonic Subatomic Java">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@QuarkusIO"> 
+  <meta name="twitter:creator" content="@QuarkusIO">
+  <meta property="og:url" content="https://quarkus.io/version/main/guides/security-vertx-oidc-to-quarkus-oidc-migration" />
+  <meta property="og:title" content="Vert.x OIDC から Quarkus OIDC への移行 - main" />
+  <meta property="og:description" content="Quarkus: Supersonic Subatomic Java" />
+  <meta property="og:image" content="https://quarkus.io/assets/images/quarkus_card.png" />
+  
+  <link rel="canonical" href="https://quarkus.io/guides/security-vertx-oidc-to-quarkus-oidc-migration">
+  <link rel="shortcut icon" type="image/png" href="/favicon.ico" >
+  <link rel="stylesheet" href="/guides/stylesheet/config.css" />
+  <link rel="stylesheet" href="/assets/css/main.css?2021-07-29" />
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.5.2/css/all.css" crossorigin="anonymous">
+  <link rel="alternate" type="application/rss+xml"  href="/feed.xml" title="Quarkus">
+  <script src="/assets/javascript/hl.js" type="text/javascript"></script>
+  
+  
+  
+  
+  <link rel="alternate" hreflang="x-default" href="https://quarkus.io/" />  
+  <script src="/assets/javascript/tracking.js"></script>
+  
+  <script src="/assets/javascript/colormode.js" type="text/javascript"></script>
+
+</head>
+
+<body class="guides">
+
+  
+
+
+<div class="grid-wrapper communitysite">
+  <div class="grid__item width-12-12">The <a href="https://quarkus.io/version/main/guides/security-vertx-oidc-to-quarkus-oidc-migration">English version of quarkus.io</a> is the official project site. Translated sites are community supported on a best-effort basis.</div>
+</div>
+
+
+  <div class="nav-wrapper">
+  <div class="grid-wrapper">
+    <div class="width-12-12">
+      <input type="checkbox" id="checkbox" />
+      <nav id="main-nav" class="main-nav">
+        <div class="logo-wrapper">
+           <a href="/"><img src="/assets/images/quarkus_logo_horizontal_rgb_600px_reverse.png" class="project-logo" title="Quarkus"></a>
+        </div>
+    <label class="nav-toggle" for="checkbox"> <i class="fa fa-bars"></i>
+</label>
+    <ul id="menu" class="menu">
+      <li class="dropdown">
+        <span href="#">Why<i class="fas fa-chevron-down firsti"></i></span>
+        <ul class="submenu">
+          <li><a href="/about" class="">QUARKUSとは何か？</a></li>
+          <li><a href="/developer-joy" class="">開発者満足</a></li>
+          <li><a href="/performance" class="">パフォーマンス</a></li>
+          <li><a href="/kubernetes-native" class="">KUBERNETES NATIVE</a></li>
+          <li><a href="/standards" class="">標準</a></li>
+          <li><a href="/versatility" class="">多用途性</a></li>
+          <li><a href="/container-first" class="">コンテナ・ファースト</a></li>
+          <li><a href="/spring" class="">SPRINGを使用する</a></li>
+          <li class="tertiarydropdown">
+            <span href="#">AI<i class="fas fa-chevron-down"></i></span>
+            <ul class="tertiarymenu">
+              <li><a href="/ai" class="">AI概要</a></li>
+              <li><a href="/java-for-ai" class="">AI向けJAVA</a></li>
+              <li><a href="/quarkus-for-ai" class="">AIにQuarkusを使う理由</a></li>
+              <li><a href="/ai-blueprints" class="">AI BLUEPRINTS</a></li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+      <li class="dropdown">
+        <span href="#">Learn<i class="fas fa-chevron-down firsti"></i></span>
+        <ul class="submenu">
+          <li><a href="/get-started" class="">入門</a></li>
+          <li><a href="/guides" class="active">ドキュメント</a></li>
+          <li><a href="/userstories/" class="">ユーザーストーリー</a></li>  
+          <li><a href="/qtips" class="">"Q" Tipsビデオ</a></li>          
+          <li><a href="/books" class="">書籍</a></li>
+          </ul>
+      </li>
+      <li class="dropdown">
+        <span href="#">Extensions<i class="fas fa-chevron-down firsti"></i></span>
+        <ul class="submenu">
+          
+          <!-- Note that quarkus.io is hardcoded here, because it is the only url which supports extensions -->
+<li><a href="https://quarkus.io/extensions/" class="">エクステンションを探す</a></li>
+          <li><a href="/faq/#what-is-a-quarkus-extension" class="">エクステンションの使用</a></li>
+          <li><a href="/guides/writing-extensions" class="">エクステンションの作成</a></li>
+          <li><a href="https://hub.quarkiverse.io" class="">エクステンションの共有</a></li>
+        </ul>
+      </li>
+      <li class="dropdown">
+        <span href="#">Community<i class="fas fa-chevron-down firsti"></i></span>
+        <ul class="submenu">
+          <li><a href="/support/" class="">サポート</a></li>
+          <li><a href="/blog" class="">ブログ</a></li>
+          <li><a href="/discussion" class="">ディスカッション</a></li>
+          <li><a href="/working-groups" class="">ワーキンググループ</a></li>
+          <li><a href="/insights" class="">ポッドキャスト</a></li>
+          <li><a href="/events" class="">イベント</a></li>
+          <li><a href="/newsletter" class="">ニュースレター</a></li>
+          <li><a href="https://github.com/orgs/quarkusio/projects/13/views/1" class="">ロードマップ</a></li>
+          <li><a href="/benefactors" class="">貢献者</a></li>
+          </ul>
+      </li>
+      <li>
+        <a href="https://code.quarkus.io" class="button-cta secondary
+white">コーディングを開始</a>
+      </li>
+      <li class="dropdown">
+        <span href="/language/"><div class="fas fa-globe langicon"></div><i class="fas fa-chevron-down"></i></span>
+        <ul class="submenu">
+          <li><a href="https://quarkus.io/version/main/guides/security-vertx-oidc-to-quarkus-oidc-migration" >OFFICIAL (ENGLISH)</a></li>
+          <li><a href="https://pt.quarkus.io/version/main/guides/security-vertx-oidc-to-quarkus-oidc-migration">ポルトガル（BR）</a></li>
+          <li><a href="https://es.quarkus.io/version/main/guides/security-vertx-oidc-to-quarkus-oidc-migration">ESPAÑOL</a></li>
+          <li><a href="https://cn.quarkus.io/version/main/guides/security-vertx-oidc-to-quarkus-oidc-migration">简体中文</a></li>
+          <li><a href="https://ja.quarkus.io/version/main/guides/security-vertx-oidc-to-quarkus-oidc-migration">日本語</a></li>
+          </ul>
+      </li>
+      <li>
+        <span href="#" class="modeswitcher" id='theme-toggle'><i class="fas
+fa-sun"></i><i class="fas fa-moon"></i><i class="fas fa-cog"></i></span>
+      </li>
+    </ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+  <div class="content">
+    
+
+
+
+
+
+
+
+<section class="full-width-version-bg flexfilterbar guides">
+  <div class="guideflexcontainer">
+    <div class="docslink">
+      <a class="returnlink" href="/version/main/guides/"> Back to Guides</a>
+    </div>
+    <div class="flexlabel">
+      <label>バージョン:</label>
+    </div>
+    <div class="guidepulldown version">
+    <select id="guide-version-dropdown">
+      
+        
+        
+        <option value="main" selected>Main - SNAPSHOT</option>
+        
+        
+        
+        <option value="latest" >3.36.1 - Latest</option>
+        
+        
+        
+        <option value="3.33" >3.33</option>
+        
+        
+        
+        <option value="3.27" >3.27</option>
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        </select>
+    </div>
+  </div>
+</section>
+
+<div class="guide">
+  <div class="grid-wrapper">
+    <div class="grid__item width-8-12 width-12-12-m">
+      
+      <a class="editlink" href="https://github.com/quarkusio/quarkus/edit/main/docs/src/main/asciidoc/security-vertx-oidc-to-quarkus-oidc-migration.adoc">このページを編集</a>
+      
+      <h1 class="text-caps">Vert.x OIDC から Quarkus OIDC への移行 </h1>
+      <div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Vert.x OIDC アプリケーションを Quarkus に移行する方法を学び、Vert.x OIDC をそのまま使い続けるか、Quarkus OIDC に置き換えるかを選択します。</p>
+</div>
+<div class="paragraph">
+<p>まず、オリジナルの Vert.x <a href="https://how-to.vertx.io/web-and-oauth2-oidc/">Securing a Web Application with OAuth2/OpenID Connect</a> <code>how-to</code> チュートリアルから始めます。これは、Vert.x OIDC を使用して <a href="https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/authenticating-to-the-rest-api-with-an-oauth-app">GitHub OAuth2 アプリケーション</a> を実装する方法を示しています。Vert.x OIDC ユーザーであれば、すでにこのチュートリアルに取り組んだことがあるかもしれません。</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>GitHub は <code>OAuth2</code> のみをサポートしていますが、ここでは <code>Vert.x OIDC</code> という用語を使用します。OIDC は OAuth2 の上に構築されており、Vert.x の <a href="https://how-to.vertx.io/web-and-oauth2-oidc/">Securing a Web Application with OAuth2/OpenID Connect</a> チュートリアルでも <a href="https://how-to.vertx.io/web-and-oauth2-oidc/#openid-connect">OIDC について言及されています</a>。</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>次に、Vert.x OIDC のコードを <code>完全に保持</code> したまま、Vert.x アプリケーションを Quarkus に移行する方法を学びます。</p>
+</div>
+<div class="paragraph">
+<p>最後に、Vert.x OIDC を Quarkus OIDC に置き換えるオプションについて説明します。これを分析し、実装を検討してください。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertx-oidc-vertx"><a class="anchor" href="#vertx-oidc-vertx"></a>Vert.x 上の Vert.x OIDC</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><a href="https://how-to.vertx.io/web-and-oauth2-oidc/">Securing a Web Application with OAuth2/OpenID Connect</a> <code>how-to</code> チュートリアルから始めましょう。</p>
+</div>
+<div class="paragraph">
+<p><a href="https://how-to.vertx.io/web-and-oauth2-oidc/#create-a-project">プロジェクトを作成</a> すると、以下のプロパティーと依存関係を含む <code>pom.xml</code> が作成されます。</p>
+</div>
+<div class="listingblock xml">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">&lt;project&gt;
+  &lt;groupId&gt;howto&lt;/groupId&gt;
+  &lt;artifactId&gt;oauth-oidc&lt;/artifactId&gt;
+  &lt;version&gt;1.0.0-SNAPSHOT&lt;/version&gt;
+
+  &lt;properties&gt;
+    &lt;! ... --&gt;
+    &lt;vertx.version&gt;5.0.16&lt;/vertx.version&gt;
+    &lt;main.verticle&gt;howto.oauth_oidc.MainVerticle&lt;/main.verticle&gt;
+    &lt;launcher.class&gt;io.vertx.launcher.application.VertxApplication&lt;/launcher.class&gt;
+  &lt;/properties&gt;
+
+  &lt;dependencyManagement&gt;
+    &lt;dependencies&gt;
+      &lt;dependency&gt;
+        &lt;groupId&gt;io.vertx&lt;/groupId&gt;
+        &lt;artifactId&gt;vertx-stack-depchain&lt;/artifactId&gt;
+        &lt;version&gt;${vertx.version}&lt;/version&gt;
+        &lt;type&gt;pom&lt;/type&gt;
+        &lt;scope&gt;import&lt;/scope&gt;
+      &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+  &lt;/dependencyManagement&gt;
+
+  &lt;dependencies&gt;
+    &lt;dependency&gt;
+      &lt;groupId&gt;io.vertx&lt;/groupId&gt;
+      &lt;artifactId&gt;vertx-launcher-application&lt;/artifactId&gt;
+    &lt;/dependency&gt;
+    &lt;dependency&gt;
+      &lt;groupId&gt;io.vertx&lt;/groupId&gt;
+      &lt;artifactId&gt;vertx-web-client&lt;/artifactId&gt;
+    &lt;/dependency&gt;
+    &lt;dependency&gt;
+      &lt;groupId&gt;io.vertx&lt;/groupId&gt;
+      &lt;artifactId&gt;vertx-web-templ-handlebars&lt;/artifactId&gt;
+    &lt;/dependency&gt;
+    &lt;dependency&gt;
+      &lt;groupId&gt;io.vertx&lt;/groupId&gt;
+      &lt;artifactId&gt;vertx-web&lt;/artifactId&gt;
+    &lt;/dependency&gt;
+    &lt;dependency&gt;
+      &lt;groupId&gt;io.vertx&lt;/groupId&gt;
+      &lt;artifactId&gt;vertx-auth-oauth2&lt;/artifactId&gt;
+    &lt;/dependency&gt;
+    &lt;! ... --&gt;
+  &lt;/dependencies&gt;
+  &lt;! ... --&gt;
+&lt;/project&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><a href="https://how-to.vertx.io/web-and-oauth2-oidc/">Securing a Web Application with OAuth2/OpenID Connect</a> チュートリアルの説明に従って GitHub アプリケーションを登録します。唯一の違いは、コールバック URL として <code><a href="http://localhost:8080/callback" class="bare">http://localhost:8080/callback</a></code> の代わりに <code><a href="http://localhost:8080/login" class="bare">http://localhost:8080/login</a></code> を登録する必要があることです。</p>
+</div>
+<div class="paragraph">
+<p>最終的な <code>MainVerticle</code> Java クラスは以下のようになります。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">package howto.oauth_oidc;
+
+import io.vertx.core.Future;
+import io.vertx.core.VerticleBase;
+import io.vertx.ext.auth.authorization.PermissionBasedAuthorization;
+import io.vertx.ext.auth.oauth2.OAuth2Auth;
+import io.vertx.ext.auth.oauth2.authorization.ScopeAuthorization;
+import io.vertx.ext.auth.oauth2.providers.GithubAuth;
+import io.vertx.ext.web.Router;
+import io.vertx.ext.web.handler.AuthorizationHandler;
+import io.vertx.ext.web.handler.OAuth2AuthHandler;
+import io.vertx.ext.web.handler.SessionHandler;
+import io.vertx.ext.web.sstore.LocalSessionStore;
+import io.vertx.ext.web.templ.handlebars.HandlebarsTemplateEngine;
+
+public class MainVerticle extends VerticleBase {
+
+    private static final String CLIENT_ID = System.getenv("GITHUB_CLIENT_ID");
+    private static final String CLIENT_SECRET = System.getenv("GITHUB_CLIENT_SECRET");
+
+    @Override
+    public Future&lt;?&gt; start() {
+
+        HandlebarsTemplateEngine engine = HandlebarsTemplateEngine.create(vertx); <i class="conum" data-value="1"></i><b>(1)</b>
+
+        Router router = Router.router(vertx); <i class="conum" data-value="2"></i><b>(2)</b>
+
+        router.route().handler(SessionHandler.create(LocalSessionStore.create(vertx))); <i class="conum" data-value="3"></i><b>(3)</b>
+
+        router.get("/").handler(ctx -&gt; { <i class="conum" data-value="4"></i><b>(4)</b>
+            // we pass the client id to the template
+            ctx.put("client_id", CLIENT_ID);
+            // and now delegate to the engine to render it.
+            engine.render(ctx.data(), "views/index.hbs").onSuccess(buffer -&gt; {
+                ctx.response().putHeader("Content-Type", "text/html").end(buffer);
+            }).onFailure(ctx::fail);
+        });
+
+        OAuth2Auth authProvider = GithubAuth.create(vertx, CLIENT_ID, CLIENT_SECRET); <i class="conum" data-value="5"></i><b>(5)</b>
+
+        router.get("/protected").handler(
+
+                OAuth2AuthHandler.create(vertx, authProvider, "http://localhost:8080/login")
+                        .setupCallback(router.route("/login")).withScope("user:email")) <i class="conum" data-value="6"></i><b>(6)</b>
+                .handler(AuthorizationHandler.create(PermissionBasedAuthorization.create("user:email"))
+                        .addAuthorizationProvider(ScopeAuthorization.create(" "))) <i class="conum" data-value="7"></i><b>(7)</b>
+                .handler(new ProtectedProfileHandler(authProvider, engine)); <i class="conum" data-value="8"></i><b>(8)</b>
+
+        return vertx.createHttpServer().requestHandler(router).listen(Integer.getInteger("port", 8080))
+                .onSuccess(server -&gt; System.out.println("HTTP server started on port: " + server.actualPort()));
+    }
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Handlebars テンプレートエンジンを初期化します。</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Vert.x ルーターを作成します。</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>セッション詳細をメモリーに保持する Vert.x OIDC セッションハンドラーを登録します。</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td><code><a href="http://localhost:8080" class="bare">http://localhost:8080</a></code> アドレスでウェルカムページをサポートするためのルートハンドラーを作成します。</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>Vert.x インスタンス、および GitHub のクライアント ID とシークレットプロパティーを使用して、OAuth2 GitHub プロバイダーを初期化します。</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="6"></i><b>6</b></td>
+<td><code><a href="http://localhost:8080/protected" class="bare">http://localhost:8080/protected</a></code> エンドポイントを保護するために OAuth2 ハンドラーを登録します。このハンドラーは GitHub プロバイダーを使用してユーザーを認証し、ユーザーを GitHub にリダイレクトする際に <code>user:email</code> スコープを要求します。ハンドラーにはコールバックルートが設定されており、返された認可コードと指定された <code><a href="http://localhost:8080/login" class="bare">http://localhost:8080/login</a></code> リダイレクト URL を使用して認可コードフローを完了し、GitHub アクセストークンを取得します。</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="7"></i><b>7</b></td>
+<td>GitHub アクセストークンに <code>user:email</code> スコープがない場合、 <code><a href="http://localhost:8080/protected" class="bare">http://localhost:8080/protected</a></code> エンドポイントへのアクセスを許可しないでください。アクセストークンを制限する <code>PermissionBasedAuthorization</code> 機能は優れていますが、このアプリケーションのコンテキストで適用する必要はないことに注意してください。認可コードフローのアクセストークン、特に GitHub のアクセストークンは、それを取得したアプリケーションへのアクセスを制御するためのものではなく、認証されたユーザーに代わって GitHub API などの別の API にアクセスするためにそのアプリケーションが使用するためのものです。これについては後述の実演で説明します。</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p><code>ProtectedProfileHandler</code> Java クラスはユーザーのメール一覧を返します。内容は <a href="https://how-to.vertx.io/web-and-oauth2-oidc/#create-a-project">Securing a Web Application with OAuth2/OpenID Connect</a> チュートリアルに示されているものと全く同じです。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">package howto.oauth_oidc;
+
+import io.vertx.core.Handler;
+import io.vertx.ext.auth.authentication.TokenCredentials;
+import io.vertx.ext.auth.oauth2.OAuth2Auth;
+import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.client.WebClient;
+import io.vertx.ext.web.codec.BodyCodec;
+import io.vertx.ext.web.templ.handlebars.HandlebarsTemplateEngine;
+
+class ProtectedProfileHandler implements Handler&lt;RoutingContext&gt; {
+
+    private final OAuth2Auth authProvider;
+    private final HandlebarsTemplateEngine engine;
+
+    ProtectedProfileHandler(OAuth2Auth authProvider, HandlebarsTemplateEngine engine) {
+        this.authProvider = authProvider;
+        this.engine = engine;
+    }
+
+    @Override
+    public void handle(RoutingContext ctx) {
+        authProvider.userInfo(ctx.user())
+                .onFailure(err -&gt; {
+                    ctx.session().destroy();
+                    ctx.fail(err);
+                }).onSuccess(userInfo -&gt; {
+                    WebClient.create(ctx.vertx()).getAbs("https://api.github.com/user/emails") <i class="conum" data-value="1"></i><b>(1)</b>
+                            .authentication(new TokenCredentials(ctx.user().&lt;String&gt;get("access_token"))) <i class="conum" data-value="2"></i><b>(2)</b>
+                            .as(BodyCodec.jsonArray()).send().onFailure(err -&gt; {
+                                ctx.session().destroy();
+                                ctx.fail(err);
+                            }).onSuccess(res -&gt; {
+                                userInfo.put("private_emails", res.body());
+                                // we pass the client info to the template
+                                ctx.put("userInfo", userInfo); <i class="conum" data-value="3"></i><b>(3)</b>
+                                // and now delegate to the engine to render it.
+                                engine.render(ctx.data(), "views/protected.hbs").onSuccess(buffer -&gt; {
+                                    ctx.response().putHeader("Content-Type", "text/html").end(buffer);
+                                }).onFailure(err -&gt; {
+                                    ctx.session().destroy();
+                                    ctx.fail(err);
+                                });
+                            });
+                });
+    }
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Vert.x WebClient を使用してユーザーのメールを取得します。</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>GitHub アクセストークンを使用して GitHub API にアクセスします。</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>プライベートメールを含む JSON 配列で UserInfo を更新し、それを <code>protected.hbs</code> テンプレートに渡します。</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>最後に、 <code>src/main/resources/views</code> ディレクトリーに <code>index.hbs</code> と <code>protected.hbs</code> テンプレートを作成し、 <a href="https://how-to.vertx.io/web-and-oauth2-oidc/#create-a-project">Securing a Web Application with OAuth2/OpenID Connect</a> チュートリアルから内容をコピーします。</p>
+</div>
+<div class="paragraph">
+<p><code>java -jar target/oauth-oidc-1.0.0-SNAPSHOT-fat.jar</code> としてアプリケーションをコンパイルして実行し、 <code><a href="http://localhost:8080" class="bare">http://localhost:8080</a></code> にアクセスして <a href="https://how-to.vertx.io/web-and-oauth2-oidc/#create-a-project">Securing a Web Application with OAuth2/OpenID Connect</a> チュートリアルに従い GitHub にログインすると、GitHub アカウントのメールアドレスが表示されます。</p>
+</div>
+<div class="paragraph">
+<p>初めて <code><a href="http://localhost:8080/protected" class="bare">http://localhost:8080/protected</a></code> ページにアクセスしたとき、以下のリダイレクトが発生しました。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Vert.x OIDC によってログインのために GitHub にリダイレクトされました。</p>
+</li>
+<li>
+<p>GitHub によって <code><a href="http://localhost:8080/login" class="bare">http://localhost:8080/login</a></code> コールバックルートハンドラーにリダイレクトされました。ここで認可コードフローが完了し、GitHub アクセストークンが取得されました。</p>
+</li>
+<li>
+<p>Vert.x OIDC によって、<code>元の</code> リクエスト URL である <code><a href="http://localhost:8080/protected" class="bare">http://localhost:8080/protected</a></code> にリダイレクトされました。</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertx-oidc-quarkus"><a class="anchor" href="#vertx-oidc-quarkus"></a>Quarkus 上の Vert.x OIDC</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><a href="#vertx-oidc-vertx">Vert.x 上の Vert.x OIDC</a> セクションでオリジナルの <a href="https://how-to.vertx.io/web-and-oauth2-oidc/#create-a-project">Securing a Web Application with OAuth2/OpenID Connect</a> チュートリアルを進めました。ここからは、Vert.x OIDC を保持したまま、Vert.x アプリケーションを Quarkus に移行する計画を立てることができます。</p>
+</div>
+<div class="paragraph">
+<p><code>pom.xml</code> を次のように更新しましょう。</p>
+</div>
+<div class="listingblock xml">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">&lt;project&gt;
+  &lt;groupId&gt;howto&lt;/groupId&gt;
+  &lt;artifactId&gt;quarkus-oauth-oidc&lt;/artifactId&gt;
+  &lt;version&gt;1.0.0-SNAPSHOT&lt;/version&gt;
+
+  &lt;properties&gt;
+    &lt;! ... --&gt;
+    &lt;quarkus.platform.artifact-id&gt;quarkus-bom&lt;/quarkus.platform.artifact-id&gt;
+    &lt;quarkus.platform.group-id&gt;io.quarkus&lt;/quarkus.platform.group-id&gt;
+    &lt;quarkus.platform.version&gt;3.24.0&lt;/quarkus.platform.version&gt;
+  &lt;/properties&gt;
+
+  &lt;dependencyManagement&gt;
+    &lt;dependencies&gt;
+      &lt;dependency&gt;
+        &lt;groupId&gt;${quarkus.platform.group-id}&lt;/groupId&gt;
+        &lt;artifactId&gt;${quarkus.platform.artifact-id}&lt;/artifactId&gt;
+        &lt;version&gt;${quarkus.platform.version}&lt;/version&gt;
+        &lt;type&gt;pom&lt;/type&gt;
+        &lt;scope&gt;import&lt;/scope&gt;
+      &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+  &lt;/dependencyManagement&gt;
+
+  &lt;dependencies&gt;
+      &lt;dependency&gt;
+          &lt;groupId&gt;io.quarkus&lt;/groupId&gt;
+          &lt;artifactId&gt;quarkus-vertx-http&lt;/artifactId&gt;
+      &lt;/dependency&gt;
+      &lt;dependency&gt;
+          &lt;groupId&gt;io.quarkus&lt;/groupId&gt;
+          &lt;artifactId&gt;quarkus-qute&lt;/artifactId&gt;
+      &lt;/dependency&gt;
+      &lt;dependency&gt;
+          &lt;groupId&gt;io.vertx&lt;/groupId&gt;
+          &lt;artifactId&gt;vertx-web-client&lt;/artifactId&gt;
+      &lt;/dependency&gt;
+      &lt;dependency&gt;
+          &lt;groupId&gt;io.vertx&lt;/groupId&gt;
+          &lt;artifactId&gt;vertx-auth-oauth2&lt;/artifactId&gt;
+      &lt;/dependency&gt;
+  &lt;/dependencies&gt;
+  &lt;! ... --&gt;
+&lt;/project&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><a href="#vertx-oidc-vertx">Vert.x 上の Vert.x OIDC</a> セクションの pom.xml と比較すると、この pom.xml は <code>io.vertx</code> グループのオリジナルの Vert.x 依存関係を 2 つだけ保持しています。GitHub API 呼び出しをサポートする <code>vertx-web-client</code> と、Vert.x GitHub OAuth2 プロバイダーで保護されたエンドポイントのセキュリティーを継続するための <code>vertx-auth-oauth2</code> です。</p>
+</div>
+<div class="paragraph">
+<p>また、 <code>io.quarkus</code> グループの 2 つの Quarkus 依存関係を導入しています。 <code>quarkus-vertx-http</code> と、 <a href="https://quarkus.io/guides/qute">Qute テンプレートエンジン</a> を提供し、 <a href="#vertx-oidc-vertx">Vert.x 上の Vert.x OIDC</a> セクションで使用されていた Handlebars エンジンを置き換える <code>quarkus-qute</code> です。</p>
+</div>
+<div class="paragraph">
+<p><code>MainVerticle</code> Java クラスは、起動時に Vert.x ルートとハンドラーを登録する CDI <code>@ApplicationScoped</code> の <code>GitHubProfileService</code> Java Bean クラスに変換されました。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">package howto.oauth_oidc;
+
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
+import io.quarkus.qute.Template;
+import io.vertx.core.Vertx;
+import io.vertx.ext.auth.authorization.PermissionBasedAuthorization;
+import io.vertx.ext.auth.oauth2.OAuth2Auth;
+import io.vertx.ext.auth.oauth2.authorization.ScopeAuthorization;
+import io.vertx.ext.auth.oauth2.providers.GithubAuth;
+import io.vertx.ext.web.Router;
+import io.vertx.ext.web.handler.AuthorizationHandler;
+import io.vertx.ext.web.handler.OAuth2AuthHandler;
+import io.vertx.ext.web.handler.SessionHandler;
+import io.vertx.ext.web.sstore.LocalSessionStore;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
+import jakarta.inject.Inject;
+
+@ApplicationScoped
+public class GitHubProfileService {
+
+    OAuth2Auth authProvider;
+    @Inject
+    Template userEmail;
+
+    public GithubProfileService(Vertx vertx,
+            @ConfigProperty(name = "github_client_id") String githubClientId,
+            @ConfigProperty(name = "github_client_secret") String githubClientSecret) {
+        authProvider = GithubAuth.create(vertx, githubClientId, githubClientSecret); <i class="conum" data-value="1"></i><b>(1)</b>
+    }
+
+    void start(@Observes Router router, Vertx vertx) { <i class="conum" data-value="2"></i><b>(2)</b>
+
+        router.route().handler(SessionHandler.create(LocalSessionStore.create(vertx)));
+
+        router.get("/protected").handler(
+                OAuth2AuthHandler.create(vertx, authProvider, "http://localhost:8080/login")
+                        .setupCallback(router.route("/login")).withScope("user:email"))
+                .handler(AuthorizationHandler.create(PermissionBasedAuthorization.create("user:email"))
+                        .addAuthorizationProvider(ScopeAuthorization.create(" ")))
+                .handler(new ProtectedProfileHandler(authProvider, userEmail)); <i class="conum" data-value="3"></i><b>(3)</b>
+    }
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>注入された Vert.x インスタンス、および GitHub のクライアント ID とシークレットプロパティーを使用して、OAuth2 GitHub プロバイダーを初期化します。</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>起動時にルーターをセットアップします。これは、 <a href="#vertx-oidc-vertx">Vert.x 上の Vert.x OIDC</a> セクションの <code>MainVerticle</code> クラスで行ったのとほぼ同じですが、次のポイントで述べるわずかな違いがあります。</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>注入された Qute の <code>userEmail</code> テンプレートを <code>ProtectedProfileHandler</code> に渡します。</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p><code>ProtectedProfileHandler</code> Java クラスは <a href="#vertx-oidc-vertx">Vert.x 上の Vert.x OIDC</a> セクションで実装されたものと同様ですが、Qute テンプレートを使用するように変更されており、以下のようになります。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">package howto.oauth_oidc;
+
+import io.quarkus.qute.Template;
+import io.vertx.core.Handler;
+import io.vertx.ext.auth.authentication.TokenCredentials;
+import io.vertx.ext.auth.oauth2.OAuth2Auth;
+import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.client.WebClient;
+import io.vertx.ext.web.codec.BodyCodec;
+
+class ProtectedProfileHandler implements Handler&lt;RoutingContext&gt; {
+
+    private final OAuth2Auth authProvider;
+    private final Template userEmail;
+
+    ProtectedProfileHandler(OAuth2Auth authProvider, Template userEmail) {
+        this.authProvider = authProvider;
+        this.userEmail = userEmail;
+    }
+
+    @Override
+    public void handle(RoutingContext ctx) {
+        authProvider.userInfo(ctx.user()).onSuccess(userInfo -&gt; {
+            // fetch the user emails from the github API
+            WebClient.create(ctx.vertx()).getAbs("https://api.github.com/user/emails") <i class="conum" data-value="1"></i><b>(1)</b>
+                    .authentication(new TokenCredentials(ctx.user().&lt;String&gt;get("access_token"))) <i class="conum" data-value="2"></i><b>(2)</b>
+                    .as(BodyCodec.jsonArray()).send().onSuccess(res -&gt; {
+                        userInfo.put("private_emails", res.body());
+
+                        userEmail.data("userInfo", userInfo).renderAsync() <i class="conum" data-value="3"></i><b>(3)</b>
+                           .whenComplete((result, failure) -&gt; {
+		               if (failure == null) {
+		                   ctx.response().putHeader("Content-Type", "text/html").end(result);
+		               } else {
+		                   ctx.session().destroy();
+		                   ctx.fail(failure);
+		               }
+                           });
+                    });
+        });
+    }
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Vert.x WebClient を使用してユーザーのメールを取得します。</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>GitHub アクセストークンを使用して GitHub API にアクセスします。</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>プライベートメールを含む JSON 配列で UserInfo を更新し、それを <code>userEmail</code> テンプレートに渡して非同期にレンダリングします。</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p><code>index.hbs</code> は <code>index.html</code> という Qute テンプレートに名前が変更され、 <code>src/main/resources/META-INF/resources/</code> ディレクトリーに移動されましたが、内容は同じままです。</p>
+</div>
+<div class="paragraph">
+<p><code>protected.hbs</code> は <code>userEmail.html</code> という Qute テンプレートに変換され、 <code>src/main/resources/templates</code> ディレクトリーに移動されました。Qute のルールに従って更新されています。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;html lang="en"&gt;
+&lt;body&gt;
+&lt;p&gt;Well, well, well, {userInfo.login}!&lt;/p&gt;
+&lt;p&gt;
+  {#if userInfo.email} It looks like your public email
+    address is {userInfo.email}.
+  {#else} It looks like you don't have a public email.
+    That's cool.
+  {/if}
+&lt;/p&gt;
+&lt;p&gt;
+  {#if userInfo.containsKey('private_emails')}
+    With your permission, we were also able to dig up your
+    private email addresses:
+    {#for email in userInfo.private_emails}
+      {email.email}
+      {#if email_hasNext},{/if}
+    {/for}
+  {#else}
+    Also, you're a bit secretive about your private email
+    addresses.
+  {/if}
+&lt;/p&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>このシンプルなテンプレートは、 <a href="#vertx-oidc-vertx">Vert.x 上の Vert.x OIDC</a> セクションで作成した Handlebars テンプレートと非常によく似ています。詳細は <a href="https://quarkus.io/guides/qute-reference">Qute リファレンスガイド</a> を参照してください。</p>
+</div>
+<div class="paragraph">
+<p>これで、アプリケーションをコンパイルして実行できるようになりました。 <code>mvn quarkus:dev</code> を使用して開発モードで起動してみましょう。</p>
+</div>
+<div class="paragraph">
+<p><code><a href="http://localhost:8080" class="bare">http://localhost:8080</a></code> にアクセスし、 <a href="https://how-to.vertx.io/web-and-oauth2-oidc/#create-a-project">Securing a Web Application with OAuth2/OpenID Connect</a> チュートリアルに従って GitHub にログインし、GitHub アカウントのメールアドレスが表示されることを確認してください。</p>
+</div>
+<div class="paragraph">
+<p><code><a href="http://localhost:8080/protected" class="bare">http://localhost:8080/protected</a></code> にアクセスした後のリダイレクトシーケンスは、 <a href="#vertx-oidc-vertx">Vert.x 上の Vert.x OIDC</a> セクションの最後で説明したものと同じことがこのアプリケーションでも発生しました。</p>
+</div>
+<div class="paragraph">
+<p>この時点で、必要であれば、既存の Vert.x OIDC のコードを維持したまま、Quarkus の学習を続けることができます。</p>
+</div>
+<div class="paragraph">
+<p>また、アノテーションを使用せずに、 <a href="https://quarkus.io/guides/security-authorize-web-endpoints-reference">HTTP リクエストパスに認可ルールを適用する方法</a> も確認しておくとよいでしょう。</p>
+</div>
+<div class="paragraph">
+<p>Vert.x OIDC から Quarkus OIDC への移行方法を学びたい場合は、次の <a href="#vertx-oidc-to-quarkus-oidc">Quarkus OIDC への移行</a> セクションに進んでください。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertx-oidc-to-quarkus-oidc"><a class="anchor" href="#vertx-oidc-to-quarkus-oidc"></a>Quarkus OIDC への移行</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><a href="#vertx-oidc-vertx">Vert.x 上の Vert.x OIDC</a> セクションでオリジナルの <a href="https://how-to.vertx.io/web-and-oauth2-oidc/#create-a-project">Securing a Web Application with OAuth2/OpenID Connect</a> チュートリアルを進めました。そして <a href="#vertx-oidc-quarkus">Quarkus 上の Vert.x OIDC</a> セクションでは、Vert.x OIDC を保持したまま、Quarkus で動作するように変換しました。</p>
+</div>
+<div class="paragraph">
+<p>このセクションでは、Vert.x OIDC のコードを Quarkus OIDC に変換する方法を学びます。</p>
+</div>
+<div class="paragraph">
+<p>まず <code>pom.xml</code> の更新から始めましょう。以下のようになるはずです。</p>
+</div>
+<div class="listingblock xml">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">&lt;project&gt;
+  &lt;groupId&gt;howto&lt;/groupId&gt;
+  &lt;artifactId&gt;quarkus-oauth-oidc&lt;/artifactId&gt;
+  &lt;version&gt;1.0.0-SNAPSHOT&lt;/version&gt;
+
+  &lt;properties&gt;
+    &lt;! ... --&gt;
+    &lt;quarkus.platform.artifact-id&gt;quarkus-bom&lt;/quarkus.platform.artifact-id&gt;
+    &lt;quarkus.platform.group-id&gt;io.quarkus&lt;/quarkus.platform.group-id&gt;
+    &lt;quarkus.platform.version&gt;3.24.0&lt;/quarkus.platform.version&gt;
+  &lt;/properties&gt;
+
+  &lt;dependencyManagement&gt;
+    &lt;dependencies&gt;
+      &lt;dependency&gt;
+        &lt;groupId&gt;${quarkus.platform.group-id}&lt;/groupId&gt;
+        &lt;artifactId&gt;${quarkus.platform.artifact-id}&lt;/artifactId&gt;
+        &lt;version&gt;${quarkus.platform.version}&lt;/version&gt;
+        &lt;type&gt;pom&lt;/type&gt;
+        &lt;scope&gt;import&lt;/scope&gt;
+      &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+  &lt;/dependencyManagement&gt;
+
+  &lt;dependencies&gt;
+      &lt;dependency&gt;
+          &lt;groupId&gt;io.quarkus&lt;/groupId&gt;
+          &lt;artifactId&gt;quarkus-vertx-http&lt;/artifactId&gt;
+      &lt;/dependency&gt;
+      &lt;dependency&gt;
+          &lt;groupId&gt;io.quarkus&lt;/groupId&gt;
+          &lt;artifactId&gt;quarkus-qute&lt;/artifactId&gt;
+      &lt;/dependency&gt;
+      &lt;dependency&gt;
+          &lt;groupId&gt;io.quarkus&lt;/groupId&gt;
+          &lt;artifactId&gt;quarkus-oidc&lt;/artifactId&gt;
+      &lt;/dependency&gt;
+      &lt;dependency&gt;
+          &lt;groupId&gt;io.quarkus&lt;/groupId&gt;
+          &lt;artifactId&gt;quarkus-rest&lt;/artifactId&gt;
+      &lt;/dependency&gt;
+      &lt;dependency&gt;
+          &lt;groupId&gt;io.quarkus&lt;/groupId&gt;
+          &lt;artifactId&gt;quarkus-rest-qute&lt;/artifactId&gt;
+      &lt;/dependency&gt;
+      &lt;dependency&gt;
+          &lt;groupId&gt;io.quarkus&lt;/groupId&gt;
+          &lt;artifactId&gt;quarkus-rest-client-jackson&lt;/artifactId&gt;
+      &lt;/dependency&gt;
+      &lt;dependency&gt;
+          &lt;groupId&gt;io.quarkus&lt;/groupId&gt;
+          &lt;artifactId&gt;quarkus-rest-client-oidc-token-propagation&lt;/artifactId&gt;
+      &lt;/dependency&gt;
+  &lt;/dependencies&gt;
+  &lt;! ... --&gt;
+&lt;/project&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>上記の <a href="#vertx-oidc-quarkus">Quarkus 上の Vert.x OIDC</a> セクションの pom.xml と比較すると、この pom.xml には <code>io.vertx</code> グループの依存関係はもうありませんが、 <code>io.quarkus</code> グループの 2 つの Quarkus 依存関係である <code>quarkus-vertx-http</code> と <code>quarkus-qute</code> は保持され、さらにいくつかの Quarkus 依存関係が追加されています。</p>
+</div>
+<div class="paragraph">
+<p><code>quarkus-oidc</code> エクステンションは、保護されたエンドポイントのセキュリティーを確保し、GitHub OAuth2 認証を管理するために使用されます。 <code>quarkus-rest</code> エクステンションは JAX-RS REST エンドポイントをサポートするために使用され、 <code>quarkus-rest-qute</code> エクステンションは JAX-RS で Qute テンプレートをレンダリングしやすくします。</p>
+</div>
+<div class="paragraph">
+<p><code>quarkus-rest-client-oidc-token-propagation</code> エクステンションは REST クライアントによる簡単なアクセストークンの伝播をサポートし、 <code>quarkus-rest-client-jackson</code> は Jackson を使用して JSON 形式の REST クライアントレスポンスを Java Bean やレコードに変換するのを助けます。</p>
+</div>
+<div class="paragraph">
+<p><code>GitHubProfileService</code> は JAX-RS REST クラスになりました。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">package howto.oauth_oidc;
+
+import java.util.Set;
+import java.util.function.Function;
+
+import org.eclipse.microprofile.rest.client.inject.RestClient;
+
+import howto.oauth_oidc.GitHubApiClient.Email;
+import io.quarkus.oidc.OidcSession;
+import io.quarkus.oidc.UserInfo;
+import io.quarkus.qute.Template;
+import io.quarkus.qute.TemplateInstance;
+import io.quarkus.security.Authenticated;
+import io.smallrye.mutiny.Uni;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.NotAuthorizedException;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.Response;
+
+@Path("/protected")
+@Authenticated <i class="conum" data-value="1"></i><b>(1)</b>
+public class GitHubProfileService {
+
+    @Inject
+    Template userEmail;
+
+    @Inject
+    UserInfo userInfo; <i class="conum" data-value="2"></i><b>(2)</b>
+
+    @Inject
+    @RestClient
+    GitHubApiClient gitHubApiClient; <i class="conum" data-value="3"></i><b>(3)</b>
+
+    @Inject
+    OidcSession oidcSession; <i class="conum" data-value="4"></i><b>(4)</b>
+
+    @GET
+    @Produces("text/html")
+    public Uni&lt;TemplateInstance&gt; getEmail() { <i class="conum" data-value="5"></i><b>(5)</b>
+        return gitHubApiClient.userEmails() <i class="conum" data-value="6"></i><b>(6)</b>
+            .onItemOrFailure().transformToUni((emails, throwable) -&gt; {
+                if (throwable == null) {
+                    return Uni.createFrom().item(toUserEmails(emails)); <i class="conum" data-value="7"></i><b>(7)</b>
+                }
+                return oidcSession.logout(). <i class="conum" data-value="8"></i><b>(8)</b>
+                    onItem().transform(new Function&lt;Void, TemplateInstance&gt;() {
+                        @Override
+                        public TemplateInstance apply(Void t) {
+                            throw new NotAuthorizedException(Response.status(401).build());
+                        }
+                    });
+        });
+    }
+
+    private TemplateInstance toUserEmails(Set&lt;Email&gt; emails) { <i class="conum" data-value="7"></i><b>(7)</b>
+        return userEmail.data("name", userInfo.getName()).data("email", userInfo.getEmail())
+                .data("private_emails", emails);
+    }
+
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td><code>/protected</code> エンドポイントへのアクセスに認証を要求します。</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>GitHub 固有の UserInfo 表現を注入します。</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>ユーザーメールの要求に使用される GitHub API REST クライアントを注入します。</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>現在の OIDC セッションを注入します。</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>レンダリングされる <code>userEmail</code> テンプレートインスタンスを返す JAX-RS メソッドです。 <code>Uni</code> を使用する必要はありませんが、Vert.x から移行する場合、Quarkus の <code>Uni</code> でサポートされるリアクティブなコードには慣れているはずです。</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="6"></i><b>6</b></td>
+<td>注入された REST クライアントを使用して GitHub API にアクセスし、プライベートなユーザーメールを要求します。</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="7"></i><b>7</b></td>
+<td>GitHub API へのリクエストが成功した場合、ユーザーメールと返されたプライベートメールアドレスのセットでテンプレートインスタンスを初期化します。</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="8"></i><b>8</b></td>
+<td>GitHub API へのリクエストが失敗した場合は、ローカルセッションログアウトを実行してセッションクッキーをクリアし、HTTP 401 ステータスを返します。</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>プライベートなユーザーメールを取得するために、 <code>GitHubApiClient</code> REST クライアントが使用されます。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">package howto.oauth_oidc;
+
+import java.util.Set;
+
+import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
+
+import io.quarkus.oidc.token.propagation.common.AccessToken;
+import io.smallrye.mutiny.Uni;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
+
+@RegisterRestClient(configKey = "github-api-client") <i class="conum" data-value="1"></i><b>(1)</b>
+@Path("/")
+@AccessToken <i class="conum" data-value="2"></i><b>(2)</b>
+public interface GitHubApiClient {
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("user/emails")
+    Uni&lt;Set&lt;Email&gt;&gt; userEmails(); <i class="conum" data-value="3"></i><b>(3)</b>
+
+    record Email(String email) {
+
+    }
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>REST クライアントを登録し、 <code>github-api-client</code> 設定キーを使用します。</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>アクセストークンの伝播を要求します。</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>プライベートメールのセットを返します。前の例と同様に <code>Uni</code> を使用する必要はありませんが、 <code>Uni</code> を使用する方が、このメソッドを呼び出して <code>Uni</code> レスポンスを返す上記の <code>GitHubProfileService</code> JAX-RS リソースの JAX-RS メソッドとの親和性が高くなります。</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p><code>application.properties</code> の設定は以下のようになります。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-configuration hljs" data-lang="configuration">quarkus.oidc.provider=github <i class="conum" data-value="1"></i><b>(1)</b>
+quarkus.oidc.client-id=${github_client_id}
+quarkus.oidc.credentials.secret=${github_client_secret} <i class="conum" data-value="2"></i><b>(2)</b>
+
+# By default, Quarkus GitHub provider submits the client id and secret in the HTTP Authorization header. <i class="conum" data-value="2"></i><b>(2)</b>
+# However, GitHub may require that both client id and secret are submitted as form parameters instead.
+# In this case, replace 'quarkus.oidc.credentials.secret=${github_client_secret}'
+# with the following two properties:
+#quarkus.oidc.credentials.client-secret.method=post
+#quarkus.oidc.credentials.client-secret.value=${github_client_secret}
+
+quarkus.oidc.authentication.redirect-path=/login <i class="conum" data-value="3"></i><b>(3)</b>
+quarkus.oidc.authentication.restore-path-after-redirect=true <i class="conum" data-value="4"></i><b>(4)</b>
+
+quarkus.http.auth.permission.login.paths=/login <i class="conum" data-value="5"></i><b>(5)</b>
+quarkus.http.auth.permission.login.policy=authenticated
+
+quarkus.rest-client.github-api-client.url=https://api.github.com <i class="conum" data-value="6"></i><b>(6)</b>
+
+quarkus.rest-client.logging.scope=request-response <i class="conum" data-value="7"></i><b>(7)</b>
+quarkus.rest-client.logging.body-limit=200
+quarkus.log.category."org.jboss.resteasy.reactive.client.logging".level=DEBUG</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Quarkus GitHub プロバイダーを有効にします。</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>デフォルトでは、Quarkus GitHub プロバイダーがアクセストークンを取得する際、クライアント ID とシークレットをエンコードされた HTTP Authorization <code>Basic</code> スキームの値として送信します。一部の地域では GitHub がこのオプションをサポートしていない場合があります。クライアント ID とシークレットをフォームパラメーターとして送信する <code>client_secret_post</code> メソッドを代わりに有効にする方法については、上記の <code>application.properties</code> 内のコメントを参照してください。</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>コールバック用の <code>/login</code> パスを宣言します。</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>認可コードフローが完了したら、元の <code>/protected</code> リクエストパスを復元します。<a href="#vertx-oidc-vertx">Vert.x 上の Vert.x OIDC</a> および <a href="#vertx-oidc-vertx">Vert.x 上の Vert.x OIDC</a> セクションの Vert.x OIDC の例では、ユーザーが何もする必要なく、デフォルトで元のリクエストパスが復元されたことを思い出すかもしれません。しかし、デフォルトでは、Quarkus OIDC はコールバックリソースへのアクセスを許可しますが、<code>認可コードフローが完了した後にのみ</code> 許可します。詳細については、次の <a href="#vertx-oidc-to-quarkus-oidc-custom-callback">カスタムコールバックメソッドを使用した Quarkus OIDC への移行</a> セクションを参照してください。</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>Quarkus セキュリティーでは、 <code>@Authenticated</code> などのセキュリティーアノテーションが付けられているか、構成済みの HTTP セキュリティーポリシーでそのエンドポイントパスが保護されている場合に、リソースが保護されます。 <code>/login</code> コールバックリソースは仮想的なものです。JAX-RS メソッドも追加のコールバックハンドラーもその処理には割り当てられないため、Quarkus OIDC 認証メカニズムがそれを保護できるように、HTTP セキュリティーポリシー設定で保護する必要があります。</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="6"></i><b>6</b></td>
+<td><code>github-api-client</code> REST クライアントのベース URL を設定します。</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="7"></i><b>7</b></td>
+<td>REST クライアントのリクエストとレスポンスのデータをログに記録します。</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p><code>src/main/resources/META-INF/resources/</code> ディレクトリーの <code>index.html</code> Qute テンプレートと、 <code>src/main/templates</code> ディレクトリーの <code>userEmail.html</code> Qute テンプレートは変更されません。</p>
+</div>
+<div class="paragraph">
+<p>ここで、 <code>mvn quarkus:dev</code> を使用して開発モードでアプリケーションを起動します。</p>
+</div>
+<div class="paragraph">
+<p><code><a href="http://localhost:8080" class="bare">http://localhost:8080</a></code> にアクセスし、GitHub にログインして、GitHub アカウントのメールアドレスが表示されることを確認してください。</p>
+</div>
+<div class="paragraph">
+<p>初めて <code><a href="http://localhost:8080/protected" class="bare">http://localhost:8080/protected</a></code> ページにアクセスしたとき、以下のリダイレクトが発生しました。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Quarkus OIDC によって GitHub にリダイレクトされ、ログインしました。</p>
+</li>
+<li>
+<p>GitHub によって <code><a href="http://localhost:8080/login" class="bare">http://localhost:8080/login</a></code> 仮想コールバックハンドラーにリダイレクトされ、Quarkus OIDC が認可コードフローを完了して GitHub アクセストークンを取得しました。</p>
+</li>
+<li>
+<p>Quarkus OIDC によって、<code>元の</code> リクエスト URL である <code><a href="http://localhost:8080/protected" class="bare">http://localhost:8080/protected</a></code> にリダイレクトされました。この最終的なリダイレクト中に、 <code>code</code> や <code>state</code> などの OIDC リダイレクトクエリーパラメーターも削除されます。</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertx-oidc-to-quarkus-oidc-custom-callback"><a class="anchor" href="#vertx-oidc-to-quarkus-oidc-custom-callback"></a>カスタムコールバックメソッドを使用した Quarkus OIDC への移行</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>最初の <a href="#vertx-oidc-to-quarkus-oidc">Vert.x OIDC から Quarkus OIDC への移行例</a> では、認可コードフローの完了後に元のリクエスト URL を復元するように Quarkus OIDC を設定する必要がありました。</p>
+</div>
+<div class="paragraph">
+<p>このセクションでは、デフォルトの代替オプションを見ていきます。ここではカスタムコールバックハンドラーが呼び出されますが、それは Quarkus OIDC が認可コードフローを完了した後になります。</p>
+</div>
+<div class="paragraph">
+<p>通常、本番環境では、ログインが必要なユーザーはまず中央のログイン URL に誘導されます。ランダムな保護されたパスにアクセスして、まったく同じ元のリクエストパスに戻ることを期待するのとは対照的です。後者の場合、中央のログインエンドポイントから利用可能なコンテキストが失われる可能性があります。代わりに、ユーザーが保護された中央のログインページに到達すると、このページがアプリケーションのフローに従ってユーザーをさらにリダイレクトします。</p>
+</div>
+<div class="paragraph">
+<p>中央のログインエンドポイントをコールバック URL として指定することで、認可コードフローの完了後に認証済みユーザーをこのログインエンドポイントに着地させることができます。これにより、Quarkus OIDC が復元のために元のリクエスト URL を認可コードフローの状態として保持する必要がなくなり、コールバックエンドポイントをセキュリティーアノテーションで保護することも可能になります。</p>
+</div>
+<div class="paragraph">
+<p>その方法を見てみましょう。</p>
+</div>
+<div class="paragraph">
+<p>依存関係は <a href="#vertx-oidc-to-quarkus-oidc">Quarkus OIDC への移行</a> セクションと同じですが、ログインコールバックを管理する JAX-RS リソースをさらにもう 1 つ追加します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">package howto.oauth_oidc;
+
+import io.quarkus.security.Authenticated;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriInfo;
+
+@Path("/login")
+@Authenticated <i class="conum" data-value="1"></i><b>(1)</b>
+public class LoginService {
+
+    @GET
+    public Response login(@Context UriInfo uriInfo) {
+        return Response.seeOther(uriInfo.getBaseUriBuilder().path("protected").build()).build(); <i class="conum" data-value="2"></i><b>(2)</b>
+    }
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td><code>LoginService</code> は保護されたコールバックハンドラーであり、Quarkus OIDC が認可コードフローを完了すると制御を引き継ぎます。</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>認証済みユーザーがこのページに到達したら、アプリケーションで必要な処理を何でも行ってください。この例では、保護された <code>/protected</code> リソースにリダイレクトされます。この <code>/protected</code> エンドポイントは内部的なエンドポイントかもしれません。保護された <code>/protected</code> エンドポイントがパブリックにもアクセス可能で、未認証のユーザーがそこにアクセスしようとした場合でも、GitHub で認証した後はまずこの <code>LoginService</code> ページに到達し、次に <code>/protected</code> ページにリダイレクトされます。</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p><code>GitHubProfileService</code> クラスと <code>GitHubApiClient</code> クラスは <a href="#vertx-oidc-to-quarkus-oidc">Quarkus OIDC への移行</a> セクションと同じままです。</p>
+</div>
+<div class="paragraph">
+<p>設定は非常にシンプルになりました。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-configuration hljs" data-lang="configuration">quarkus.oidc.provider=github <i class="conum" data-value="1"></i><b>(1)</b>
+quarkus.oidc.client-id=${github_client_id}
+quarkus.oidc.credentials.secret=${github_client_secret}
+
+quarkus.oidc.authentication.redirect-path=/login <i class="conum" data-value="2"></i><b>(2)</b>
+
+quarkus.rest-client.github-api-client.url=https://api.github.com <i class="conum" data-value="3"></i><b>(3)</b>
+
+quarkus.rest-client.logging.scope=request-response <i class="conum" data-value="4"></i><b>(4)</b>
+quarkus.rest-client.logging.body-limit=200
+quarkus.log.category."org.jboss.resteasy.reactive.client.logging".level=DEBUG</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Quarkus GitHub プロバイダーを有効にします。</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>コールバック用の <code>/login</code> パスを宣言します。</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td><code>github-api-client</code> REST クライアントのベース URL を設定します。</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>REST クライアントのリクエストとレスポンスのデータをログに記録します。</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p><code>src/main/resources/META-INF/resources/</code> ディレクトリーの <code>index.html</code> Qute テンプレートと、 <code>src/main/templates</code> ディレクトリーの <code>userEmail.html</code> Qute テンプレートは変更されません。</p>
+</div>
+<div class="paragraph">
+<p><code><a href="http://localhost:8080" class="bare">http://localhost:8080</a></code> にアクセスし、GitHub にログインして、GitHub アカウントのメールアドレスが表示されることを確認してください。</p>
+</div>
+<div class="paragraph">
+<p>初めて <code><a href="http://localhost:8080/protected" class="bare">http://localhost:8080/protected</a></code> ページにアクセスしたとき、以下のリダイレクトが発生しました。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Quarkus OIDC によって GitHub にリダイレクトされ、ログインしました。</p>
+</li>
+<li>
+<p>GitHub によって <code><a href="http://localhost:8080/login" class="bare">http://localhost:8080/login</a></code> コールバックハンドラーにリダイレクトされましたが、Quarkus OIDC がまず認可コードフローを完了し、GitHub アクセストークンを取得します。</p>
+</li>
+<li>
+<p><code>/login</code> ハンドラーに制御が渡される前に、Quarkus OIDC は OIDC リダイレクトの <code>code</code> および <code>state</code> プロパティーを削除し、ユーザーを同じ <code>/login</code> エンドポイントにリダイレクトします。これは、認可コードフローの完了後にアプリケーションがエラーを返した場合に、 <code>code</code> や <code>state</code> クエリーパラメーターが現在のブラウザービューに残ったままになり、ユーザーのブラウザーにこれらのパラメーターが表示され続けるリスクを最小限に抑えるために行われます。必要に応じて、 <code>quarkus.oidc.authentication.remove-redirect-parameters=false</code> でこの最終リダイレクトを無効にできます。</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="enforce-github-access-token-scope-in-quarkus-oidc"><a class="anchor" href="#enforce-github-access-token-scope-in-quarkus-oidc"></a>Quarkus OIDC で GitHub アクセストークンのスコープを強制する</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><a href="#vertx-oidc-vertx">Vert.x 上の Vert.x OIDC</a> および <a href="#vertx-oidc-quarkus">Quarkus 上の Vert.x OIDC</a> の両セクションでは、GitHub アクセストークンに <code>user:email</code> スコープがあることを強制することで、Vert.x OIDC アプリケーションへのアクセスを制限する方法を説明しました。</p>
+</div>
+<div class="paragraph">
+<p>また、 <a href="#vertx-oidc-vertx">Vert.x 上の Vert.x OIDC</a> セクションでは、GitHub アクセストークンは GitHub API へのアクセスに使用するためのものであり、それを取得したアプリケーションへのアクセスに使用するためのものではないため、GitHub アクセストークンの <code>user:email</code> スコープを強制する必要はないとも述べました。</p>
+</div>
+<div class="paragraph">
+<p>Quarkus OIDC に移行した後も GitHub アクセストークンの <code>user:email</code> スコープを強制し続けたい場合は、次のように行うことができます。</p>
+</div>
+<div class="paragraph">
+<p>まず、 <code>@Authenticated</code> アノテーションを <code>@PermissionsAllowed("user:email")</code> に置き換えます。後者は前者を含んでおり、同様にユーザー認証を必要とします。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">@Path("/protected")
+@PermissionsAllowed("user:email") <i class="conum" data-value="1"></i><b>(1)</b>
+public class GitHubProfileService {
+//...
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>そして、次の設定プロパティーを追加します。 <code>quarkus.oidc.roles.source=accesstoken</code>。</p>
+</div>
+<div class="paragraph">
+<p>このプロパティーを追加する必要がある理由は、認可コードフローにおいて、Quarkus OIDC は ID トークンを、ユーザーがログインしたアプリケーションへのアクセスを制御するプライマリトークンとして扱うためです。アクセストークンは、アプリケーションが許可した認証済みユーザーに代わって、アプリケーションが必要に応じてダウンストリームサービスにアクセスするために使用されます。</p>
+</div>
+<div class="paragraph">
+<p>Quarkus OIDC が GitHub のような純粋な OAuth2 プロバイダーと連携する場合、ユーザー認証を表すための内部 ID トークンを生成します。GitHub アクセストークンは依然として GitHub API にアクセスするためのものです。</p>
+</div>
+<div class="paragraph">
+<p>認可コードフロー中にアプリケーションが取得したアクセストークンを、まさにその同じアプリケーションへのアクセスに使用したい場合には、 <code>quarkus.oidc.roles.source=accesstoken</code> を設定する必要があります。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="session-management-in-vertx-oidc-and-quarkus-oidc"><a class="anchor" href="#session-management-in-vertx-oidc-and-quarkus-oidc"></a>Vertx OIDC と Quarkus OIDC におけるセッション管理</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Vert.x OIDC は <code>stateful</code> (ステートフル) であるため、Vert.x OIDC はクッキーを使用しないと一部のユーザーは考えるかもしれません。しかし、そうではありません。認可コードフローの進行状況と認証済みユーザーセッションの両方を追跡するために、不透明なセッションクッキーを使用します。</p>
+</div>
+<div class="paragraph">
+<p><a href="#vertx-oidc-vertx">Vert.x 上の Vert.x OIDC</a> または <a href="#vertx-oidc-quarkus">Quarkus 上の Vert.x OIDC</a> セクションで作成したアプリケーションを実行すると、ブラウザーの開発者ツールを使用して、不透明な <code>vertx-web-session</code> セッションクッキーがユーザーセッションの追跡に使用されていることを観察できます。</p>
+</div>
+<div class="imageblock center">
+<div class="content">
+<img src="./images/vertx-oidc-session-cookie.png" alt="Vertx OIDC session cookie">
+</div>
+</div>
+<div class="paragraph">
+<p>現在のユーザーセッションに関連付けられた状態はサーバー上に保存されます。</p>
+</div>
+<div class="paragraph">
+<p>一方、 <a href="#vertx-oidc-to-quarkus-oidc">Quarkus OIDC への移行</a> または <a href="#vertx-oidc-to-quarkus-oidc-custom-callback">カスタムコールバックメソッドを使用した Quarkus OIDC への移行</a> セクションで作成したアプリケーションを実行すると、Quarkus OIDC も <code>q_session</code> セッションクッキーを使用しますが、そのサイズが大幅に大きいことがわかります。</p>
+</div>
+<div class="imageblock center">
+<div class="content">
+<img src="./images/quarkus-oidc-jwe-session-cookie.png" alt="Quarkus OIDC encrypted session cookie">
+</div>
+</div>
+<div class="paragraph">
+<p>これは、Quarkus OIDC がデフォルトで <code>stateless</code> (ステートレス) であるためです。ユーザーセッションの詳細をセッションクッキー内で暗号化し、ユーザーセッションに関連するコンテンツはサーバーに保存されません。このアプローチにより、大幅に高い WEB スケールレベルの機能が提供されます。</p>
+</div>
+<div class="paragraph">
+<p><code>stateful</code> (ステートフル) なアプローチよりも安全性が低いのでしょうか？正確な答えを出すのは困難です。<code>stateful</code> なアプローチではセッションクッキーを保護しないため、攻撃者がそれを入手するとセキュアなアクセスが侵害されます。したがって、どちらのアプローチでも、HTTPS の使用と追加の CORS および CSRF 制御の適用を検討する必要があります。</p>
+</div>
+<div class="paragraph">
+<p><code>stateless</code> (ステートレス) なアプローチの場合、Quarkus は、ユーザーがセッションクッキーの暗号化キーを設定できるようにします。クライアントシークレットにフォールバックし、最終的には生成されたセキュアなランダムキーにフォールバックして、JSON Web Encryption (JWE) を適用し、対称型の <code>A256GCMKW</code> アルゴリズムで生成されたコンテンツ暗号化キーを暗号化し、<code>A256GCM</code> アルゴリズムで実際のセッションクッキーの内容を暗号化します。</p>
+</div>
+<div class="paragraph">
+<p>ただし、ステートフルなアプローチを継続したい場合は、Quarkus OIDC で簡単に実現できます。</p>
+</div>
+<div class="paragraph">
+<p>Quarkus OIDC が保持するセッション状態には、ID、アクセス、およびリフレッシュトークンが含まれます。さらに、認可コード付与のレスポンスでアクセストークンの有効期限とスコーププロパティーが返された場合は、それらの値も保存されます。</p>
+</div>
+<div class="paragraph">
+<p>まず、カスタムの <code>quarkus.oidc.TokenStateManager</code> を登録し、必要なセッション状態の保存メカニズムを実装できます。例えば、Quarkus OIDC は、再起動後や複数の Pod 間では実際には機能しないため、インメモリの <code>TokenStateManager</code> を同梱していませんが、カスタム <code>TokenStateManager</code> の試行を開始するために実装することは可能です。</p>
+</div>
+<div class="paragraph">
+<p>さらに、Quarkus OIDC は、ほとんどの既知のデータベースと統合できるデータベース対応の <code>TokenStateManager</code> と、Redis <code>TokenStateManager</code> の両方を提供しています。詳細は <a href="https://quarkus.io/guides/security-oidc-code-flow-authentication#handling-and-controlling-the-lifetime-of-authentication">セクション</a> を参照してください。</p>
+</div>
+<div class="paragraph">
+<p>Redis <code>TokenStateManager</code> でどのように動作するか見てみましょう。</p>
+</div>
+<div class="paragraph">
+<p><a href="#vertx-oidc-to-quarkus-oidc">Quarkus OIDC への移行</a> または <a href="#vertx-oidc-to-quarkus-oidc-custom-callback">カスタムコールバックメソッドを使用した Quarkus OIDC への移行</a> セクションの pom.xml に、この依存関係を 1 つ追加するだけです。</p>
+</div>
+<div class="listingblock xml">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">&lt;project&gt;
+  &lt;! ... --&gt;
+  &lt;dependencies&gt;
+      &lt;! ... -&gt;
+      &lt;dependency&gt;
+          &lt;groupId&gt;io.quarkus&lt;/groupId&gt;
+          &lt;artifactId&gt;quarkus-oidc-redis-token-state-manager&lt;/artifactId&gt;
+      &lt;/dependency&gt;
+  &lt;/dependencies&gt;
+  &lt;! ... --&gt;
+&lt;/project&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Redis <code>TokenStateManager</code> の使用を開始するために必要なのはこれだけです。</p>
+</div>
+<div class="paragraph">
+<p>ブラウザーのクッキーをクリアして保護されたエンドポイントに再度アクセスすると、不透明な <code>q_session</code> セッションクッキーのみが確認できます。</p>
+</div>
+<div class="imageblock center">
+<div class="content">
+<img src="./images/quarkus-oidc-opaque-session-cookie.png" alt="Quarkus OIDC opaque session cookie">
+</div>
+</div>
+<div class="paragraph">
+<p>また、Vert.x OIDC が認可コードフローの進行状況と認証済みユーザーのセッションを追跡するためにセッションクッキーを使用していることも観察できるでしょう。</p>
+</div>
+<div class="paragraph">
+<p>一方、Quarkus OIDC は、認可コードフローの進行中は専用の <code>q_auth_&lt;uuid&gt;</code> 状態クッキーを使用し、コードフローが完了した後にのみセッションクッキーを作成します。状態クッキーの名前も一意であるため、マルチタブ認証が可能です。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="help-with-the-migration"><a class="anchor" href="#help-with-the-migration"></a>移行のサポート</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Vert.x OIDC から Quarkus OIDC への移行を検討しており、このガイドで回答されていない質問がある場合は、 <a href="https://quarkus.io/support/">Quarkus チームにお問い合わせください</a>。</p>
+</div>
+<div class="paragraph">
+<p>詳細は <a href="#references">参照</a> も参照してください。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="references"><a class="anchor" href="#references"></a>参照</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="security-overview">Quarkus Securityの概要</a></p>
+</li>
+<li>
+<p><a href="security-oidc-code-flow-authentication">OpenID Connect 認可コードフロー認証</a>。</p>
+</li>
+<li>
+<p><a href="security-oidc-bearer-token-authentication">OpenID Connect ベアラートークン認証</a>。</p>
+</li>
+<li>
+<p><a href="security-openid-connect-multitenancy">OpenID Connect マルチテナンシーの使用</a></p>
+</li>
+<li>
+<p><a href="security-oidc-expanded-configuration">詳細な OIDC 設定リファレンス</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+    </div>
+    <div class="grid__item width-4-12 width-12-12-m tocwrapper">
+      <div class="hide-mobile toc"><ul class="sectlevel1">
+<li><a href="#vertx-oidc-vertx">Vert.x 上の Vert.x OIDC</a></li>
+<li><a href="#vertx-oidc-quarkus">Quarkus 上の Vert.x OIDC</a></li>
+<li><a href="#vertx-oidc-to-quarkus-oidc">Quarkus OIDC への移行</a></li>
+<li><a href="#vertx-oidc-to-quarkus-oidc-custom-callback">カスタムコールバックメソッドを使用した Quarkus OIDC への移行</a></li>
+<li><a href="#enforce-github-access-token-scope-in-quarkus-oidc">Quarkus OIDC で GitHub アクセストークンのスコープを強制する</a></li>
+<li><a href="#session-management-in-vertx-oidc-and-quarkus-oidc">Vertx OIDC と Quarkus OIDC におけるセッション管理</a></li>
+<li><a href="#help-with-the-migration">移行のサポート</a></li>
+<li><a href="#references">参照</a></li>
+</ul></div>
+    </div>
+  </div>
+  <h2>関連コンテンツ</h2>
+  <div class="grid-wrapper relations">
+    <div class="grid__item width-6-12 width-12-12-m">
+      <h3>同じエクステンションについて</h3>
+      <ul class="related-content">
+      
+        
+        <li class="concepts"><a href="/version/main/guides/security-openid-connect-providers">よく知られたOpenID Connect プロバイダーの設定</a></li>
+      
+        
+        <li class="howto"><a href="/version/main/guides/security-openid-connect-dev-services">OpenID Connect (OIDC)のDev ServicesとDev UI</a></li>
+      
+        
+        <li class="concepts"><a href="/version/main/guides/security-oidc-bearer-token-authentication">OpenID Connect (OIDC) ベアラートークン認証</a></li>
+      
+        
+        <li class="reference"><a href="/version/main/guides/security-oidc-configuration-properties-reference">OpenID Connect (OIDC) 設定プロパティ</a></li>
+      
+        
+        <li class="concepts"><a href="/version/main/guides/security-oidc-code-flow-authentication">Web アプリケーションを保護するための OpenID Connect 認可コードフローメカニズム</a></li>
+      
+        
+        <li class="tutorial"><a href="/version/main/guides/security-oidc-bearer-token-authentication-tutorial">OpenID Connect（OIDC）ベアラートークン認証によるサービスアプリケーションの保護</a></li>
+      
+        
+        <li class="tutorial"><a href="/version/main/guides/security-oidc-code-flow-authentication-tutorial">Quarkus - 認可コードフローのOpenID Connectを使用してWebアプリケーションを保護</a></li>
+      
+        
+        <li class="howto"><a href="/version/main/guides/security-keycloak-authorization">OpenID Connect (OIDC)とKeycloakを使用した認可の一元化</a></li>
+      
+        
+        <li class="howto"><a href="/version/main/guides/security-openid-connect-multitenancy">OpenID Connect (OIDC)のマルチテナンシーの使用</a></li>
+      </ul>
+    </div>
+    <div class="grid__item width-6-12 width-12-12-m">
+      <h3>同じトピックについて</h3>
+      <ul class="related-content">
+      
+        
+        <li class="concepts"><a href="/version/main/guides/security-openid-connect-providers">よく知られたOpenID Connect プロバイダーの設定</a></li>
+      
+        
+        <li class="howto"><a href="/version/main/guides/security-openid-connect-dev-services">OpenID Connect (OIDC)のDev ServicesとDev UI</a></li>
+      
+        
+        <li class="reference"><a href="/version/main/guides/security-openid-connect-client-reference">OpenID Connect (OIDC) と OAuth2 クライアントおよびフィルター</a></li>
+      
+        
+        <li class="reference"><a href="/version/main/guides/security-openid-connect-client-registration">OpenID Connect (OIDC) と OAuth2 の動的クライアント登録</a></li>
+      
+        
+        <li class="concepts"><a href="/version/main/guides/security-oidc-bearer-token-authentication">OpenID Connect (OIDC) ベアラートークン認証</a></li>
+      
+        
+        <li class="reference"><a href="/version/main/guides/security-oidc-configuration-properties-reference">OpenID Connect (OIDC) 設定プロパティ</a></li>
+      
+        
+        <li class="concepts"><a href="/version/main/guides/security-oidc-code-flow-authentication">Web アプリケーションを保護するための OpenID Connect 認可コードフローメカニズム</a></li>
+      
+        
+        <li class="tutorial"><a href="/version/main/guides/security-openid-connect-client">OpenID Connectクライアントとトークン伝搬クイックスタート</a></li>
+      
+        
+        <li class="tutorial"><a href="/version/main/guides/security-oidc-bearer-token-authentication-tutorial">OpenID Connect（OIDC）ベアラートークン認証によるサービスアプリケーションの保護</a></li>
+      
+        
+        <li class="tutorial"><a href="/version/main/guides/security-oidc-code-flow-authentication-tutorial">Quarkus - 認可コードフローのOpenID Connectを使用してWebアプリケーションを保護</a></li>
+      
+        
+        <li class="howto"><a href="/version/main/guides/security-keycloak-authorization">OpenID Connect (OIDC)とKeycloakを使用した認可の一元化</a></li>
+      
+        
+        <li class="howto"><a href="/version/main/guides/security-openid-connect-multitenancy">OpenID Connect (OIDC)のマルチテナンシーの使用</a></li>
+      
+        
+        <li class="concepts"><a href="/version/main/guides/security-authentication-mechanisms">Quarkusの認証メカニズム</a></li>
+      
+        
+        <li class="reference"><a href="/version/main/guides/security-authorize-web-endpoints-reference">ウェブエンドポイントの認可</a></li>
+      
+        
+        <li class="concepts"><a href="/version/main/guides/security-basic-authentication">Basic認証</a></li>
+      
+        
+        <li class="guide"><a href="/version/main/guides/security-jwt-build">JSON Web トークン (JWT) のビルド、署名、暗号化</a></li>
+      
+        
+        <li class="guide"><a href="/version/main/guides/security-csrf-prevention">クロスサイトリクエストフォージェリー対策</a></li>
+      
+        
+        <li class="howto"><a href="/version/main/guides/security-basic-authentication-howto">ベーシック認証の有効化</a></li>
+      
+        
+        <li class="tutorial"><a href="/version/main/guides/security-getting-started-tutorial">Basic認証とJakarta Persistenceを使用したセキュリティの入門</a></li>
+      
+        
+        <li class="reference"><a href="/version/main/guides/http-reference">HTTPリファレンス</a></li>
+      </ul>
+    </div>
+    </div>
+  </div>
+
+  </div>
+
+  <div class="content project-footer">
+  <div class="footer-section">
+    <div class="logo-wrapper">
+      <a href="/"><img src="/assets/images/quarkus_logo_horizontal_rgb_reverse.svg" class="project-logo" title="Quarkus"></a>
+    </div>
+  </div>
+  <div class="grid-wrapper">
+    <p class="grid__item width-3-12">Quarkus はオープンです。このプロジェクトのすべての依存関係は、<a href='https://www.apache.org/licenses/LICENSE-2.0' target='_blank'>Apache Software License 2.0</a> または互換性のあるライセンスの下で利用可能です。<i class='fab fa-creative-commons'></i><i class='fab fa-creative-commons-by'></i> <a href='https://creativecommons.org/licenses/by/3.0/' target='_blank'>CC by 3.0</a><br /><br />このウェブサイトは <a href='https://jekyllrb.com/' target='_blank'>Jekyll</a> で構築され、<a href='https://pages.github.com/' target='_blank'>GitHub Pages</a> でホストされており、完全にオープンソースです。改善したい場合は、<a href='https://github.com/quarkusio/quarkusio.github.io' target='_blank'>ウェブサイトをフォーク</a>して、あなたのアイデアを見せてください。</p>
+
+    
+      <div class="width-1-12 project-links">
+        <span>ナビゲーション</span>
+        <ul class="footer-links">
+           
+            <li><a href="/" target="_blank">ホーム</a></li>
+            
+            <li><a href="/about" target="_blank">Quarkusについて</a></li>
+            
+            <li><a href="/blog" target="_blank">ブログ</a></li>
+            
+            <li><a href="/insights" target="_blank">ポッドキャスト</a></li>
+            
+            <li><a href="/events" target="_blank">イベント</a></li>
+            
+            <li><a href="/newsletter" target="_blank">ニュースレター</a></li>
+            
+            <li><a href="/userstories" target="_blank">ユーザーストーリー</a></li>
+            
+            <li><a href="https://github.com/orgs/quarkusio/projects/13/views/1" target="_blank">ロードマップ</a></li>
+            
+            <li><a href="/security" target="_blank">セキュリティ&nbsp;ポリシー</a></li>
+            
+            <li><a href="/usage" target="_blank">使用方法</a></li>
+            
+            <li><a href="https://github.com/commonhaus/artwork/tree/main/projects/quarkus" target="_blank">ブランド</a></li>
+            
+            <li><a href="/desktopwallpapers" target="_blank">壁紙</a></li>
+            
+            <li><a href="https://www.redhat.com/en/about/privacy-policy" target="_blank">プライバシーポリシー</a></li>
+            
+            <li><a href="/sitemap" target="_blank">Sitemap</a></li>
+           
+        </ul>
+      </div>
+    
+      <div class="width-1-12 project-links">
+        <span>フォローする</span>
+        <ul class="footer-links">
+           
+            <li><a href="https://x.com/quarkusio" target="_blank">X</a></li>
+            
+            <li><a href="https://bsky.app/profile/quarkus.io" target="_blank">Bluesky</a></li>
+            
+            <li><a rel="me" href="https://fosstodon.org/@quarkusio" target="_blank">Mastodon</a></li>
+              
+            <li><a href="https://www.threads.com/@quarkusio" target="_blank">Threads</a></li>
+            
+            <li><a href="https://www.facebook.com/quarkusio" target="_blank">Facebook</a></li>
+            
+            <li><a href="https://www.linkedin.com/company/quarkusio/" target="_blank">Linkedin</a></li>
+            
+            <li><a href="https://www.youtube.com/channel/UCaW8QG_QoIk_FnjLgr5eOqg" target="_blank">Youtube</a></li>
+            
+            <li><a href="https://www.tiktok.com/@quarkusio" target="_blank">TikTok</a></li>
+            
+            <li><a href="https://www.instagram.com/quarkusio" target="_blank">Instagram</a></li>
+            
+            <li><a href="https://github.com/quarkusio" target="_blank">GitHub</a></li>
+           
+        </ul>
+      </div>
+    
+      <div class="width-2-12 project-links">
+        <span>ヘルプ</span>
+        <ul class="footer-links">
+           
+            <li><a href="/support" target="_blank">サポート</a></li>
+            
+            <li><a href="/guides" target="_blank">ガイド</a></li>
+            
+            <li><a href="/faq" target="_blank">FAQ</a></li>
+            
+            <li><a href="/get-started" target="_blank">入門</a></li>
+            
+            <li><a href="https://stackoverflow.com/questions/tagged/quarkus" target="_blank">Stack Overflow</a></li>
+            
+            <li><a href="https://github.com/quarkusio/quarkus/discussions" target="_blank">ディスカッション</a></li>
+            
+            <li><a href="https://groups.google.com/forum/#!forum/quarkus-dev" target="_blank">開発メーリングリスト</a></li>
+            
+            <li><a href="https://stats.uptimerobot.com/ze1PfweT2p" target="_blank">Quarkus サービスステータス</a></li>
+           
+        </ul>
+      </div>
+    
+      <div class="width-1-12 project-links">
+        <span>言語</span>
+        <ul class="footer-links">
+           
+            <li><a href=" https://quarkus.io/ " target="_blank">English</a></li>
+            
+            <li><a href="https://pt.quarkus.io/" target="_blank">ポルトガル語 &nbsp;(ブラジル)</a></li>
+            
+            <li><a href=" https://es.quarkus.io/ " target="_blank">Español</a></li>
+            
+            <li><a href="https://cn.quarkus.io/" target="_blank">简体中文</a></li>
+            
+            <li><a href=" https://ja.quarkus.io/ " target="_blank">日本語</a></li>
+           
+        </ul>
+      </div>
+     
+      <div class="width-4-12 more-links">
+        <span>Quarkusはコミュニティプロジェクトで構成されています</span>
+        <ul class="footer-links">
+          
+            <li><a blah href="https://vertx.io/" target="_blank">Eclipse Vert.x</a></li>
+          
+            <li><a blah href="https://smallrye.io" target="_blank">SmallRye</a></li>
+          
+            <li><a blah href="https://hibernate.org" target="_blank">Hibernate ORM</a></li>
+          
+            <li><a blah href="https://netty.io" target="_blank">Netty</a></li>
+          
+            <li><a blah href="https://resteasy.github.io" target="_blank">RESTEasy</a></li>
+          
+            <li><a blah href="https://camel.apache.org" target="_blank">Apache Camel</a></li>
+          
+            <li><a blah href="https://microprofile.io" target="_blank">Eclipse MicroProfile</a></li>
+          
+            <li><a blah href="https://code.quarkus.io/" target="_blank">その他多数...</a></li>
+          
+        </ul>
+      </div>
+    
+  </div>
+</div>
+
+  <div class="content cf-footer">
+  <div class="flexcontainer">
+    <div class="cf-logo">
+      <a class="cf-logo" href="https://www.commonhaus.org/" target="_blank"><img src="https://raw.githubusercontent.com/commonhaus/artwork/main/foundation/brand/svg/CF_logo_horizontal_single_reverse.svg"/></a>
+    </div>
+    <div class="license">
+      Copyright © <a href="/">Quarkus</a>. All rights reserved. For details on our
+trademarks, please visit our <a
+href="https://www.commonhaus.org/policies/trademark-policy/">Trademark
+Policy</a> and <a href="https://www.commonhaus.org/trademarks/">Trademark
+List</a>. Trademarks of third parties are owned by their respective holders
+and their mention here does not suggest any endorsement or association.
+    </div>
+  </div>
+</div>
+
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js" integrity="sha384-8gBf6Y4YYq7Jx97PIqmTwLPin4hxIzQw5aDmUg/DDhul9fFpbbLcLh3nTIIDJKhx" crossorigin="anonymous"></script>
+  <script type="text/javascript" src="/assets/javascript/mobile-nav.js"></script>
+  <script type="text/javascript" src="/assets/javascript/scroll-down.js"></script>
+  <script src="/assets/javascript/satellite.js" type="text/javascript"></script>
+  <script src="/guides/javascript/config.js" type="text/javascript"></script>
+  <script src="/assets/javascript/guides-version-dropdown.js" type="text/javascript"></script>
+  <script src="/assets/javascript/back-to-top.js" type="text/javascript"></script>
+  <script src="/assets/javascript/clipboard.min.js" type="text/javascript"></script>
+  <script src="/assets/javascript/copy.js" type="text/javascript"></script>
+  <script src="/assets/javascript/asciidoc-tabs.js" type="text/javascript"></script>
+  <script src="/assets/javascript/future-date.js" type="text/javascript"></script>
+  <script src="/assets/javascript/randomize.js" type="text/javascript"></script>
+  <script src="/assets/javascript/time.js" type="text/javascript"></script>
+</body>
+
+</html>
