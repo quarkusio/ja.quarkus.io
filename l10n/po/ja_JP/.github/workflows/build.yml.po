@@ -36,13 +36,13 @@ msgstr ""
 #. type: Hash Value: jobs build steps id
 #: .github/workflows/build.yml:1
 #, no-wrap
-msgid "check_jekyll"
+msgid "detect"
 msgstr ""
 
 #. type: Hash Value: jobs build steps name
 #: .github/workflows/build.yml:1
 #, no-wrap
-msgid "Check for Jekyll site"
+msgid "Detect site generator"
 msgstr ""
 
 #. type: Hash Value: jobs build steps run
@@ -50,16 +50,23 @@ msgstr ""
 #, no-wrap
 msgid ""
 "if [ -f \"Gemfile\" ]; then\n"
-"  echo \"jekyll_exists=true\" >> $GITHUB_OUTPUT\n"
+"  echo \"jekyll=true\" >> $GITHUB_OUTPUT\n"
+"  echo \"site_dir=_site\" >> $GITHUB_OUTPUT\n"
 "else\n"
-"  echo \"jekyll_exists=false\" >> $GITHUB_OUTPUT\n"
+"  echo \"jekyll=false\" >> $GITHUB_OUTPUT\n"
+"fi\n"
+"if [ -d \"src/main\" ]; then\n"
+"  echo \"roq=true\" >> $GITHUB_OUTPUT\n"
+"  echo \"site_dir=target/roq\" >> $GITHUB_OUTPUT\n"
+"else\n"
+"  echo \"roq=false\" >> $GITHUB_OUTPUT\n"
 "fi\n"
 msgstr ""
 
 #. type: Hash Value: jobs build steps if
 #: .github/workflows/build.yml:1
 #, no-wrap
-msgid "steps.check_jekyll.outputs.jekyll_exists == 'true'"
+msgid "steps.detect.outputs.jekyll == 'true'"
 msgstr ""
 
 #. type: Hash Value: jobs build steps name
@@ -220,33 +227,10 @@ msgstr ""
 msgid "bundle exec jekyll build --future --config _config.yml,_only_latest_guides_config.yml"
 msgstr ""
 
-#. type: Hash Value: jobs build steps id
-#: .github/workflows/build.yml:1
-#, no-wrap
-msgid "check_roq"
-msgstr ""
-
-#. type: Hash Value: jobs build steps name
-#: .github/workflows/build.yml:1
-#, no-wrap
-msgid "Check for Roq project"
-msgstr ""
-
-#. type: Hash Value: jobs build steps run
-#: .github/workflows/build.yml:1
-#, no-wrap
-msgid ""
-"if [ -f \"src/main\" ]; then\n"
-"  echo \"roq_exists=true\" >> $GITHUB_OUTPUT\n"
-"else\n"
-"  echo \"roq_exists=false\" >> $GITHUB_OUTPUT\n"
-"fi\n"
-msgstr ""
-
 #. type: Hash Value: jobs build steps if
 #: .github/workflows/build.yml:1
 #, no-wrap
-msgid "steps.check_roq.outputs.roq_exists == 'true'"
+msgid "steps.detect.outputs.roq == 'true'"
 msgstr ""
 
 #. type: Hash Value: jobs build steps with cache
@@ -264,7 +248,7 @@ msgstr ""
 #. type: Hash Value: jobs build steps run
 #: .github/workflows/build.yml:1
 #, no-wrap
-msgid "QUARKUS_ROQ_GENERATOR_BATCH=true mvn -B package quarkus:run"
+msgid "QUARKUS_ROQ_GENERATOR_BATCH=true mvn -B package quarkus:run -DskipTests"
 msgstr ""
 
 #. type: Hash Value: jobs build steps name
@@ -300,7 +284,7 @@ msgstr ""
 #. type: Hash Value: jobs build steps name
 #: .github/workflows/build.yml:1
 #, no-wrap
-msgid "Start test server"
+msgid "Start Jekyll test server"
 msgstr ""
 
 #. type: Hash Value: jobs build steps run
@@ -309,6 +293,26 @@ msgstr ""
 msgid ""
 "bundle exec jekyll serve --port 8090 --no-watch --skip-initial-build &\n"
 "timeout 30 bash -c 'until curl -s http://localhost:8090 > /dev/null 2>&1; do sleep 0.5; done'\n"
+msgstr ""
+
+#. type: Hash Value: jobs build steps uses
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid "jbangdev/setup-jbang@main"
+msgstr ""
+
+#. type: Hash Value: jobs build steps name
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid "Start Java test server"
+msgstr ""
+
+#. type: Hash Value: jobs build steps run
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid ""
+"jbang trust add https://repo1.maven.org/maven2/io/quarkiverse/roq/quarkus-roq-cli/\n"
+"jbang roq@quarkiverse/quarkus-roq serve target/roq/ -p 8090 &\n"
 msgstr ""
 
 #. type: Hash Value: jobs build steps env PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS
@@ -370,7 +374,7 @@ msgid ""
 "}\n"
 "RSYNC_OUT=$(rsync -rcn --out-format='%n' \\\n"
 "  --include='*/' --include='*.html' --exclude='*' \\\n"
-"  _site/ /tmp/gh-pages/ 2>/dev/null) || {\n"
+"  ${{ steps.detect.outputs.site_dir }}/ /tmp/gh-pages/ 2>/dev/null) || {\n"
 "  echo \"mode=full\" >> $GITHUB_OUTPUT\n"
 "  echo \"Site comparison failed, running full link check\"\n"
 "  git worktree remove /tmp/gh-pages 2>/dev/null || true\n"
@@ -431,7 +435,7 @@ msgstr ""
 #. type: Hash Value: jobs build steps run
 #: .github/workflows/build.yml:1
 #, no-wrap
-msgid "echo ${{ github.event.number }} > ./_site/pr-id.txt"
+msgid "echo ${{ github.event.number }} > ./${{ steps.detect.outputs.site_dir }}/pr-id.txt"
 msgstr ""
 
 #. type: Hash Value: jobs build steps name
@@ -444,13 +448,14 @@ msgstr ""
 #: .github/workflows/build.yml:1
 #, no-wrap
 msgid ""
-"find assets/images/posts/ -mindepth 1 -maxdepth 1 -type d -mtime +50 -exec rm -rf _site/{} \\;\n"
-"find newsletter/ -mindepth 1 -maxdepth 1 -type d -mtime +50 -exec rm -rf _site/{} \\;\n"
-"rm -rf _site/assets/stickers\n"
-"rm -rf _site/assets/images/worldtour/2023\n"
-"rm -rf _site/assets/images/worldtour/2024\n"
-"rm -rf _site/assets/images/desktopwallpapers\n"
-"rm -rf _site/assets/images/stickers\n"
+"SITE_DIR=\"${{ steps.detect.outputs.site_dir }}\"\n"
+"find assets/images/posts/ -mindepth 1 -maxdepth 1 -type d -mtime +50 -exec rm -rf \"$SITE_DIR\"/{} \\;\n"
+"find newsletter/ -mindepth 1 -maxdepth 1 -type d -mtime +50 -exec rm -rf \"$SITE_DIR\"/{} \\;\n"
+"rm -rf \"$SITE_DIR\"/assets/stickers\n"
+"rm -rf \"$SITE_DIR\"/assets/images/worldtour/2023\n"
+"rm -rf \"$SITE_DIR\"/assets/images/worldtour/2024\n"
+"rm -rf \"$SITE_DIR\"/assets/images/desktopwallpapers\n"
+"rm -rf \"$SITE_DIR\"/assets/images/stickers\n"
 msgstr ""
 
 #. type: Hash Value: jobs build steps name
@@ -474,7 +479,7 @@ msgstr ""
 #. type: Hash Value: jobs build steps with path
 #: .github/workflows/build.yml:1
 #, no-wrap
-msgid "./_site"
+msgid "./${{ steps.detect.outputs.site_dir }}"
 msgstr ""
 
 #. type: Hash Value: jobs build steps with retention-days

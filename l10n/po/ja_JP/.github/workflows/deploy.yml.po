@@ -42,13 +42,13 @@ msgstr ""
 #. type: Hash Value: jobs deploy steps id
 #: .github/workflows/deploy.yml:1
 #, no-wrap
-msgid "check_jekyll"
+msgid "detect"
 msgstr ""
 
 #. type: Hash Value: jobs deploy steps name
 #: .github/workflows/deploy.yml:1
 #, no-wrap
-msgid "Check for Jekyll site"
+msgid "Detect site generator"
 msgstr ""
 
 #. type: Hash Value: jobs deploy steps run
@@ -56,16 +56,23 @@ msgstr ""
 #, no-wrap
 msgid ""
 "if [ -f \"Gemfile\" ]; then\n"
-"  echo \"jekyll_exists=true\" >> $GITHUB_OUTPUT\n"
+"  echo \"jekyll=true\" >> $GITHUB_OUTPUT\n"
+"  echo \"site_dir=_site\" >> $GITHUB_OUTPUT\n"
 "else\n"
-"  echo \"jekyll_exists=false\" >> $GITHUB_OUTPUT\n"
+"  echo \"jekyll=false\" >> $GITHUB_OUTPUT\n"
+"fi\n"
+"if [ -d \"src/main\" ]; then\n"
+"  echo \"roq=true\" >> $GITHUB_OUTPUT\n"
+"  echo \"site_dir=target/roq\" >> $GITHUB_OUTPUT\n"
+"else\n"
+"  echo \"roq=false\" >> $GITHUB_OUTPUT\n"
 "fi\n"
 msgstr ""
 
 #. type: Hash Value: jobs deploy steps if
 #: .github/workflows/deploy.yml:1
 #, no-wrap
-msgid "steps.check_jekyll.outputs.jekyll_exists == 'true'"
+msgid "steps.detect.outputs.jekyll == 'true'"
 msgstr ""
 
 #. type: Hash Value: jobs deploy steps name
@@ -142,33 +149,10 @@ msgstr ""
 msgid "bundle exec jekyll build"
 msgstr ""
 
-#. type: Hash Value: jobs deploy steps id
-#: .github/workflows/deploy.yml:1
-#, no-wrap
-msgid "check_roq"
-msgstr ""
-
-#. type: Hash Value: jobs deploy steps name
-#: .github/workflows/deploy.yml:1
-#, no-wrap
-msgid "Check for Roq project"
-msgstr ""
-
-#. type: Hash Value: jobs deploy steps run
-#: .github/workflows/deploy.yml:1
-#, no-wrap
-msgid ""
-"if [ -f \"src/main\" ]; then\n"
-"  echo \"roq_exists=true\" >> $GITHUB_OUTPUT\n"
-"else\n"
-"  echo \"roq_exists=false\" >> $GITHUB_OUTPUT\n"
-"fi\n"
-msgstr ""
-
 #. type: Hash Value: jobs deploy steps if
 #: .github/workflows/deploy.yml:1
 #, no-wrap
-msgid "steps.check_roq.outputs.roq_exists == 'true'"
+msgid "steps.detect.outputs.roq == 'true'"
 msgstr ""
 
 #. type: Hash Value: jobs deploy steps name
@@ -228,7 +212,7 @@ msgstr ""
 #. type: Hash Value: jobs deploy steps with path
 #: .github/workflows/deploy.yml:1
 #, no-wrap
-msgid "./_site"
+msgid "./${{ steps.detect.outputs.site_dir }}"
 msgstr ""
 
 #. type: Hash Value: jobs deploy steps id
@@ -260,14 +244,14 @@ msgstr ""
 #, no-wrap
 msgid ""
 "SITE_DIR=$(mktemp -d)\n"
-"rsync -a ./_site/ \"$SITE_DIR\"\n"
+"rsync -a ./${{ steps.detect.outputs.site_dir }}/ \"$SITE_DIR\"\n"
 "git config --local user.email \"action@github.com\"\n"
 "git config --local user.name \"GitHub Action\"\n"
 "git fetch origin gh-pages:gh-pages\n"
 "git checkout gh-pages\n"
 "rsync -a --delete --exclude='.git' --exclude='.nojekyll' \"$SITE_DIR\"/ .\n"
 "git add -A\n"
-"git rm -rf --cached --ignore-unmatch _site\n"
+"git rm -rf --cached --ignore-unmatch ${{ steps.detect.outputs.site_dir }}\n"
 "git commit --allow-empty -m \"deploy: ${{ github.sha }}\"\n"
 "git push origin gh-pages\n"
 msgstr ""
