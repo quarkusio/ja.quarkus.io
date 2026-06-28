@@ -15,7 +15,13 @@ msgstr ""
 msgid "${{ github.workflow }}-${{ github.ref }}"
 msgstr ""
 
-#. type: Hash Value: jobs build runs-on
+#. type: Hash Value: name
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid "Build"
+msgstr ""
+
+#. type: Hash Value: jobs build-report runs-on
 #: .github/workflows/build.yml:1
 #, no-wrap
 msgid "ubuntu-latest"
@@ -24,7 +30,7 @@ msgstr ""
 #. type: Hash Value: jobs build steps uses
 #: .github/workflows/build.yml:1
 #, no-wrap
-msgid "actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd"
+msgid "actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10"
 msgstr ""
 
 #. type: Hash Value: jobs build steps with fetch-depth
@@ -52,12 +58,14 @@ msgid ""
 "if [ -f \"Gemfile\" ]; then\n"
 "  echo \"jekyll=true\" >> $GITHUB_OUTPUT\n"
 "  echo \"site_dir=_site\" >> $GITHUB_OUTPUT\n"
+"  echo \"statics_dir=.\" >> $GITHUB_OUTPUT\n"
 "else\n"
 "  echo \"jekyll=false\" >> $GITHUB_OUTPUT\n"
 "fi\n"
 "if [ -d \"src/main\" ]; then\n"
 "  echo \"roq=true\" >> $GITHUB_OUTPUT\n"
 "  echo \"site_dir=target/roq\" >> $GITHUB_OUTPUT\n"
+"  echo \"statics_dir=public\" >> $GITHUB_OUTPUT\n"
 "else\n"
 "  echo \"roq=false\" >> $GITHUB_OUTPUT\n"
 "fi\n"
@@ -78,7 +86,7 @@ msgstr ""
 #. type: Hash Value: jobs build steps uses
 #: .github/workflows/build.yml:1
 #, no-wrap
-msgid "ruby/setup-ruby@afeafc3d1ab54a631816aba4c914a0081c12ff2f"
+msgid "ruby/setup-ruby@12fd324f1d0b43274fdc8130f6980590a667c455"
 msgstr ""
 
 #. type: Hash Value: jobs build steps with ruby-version
@@ -93,22 +101,22 @@ msgstr ""
 msgid "Set up JDK"
 msgstr ""
 
-#. type: Hash Value: jobs build steps uses
+#. type: Hash Value: jobs build-report steps uses
 #: .github/workflows/build.yml:1
 #, no-wrap
 msgid "actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654"
 msgstr ""
 
-#. type: Hash Value: jobs build steps with distribution
+#. type: Hash Value: jobs build-report steps with distribution
 #: .github/workflows/build.yml:1
 #, no-wrap
 msgid "temurin"
 msgstr ""
 
-#. type: Hash Value: jobs build steps with java-version
+#. type: Hash Value: jobs build-report steps with java-version
 #: .github/workflows/build.yml:1
 #, no-wrap
-msgid "21"
+msgid "25"
 msgstr ""
 
 #. type: Hash Value: jobs build steps name
@@ -362,7 +370,7 @@ msgid ""
 "  echo \"Infrastructure files changed, running full link check\"\n"
 "  exit 0\n"
 "fi\n"
-"git fetch origin gh-pages 2>/dev/null || {\n"
+"git fetch origin gh-pages --filter=blob:none 2>/dev/null || {\n"
 "  echo \"mode=full\" >> $GITHUB_OUTPUT\n"
 "  echo \"Could not fetch gh-pages, running full link check\"\n"
 "  exit 0\n"
@@ -372,6 +380,7 @@ msgid ""
 "  echo \"Could not check out gh-pages, running full link check\"\n"
 "  exit 0\n"
 "}\n"
+"git -C /tmp/gh-pages sparse-checkout set --no-cone '*.html'\n"
 "RSYNC_OUT=$(rsync -rcn --out-format='%n' \\\n"
 "  --include='*/' --include='*.html' --exclude='*' \\\n"
 "  ${{ steps.detect.outputs.site_dir }}/ /tmp/gh-pages/ 2>/dev/null) || {\n"
@@ -380,7 +389,7 @@ msgid ""
 "  git worktree remove /tmp/gh-pages 2>/dev/null || true\n"
 "  exit 0\n"
 "}\n"
-"CHANGED=$(echo \"$RSYNC_OUT\" | grep '\\.html$' || true)\n"
+"CHANGED=$(echo \"$RSYNC_OUT\" | grep '\\.html$' | grep -v '^version/main/' || true)\n"
 "git worktree remove /tmp/gh-pages 2>/dev/null || true\n"
 "if [ -z \"$CHANGED\" ]; then\n"
 "  echo \"mode=skip\" >> $GITHUB_OUTPUT\n"
@@ -389,9 +398,10 @@ msgid ""
 "fi\n"
 "COUNT=$(echo \"$CHANGED\" | wc -l | tr -d ' ')\n"
 "echo \"$COUNT changed HTML file(s)\"\n"
-"if [ \"$COUNT\" -gt 15 ]; then\n"
+"echo \"$CHANGED\" | sed 's|/[^/]*$||' | sort | uniq -c | sort -rn | head -20\n"
+"if [ \"$COUNT\" -gt 200 ]; then\n"
 "  echo \"mode=full\" >> $GITHUB_OUTPUT\n"
-"  echo \"More than 15 files changed, running full link check\"\n"
+"  echo \"More than 200 files changed, running full link check\"\n"
 "else\n"
 "  PATHS=$(echo \"$CHANGED\" | sed 's|index\\.html$||; s|^|/|' | tr '\\n' ',' | sed 's/,$//')\n"
 "  echo \"mode=partial\" >> $GITHUB_OUTPUT\n"
@@ -422,8 +432,77 @@ msgid ""
 "fi\n"
 "mvn -B test -Pe2e -Dtest.url=http://localhost:8090 \\\n"
 "  -Dtest.crawl.check-external=false \\\n"
-"  -Dtest.crawl.exclude-paths=/version/2,/version/3,/version/4,/version/5,/version/main/guides/doc-reference \\\n"
+"  -Dtest.crawl.exclude-paths=/version/2,/version/3,/version/4,/version/5,/version/main \\\n"
 "  $CHANGED_PATHS_ARG\n"
+msgstr ""
+
+#. type: Hash Value: jobs build-report if
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid "always()"
+msgstr ""
+
+#. type: Hash Value: jobs build steps name
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid "Upload build reports"
+msgstr ""
+
+#. type: Hash Value: jobs build steps uses
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a"
+msgstr ""
+
+#. type: Hash Value: jobs build steps with name
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid "build-reports-${{ github.run_attempt }}-Build"
+msgstr ""
+
+#. type: Hash Value: jobs build steps with path
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid ""
+"target/*-reports/TEST-*.xml\n"
+"target/build-report.json\n"
+"README.md\n"
+msgstr ""
+
+#. type: Hash Value: jobs build steps with retention-days
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid "2"
+msgstr ""
+
+#. type: Hash Value: jobs build steps name
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid "Test report"
+msgstr ""
+
+#. type: Hash Value: jobs build steps run
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid ""
+"{\n"
+"  echo \"### Test Results\"\n"
+"  echo \"\"\n"
+"  echo \"| Suite | Tests | Passed | Failed | Skipped | Time |\"\n"
+"  echo \"|-------|------:|-------:|-------:|--------:|-----:|\"\n"
+"  for f in target/surefire-reports/TEST-*.xml; do\n"
+"    [ -f \"$f\" ] || continue\n"
+"    suite=$(sed -n 's/.*name=\"\\([^\"]*\\).*/\\1/p' \"$f\" | head -1)\n"
+"    tests=$(sed -n 's/.*tests=\"\\([^\"]*\\).*/\\1/p' \"$f\" | head -1)\n"
+"    fail=$(sed -n 's/.*failures=\"\\([^\"]*\\).*/\\1/p' \"$f\" | head -1)\n"
+"    err=$(sed -n 's/.*errors=\"\\([^\"]*\\).*/\\1/p' \"$f\" | head -1)\n"
+"    skip=$(sed -n 's/.*skipped=\"\\([^\"]*\\).*/\\1/p' \"$f\" | head -1)\n"
+"    time=$(sed -n 's/.*time=\"\\([^\"]*\\).*/\\1/p' \"$f\" | head -1)\n"
+"    pass=$((tests - ${fail:-0} - ${err:-0} - ${skip:-0}))\n"
+"    icon=$( [ \"${fail:-0}\" -gt 0 ] || [ \"${err:-0}\" -gt 0 ] && echo \":x:\" || echo \":white_check_mark:\" )\n"
+"    echo \"| ${icon} ${suite##*.} | $tests | $pass | $((${fail:-0} + ${err:-0})) | ${skip:-0} | ${time}s |\"\n"
+"  done\n"
+"} >> \"$GITHUB_STEP_SUMMARY\"\n"
 msgstr ""
 
 #. type: Hash Value: jobs build steps name
@@ -449,8 +528,9 @@ msgstr ""
 #, no-wrap
 msgid ""
 "SITE_DIR=\"${{ steps.detect.outputs.site_dir }}\"\n"
-"find assets/images/posts/ -mindepth 1 -maxdepth 1 -type d -mtime +50 -exec rm -rf \"$SITE_DIR\"/{} \\;\n"
-"find newsletter/ -mindepth 1 -maxdepth 1 -type d -mtime +50 -exec rm -rf \"$SITE_DIR\"/{} \\;\n"
+"STATICS_DIR=\"${{ steps.detect.outputs.statics_dir }}\"\n"
+"find \"$STATICS_DIR\"/assets/images/posts/ -mindepth 1 -maxdepth 1 -type d -mtime +50 -exec rm -rf \"$SITE_DIR\"/{} \\;\n"
+"find \"$STATICS_DIR\"/newsletter/ -mindepth 1 -maxdepth 1 -type d -mtime +50 -exec rm -rf \"$SITE_DIR\"/{} \\;\n"
 "rm -rf \"$SITE_DIR\"/assets/stickers\n"
 "rm -rf \"$SITE_DIR\"/assets/images/worldtour/2023\n"
 "rm -rf \"$SITE_DIR\"/assets/images/worldtour/2024\n"
@@ -462,12 +542,6 @@ msgstr ""
 #: .github/workflows/build.yml:1
 #, no-wrap
 msgid "Publishing directory for PR preview"
-msgstr ""
-
-#. type: Hash Value: jobs build steps uses
-#: .github/workflows/build.yml:1
-#, no-wrap
-msgid "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a"
 msgstr ""
 
 #. type: Hash Value: jobs build steps with name
@@ -488,10 +562,58 @@ msgstr ""
 msgid "3"
 msgstr ""
 
-#. type: Hash Value: name
+#. type: Hash Value: jobs build-report name
 #: .github/workflows/build.yml:1
 #, no-wrap
-msgid "Build"
+msgid "Build report"
+msgstr ""
+
+#. type: Hash Value: jobs build-report needs
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid "[build]"
+msgstr ""
+
+#. type: Hash Value: jobs build-report steps uses
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid "actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c"
+msgstr ""
+
+#. type: Hash Value: jobs build-report steps with build-reports-artifacts-path
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid "build-reports-artifacts"
+msgstr ""
+
+#. type: Hash Value: jobs build-report steps with pattern
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid "build-reports-${{ github.run_attempt }}-*"
+msgstr ""
+
+#. type: Hash Value: jobs build-report steps name
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid "Set up JDK 25"
+msgstr ""
+
+#. type: Hash Value: jobs build-report steps name
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid "Produce report and add it as job summary"
+msgstr ""
+
+#. type: Hash Value: jobs build-report steps uses
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid "quarkusio/action-build-reporter@main"
+msgstr ""
+
+#. type: Hash Value: jobs build-report steps with github-token
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid "${{ secrets.GITHUB_TOKEN }}"
 msgstr ""
 
 #. type: Hash Value: on pull_request types
