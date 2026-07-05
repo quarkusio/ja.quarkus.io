@@ -1913,10 +1913,179 @@ msgid ""
 "This enables coupling a consumer with a transactional producer in a _consume-transform-produce_ pattern, also known as *exactly-once processing*."
 msgstr "Kafka Transactions を使用すると、生成されたメッセージとともに、トランザクション内のコンシューマーオフセットを管理できます。これにより、コンシューマーとトランザクションプロデューサーを _consume-transform-produce_ パターンでカップリングすることができます。これは *exactly-once 処理* としても知られています。"
 
+#. type: Title ===
+#: _versions/main/guides/kafka.adoc
+msgid "Declarative Exactly-Once with `@ExactlyOnce`"
+msgstr ""
+
 #. type: Plain text
 #: _versions/main/guides/kafka.adoc
-msgid "The `KafkaTransactions` custom emitter provides a way to apply exactly-once processing to an incoming Kafka message inside a transaction."
-msgstr "`KafkaTransactions` カスタムエミッターは、トランザクション内の着信 Kafka メッセージに exactly-once 処理を適用する方法を提供します。"
+msgid ""
+"The simplest way to enable exactly-once processing is to annotate a processor method with `@ExactlyOnce`.\n"
+"The method must have both `@Incoming` and `@Outgoing` annotations, and both channels must be managed by the Kafka connector:"
+msgstr ""
+
+#. type: Plain text
+#: _versions/main/guides/kafka.adoc
+msgid "Each incoming record is consumed and the result is produced within a single Kafka transaction, ensuring atomic consumption and production -- no duplicates and no message loss."
+msgstr ""
+
+#. type: Plain text
+#: _versions/main/guides/kafka.adoc
+msgid "The method can also return a `List` to produce multiple records per input:"
+msgstr ""
+
+#. type: Plain text
+#: _versions/main/guides/kafka.adoc
+msgid "Quarkus auto-configures the following Kafka properties when `@ExactlyOnce` is detected:"
+msgstr ""
+
+#. type: Table
+#: _versions/main/guides/kafka.adoc
+msgid "Property"
+msgstr ""
+
+#. type: Table
+#: _versions/main/guides/kafka.adoc
+msgid "Value"
+msgstr ""
+
+#. type: Table
+#: _versions/main/guides/kafka.adoc
+msgid "`transactional.id` (outgoing)"
+msgstr ""
+
+#. type: Table
+#: _versions/main/guides/kafka.adoc
+msgid "`${quarkus.application.name}-<channel-name>`"
+msgstr ""
+
+#. type: Table
+#: _versions/main/guides/kafka.adoc
+msgid "`enable.idempotence` (outgoing)"
+msgstr ""
+
+#. type: Table
+#: _versions/main/guides/kafka.adoc
+msgid "`true`"
+msgstr ""
+
+#. type: Table
+#: _versions/main/guides/kafka.adoc
+msgid "`acks` (outgoing)"
+msgstr ""
+
+#. type: Table
+#: _versions/main/guides/kafka.adoc
+msgid "`all`"
+msgstr ""
+
+#. type: Table
+#: _versions/main/guides/kafka.adoc
+msgid "`commit-strategy` (incoming)"
+msgstr ""
+
+#. type: Table
+#: _versions/main/guides/kafka.adoc
+msgid "`ignore`"
+msgstr ""
+
+#. type: Table
+#: _versions/main/guides/kafka.adoc
+msgid "`isolation.level` (incoming)"
+msgstr ""
+
+#. type: Table
+#: _versions/main/guides/kafka.adoc
+msgid "`read_committed`"
+msgstr ""
+
+#. type: Plain text
+#: _versions/main/guides/kafka.adoc
+msgid "These can be overridden in `application.properties` if needed."
+msgstr ""
+
+#. type: Plain text
+#: _versions/main/guides/kafka.adoc
+msgid ""
+"The method can also return reactive types (`Uni`, `CompletionStage`).\n"
+"In that case, the method runs non-blocking and the transaction commits when the returned `Uni` completes:"
+msgstr ""
+
+#. type: Plain text
+#: _versions/main/guides/kafka.adoc
+msgid "`@ExactlyOnce` methods must use payload parameters (e.g., `Record<K, V>`, plain types), not `Message<?>`."
+msgstr ""
+
+#. type: Title ====
+#: _versions/main/guides/kafka.adoc
+msgid "Combining with Database Transactions"
+msgstr ""
+
+#. type: Plain text
+#: _versions/main/guides/kafka.adoc
+msgid ""
+"`@ExactlyOnce` can be combined with database transactions.\n"
+"The database transaction runs inside the Kafka transaction: if the database commit fails, the Kafka transaction is rolled back too.\n"
+"If the database commit succeeds but the Kafka transaction fails, the database changes persist but the message will be reprocessed.\n"
+"So you need to design your consumer to be idempotent to handle this case.\n"
+"For stronger guarantees, consider using the transactional outbox pattern."
+msgstr ""
+
+#. type: Plain text
+#: _versions/main/guides/kafka.adoc
+msgid "For **Hibernate ORM** (blocking), use `@Transactional`:"
+msgstr ""
+
+#. type: Plain text
+#: _versions/main/guides/kafka.adoc
+msgid "For **Hibernate Reactive**, use `@Transactional` or `@WithTransaction` with a reactive return type:"
+msgstr ""
+
+#. type: Title ====
+#: _versions/main/guides/kafka.adoc
+msgid "Error Handling"
+msgstr ""
+
+#. type: Plain text
+#: _versions/main/guides/kafka.adoc
+msgid ""
+"When an `@ExactlyOnce` method throws an exception, the Kafka transaction is aborted and the consumer offset is reset to the last committed position.\n"
+"The message will be retried automatically on the next poll.\n"
+"If the method is also annotated with `@Transactional`, the database transaction is rolled back as well."
+msgstr ""
+
+#. type: Plain text
+#: _versions/main/guides/kafka.adoc
+msgid ""
+"Using the `@ExactlyOnce` annotation, the incoming channel `commit-strategy` and `failure-strategy` attributes are set by default to `ignore`,\n"
+"in order to allow the Kafka transaction to manage the offset commits."
+msgstr ""
+
+#. type: Title ====
+#: _versions/main/guides/kafka.adoc
+msgid "Routing to a Different Topic"
+msgstr ""
+
+#. type: Plain text
+#: _versions/main/guides/kafka.adoc
+msgid "To route records to a different topic within the exactly-once transaction (e.g., a dead-letter topic), return a `ProducerRecord` with the target topic:"
+msgstr ""
+
+#. type: Plain text
+#: _versions/main/guides/kafka.adoc
+msgid "The record is sent transactionally — if the transaction is aborted, neither the main output nor the dead-letter record is published."
+msgstr ""
+
+#. type: Title ===
+#: _versions/main/guides/kafka.adoc
+msgid "Manual Exactly-Once with `KafkaTransactions`"
+msgstr ""
+
+#. type: Plain text
+#: _versions/main/guides/kafka.adoc
+msgid "For more advanced use cases, the `KafkaTransactions` custom emitter provides a way to apply exactly-once processing to an incoming Kafka message inside a transaction."
+msgstr ""
 
 #. type: Plain text
 #: _versions/main/guides/kafka.adoc
