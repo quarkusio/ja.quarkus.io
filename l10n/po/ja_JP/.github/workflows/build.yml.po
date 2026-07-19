@@ -58,14 +58,12 @@ msgid ""
 "if [ -f \"Gemfile\" ]; then\n"
 "  echo \"jekyll=true\" >> $GITHUB_OUTPUT\n"
 "  echo \"site_dir=_site\" >> $GITHUB_OUTPUT\n"
-"  echo \"statics_dir=.\" >> $GITHUB_OUTPUT\n"
 "else\n"
 "  echo \"jekyll=false\" >> $GITHUB_OUTPUT\n"
 "fi\n"
 "if [ -d \"src/main\" ]; then\n"
 "  echo \"roq=true\" >> $GITHUB_OUTPUT\n"
 "  echo \"site_dir=target/roq\" >> $GITHUB_OUTPUT\n"
-"  echo \"statics_dir=public\" >> $GITHUB_OUTPUT\n"
 "else\n"
 "  echo \"roq=false\" >> $GITHUB_OUTPUT\n"
 "fi\n"
@@ -155,6 +153,30 @@ msgstr ""
 msgid "${{ runner.os }}-gems-"
 msgstr ""
 
+#. type: Hash Value: jobs build steps name
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid "Cache npm packages"
+msgstr ""
+
+#. type: Hash Value: jobs build steps with key
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid "${{ runner.os }}-npm-${{ hashFiles('package-lock.json') }}"
+msgstr ""
+
+#. type: Hash Value: jobs build steps with path
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid "~/.npm"
+msgstr ""
+
+#. type: Hash Value: jobs build steps with restore-keys
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid "${{ runner.os }}-npm-"
+msgstr ""
+
 #. type: Hash Value: jobs build steps id
 #: .github/workflows/build.yml:1
 #, no-wrap
@@ -232,7 +254,7 @@ msgstr ""
 #. type: Hash Value: jobs build steps run
 #: .github/workflows/build.yml:1
 #, no-wrap
-msgid "QUARKUS_ROQ_GENERATOR_BATCH=true mvn -B package quarkus:run -DskipTests"
+msgid "QUARKUS_ROQ_GENERATOR_BATCH=true QUARKUS_PROFILE=only-latest-guides mvn -B package quarkus:run -DskipTests"
 msgstr ""
 
 #. type: Hash Value: jobs build steps name
@@ -386,10 +408,39 @@ msgid ""
 "fi\n"
 msgstr ""
 
+#. type: Hash Value: jobs build steps env LHCI_GITHUB_APP_TOKEN
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid "${{ secrets.LHCI_GITHUB_APP_TOKEN }}"
+msgstr ""
+
 #. type: Hash Value: jobs build steps if
 #: .github/workflows/build.yml:1
 #, no-wrap
 msgid "steps.link_scope.outputs.mode != 'skip'"
+msgstr ""
+
+#. type: Hash Value: jobs build steps name
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid "Run Lighthouse CI"
+msgstr ""
+
+#. type: Hash Value: jobs build steps run
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid ""
+"npm ci\n"
+"URLS=\"\"\n"
+"if [ \"${{ steps.link_scope.outputs.mode }}\" = \"partial\" ]; then\n"
+"  IFS=',' read -ra PATHS <<< \"${{ steps.link_scope.outputs.paths }}\"\n"
+"  for p in \"${PATHS[@]:0:5}\"; do\n"
+"    URLS=\"$URLS --collect.url=http://localhost:8090${p}\"\n"
+"  done\n"
+"else\n"
+"  URLS=\"--collect.url=http://localhost:8090/ --collect.url=http://localhost:8090/guides/ --collect.url=http://localhost:8090/blog/\"\n"
+"fi\n"
+"npx lhci autorun $URLS\n"
 msgstr ""
 
 #. type: Hash Value: jobs build steps name
@@ -442,6 +493,7 @@ msgstr ""
 msgid ""
 "target/*-reports/TEST-*.xml\n"
 "target/build-report.json\n"
+".lighthouseci/\n"
 "README.md\n"
 msgstr ""
 
@@ -449,6 +501,43 @@ msgstr ""
 #: .github/workflows/build.yml:1
 #, no-wrap
 msgid "2"
+msgstr ""
+
+#. type: Hash Value: jobs build steps name
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid "Lighthouse report"
+msgstr ""
+
+#. type: Hash Value: jobs build steps run
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid ""
+"{\n"
+"  echo \"### Lighthouse Results\"\n"
+"  echo \"\"\n"
+"  echo \"| Page | Performance | Accessibility | Best Practices | SEO | Report |\"\n"
+"  echo \"|------|:----------:|:------------:|:--------------:|:---:|--------|\"\n"
+"  for f in .lighthouseci/lhr-*.json; do\n"
+"    [ -f \"$f\" ] || continue\n"
+"    url=$(jq -r '.requestedUrl' \"$f\")\n"
+"    path=$(echo \"$url\" | sed 's|http://[^/]*||')\n"
+"    perf=$(jq '.categories.performance.score // 0' \"$f\" | awk '{printf \"%d\", $1 * 100}')\n"
+"    a11y=$(jq '.categories.accessibility.score // 0' \"$f\" | awk '{printf \"%d\", $1 * 100}')\n"
+"    bp=$(jq '.categories[\"best-practices\"].score // 0' \"$f\" | awk '{printf \"%d\", $1 * 100}')\n"
+"    seo=$(jq '.categories.seo.score // 0' \"$f\" | awk '{printf \"%d\", $1 * 100}')\n"
+"    perf_icon=$( [ \"$perf\" -ge 90 ] && echo \":green_circle:\" || ( [ \"$perf\" -ge 50 ] && echo \":orange_circle:\" || echo \":red_circle:\" ) )\n"
+"    a11y_icon=$( [ \"$a11y\" -ge 90 ] && echo \":green_circle:\" || ( [ \"$a11y\" -ge 50 ] && echo \":orange_circle:\" || echo \":red_circle:\" ) )\n"
+"    bp_icon=$( [ \"$bp\" -ge 90 ] && echo \":green_circle:\" || ( [ \"$bp\" -ge 50 ] && echo \":orange_circle:\" || echo \":red_circle:\" ) )\n"
+"    seo_icon=$( [ \"$seo\" -ge 90 ] && echo \":green_circle:\" || ( [ \"$seo\" -ge 50 ] && echo \":orange_circle:\" || echo \":red_circle:\" ) )\n"
+"    link=\"\"\n"
+"    if [ -f .lighthouseci/links.json ]; then\n"
+"      report_url=$(jq -r --arg u \"$url\" '.[$u] // empty' .lighthouseci/links.json)\n"
+"      [ -n \"$report_url\" ] && link=\"[Full report](${report_url})\"\n"
+"    fi\n"
+"    echo \"| \\`${path:-/}\\` | ${perf_icon} ${perf} | ${a11y_icon} ${a11y} | ${bp_icon} ${bp} | ${seo_icon} ${seo} | ${link} |\"\n"
+"  done\n"
+"} >> \"$GITHUB_STEP_SUMMARY\"\n"
 msgstr ""
 
 #. type: Hash Value: jobs build steps name
@@ -504,12 +593,31 @@ msgstr ""
 #, no-wrap
 msgid ""
 "SITE_DIR=\"${{ steps.detect.outputs.site_dir }}\"\n"
-"STATICS_DIR=\"${{ steps.detect.outputs.statics_dir }}\"\n"
-"find \"$STATICS_DIR\"/assets/images/posts/ -mindepth 1 -maxdepth 1 -type d -mtime +50 -exec rm -rf \"$SITE_DIR\"/{} \\;\n"
-"find \"$STATICS_DIR\"/newsletter/ -mindepth 1 -maxdepth 1 -type d -mtime +50 -exec rm -rf \"$SITE_DIR\"/{} \\;\n"
+"if [ -d \"$SITE_DIR/newsletter\" ]; then\n"
+"  ls -1 \"$SITE_DIR/newsletter\" | sort -n | head -n -10 | while read -r dir; do\n"
+"    rm -rf \"$SITE_DIR/newsletter/$dir\"\n"
+"  done\n"
+"fi\n"
+"CUTOFF=$(date -d '50 days ago' +%Y-%m-%d)\n"
+"RECENT_IMGS=$(mktemp)\n"
+"OLD_IMGS=$(mktemp)\n"
+"POSTS_DIR=content/posts\n"
+"[ -d _posts ] && POSTS_DIR=_posts\n"
+"for post in \"$POSTS_DIR\"/[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-*.adoc; do\n"
+"  POST_DATE=$(basename \"$post\" | grep -oP '^\\d{4}-\\d{2}-\\d{2}')\n"
+"  [ -z \"$POST_DATE\" ] && continue\n"
+"  if [ \"$POST_DATE\" \\> \"$CUTOFF\" ]; then\n"
+"    grep -oP 'images/posts/\\K[^/\\[\"\\]]+' \"$post\" >> \"$RECENT_IMGS\" 2>/dev/null || true\n"
+"  else\n"
+"    grep -oP 'images/posts/\\K[^/\\[\"\\]]+' \"$post\" >> \"$OLD_IMGS\" 2>/dev/null || true\n"
+"  fi\n"
+"done\n"
+"comm -23 <(sort -u \"$OLD_IMGS\") <(sort -u \"$RECENT_IMGS\") | while read -r imgdir;\n"
+"do\n"
+" rm -rf \"$SITE_DIR/assets/images/posts/$imgdir\"\n"
+"done\n"
+"rm -f \"$RECENT_IMGS\" \"$OLD_IMGS\"\n"
 "rm -rf \"$SITE_DIR\"/assets/stickers\n"
-"rm -rf \"$SITE_DIR\"/assets/images/worldtour/2023\n"
-"rm -rf \"$SITE_DIR\"/assets/images/worldtour/2024\n"
 "rm -rf \"$SITE_DIR\"/assets/images/desktopwallpapers\n"
 "rm -rf \"$SITE_DIR\"/assets/images/stickers\n"
 msgstr ""
