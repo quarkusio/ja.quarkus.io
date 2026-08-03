@@ -1,0 +1,94 @@
+name: pr-build
+
+on: pull_request
+
+jobs:
+  build:
+    name: Build localized site preview
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout base branch
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 50
+          fetch-tags: false
+
+      - name: Fetch upstream submodule with deep history
+        run: git submodule update --init --depth 5000 upstream
+
+      - name: Checkout PR commit to 'merged' dir
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: merged
+
+      - name: Copy l10n translations from PR
+        run: |
+          find merged/l10n/po -name '*.po' -not -type l | while read src; do
+            dest="${src#merged/}"
+            mkdir -p "$(dirname "$dest")"
+            cp "$src" "$dest"
+          done
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Cache bundle directory
+        uses: actions/cache@v6
+        with:
+          path: vendor/bundle
+          key: ${{ runner.os }}-gem-${{ hashFiles('**/Gemfile.lock') }}
+
+      - name: Cache tsuji.jar
+        uses: actions/cache@v6
+        with:
+          path: vendor/tsuji
+          key: ${{ runner.os }}-tsuji-${{ hashFiles('config/application.yaml') }}
+
+      - name: Setup build env
+        run: bin/setup-build-env-on-ubuntu
+
+      - name: Restore mtime
+        # git restore-mtime is currently broken in the GH Actions images so using our own updated local copy
+        # see https://github.com/MestreLion/git-tools/blob/main/git-restore-mtime
+        run: |
+          cd upstream
+          ./tools/git-restore-mtime
+
+      - name: Build for preview
+        run: ./tsujiw jekyll build --accept-mt=gemini --additional-configs=_only_latest_guides_config.yml
+
+      - name: Reduce the size of the website to be compatible with surge
+        run: |
+          cd upstream
+          find assets/images/posts/ -mindepth 1 -maxdepth 1 -type d -mtime +50 -exec rm -rf ../docs/{} \;
+          find newsletter/ -mindepth 1 -maxdepth 1 -type d -mtime +50 -exec rm -rf ../docs/{} \;
+          rm -rf ../docs/assets/stickers
+          rm -rf ../docs/assets/images/worldtour/2023
+          rm -rf ../docs/assets/images/worldtour/2024
+          rm -rf ../docs/assets/images/desktopwallpapers
+          rm -rf ../docs/assets/images/stickers
+
+      - name: Save PR metadata
+        run: |
+          mkdir -p pr-metadata
+          echo "${{ github.event.pull_request.number }}" > pr-metadata/pr-number
+          SURGE_DOMAIN_SUFFIX=$(./tsujiw config get tsuji.jekyll.surge-domain-suffix)
+          echo "${SURGE_DOMAIN_SUFFIX}" > pr-metadata/surge-domain-suffix
+
+      - name: Upload site artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr-preview-site
+          path: docs/
+
+      - name: Upload PR metadata
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr-metadata
+          path: pr-metadata/
