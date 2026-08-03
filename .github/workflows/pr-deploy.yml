@@ -12,8 +12,32 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.workflow_run.conclusion == 'success'
     permissions:
+      contents: read
       pull-requests: write
     steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          sparse-checkout: config/application.yaml
+          sparse-checkout-cone-mode: false
+
+      - name: Get PR number
+        id: pr-info
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const prs = context.payload.workflow_run.pull_requests;
+            if (!prs || prs.length === 0) {
+              core.setFailed('No pull request found for this workflow run');
+              return;
+            }
+            core.setOutput('pr_number', prs[0].number);
+
+      - name: Read surge domain suffix
+        id: config
+        run: |
+          echo "surge_domain_suffix=$(yq '.tsuji.jekyll.surge-domain-suffix' config/application.yaml)" >> $GITHUB_OUTPUT
+
       - name: Download site artifact
         uses: actions/download-artifact@v4
         with:
@@ -22,26 +46,12 @@ jobs:
           run-id: ${{ github.event.workflow_run.id }}
           github-token: ${{ github.token }}
 
-      - name: Download PR metadata
-        uses: actions/download-artifact@v4
-        with:
-          name: pr-metadata
-          path: pr-metadata/
-          run-id: ${{ github.event.workflow_run.id }}
-          github-token: ${{ github.token }}
-
-      - name: Read PR metadata
-        id: metadata
-        run: |
-          echo "pr_number=$(cat pr-metadata/pr-number)" >> $GITHUB_OUTPUT
-          echo "surge_domain_suffix=$(cat pr-metadata/surge-domain-suffix)" >> $GITHUB_OUTPUT
-
       - name: Install surge
         run: sudo npm --global install surge
 
       - name: Deploy to surge
         run: |
-          surge docs pr-preview-${{ steps.metadata.outputs.pr_number }}-${{ steps.metadata.outputs.surge_domain_suffix }}
+          surge docs "pr-preview-${{ steps.pr-info.outputs.pr_number }}-${{ steps.config.outputs.surge_domain_suffix }}"
         env:
           SURGE_LOGIN: ${{ secrets.SURGE_LOGIN }}
           SURGE_TOKEN: ${{ secrets.SURGE_TOKEN }}
@@ -50,8 +60,8 @@ jobs:
         uses: actions/github-script@v9
         with:
           script: |
-            const prNumber = parseInt('${{ steps.metadata.outputs.pr_number }}');
-            const suffix = '${{ steps.metadata.outputs.surge_domain_suffix }}';
+            const prNumber = ${{ steps.pr-info.outputs.pr_number }};
+            const suffix = '${{ steps.config.outputs.surge_domain_suffix }}';
             const baseUrl = `https://pr-preview-${prNumber}-${suffix}`;
             let body = `Site preview: ${baseUrl}`;
 
