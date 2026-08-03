@@ -1,0 +1,91 @@
+name: pr-deploy
+
+on:
+  workflow_run:
+    workflows: ["pr-build"]
+    types:
+      - completed
+
+jobs:
+  deploy:
+    name: Deploy PR preview to surge.sh
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success'
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Download site artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: pr-preview-site
+          path: docs/
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+
+      - name: Download PR metadata
+        uses: actions/download-artifact@v4
+        with:
+          name: pr-metadata
+          path: pr-metadata/
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+
+      - name: Read PR metadata
+        id: metadata
+        run: |
+          echo "pr_number=$(cat pr-metadata/pr-number)" >> $GITHUB_OUTPUT
+          echo "surge_domain_suffix=$(cat pr-metadata/surge-domain-suffix)" >> $GITHUB_OUTPUT
+
+      - name: Install surge
+        run: sudo npm --global install surge
+
+      - name: Deploy to surge
+        run: |
+          surge docs pr-preview-${{ steps.metadata.outputs.pr_number }}-${{ steps.metadata.outputs.surge_domain_suffix }}
+        env:
+          SURGE_LOGIN: ${{ secrets.SURGE_LOGIN }}
+          SURGE_TOKEN: ${{ secrets.SURGE_TOKEN }}
+
+      - name: Add comment
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const prNumber = parseInt('${{ steps.metadata.outputs.pr_number }}');
+            const suffix = '${{ steps.metadata.outputs.surge_domain_suffix }}';
+            const baseUrl = `https://pr-preview-${prNumber}-${suffix}`;
+            let body = `Site preview: ${baseUrl}`;
+
+            const files = await github.paginate(github.rest.pulls.listFiles, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+              per_page: 100
+            });
+
+            function toPagePath(filename) {
+              const guideMatch = filename.match(/^l10n\/po\/[^/]+\/_guides\/([^/]+)\.adoc\.po$/);
+              if (guideMatch) return `/guides/${guideMatch[1]}`;
+              const postMatch = filename.match(/^l10n\/po\/[^/]+\/_posts\/\d{4}-\d{2}-\d{2}-([^/]+)\.adoc\.po$/);
+              if (postMatch) return `/blog/${postMatch[1]}/`;
+              return null;
+            }
+
+            const updatedFiles = files
+              .map(f => f.filename)
+              .filter(f => f.startsWith('l10n/'))
+              .map(f => {
+                const path = toPagePath(f);
+                return path ? `- [${f}](${baseUrl}${path})` : `- ${f}`;
+              });
+
+            if (updatedFiles.length > 0) {
+              body += '\n\nUpdated files:\n';
+              body += updatedFiles.join('\n');
+            }
+
+            github.rest.issues.createComment({
+              issue_number: prNumber,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            })
