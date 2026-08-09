@@ -747,6 +747,92 @@ msgid ""
 msgstr "別のドメインで実行されている別のアプリケーションから Quarkus アプリケーションにアクセスできるようにするには、オリジン間リソース共有（CORS）を設定する必要があります。Quarkus が提供する CORS フィルターの詳細については、「Cross-origin resource sharing」ガイドの Quarkus xref:security-cors.adoc#cors-filter[CORS フィルター] セクションを参照してください。"
 
 #. type: Title =
+#: _guides/http-reference.adoc
+msgid "HTTP Host header validation"
+msgstr ""
+
+#. type: Plain text
+#: _guides/http-reference.adoc
+msgid "Quarkus can validate the HTTP `Host` header on incoming requests to protect against DNS rebinding attacks and host header poisoning."
+msgstr ""
+
+#. type: Plain text
+#: _guides/http-reference.adoc
+msgid ""
+"When `quarkus.http.host` is set to a localhost name (`localhost`, `127.0.0.1`, or `[::1]`), host validation is automatically enabled in **dev** and **production** modes.\n"
+"Only requests whose `Host` header matches one of the known localhost names are accepted; all others receive a `400 Bad Request` response."
+msgstr ""
+
+#. type: Plain text
+#: _guides/http-reference.adoc
+msgid ""
+"This automatic behavior is a change from previous Quarkus versions, where no `Host` header validation was performed.\n"
+"If your application runs behind a reverse proxy that rewrites the `Host` header, you may need to either:"
+msgstr ""
+
+#. type: Plain text
+#: _guides/http-reference.adoc
+msgid "configure the allowed hosts explicitly with `quarkus.http.host-validation.allowed-hosts`, or"
+msgstr ""
+
+#. type: Plain text
+#: _guides/http-reference.adoc
+msgid "disable the automatic validation with `quarkus.http.host-validation.require-localhost=false`."
+msgstr ""
+
+#. type: Title ==
+#: _guides/http-reference.adoc
+msgid "Configuring allowed hosts"
+msgstr ""
+
+#. type: Plain text
+#: _guides/http-reference.adoc
+msgid "To restrict requests to a specific set of host names, use `allowed-hosts`:"
+msgstr ""
+
+#. type: Plain text
+#: _guides/http-reference.adoc
+msgid "The check is case-insensitive and only validates the host name, not the port."
+msgstr ""
+
+#. type: Title ==
+#: _guides/http-reference.adoc
+msgid "Requiring localhost only"
+msgstr ""
+
+#. type: Plain text
+#: _guides/http-reference.adoc
+msgid "To explicitly require that only localhost names are accepted:"
+msgstr ""
+
+#. type: Plain text
+#: _guides/http-reference.adoc
+msgid "To disable automatic localhost validation when the server is bound to a localhost address:"
+msgstr ""
+
+#. type: Plain text
+#: _guides/http-reference.adoc
+msgid ""
+"`allowed-hosts` and `require-localhost` are mutually exclusive.\n"
+"Setting both results in a configuration error."
+msgstr ""
+
+#. type: Title ==
+#: _guides/http-reference.adoc
+msgid "Reverse proxy considerations"
+msgstr ""
+
+#. type: Plain text
+#: _guides/http-reference.adoc
+msgid "When running behind a reverse proxy, enable proxy header forwarding so that Quarkus validates the forwarded host instead of the proxy's internal host name:"
+msgstr ""
+
+#. type: Plain text
+#: _guides/http-reference.adoc
+msgid "This works with both the standard `Forwarded` header and the `X-Forwarded-Host` header."
+msgstr ""
+
+#. type: Title =
 #. mt: gemini
 #: _guides/http-reference.adoc
 #, no-wrap
@@ -1659,10 +1745,62 @@ msgid "Configure enough DN components to uniquely identify your proxy. Using onl
 msgstr "プロキシを一意に識別するのに十分なDNコンポーネントを設定します。 `CN=my-proxyのみを` 使用すると、発行組織に関係なく、そのCNを持つ証明書にマッチします。"
 
 #. type: Plain text
+#: _guides/http-reference.adoc
+msgid ""
+"When multiple CAs are trusted, different CAs could issue certificates with the same Subject DN.\n"
+"To also verify the trust anchor, reference a certificate alias in the HTTP server's truststore.\n"
+"Both conditions must match — the Subject DN and the trust anchor.\n"
+"The following example uses the xref:./tls-registry-reference.adoc[TLS centralized configuration] to set up mTLS and proxy trust:"
+msgstr ""
+
+#. type: Plain text
+#: _guides/http-reference.adoc
+msgid "The truststore must be configured via the TLS registry and must contain a certificate entry with alias `my-proxy-ca`."
+msgstr ""
+
+#. type: Plain text
+#: _guides/http-reference.adoc
+msgid "The alias is resolved from `server-truststore.p12`."
+msgstr ""
+
+#. type: Plain text
+#: _guides/http-reference.adoc
+msgid "When the truststore is configured with PEM certificates, aliases are assigned automatically as `cert-0`, `cert-1`, and so on, based on the order in the configuration:"
+msgstr ""
+
+#. type: Plain text
+#: _guides/http-reference.adoc
+msgid "`proxy-ca.crt` becomes `cert-0`, `other-ca.crt` becomes `cert-1`."
+msgstr ""
+
+#. type: Plain text
+#: _guides/http-reference.adoc
+msgid "References `proxy-ca.crt`."
+msgstr ""
+
+#. type: Plain text
+#: _guides/http-reference.adoc
+msgid "Since PEM aliases depend on ordering, we recommend using a xref:tls-registry-reference.adoc#pkcs12_truststores[PKCS12 truststore] to avoid certificate list ordering issues."
+msgstr ""
+
+#. type: Plain text
+#: _guides/http-reference.adoc
+msgid "The configured Subject DN is trusted to be unique only among clients signed by the CA referenced by the truststore alias. Only reference a CA that you control or trust not to issue another certificate with the same Subject DN."
+msgstr ""
+
+#. type: Plain text
 #. mt: gemini
 #: _guides/http-reference.adoc
 msgid "Both configurations related to standard and non-standard headers can be combined, although the standard headers configuration will have precedence. However, combining them has security implications as clients can forge requests with a forwarded header that is not overwritten by the proxy. Therefore, proxies should strip unexpected `Forwarded` or `X-Forwarded-*` headers from the client."
 msgstr "標準ヘッダーと非標準ヘッダーに関する両方の設定を組み合わせることもできますが、その場合は標準ヘッダーの設定が優先されます。ただし、これらを組み合わせると、クライアントがプロキシによって上書きされない転送ヘッダーを含むリクエストを偽造できる可能性があるため、セキュリティー上の影響があります。したがって、プロキシはクライアントからの予期しない `Forwarded` または `X-Forwarded-*` ヘッダーを削除する必要があります。"
+
+#. type: Plain text
+#: _guides/http-reference.adoc
+msgid ""
+"By default, the `proto` values from `Forwarded` and `X-Forwarded-Proto` headers are validated against the https://datatracker.ietf.org/doc/html/rfc3986#section-3.1[URI scheme syntax].\n"
+"Requests with an invalid proto value receive a `400 Bad Request` response.\n"
+"To disable this validation, set the `quarkus.http.proxy.forwarded-proto-validation` configuration property to `none`."
+msgstr ""
 
 #. type: Plain text
 #. mt: gemini
@@ -1871,18 +2009,6 @@ msgstr "ホットリプレイスメントのボディハンドラー。"
 #. type: Table
 #. mt: gemini
 #: _guides/http-reference.adoc
-msgid "`ROUTE_ORDER_BODY_HANDLER_MANAGEMENT`"
-msgstr "`ROUTE_ORDER_BODY_HANDLER_MANAGEMENT`"
-
-#. type: Table
-#. mt: gemini
-#: _guides/http-reference.adoc
-msgid "Body handler for the management router."
-msgstr "マネジメントルーターのボディハンドラー。"
-
-#. type: Table
-#. mt: gemini
-#: _guides/http-reference.adoc
 msgid "`ROUTE_ORDER_HEADERS`"
 msgstr "`ROUTE_ORDER_HEADERS`"
 
@@ -1891,6 +2017,27 @@ msgstr "`ROUTE_ORDER_HEADERS`"
 #: _guides/http-reference.adoc
 msgid "Handlers that add headers specified in the configuration."
 msgstr "設定で指定されたヘッダーを追加するハンドラー。"
+
+#. type: Table
+#. mt: gemini
+#: _guides/http-reference.adoc
+msgid "`Integer.MIN_VALUE + 1`"
+msgstr "`Integer.MIN_VALUE + 1`"
+
+#. type: Table
+#: _guides/http-reference.adoc
+msgid "`ROUTE_ORDER_HOST_VALIDATION_MANAGEMENT`"
+msgstr ""
+
+#. type: Table
+#: _guides/http-reference.adoc
+msgid "Host validation handler of the management router."
+msgstr ""
+
+#. type: Table
+#: _guides/http-reference.adoc
+msgid "`Integer.MIN_VALUE + 2`"
+msgstr ""
 
 #. type: Table
 #. mt: gemini
@@ -1905,10 +2052,21 @@ msgid "CORS-Origin handler of the management router."
 msgstr "マネジメントルーターの CORS-Origin ハンドラー。"
 
 #. type: Table
+#: _guides/http-reference.adoc
+msgid "`Integer.MIN_VALUE + 3`"
+msgstr ""
+
+#. type: Table
 #. mt: gemini
 #: _guides/http-reference.adoc
-msgid "`Integer.MIN_VALUE + 1`"
-msgstr "`Integer.MIN_VALUE + 1`"
+msgid "`ROUTE_ORDER_BODY_HANDLER_MANAGEMENT`"
+msgstr "`ROUTE_ORDER_BODY_HANDLER_MANAGEMENT`"
+
+#. type: Table
+#. mt: gemini
+#: _guides/http-reference.adoc
+msgid "Body handler for the management router."
+msgstr "マネジメントルーターのボディハンドラー。"
 
 #. type: Table
 #. mt: gemini
