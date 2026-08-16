@@ -1,0 +1,292 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. type: Hash Value: concurrency group
+#: .github/workflows/update-insights.yml:1
+#, no-wrap
+msgid "${{ github.workflow }}"
+msgstr ""
+
+#. type: Hash Value: jobs build environment
+#: .github/workflows/update-insights.yml:1
+#, no-wrap
+msgid "${{ github.event_name != 'pull_request' && 'quarkus-push-website' || '' }}"
+msgstr ""
+
+#. type: Hash Value: jobs build if
+#: .github/workflows/update-insights.yml:1
+#, no-wrap
+msgid "github.repository == 'quarkusio/quarkusio.github.io' || github.event_name == 'pull_request'"
+msgstr ""
+
+#. type: Hash Value: jobs build runs-on
+#: .github/workflows/update-insights.yml:1
+#, no-wrap
+msgid "ubuntu-latest"
+msgstr ""
+
+#. type: Hash Value: jobs build steps id
+#: .github/workflows/update-insights.yml:1
+#, no-wrap
+msgid "generate-token"
+msgstr ""
+
+#. type: Hash Value: jobs build steps if
+#: .github/workflows/update-insights.yml:1
+#, no-wrap
+msgid "github.event_name != 'pull_request'"
+msgstr ""
+
+#. type: Hash Value: jobs build steps name
+#: .github/workflows/update-insights.yml:1
+#, no-wrap
+msgid "Generate GitHub App token"
+msgstr ""
+
+#. type: Hash Value: jobs build steps uses
+#: .github/workflows/update-insights.yml:1
+#, no-wrap
+msgid "actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1"
+msgstr ""
+
+#. type: Hash Value: jobs build steps with client-id
+#: .github/workflows/update-insights.yml:1
+#, no-wrap
+msgid "${{ secrets.QUARKUS_PUSH_WEBSITE_APP_ID }}"
+msgstr ""
+
+#. type: Hash Value: jobs build steps with private-key
+#: .github/workflows/update-insights.yml:1
+#, no-wrap
+msgid "${{ secrets.QUARKUS_PUSH_WEBSITE_PRIVATE_KEY }}"
+msgstr ""
+
+#. type: Hash Value: jobs build steps name
+#: .github/workflows/update-insights.yml:1
+#, no-wrap
+msgid "Checkout repository"
+msgstr ""
+
+#. type: Hash Value: jobs build steps uses
+#: .github/workflows/update-insights.yml:1
+#, no-wrap
+msgid "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1"
+msgstr ""
+
+#. type: Hash Value: jobs build steps with token
+#: .github/workflows/update-insights.yml:1
+#, no-wrap
+msgid "${{ steps.generate-token.outputs.token || github.token }}"
+msgstr ""
+
+#. type: Hash Value: jobs build steps id
+#: .github/workflows/update-insights.yml:1
+#, no-wrap
+msgid "archive_session"
+msgstr ""
+
+#. type: Hash Value: jobs build steps name
+#: .github/workflows/update-insights.yml:1
+#, no-wrap
+msgid "Archive current session"
+msgstr ""
+
+#. type: Hash Value: jobs build steps run
+#: .github/workflows/update-insights.yml:1
+#, no-wrap
+msgid ""
+"nextsessiondate=$(yq -r '.nextsessiondate' _data/insights-videos.yaml)\n"
+"if [ -z \"$nextsessiondate\" ] || [ \"$nextsessiondate\" == \"null\" ]; then\n"
+"  echo \"Error: Could not read nextsessiondate from YAML\"\n"
+"  exit 1\n"
+"fi\n"
+"day=$(date --date=\"$nextsessiondate\" +\"%d\")\n"
+"day=${day#0}\n"
+"case $day in\n"
+"  1|21|31) suffix=\"st\";;\n"
+"  2|22) suffix=\"nd\";;\n"
+"  3|23) suffix=\"rd\";;\n"
+"  *) suffix=\"th\";;\n"
+"esac\n"
+"nextsessiondate_formatted=$(date --date=\"$nextsessiondate\" +\"%B ${day}${suffix}, %Y\")\n"
+"today_iso=$(date +\"%Y-%m-%d\")\n"
+"nextsessiondate_iso=$(date --date=\"$nextsessiondate\" +\"%Y-%m-%d\")\n"
+"is_dry_run=${{ github.event_name == 'pull_request' }}\n"
+"if [ \"$is_dry_run\" = \"true\" ]; then\n"
+"  echo \"DRY-RUN: Would check if next session date ($nextsessiondate_formatted) has passed (today is $today_iso, session is $nextsessiondate_iso)\"\n"
+"elif [ \"$today_iso\" \\< \"$nextsessiondate_iso\" ]; then\n"
+"  echo \"Next session date ($nextsessiondate_formatted / $nextsessiondate_iso) is still in the future (today is $today_iso). Skipping workflow run.\"\n"
+"  exit 0\n"
+"fi\n"
+"current_episode=$(yq -r '.nextsessiontitle | sub(\".* #([0-9]+):.*\"; \"${1}\")' _data/insights-videos.yaml)\n"
+"if ! [[ \"$current_episode\" =~ ^[0-9]+$ ]]; then\n"
+"  echo \"Error: Could not extract episode number from nextsessiontitle. Got: '$current_episode'\"\n"
+"  exit 1\n"
+"fi\n"
+"echo \"Current episode number: $current_episode\"\n"
+"YOUTUBE_CHANNEL_ID=\"UCaW8QG_QoIk_FnjLgr5eOqg\"\n"
+"youtube_response=$(curl -s --fail \\\n"
+"    \"https://www.youtube.com/feeds/videos.xml?channel_id=${YOUTUBE_CHANNEL_ID}\") || {\n"
+"  echo \"Error: YouTube RSS feed request failed\"\n"
+"  exit 1\n"
+"}\n"
+"video_id=$(echo \"$youtube_response\" | grep -o \"<yt:videoId>[^<]*</yt:videoId>\" | sed 's/<[^>]*>//g' | head -1)\n"
+"if [ -z \"$video_id\" ]; then\n"
+"  echo \"Could not find the YouTube video for episode #$current_episode. Assuming it's not there yet. Exiting...\"\n"
+"  exit 0\n"
+"fi\n"
+"video_link=\"https://www.youtube.com/watch?v=${video_id}\"\n"
+"nextsessiontitle=\"$(yq '.nextsessiontitle' _data/insights-videos.yaml)\"\n"
+"nextsessionguest=\"$(yq '.nextsessionguest' _data/insights-videos.yaml)\"\n"
+"yq -i --yaml-compact-seq-indent '\n"
+"  .pastvideos = [\n"
+"  {\n"
+"    \"title\": \"'\"$nextsessiontitle\"'\",\n"
+"    \"date\": \"'\"$nextsessiondate_formatted\"'\",\n"
+"    \"authors\": \"'\"$nextsessionguest\"'\",\n"
+"    \"link\": \"'\"$video_link\"'\"\n"
+"  }\n"
+"] + .pastvideos\n"
+"' _data/insights-videos.yaml\n"
+"echo \"title=$nextsessiontitle\" >> \"$GITHUB_OUTPUT\"\n"
+msgstr ""
+
+#. type: Hash Value: jobs build steps if
+#: .github/workflows/update-insights.yml:1
+#, no-wrap
+msgid "steps.archive_session.outputs.title != ''"
+msgstr ""
+
+#. type: Hash Value: jobs build steps name
+#: .github/workflows/update-insights.yml:1
+#, no-wrap
+msgid "Set next session information"
+msgstr ""
+
+#. type: Hash Value: jobs build steps run
+#: .github/workflows/update-insights.yml:1
+#, no-wrap
+msgid ""
+"title=$(yq '.futurevideos[1].title' _data/insights-videos.yaml)\n"
+"guests=$(yq '.futurevideos[1].authors' _data/insights-videos.yaml)\n"
+"date_raw=$(yq '.futurevideos[1].date' _data/insights-videos.yaml)\n"
+"if [ -z \"$title\" ] || [ \"$title\" == \"null\" ]; then\n"
+"  echo \"Warning: No future videos remaining in the queue\"\n"
+"  exit 0\n"
+"fi\n"
+"date_clean=$(echo \"$date_raw\" | sed 's/\\([0-9]\\+\\)\\(st\\|nd\\|rd\\|th\\)/\\1/')\n"
+"date_iso=$(date --date=\"$date_clean\" +\"%Y-%m-%d\")\n"
+"date=${date_iso}T13:00Z\n"
+"yq -i --yaml-compact-seq-indent 'del(.futurevideos[0])' _data/insights-videos.yaml\n"
+"yq -i --yaml-compact-seq-indent '.nextsessiontitle = \"'\"$title\"'\"' _data/insights-videos.yaml\n"
+"yq -i --yaml-compact-seq-indent '.nextsessionguest = \"'\"$guests\"'\"' _data/insights-videos.yaml\n"
+"yq -i --yaml-compact-seq-indent '.nextsessiondate = \"'\"$date\"'\"' _data/insights-videos.yaml\n"
+msgstr ""
+
+#. type: Hash Value: jobs build steps if
+#: .github/workflows/update-insights.yml:1
+#, no-wrap
+msgid "github.event_name == 'pull_request'"
+msgstr ""
+
+#. type: Hash Value: jobs build steps name
+#: .github/workflows/update-insights.yml:1
+#, no-wrap
+msgid "Show dry-run diff"
+msgstr ""
+
+#. type: Hash Value: jobs build steps run
+#: .github/workflows/update-insights.yml:1
+#, no-wrap
+msgid ""
+"echo \"DRY-RUN: Changes that would be committed:\"\n"
+"git diff _data/insights-videos.yaml\n"
+msgstr ""
+
+#. type: Hash Value: jobs build steps name
+#: .github/workflows/update-insights.yml:1
+#, no-wrap
+msgid "Commit and push"
+msgstr ""
+
+#. type: Hash Value: jobs build steps run
+#: .github/workflows/update-insights.yml:1
+#, no-wrap
+msgid ""
+"git config --local user.email \"action@github.com\"\n"
+"git config --local user.name \"GitHub Action\"\n"
+"git add _data/insights-videos.yaml\n"
+"if ! git diff --cached --quiet; then\n"
+"  git commit -m \"Update Insights sessions archive\"\n"
+"  git pull origin main --rebase\n"
+"  git push origin main\n"
+"fi\n"
+msgstr ""
+
+#. type: Hash Value: name
+#: .github/workflows/update-insights.yml:1
+#, no-wrap
+msgid "Sync Insights Sessions archive/upcoming"
+msgstr ""
+
+#. type: Array Element: on push paths
+#: .github/workflows/update-insights.yml:1
+#, no-wrap
+msgid "_data/insights-videos.yaml"
+msgstr ""
+
+#. type: Array Element: on push paths
+#: .github/workflows/update-insights.yml:1
+#, no-wrap
+msgid ".github/workflows/update-insights.yml"
+msgstr ""
+
+#. type: Hash Value: on schedule cron
+#: .github/workflows/update-insights.yml:1
+#, no-wrap
+msgid "0 12 * * 1"
+msgstr ""
+
+#. type: Hash Value: on schedule cron
+#: .github/workflows/update-insights.yml:1
+#, no-wrap
+msgid "0 13 * * 1"
+msgstr ""
+
+#. type: Hash Value: on schedule cron
+#: .github/workflows/update-insights.yml:1
+#, no-wrap
+msgid "0 14 * * 1"
+msgstr ""
+
+#. type: Hash Value: on schedule cron
+#: .github/workflows/update-insights.yml:1
+#, no-wrap
+msgid "0 15 * * 1"
+msgstr ""
+
+#. type: Hash Value: on schedule cron
+#: .github/workflows/update-insights.yml:1
+#, no-wrap
+msgid "0 16 * * 1"
+msgstr ""
+
+#. type: Hash Value: on schedule cron
+#: .github/workflows/update-insights.yml:1
+#, no-wrap
+msgid "0 21 * * 1"
+msgstr ""
+
+#. type: Hash Value: on schedule cron
+#: .github/workflows/update-insights.yml:1
+#, no-wrap
+msgid "0 12 * * 2"
+msgstr ""
