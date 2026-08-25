@@ -248,13 +248,63 @@ msgstr ""
 #. type: Hash Value: jobs build steps name
 #: .github/workflows/build.yml:1
 #, no-wrap
+msgid "Build TOC plugin"
+msgstr ""
+
+#. type: Hash Value: jobs build steps run
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid "./roq-plugin-toc/build.sh"
+msgstr ""
+
+#. type: Hash Value: jobs build steps id
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid "infra"
+msgstr ""
+
+#. type: Hash Value: jobs build steps name
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid "Detect infra changes"
+msgstr ""
+
+#. type: Hash Value: jobs build steps run
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid ""
+"if [ -n \"${{ github.event.pull_request.base.sha }}\" ]; then\n"
+"  CHANGED=$(git diff --name-only ${{ github.event.pull_request.base.sha }}..HEAD -- \\\n"
+"    .github/workflows/build.yml \\\n"
+"    pom.xml \\\n"
+"    config/ \\\n"
+"    src/ \\\n"
+"    templates/ 2>/dev/null || true)\n"
+"else\n"
+"  CHANGED=\"not-a-pr\"\n"
+"fi\n"
+"if [ -n \"$CHANGED\" ]; then\n"
+"  echo \"include_versions=true\" >> $GITHUB_OUTPUT\n"
+"else\n"
+"  echo \"include_versions=false\" >> $GITHUB_OUTPUT\n"
+"fi\n"
+msgstr ""
+
+#. type: Hash Value: jobs build steps name
+#: .github/workflows/build.yml:1
+#, no-wrap
 msgid "Build with Maven"
 msgstr ""
 
 #. type: Hash Value: jobs build steps run
 #: .github/workflows/build.yml:1
 #, no-wrap
-msgid "QUARKUS_ROQ_GENERATOR_BATCH=true QUARKUS_PROFILE=only-latest-guides mvn -B package quarkus:run -DskipTests"
+msgid ""
+"export QUARKUS_ROQ_GENERATOR_BATCH=true\n"
+"if [ \"${{ steps.infra.outputs.include_versions }}\" != \"true\" ]; then\n"
+"  export QUARKUS_PROFILE=only-latest-guides\n"
+"fi\n"
+"mvn -B package quarkus:run -DskipTests\n"
 msgstr ""
 
 #. type: Hash Value: jobs build steps name
@@ -355,15 +405,7 @@ msgstr ""
 #: .github/workflows/build.yml:1
 #, no-wrap
 msgid ""
-"if [ -n \"${{ github.event.pull_request.base.sha }}\" ]; then\n"
-"  INFRA_CHANGED=$(git diff --name-only ${{ github.event.pull_request.base.sha }}..HEAD -- \\\n"
-"    .github/workflows/build.yml \\\n"
-"    pom.xml \\\n"
-"    src/test/java/ 2>/dev/null || true)\n"
-"else\n"
-"  INFRA_CHANGED=\"not-a-pr\"\n"
-"fi\n"
-"if [ -n \"$INFRA_CHANGED\" ]; then\n"
+"if [ \"${{ steps.infra.outputs.include_versions }}\" = \"true\" ]; then\n"
 "  echo \"mode=full\" >> $GITHUB_OUTPUT\n"
 "  echo \"Infrastructure files changed, running full link check\"\n"
 "  exit 0\n"
@@ -457,9 +499,13 @@ msgid ""
 "if [ \"${{ steps.link_scope.outputs.mode }}\" = \"partial\" ]; then\n"
 "  CHANGED_PATHS_ARG=\"-Dtest.crawl.changed-paths=${{ steps.link_scope.outputs.paths }}\"\n"
 "fi\n"
+"EXCLUDE_ARG=\"-Dtest.crawl.exclude-paths=/version/2,/version/3,/version/4,/version/5,/version/main\"\n"
+"if [ \"${{ steps.infra.outputs.include_versions }}\" = \"true\" ]; then\n"
+"  EXCLUDE_ARG=\"\"\n"
+"fi\n"
 "mvn -B test -Pe2e -Dtest.url=http://localhost:8090 \\\n"
 "  -Dtest.crawl.check-external=false \\\n"
-"  -Dtest.crawl.exclude-paths=/version/2,/version/3,/version/4,/version/5,/version/main \\\n"
+"  $EXCLUDE_ARG \\\n"
 "  $CHANGED_PATHS_ARG\n"
 msgstr ""
 
@@ -620,6 +666,15 @@ msgid ""
 "rm -rf \"$SITE_DIR\"/assets/stickers\n"
 "rm -rf \"$SITE_DIR\"/assets/images/desktopwallpapers\n"
 "rm -rf \"$SITE_DIR\"/assets/images/stickers\n"
+"if [ -d \"$SITE_DIR/version\" ]; then\n"
+"  NEWEST=$(ls -1 \"$SITE_DIR/version\" | grep -v main | sort -t. -k1,1n -k2,2n | tail -1)\n"
+"  for v in \"$SITE_DIR/version\"/*/; do\n"
+"    NAME=$(basename \"$v\")\n"
+"    if [ \"$NAME\" != \"main\" ] && [ \"$NAME\" != \"$NEWEST\" ]; then\n"
+"      rm -rf \"$v\"\n"
+"    fi\n"
+"  done\n"
+"fi\n"
 msgstr ""
 
 #. type: Hash Value: jobs build steps name
