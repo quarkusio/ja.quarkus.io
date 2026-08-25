@@ -1,0 +1,738 @@
+msgid ""
+msgstr ""
+"Language: ja_JP\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: roq-plugin-l10n-adoc\n"
+
+msgid "Centralized log management (Graylog, Logstash, Fluentd)"
+msgstr "ログの一元管理（Graylog、Logstash、Fluentd）"
+
+msgid ""
+"This guide explains how you can send your logs to a centralized log management system like Graylog, Logstash (inside the Elastic Stack or ELK - Elasticsearch, Logstash, Kibana) or\n"
+"Fluentd (inside EFK - Elasticsearch, Fluentd, Kibana)."
+msgstr "このガイドでは、Graylog、Logstash(Elastic StackやELK - Elasticsearch、Logstash、Kibanaの内部)、Fluentd(EFK - Elasticsearch、Fluentd、Kibanaの内部)のような集中型ログ管理システムにログを送信する方法を説明します。"
+
+msgid ""
+"There are a lot of different ways to centralize your logs (if you are using Kubernetes, the simplest way is to log to the console and ask you cluster administrator to integrate a central log manager inside your cluster).\n"
+"In this guide, we will expose how to send them to an external tool using the `quarkus-logging-gelf` extension that can use TCP or UDP to send logs in the Graylog Extended Log Format (GELF)."
+msgstr "ログを一元化する方法はたくさんあります(Kubernetesを使用している場合、最も簡単な方法はコンソールにログインして、クラスター管理者にクラスター内に一元化されたログマネージャーを統合するように依頼することです)。このガイドでは、TCPまたはUDPを使用してGraylog Extended Log Format (GELF)でログを送信できる `quarkus-logging-gelf` エクステンションを使用して外部ツールに送信する方法を公開します。"
+
+msgid ""
+"The `quarkus-logging-gelf` extension will add a GELF log handler to the underlying logging backend that Quarkus uses (jboss-logmanager).\n"
+"By default, it is disabled, if you enable it but still use another handler (by default the console handler is enabled), your logs will be sent to both handlers."
+msgstr "`quarkus-logging-gelf` エクステンションは、Quarkusが使用する基礎となるロギングバックエンド(jboss-logmanager)にGELFログハンドラーを追加します。デフォルトでは無効になっており、有効にした場合も別のハンドラーも使用している場合(デフォルトではコンソールハンドラーが有効になっています)、ログは両方のハンドラーに送信されます。"
+
+msgid "Prerequisites"
+msgstr "前提条件"
+
+msgid "To complete this guide, you need:"
+msgstr "このガイドを完成させるには、以下が必要です:"
+
+msgid "Roughly 15 minutes"
+msgstr "約15分"
+
+msgid "An IDE"
+msgstr "IDE"
+
+msgid "JDK 17+ installed with `JAVA_HOME` configured appropriately"
+msgstr "JDK 17+がインストールされ、 `JAVA_HOME` が適切に設定されていること"
+
+msgid "Apache Maven {maven-version}"
+msgstr "Apache Maven {maven-version}"
+
+msgid "Docker and Docker Compose or xref:podman.adoc[Podman], and Docker Compose"
+msgstr "Docker と Docker Compose、または xref:podman.adoc[Podman] 、および Docker Compose"
+
+msgid "Optionally the xref:cli-tooling.adoc[Quarkus CLI] if you want to use it"
+msgstr "使用したい場合は、 link:cli-tooling.html[Quarkus CLI]"
+
+msgid "Optionally Mandrel or GraalVM installed and xref:building-native-image.adoc#configuring-graalvm[configured appropriately] if you want to build a native executable (or Docker if you use a native container build)"
+msgstr "ネイティブ実行可能ファイルをビルドしたい場合、MandrelまたはGraalVM（あるいはネイティブなコンテナビルドを使用する場合はDocker）をインストールし、 link:building-native-image.html#configuring-graalvm[適切に設定]していること"
+
+msgid "Example application"
+msgstr "アプリケーション例"
+
+msgid "The following examples will all be based on the same example application that you can create with the following steps."
+msgstr "以下の例はすべて、以下の手順で作成できる同じアプリケーションの例を基にしています。"
+
+msgid "Create an application with the `quarkus-logging-gelf` extension. You can use the following command to create it:"
+msgstr "`quarkus-logging-gelf` のエクステンションを持つアプリケーションを作成します。以下のコマンドで作成することができます:"
+
+msgid "CLI"
+msgstr "コマンドラインインタフェース"
+
+msgid "To create a Gradle project, add the `--gradle` or `--gradle-kotlin-dsl` option."
+msgstr "Gradleプロジェクトを作成するには、 `--gradle` または `--gradle-kotlin-dsl` オプションを追加します。"
+
+msgid "For more information about how to install and use the Quarkus CLI, see the xref:cli-tooling.adoc[Quarkus CLI] guide."
+msgstr "Quarkus CLIのインストールと使用方法の詳細については、 xref:cli-tooling.adoc[Quarkus CLI] ガイドを参照してください。"
+
+msgid "Maven"
+msgstr "Maven"
+
+msgid "To create a Gradle project, add the `-DbuildTool=gradle` or `-DbuildTool=gradle-kotlin-dsl` option."
+msgstr "Gradleプロジェクトを作成するには、 `-DbuildTool=gradle` または `-DbuildTool=gradle-kotlin-dsl` オプションを追加します。"
+
+msgid "For Windows users:"
+msgstr "Windowsユーザーの場合:"
+
+msgid "If using cmd, (don't use backward slash `\\` and put everything on the same line)"
+msgstr "cmdを使用する場合、（バックスラッシュ `\\` を使用せず、すべてを同じ行に書かないでください）。"
+
+msgid "If using Powershell, wrap `-D` parameters in double quotes e.g. `\"-DprojectArtifactId={create-app-artifact-id}\"`"
+msgstr "Powershellを使用する場合は、 `-D` パラメータを二重引用符で囲んでください。例: `\"-DprojectArtifactId={create-app-artifact-id}\"`"
+
+msgid ""
+"If you already have your Quarkus project configured, you can add the `logging-gelf` extension\n"
+"to your project by running the following command in your project base directory:"
+msgstr "すでにQuarkusプロジェクトが設定されている場合は、プロジェクトのベースディレクトリーで以下のコマンドを実行することで、プロジェクトに `logging-gelf` エクステンションを追加することができます。"
+
+msgid "This will add the following dependency to your build file:"
+msgstr "これにより、ビルドファイルに以下の依存関係が追加されます:"
+
+msgid "For demonstration purposes, we create an endpoint that does nothing but log a sentence. You don't need to do this inside your application."
+msgstr "デモのために、文をログに記録するだけのエンドポイントを作成します。これをアプリケーション内で行う必要はありません。"
+
+msgid "Configure the GELF log handler to send logs to an external UDP endpoint on the port 12201:"
+msgstr "GELF ログハンドラーを構成して、ポート 12201 の外部 UDP エンドポイントにログを送信します。"
+
+msgid "Send logs to Graylog"
+msgstr "ログをGraylogに送信"
+
+msgid "To send logs to Graylog, you first need to launch the components that compose the Graylog stack:"
+msgstr "Graylogにログを送信するには、まずGraylogスタックを構成するコンポーネントを起動する必要があります:"
+
+msgid "MongoDB"
+msgstr "MongoDB"
+
+msgid "Elasticsearch"
+msgstr "Elasticsearch"
+
+msgid "Graylog"
+msgstr "Graylog"
+
+msgid "You can do this via the following `docker-compose.yml` file that you can launch via `docker-compose up -d`:"
+msgstr "これは、以下の `docker-compose.yml` ファイルから、 `docker-compose up -d` で起動できます:"
+
+msgid ""
+"Then, you need to create a UDP input in Graylog.\n"
+"You can do it from the Graylog web console (System -> Input -> Select GELF UDP) available at http://localhost:9000 or via the API."
+msgstr "次に、GraylogでUDP入力を作成する必要があります。これは、 http://localhost:9000 の GraylogのWebコンソール(System → Input → Select GELF UDP)から、 またはAPI経由で行うことができます。"
+
+msgid "This curl example will create a new Input of type GELF UDP, it uses the default login from Graylog (admin/admin)."
+msgstr "この curl の例では、Graylog (admin/admin) からのデフォルトのログインを使用し、GELF UDP タイプの新しい入力を作成します。"
+
+msgid "Launch your application, you should see your logs arriving inside Graylog."
+msgstr "アプリケーションを起動すると、Graylog内にログが届くのがわかるはずです。"
+
+msgid "Send logs to Logstash / the Elastic Stack (ELK)"
+msgstr "Logstash / Elastic Stack (ELK)にログを送信"
+
+msgid "Logstash comes by default with an Input plugin that can understand the GELF format, we will first create a pipeline that enables this plugin."
+msgstr "LogstashにはGELF形式を理解できるInputプラグインがデフォルトで入ってるので、まずこのプラグインを有効にするパイプラインを作成します。"
+
+msgid "Create the following file  in `$HOME/pipelines/gelf.conf`:"
+msgstr "`$HOME/pipelines/gelf.conf` に以下のファイルを作成します。"
+
+msgid "Finally, launch the components that compose the Elastic Stack:"
+msgstr "最後に、Elastic Stackを構成するコンポーネントを起動します:"
+
+msgid "Logstash"
+msgstr "Logstash"
+
+msgid "Kibana"
+msgstr "Kibana"
+
+msgid "Launch your application, you should see your logs arriving inside the Elastic Stack; you can use Kibana available at http://localhost:5601/ to access them."
+msgstr "アプリケーションを起動すると、Elastic Stack内にログが届いているのが確認できるはずです。 http://localhost:5601/ で利用できるKibanaを使って、ログにアクセスすることができます。"
+
+msgid "Send logs to Fluentd (EFK)"
+msgstr "Fluentd(EFK)へのログ送信"
+
+msgid ""
+"First, you need to create a Fluentd image with the needed plugins: elasticsearch and input-gelf.\n"
+"You can use the following Dockerfile that should be created inside a `fluentd` directory."
+msgstr "まず、必要なプラグインである elasticsearch と input-elf を使って Fluentd イメージを作成します。 以下の Dockerfile を使用することができます。このファイルは `fluentd` ディレクトリー内に作成する必要があります。"
+
+msgid "You can build the image or let docker-compose build it for you."
+msgstr "イメージをビルドするか、docker-composeにビルドを任せることができます。"
+
+msgid "Then you need to create a fluentd configuration file inside `$HOME/fluentd/fluent.conf`"
+msgstr "次に、 `$HOME/fluentd/fluent.conf` の中にfluentd 設定ファイルを作成する必要があります"
+
+msgid "Finally, launch the components that compose the EFK Stack:"
+msgstr "最後に、EFKスタックを構成するコンポーネントを起動します:"
+
+msgid "Fluentd"
+msgstr "Fluentd"
+
+msgid "Launch your application, you should see your logs arriving inside EFK: you can use Kibana available at http://localhost:5601/ to access them."
+msgstr "アプリケーションを起動すると、EFK内にログが到着しているのが確認できるはずです: それらにアクセスするには、 http://localhost:5601/ で利用可能な Kibana を使用することができます。"
+
+msgid "GELF alternative: use Syslog"
+msgstr "GELFの代替:Syslogの使用"
+
+msgid ""
+"You can also send your logs to Fluentd using a Syslog input.\n"
+"As opposed to the GELF input, the Syslog input will not render multiline logs in one event, that's why we advise to use the GELF input that we implement in Quarkus."
+msgstr "Syslog入力を使ってFluentdにログを送ることもできます。GELF入力とは対照的に、Syslog入力は1つのイベントで複数行のログをレンダリングすることができないため、Quarkusで実装されているGELF入力を使用することをお勧めします。"
+
+msgid ""
+"First, you need to create a Fluentd image with the elasticsearch plugin.\n"
+"You can use the following Dockerfile that should be created inside a `fluentd` directory."
+msgstr "まず、elasticsearchプラグインでFluentdイメージを作成する必要があります。 以下の Dockerfile を使用することができます。このファイルは `fluentd` ディレクトリー内に作成する必要があります。"
+
+msgid "Then, you need to create a fluentd configuration file inside `$HOME/fluentd/fluent.conf`"
+msgstr "次に、fluentd設定ファイルを `$HOME/fluentd/fluent.conf` 内に作成する必要があります。"
+
+msgid "Then, launch the components that compose the EFK Stack:"
+msgstr "次に、EFKスタックを構成するコンポーネントを起動します:"
+
+msgid "Finally, configure your application to send logs to EFK using Syslog:"
+msgstr "最後に、Syslogを使用してEFKにログを送信するようにアプリケーションを設定します:"
+
+msgid "Elasticsearch indexing consideration"
+msgstr "Elasticsearch インデックスの検討"
+
+msgid ""
+"Be careful that, by default, Elasticsearch will automatically map unknown fields (if not disabled in the index settings) by detecting their type.\n"
+"This can become tricky if you use log parameters (which are included by default), or if you enable MDC inclusion (disabled by default),\n"
+"as the first log will define the type of the message parameter (or MDC parameter) field inside the index."
+msgstr "デフォルトでは、Elasticsearch は未知のフィールド（インデックス設定で無効になっていない場合）を、そのタイプを検出して自動的にマッピングすることに注意してください。これは、ログパラメータ（デフォルトで含まれている）を使用する場合や、MDC インクルード（デフォルトでは無効）を有効にする場合、最初のログがインデックス内のメッセージパラメータ（または MDC パラメータ）フィールドのタイプを定義するため、厄介なことになる可能性があります。"
+
+msgid "Imagine the following case:"
+msgstr "次のようなケースを想像してみてください:"
+
+msgid ""
+"With log message parameters enabled, the first log message sent to Elasticsearch will have a `MessageParam0` parameter with an `int` type;\n"
+"this will configure the index with a field of type `integer`.\n"
+"When the second message will arrive to Elasticsearch, it will have a `MessageParam0` parameter with the boolean value `true`, and this will generate an indexing error."
+msgstr "ログメッセージのパラメータを有効にすると、Elasticsearch に送信される最初のログメッセージは `int` 型の `MessageParam0` パラメータが設定され、これにより `integer` 型のフィールドでインデックスが構成されます。2 番目のメッセージが Elasticsearch に届くと、ブーリアン値 `true` を持つ `MessageParam0` パラメータが設定され、これによりインデックス作成エラーが発生します。"
+
+msgid ""
+"To work around this limitation, you can disable sending log message parameters via `logging-gelf` by configuring `quarkus.log.handler.gelf.include-log-message-parameters=false`,\n"
+"or you can configure your Elasticsearch index to store those fields as text or keyword, Elasticsearch will then automatically make the translation from int/boolean to a String."
+msgstr "この制限を回避するには、 `quarkus.log.handler.gelf.include-log-message-parameters=false` を設定して `logging-gelf` を介したログメッセージパラメータの送信を無効にするか、Elasticsearch インデックスにテキストまたはキーワードとしてこれらのフィールドを保存するように設定して、Elasticsearch は int/boolean から String への変換を自動的に行います。"
+
+msgid "See the following documentation for Graylog (but the same issue exists for the other central logging stacks): link:https://docs.graylog.org/en/3.2/pages/configuration/elasticsearch.html#custom-index-mappings[Custom Index Mappings]."
+msgstr "Graylogについては以下のドキュメントを参照してください（ただし、他のセントラルロギングスタックにも同じ問題があります）。 link:https://docs.graylog.org/en/3.2/pages/configuration/elasticsearch.html#custom-index-mappings[カスタム インデックス マッピング] 。"
+
+msgid "Configuration Reference"
+msgstr "設定リファレンス"
+
+msgid "Configuration is done through the usual `application.properties` file."
+msgstr "設定は通常の `application.properties` ファイルから行います。"
+
+msgid "<span class=\"icon\"><i class=\"fa fa-lock\" title=\"Fixed at build time\"></i></span> Configuration property fixed at build time - All other configuration properties are overridable at runtime <input type=\"search\" id=\"config-search-1\" placeholder=\"FILTER CONFIGURATION\" disabled>"
+msgstr "<span class=\"icon\"><i class=\"fa fa-lock\" title=\"ビルド時に固定\"></i></span> ビルド時に固定される設定プロパティ - 他のすべての設定プロパティは、実行時にオーバーライド可能 <input type=\"search\" id=\"config-search-1\" placeholder=\"FILTER CONFIGURATION\" disabled>"
+
+msgid "[.header-title]##Configuration property##"
+msgstr ""
+
+msgid "Type"
+msgstr "タイプ"
+
+msgid "Default"
+msgstr "デフォルト"
+
+msgid ""
+"[[quarkus-logging-gelf_quarkus-log-handler-gelf-enabled]] [.property-path]##link:#quarkus-logging-gelf_quarkus-log-handler-gelf-enabled[`quarkus.log.handler.gelf.enabled`]##\n"
+"\n"
+"[.description]\n"
+"--\n"
+"Determine whether to enable the GELF logging handler\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_HANDLER_GELF_ENABLED+++[]\n"
+"--"
+msgstr ""
+
+msgid "[[quarkus-logging-gelf_quarkus-log-handler-gelf-enabled]] [.property-path]##link:#quarkus-logging-gelf_quarkus-log-handler-gelf-enabled[`quarkus.log.handler.gelf.enabled`]##"
+msgstr ""
+
+msgid "Determine whether to enable the GELF logging handler"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_HANDLER_GELF_ENABLED+++[]"
+msgstr ""
+
+msgid "<i class=\"fa fa-chevron-down\"></i><span>Show more</span>"
+msgstr ""
+
+msgid "boolean"
+msgstr "boolean"
+
+msgid "`false`"
+msgstr "`false`"
+
+msgid ""
+"[[quarkus-logging-gelf_quarkus-log-handler-gelf-host]] [.property-path]##link:#quarkus-logging-gelf_quarkus-log-handler-gelf-host[`quarkus.log.handler.gelf.host`]##\n"
+"\n"
+"[.description]\n"
+"--\n"
+"Hostname/IP-Address of the Logstash/Graylog Host By default it uses UDP, prepend tcp: to the hostname to switch to TCP, example: \"tcp:localhost\"\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_HANDLER_GELF_HOST+++[]\n"
+"--"
+msgstr ""
+
+msgid "[[quarkus-logging-gelf_quarkus-log-handler-gelf-host]] [.property-path]##link:#quarkus-logging-gelf_quarkus-log-handler-gelf-host[`quarkus.log.handler.gelf.host`]##"
+msgstr ""
+
+msgid "Hostname/IP-Address of the Logstash/Graylog Host By default it uses UDP, prepend tcp: to the hostname to switch to TCP, example: \"tcp:localhost\""
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_HANDLER_GELF_HOST+++[]"
+msgstr ""
+
+msgid "string"
+msgstr "string"
+
+msgid "`localhost`"
+msgstr "`localhost`"
+
+msgid ""
+"[[quarkus-logging-gelf_quarkus-log-handler-gelf-port]] [.property-path]##link:#quarkus-logging-gelf_quarkus-log-handler-gelf-port[`quarkus.log.handler.gelf.port`]##\n"
+"\n"
+"[.description]\n"
+"--\n"
+"The port\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_HANDLER_GELF_PORT+++[]\n"
+"--"
+msgstr ""
+
+msgid "[[quarkus-logging-gelf_quarkus-log-handler-gelf-port]] [.property-path]##link:#quarkus-logging-gelf_quarkus-log-handler-gelf-port[`quarkus.log.handler.gelf.port`]##"
+msgstr ""
+
+msgid "The port"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_HANDLER_GELF_PORT+++[]"
+msgstr ""
+
+msgid "int"
+msgstr "int"
+
+msgid "`12201`"
+msgstr ""
+
+msgid ""
+"[[quarkus-logging-gelf_quarkus-log-handler-gelf-version]] [.property-path]##link:#quarkus-logging-gelf_quarkus-log-handler-gelf-version[`quarkus.log.handler.gelf.version`]##\n"
+"\n"
+"[.description]\n"
+"--\n"
+"GELF version: 1.0 or 1.1\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_HANDLER_GELF_VERSION+++[]\n"
+"--"
+msgstr ""
+
+msgid "[[quarkus-logging-gelf_quarkus-log-handler-gelf-version]] [.property-path]##link:#quarkus-logging-gelf_quarkus-log-handler-gelf-version[`quarkus.log.handler.gelf.version`]##"
+msgstr ""
+
+msgid "GELF version: 1.0 or 1.1"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_HANDLER_GELF_VERSION+++[]"
+msgstr ""
+
+msgid "`1.1`"
+msgstr ""
+
+msgid ""
+"[[quarkus-logging-gelf_quarkus-log-handler-gelf-extract-stack-trace]] [.property-path]##link:#quarkus-logging-gelf_quarkus-log-handler-gelf-extract-stack-trace[`quarkus.log.handler.gelf.extract-stack-trace`]##\n"
+"\n"
+"[.description]\n"
+"--\n"
+"Whether to post Stack-Trace to StackTrace field.\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_HANDLER_GELF_EXTRACT_STACK_TRACE+++[]\n"
+"--"
+msgstr ""
+
+msgid "[[quarkus-logging-gelf_quarkus-log-handler-gelf-extract-stack-trace]] [.property-path]##link:#quarkus-logging-gelf_quarkus-log-handler-gelf-extract-stack-trace[`quarkus.log.handler.gelf.extract-stack-trace`]##"
+msgstr ""
+
+msgid "Whether to post Stack-Trace to StackTrace field."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_HANDLER_GELF_EXTRACT_STACK_TRACE+++[]"
+msgstr ""
+
+msgid "`true`"
+msgstr "`true`"
+
+msgid ""
+"[[quarkus-logging-gelf_quarkus-log-handler-gelf-stack-trace-throwable-reference]] [.property-path]##link:#quarkus-logging-gelf_quarkus-log-handler-gelf-stack-trace-throwable-reference[`quarkus.log.handler.gelf.stack-trace-throwable-reference`]##\n"
+"\n"
+"[.description]\n"
+"--\n"
+"Only used when `extractStackTrace` is `true`. A value of 0 will extract the whole stack trace. Any positive value will walk the cause chain: 1 corresponds with exception.getCause(), 2 with exception.getCause().getCause(), ... Negative throwable reference walk the exception chain from the root cause side: -1 will extract the root cause, -2 the exception wrapping the root cause, ...\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_HANDLER_GELF_STACK_TRACE_THROWABLE_REFERENCE+++[]\n"
+"--"
+msgstr ""
+
+msgid "[[quarkus-logging-gelf_quarkus-log-handler-gelf-stack-trace-throwable-reference]] [.property-path]##link:#quarkus-logging-gelf_quarkus-log-handler-gelf-stack-trace-throwable-reference[`quarkus.log.handler.gelf.stack-trace-throwable-reference`]##"
+msgstr ""
+
+msgid "Only used when `extractStackTrace` is `true`. A value of 0 will extract the whole stack trace. Any positive value will walk the cause chain: 1 corresponds with exception.getCause(), 2 with exception.getCause().getCause(), ... Negative throwable reference walk the exception chain from the root cause side: -1 will extract the root cause, -2 the exception wrapping the root cause, ..."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_HANDLER_GELF_STACK_TRACE_THROWABLE_REFERENCE+++[]"
+msgstr ""
+
+msgid "`0`"
+msgstr "`0`"
+
+msgid ""
+"[[quarkus-logging-gelf_quarkus-log-handler-gelf-filter-stack-trace]] [.property-path]##link:#quarkus-logging-gelf_quarkus-log-handler-gelf-filter-stack-trace[`quarkus.log.handler.gelf.filter-stack-trace`]##\n"
+"\n"
+"[.description]\n"
+"--\n"
+"Whether to perform Stack-Trace filtering\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_HANDLER_GELF_FILTER_STACK_TRACE+++[]\n"
+"--"
+msgstr ""
+
+msgid "[[quarkus-logging-gelf_quarkus-log-handler-gelf-filter-stack-trace]] [.property-path]##link:#quarkus-logging-gelf_quarkus-log-handler-gelf-filter-stack-trace[`quarkus.log.handler.gelf.filter-stack-trace`]##"
+msgstr ""
+
+msgid "Whether to perform Stack-Trace filtering"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_HANDLER_GELF_FILTER_STACK_TRACE+++[]"
+msgstr ""
+
+msgid ""
+"[[quarkus-logging-gelf_quarkus-log-handler-gelf-timestamp-pattern]] [.property-path]##link:#quarkus-logging-gelf_quarkus-log-handler-gelf-timestamp-pattern[`quarkus.log.handler.gelf.timestamp-pattern`]##\n"
+"\n"
+"[.description]\n"
+"--\n"
+"Java date pattern, see `java.text.SimpleDateFormat`\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_HANDLER_GELF_TIMESTAMP_PATTERN+++[]\n"
+"--"
+msgstr ""
+
+msgid "[[quarkus-logging-gelf_quarkus-log-handler-gelf-timestamp-pattern]] [.property-path]##link:#quarkus-logging-gelf_quarkus-log-handler-gelf-timestamp-pattern[`quarkus.log.handler.gelf.timestamp-pattern`]##"
+msgstr ""
+
+msgid "Java date pattern, see `java.text.SimpleDateFormat`"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_HANDLER_GELF_TIMESTAMP_PATTERN+++[]"
+msgstr ""
+
+msgid "`yyyy-MM-dd HH:mm:ss,SSS`"
+msgstr ""
+
+msgid ""
+"[[quarkus-logging-gelf_quarkus-log-handler-gelf-level]] [.property-path]##link:#quarkus-logging-gelf_quarkus-log-handler-gelf-level[`quarkus.log.handler.gelf.level`]##\n"
+"\n"
+"[.description]\n"
+"--\n"
+"The logging-gelf log level.\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_HANDLER_GELF_LEVEL+++[]\n"
+"--"
+msgstr ""
+
+msgid "[[quarkus-logging-gelf_quarkus-log-handler-gelf-level]] [.property-path]##link:#quarkus-logging-gelf_quarkus-log-handler-gelf-level[`quarkus.log.handler.gelf.level`]##"
+msgstr ""
+
+msgid "The logging-gelf log level."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_HANDLER_GELF_LEVEL+++[]"
+msgstr ""
+
+msgid "link:https://javadoc.io/doc/org.jboss.logmanager/jboss-logmanager/latest/org/jboss/logmanager/Level.html[Level]"
+msgstr ""
+
+msgid "`ALL`"
+msgstr ""
+
+msgid ""
+"[[quarkus-logging-gelf_quarkus-log-handler-gelf-facility]] [.property-path]##link:#quarkus-logging-gelf_quarkus-log-handler-gelf-facility[`quarkus.log.handler.gelf.facility`]##\n"
+"\n"
+"[.description]\n"
+"--\n"
+"Name of the facility.\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_HANDLER_GELF_FACILITY+++[]\n"
+"--"
+msgstr ""
+
+msgid "[[quarkus-logging-gelf_quarkus-log-handler-gelf-facility]] [.property-path]##link:#quarkus-logging-gelf_quarkus-log-handler-gelf-facility[`quarkus.log.handler.gelf.facility`]##"
+msgstr ""
+
+msgid "Name of the facility."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_HANDLER_GELF_FACILITY+++[]"
+msgstr ""
+
+msgid "`jboss-logmanager`"
+msgstr ""
+
+msgid "[[quarkus-logging-gelf_section_quarkus-log-handler-gelf-additional-field]] [.section-name.section-level0]##link:#quarkus-logging-gelf_section_quarkus-log-handler-gelf-additional-field[Post additional fields]##"
+msgstr ""
+
+msgid ""
+"[[quarkus-logging-gelf_quarkus-log-handler-gelf-additional-field-field-name-value]] [.property-path]##link:#quarkus-logging-gelf_quarkus-log-handler-gelf-additional-field-field-name-value[`quarkus.log.handler.gelf.additional-field.\"field-name\".value`]##\n"
+"\n"
+"[.description]\n"
+"--\n"
+"Additional field value.\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_HANDLER_GELF_ADDITIONAL_FIELD__FIELD_NAME__VALUE+++[]\n"
+"--"
+msgstr ""
+
+msgid "[[quarkus-logging-gelf_quarkus-log-handler-gelf-additional-field-field-name-value]] [.property-path]##link:#quarkus-logging-gelf_quarkus-log-handler-gelf-additional-field-field-name-value[`quarkus.log.handler.gelf.additional-field.\"field-name\".value`]##"
+msgstr ""
+
+msgid "Additional field value."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_HANDLER_GELF_ADDITIONAL_FIELD__FIELD_NAME__VALUE+++[]"
+msgstr ""
+
+msgid "required icon:exclamation-circle[title=Configuration property is required]"
+msgstr ""
+
+msgid ""
+"[[quarkus-logging-gelf_quarkus-log-handler-gelf-additional-field-field-name-type]] [.property-path]##link:#quarkus-logging-gelf_quarkus-log-handler-gelf-additional-field-field-name-type[`quarkus.log.handler.gelf.additional-field.\"field-name\".type`]##\n"
+"\n"
+"[.description]\n"
+"--\n"
+"Additional field type specification. Supported types: String, long, Long, double, Double and discover. Discover is the default if not specified, it discovers field type based on parseability.\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_HANDLER_GELF_ADDITIONAL_FIELD__FIELD_NAME__TYPE+++[]\n"
+"--"
+msgstr ""
+
+msgid "[[quarkus-logging-gelf_quarkus-log-handler-gelf-additional-field-field-name-type]] [.property-path]##link:#quarkus-logging-gelf_quarkus-log-handler-gelf-additional-field-field-name-type[`quarkus.log.handler.gelf.additional-field.\"field-name\".type`]##"
+msgstr ""
+
+msgid "Additional field type specification. Supported types: String, long, Long, double, Double and discover. Discover is the default if not specified, it discovers field type based on parseability."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_HANDLER_GELF_ADDITIONAL_FIELD__FIELD_NAME__TYPE+++[]"
+msgstr ""
+
+msgid "`discover`"
+msgstr ""
+
+msgid ""
+"[[quarkus-logging-gelf_quarkus-log-handler-gelf-include-full-mdc]] [.property-path]##link:#quarkus-logging-gelf_quarkus-log-handler-gelf-include-full-mdc[`quarkus.log.handler.gelf.include-full-mdc`]##\n"
+"\n"
+"[.description]\n"
+"--\n"
+"Whether to include all fields from the MDC.\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_HANDLER_GELF_INCLUDE_FULL_MDC+++[]\n"
+"--"
+msgstr ""
+
+msgid "[[quarkus-logging-gelf_quarkus-log-handler-gelf-include-full-mdc]] [.property-path]##link:#quarkus-logging-gelf_quarkus-log-handler-gelf-include-full-mdc[`quarkus.log.handler.gelf.include-full-mdc`]##"
+msgstr ""
+
+msgid "Whether to include all fields from the MDC."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_HANDLER_GELF_INCLUDE_FULL_MDC+++[]"
+msgstr ""
+
+msgid ""
+"[[quarkus-logging-gelf_quarkus-log-handler-gelf-mdc-fields]] [.property-path]##link:#quarkus-logging-gelf_quarkus-log-handler-gelf-mdc-fields[`quarkus.log.handler.gelf.mdc-fields`]##\n"
+"\n"
+"[.description]\n"
+"--\n"
+"Send additional fields whose values are obtained from MDC. Name of the Fields are comma-separated. Example: mdcFields=Application,Version,SomeOtherFieldName\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_HANDLER_GELF_MDC_FIELDS+++[]\n"
+"--"
+msgstr ""
+
+msgid "[[quarkus-logging-gelf_quarkus-log-handler-gelf-mdc-fields]] [.property-path]##link:#quarkus-logging-gelf_quarkus-log-handler-gelf-mdc-fields[`quarkus.log.handler.gelf.mdc-fields`]##"
+msgstr ""
+
+msgid "Send additional fields whose values are obtained from MDC. Name of the Fields are comma-separated. Example: mdcFields=Application,Version,SomeOtherFieldName"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_HANDLER_GELF_MDC_FIELDS+++[]"
+msgstr ""
+
+msgid ""
+"[[quarkus-logging-gelf_quarkus-log-handler-gelf-dynamic-mdc-fields]] [.property-path]##link:#quarkus-logging-gelf_quarkus-log-handler-gelf-dynamic-mdc-fields[`quarkus.log.handler.gelf.dynamic-mdc-fields`]##\n"
+"\n"
+"[.description]\n"
+"--\n"
+"Dynamic MDC Fields allows you to extract MDC values based on one or more regular expressions. Multiple regexes are comma-separated. The name of the MDC entry is used as GELF field name.\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_HANDLER_GELF_DYNAMIC_MDC_FIELDS+++[]\n"
+"--"
+msgstr ""
+
+msgid "[[quarkus-logging-gelf_quarkus-log-handler-gelf-dynamic-mdc-fields]] [.property-path]##link:#quarkus-logging-gelf_quarkus-log-handler-gelf-dynamic-mdc-fields[`quarkus.log.handler.gelf.dynamic-mdc-fields`]##"
+msgstr ""
+
+msgid "Dynamic MDC Fields allows you to extract MDC values based on one or more regular expressions. Multiple regexes are comma-separated. The name of the MDC entry is used as GELF field name."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_HANDLER_GELF_DYNAMIC_MDC_FIELDS+++[]"
+msgstr ""
+
+msgid ""
+"[[quarkus-logging-gelf_quarkus-log-handler-gelf-dynamic-mdc-field-types]] [.property-path]##link:#quarkus-logging-gelf_quarkus-log-handler-gelf-dynamic-mdc-field-types[`quarkus.log.handler.gelf.dynamic-mdc-field-types`]##\n"
+"\n"
+"[.description]\n"
+"--\n"
+"Pattern-based type specification for additional and MDC fields. Key-value pairs are comma-separated. Example: my_field.++*++=String,business++\\++..++*\\++.field=double\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_HANDLER_GELF_DYNAMIC_MDC_FIELD_TYPES+++[]\n"
+"--"
+msgstr ""
+
+msgid "[[quarkus-logging-gelf_quarkus-log-handler-gelf-dynamic-mdc-field-types]] [.property-path]##link:#quarkus-logging-gelf_quarkus-log-handler-gelf-dynamic-mdc-field-types[`quarkus.log.handler.gelf.dynamic-mdc-field-types`]##"
+msgstr ""
+
+msgid "Pattern-based type specification for additional and MDC fields. Key-value pairs are comma-separated. Example: my_field.++*++=String,business++\\++..++*\\++.field=double"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_HANDLER_GELF_DYNAMIC_MDC_FIELD_TYPES+++[]"
+msgstr ""
+
+msgid ""
+"[[quarkus-logging-gelf_quarkus-log-handler-gelf-maximum-message-size]] [.property-path]##link:#quarkus-logging-gelf_quarkus-log-handler-gelf-maximum-message-size[`quarkus.log.handler.gelf.maximum-message-size`]##\n"
+"\n"
+"[.description]\n"
+"--\n"
+"Maximum message size (in bytes). If the message size is exceeded, the appender will submit the message in multiple chunks.\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_HANDLER_GELF_MAXIMUM_MESSAGE_SIZE+++[]\n"
+"--"
+msgstr ""
+
+msgid "[[quarkus-logging-gelf_quarkus-log-handler-gelf-maximum-message-size]] [.property-path]##link:#quarkus-logging-gelf_quarkus-log-handler-gelf-maximum-message-size[`quarkus.log.handler.gelf.maximum-message-size`]##"
+msgstr ""
+
+msgid "Maximum message size (in bytes). If the message size is exceeded, the appender will submit the message in multiple chunks."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_HANDLER_GELF_MAXIMUM_MESSAGE_SIZE+++[]"
+msgstr ""
+
+msgid "`8192`"
+msgstr ""
+
+msgid ""
+"[[quarkus-logging-gelf_quarkus-log-handler-gelf-include-log-message-parameters]] [.property-path]##link:#quarkus-logging-gelf_quarkus-log-handler-gelf-include-log-message-parameters[`quarkus.log.handler.gelf.include-log-message-parameters`]##\n"
+"\n"
+"[.description]\n"
+"--\n"
+"Include message parameters from the log event\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_HANDLER_GELF_INCLUDE_LOG_MESSAGE_PARAMETERS+++[]\n"
+"--"
+msgstr ""
+
+msgid "[[quarkus-logging-gelf_quarkus-log-handler-gelf-include-log-message-parameters]] [.property-path]##link:#quarkus-logging-gelf_quarkus-log-handler-gelf-include-log-message-parameters[`quarkus.log.handler.gelf.include-log-message-parameters`]##"
+msgstr ""
+
+msgid "Include message parameters from the log event"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_HANDLER_GELF_INCLUDE_LOG_MESSAGE_PARAMETERS+++[]"
+msgstr ""
+
+msgid ""
+"[[quarkus-logging-gelf_quarkus-log-handler-gelf-include-location]] [.property-path]##link:#quarkus-logging-gelf_quarkus-log-handler-gelf-include-location[`quarkus.log.handler.gelf.include-location`]##\n"
+"\n"
+"[.description]\n"
+"--\n"
+"Include source code location\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_HANDLER_GELF_INCLUDE_LOCATION+++[]\n"
+"--"
+msgstr ""
+
+msgid "[[quarkus-logging-gelf_quarkus-log-handler-gelf-include-location]] [.property-path]##link:#quarkus-logging-gelf_quarkus-log-handler-gelf-include-location[`quarkus.log.handler.gelf.include-location`]##"
+msgstr ""
+
+msgid "Include source code location"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_HANDLER_GELF_INCLUDE_LOCATION+++[]"
+msgstr ""
+
+msgid ""
+"[[quarkus-logging-gelf_quarkus-log-handler-gelf-origin-host]] [.property-path]##link:#quarkus-logging-gelf_quarkus-log-handler-gelf-origin-host[`quarkus.log.handler.gelf.origin-host`]##\n"
+"\n"
+"[.description]\n"
+"--\n"
+"Origin hostname\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_HANDLER_GELF_ORIGIN_HOST+++[]\n"
+"--"
+msgstr ""
+
+msgid "[[quarkus-logging-gelf_quarkus-log-handler-gelf-origin-host]] [.property-path]##link:#quarkus-logging-gelf_quarkus-log-handler-gelf-origin-host[`quarkus.log.handler.gelf.origin-host`]##"
+msgstr ""
+
+msgid "Origin hostname"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_HANDLER_GELF_ORIGIN_HOST+++[]"
+msgstr ""
+
+msgid ""
+"[[quarkus-logging-gelf_quarkus-log-handler-gelf-skip-hostname-resolution]] [.property-path]##link:#quarkus-logging-gelf_quarkus-log-handler-gelf-skip-hostname-resolution[`quarkus.log.handler.gelf.skip-hostname-resolution`]##\n"
+"\n"
+"[.description]\n"
+"--\n"
+"Bypass hostname resolution. If you didn't set the `originHost` property, and resolution is disabled, the value “unknown” will be used as hostname\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_HANDLER_GELF_SKIP_HOSTNAME_RESOLUTION+++[]\n"
+"--"
+msgstr ""
+
+msgid "[[quarkus-logging-gelf_quarkus-log-handler-gelf-skip-hostname-resolution]] [.property-path]##link:#quarkus-logging-gelf_quarkus-log-handler-gelf-skip-hostname-resolution[`quarkus.log.handler.gelf.skip-hostname-resolution`]##"
+msgstr ""
+
+msgid "Bypass hostname resolution. If you didn't set the `originHost` property, and resolution is disabled, the value “unknown” will be used as hostname"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_HANDLER_GELF_SKIP_HOSTNAME_RESOLUTION+++[]"
+msgstr ""
+
+msgid ""
+"This extension uses the `logstash-gelf` library that allow more configuration options via system properties,\n"
+"you can access its documentation here: https://logging.paluch.biz/ ."
+msgstr "このエクステンションは、システムプロパティーを介してより多くの設定オプションを提供する `logstash-gelf` ライブラリを使用しています。ドキュメントにはこちら: https://logging.paluch.biz/ からアクセスできます。"

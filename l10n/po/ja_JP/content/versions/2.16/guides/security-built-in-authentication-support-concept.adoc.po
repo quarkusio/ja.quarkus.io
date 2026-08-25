@@ -1,0 +1,558 @@
+msgid ""
+msgstr ""
+"Language: ja_JP\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: roq-plugin-l10n-adoc\n"
+
+msgid "Built-In Authentication Support"
+msgstr "ビルトイン認証サポート"
+
+msgid "The following section describes the Quarkus built-in authentication mechanisms for HTTP based FORM, BASIC, and Mutual TLS authentication. Proactive authentication is also described."
+msgstr "このドキュメントでは、HTTPベースのFORM認証、BASIC認証、相互TLS認証、およびプロアクティブ認証のためのQuarkusのビルトイン認証メカニズムについて説明します。また、プロアクティブ認証についても説明します。"
+
+msgid "Basic Authentication"
+msgstr "ベーシック認証"
+
+msgid ""
+"HTTP Basic Authentication is one of the least resource-demanding techniques that enforce access controls to the Web resources.\n"
+"It uses fields in the HTTP header and does not require HTTP cookies, session identifiers, or login pages."
+msgstr "HTTP Basic認証は、Webリソースへのアクセス制御を実施するための最もリソースを必要としない技術の一つです。HTTPヘッダーのフィールドを使用し、HTTPクッキー、セッション識別子、ログインページを必要としません。"
+
+msgid ""
+"An HTTP user agent, such as a web browser, uses an `Authorization` header to provide a user name and password in each HTTP request.\n"
+"The header is specified as `Authorization: Basic <credentials>`, where credentials are the Base64 encoding of the user ID and password joined by a colon, as shown in the following example."
+msgstr "WebブラウザのようなHTTPユーザーエージェントは、各HTTPリクエストでユーザー名とパスワードを提供するために、 `Authorization` ヘッダーを使用します。このヘッダーは、 `Authorization: Basic <クレデンシャル>` として指定されます。ここで、クレデンシャルは、次の例に示すように、ユーザー ID とパスワードをコロンでつなげた Base64 エンコーディングです。"
+
+msgid "Example"
+msgstr "例"
+
+msgid "If the user name is `Alice` and the password is `secret`, the HTTP authorization header would be `Authorization: Basic QWxjZTpzZWNyZXQ=`, where `QWxjZTpzZWNyZXQ=` is a Base64 encoded representation of the `Alice:secret` string."
+msgstr "ユーザー名が `Alice` でパスワードが `secret` の場合、HTTP認証ヘッダーは `Authorization: Basic QWxjZTpzZWNyZXQ=` となり、 `QWxjZTpzZWNyZXQ=` は `Alice:secret` の文字列をBase64でエンコードしたものです。"
+
+msgid ""
+"The Basic Authentication mechanism does not provide confidentiality protection for the transmitted credentials.\n"
+"The credentials are merely encoded with Base64 when in transit and not encrypted or hashed in any way.\n"
+"Therefore, Basic Authentication is used with HTTPS to provide confidentiality."
+msgstr "Basic 認証の仕組みは、送信されるクレデンシャルに対して機密性の保護を提供しません。クレデンシャルは転送中にBase64でエンコードされるだけで、暗号化もハッシュ化もされません。したがって、Basic 認証は機密性を提供するために HTTPS と共に使用されます。"
+
+msgid ""
+"Basic Authentication is a well-specified, simple challenge and response scheme that all web browsers and most web servers understand.\n"
+"However, there are a few limitations associated with Basic Authentication, which include:"
+msgstr "Basic認証は、すべてのウェブブラウザーとほとんどのウェブサーバーが理解できる、よく規定されたシンプルなチャレンジとレスポンスのスキームです。しかし、ベーシック認証には、以下のような制限があります。"
+
+msgid "Credentials are sent as plain text"
+msgstr "認証情報がプレーンテキストで送信されます"
+
+msgid ""
+"Use HTTPS with Basic Authentication to avoid exposing the credentials.\n"
+"The risk of exposing credentials as plain text increases if a load balancer terminates HTTPS, as the request is forwarded to Quarkus over HTTP."
+msgstr "Basic認証で HTTPS を使用すると、クレデンシャルが公開されるのを防ぐことができます。ロードバランサーがHTTPSを終端すると、要求がHTTPでQuarkusに転送されるため、クレデンシャルが平文で公開されるリスクが高まります。"
+
+msgid "Also, in multi-hop deployments, the credentials can be exposed if HTTPS is used between the client and the first Quarkus endpoint only, and the credentials are propagated to the next Quarkus endpoint over HTTP."
+msgstr "また、マルチホップデプロイメントでは、クライアントと最初のQuarkusエンドポイント間のみでHTTPSを使用し、次のQuarkusエンドポイントにHTTPで認証情報を伝達する場合、認証情報が漏洩する可能性があります。"
+
+msgid "Credentials are sent with each request"
+msgstr "認証情報はリクエスト毎に送信されます"
+
+msgid "In Basic Authentication, a username and password need to be sent with each request, which increases the risk of credentials being exposed."
+msgstr "ベーシック認証では、ユーザー名とパスワードをリクエスト毎に送信する必要があります。これは、認証情報が漏洩するリスクを高めます。"
+
+msgid "Application complexity increases"
+msgstr "アプリケーションの複雑性の増大"
+
+msgid ""
+"The Quarkus application must validate that usernames, passwords, and roles are managed securely.\n"
+"This process, however, can introduce significant complexity to the application.\n"
+"Depending on the use case, other authentication mechanisms that delegate username, password, and role management to specialized services might be a better choice."
+msgstr "Quarkusアプリケーションは、ユーザー名、パスワード、およびロールが安全に管理されていることを検証する必要があります。しかし、このプロセスは、アプリケーションに大きな複雑さをもたらす可能性があります。ユースケースによっては、ユーザー名、パスワード、ロールの管理を専用のサービスに委ねる他の認証メカニズムの方が良い選択かもしれません。"
+
+msgid "Form Based Authentication"
+msgstr "フォームベース認証"
+
+msgid ""
+"Quarkus provides form based authentication that works in a similar manner to traditional Servlet form based auth. Unlike\n"
+"traditional form authentication, the authenticated user is not stored in an HTTP session, as Quarkus does not provide\n"
+"clustered HTTP session support. Instead, the authentication information is stored in an encrypted cookie, which can\n"
+"be read by all members of the cluster (provided they all share the same encryption key)."
+msgstr "Quarkusには、従来のServletのフォームベース認証と同様に動作する、フォームベース認証があります。従来のフォーム認証とは異なり、Quarkusではクラスタ化されたHTTPセッションがサポートされていないため、認証されたユーザーはHTTPセッションに保存されません。代わりに、認証情報は暗号化されたクッキーに保存されます。このクッキーは、クラスタのすべてのメンバーが読み取ることができます（ただし、すべてのメンバーが同じ暗号化キーを共有している場合）。"
+
+msgid ""
+"The encryption key can be set using the `quarkus.http.auth.session.encryption-key` property, and it must be at least 16 characters\n"
+"long. This key is hashed using SHA-256 and the resulting digest is used as a key for AES-256 encryption of the cookie\n"
+"value. This cookie contains an expiry time as part of the encrypted value, so all nodes in the cluster must have their\n"
+"clocks synchronized. At one minute intervals a new cookie will be generated with an updated expiry time if the session\n"
+"is in use."
+msgstr "暗号化キーは `quarkus.http.auth.session.encryption-key` プロパティーを使って設定でき、少なくとも 16 文字の長さでなければなりません。このキーは SHA-256 を使ってハッシュ化され、その結果のダイジェストがクッキー値の AES-256 暗号化のキーとして使用されます。このクッキーは暗号化された値の一部として有効期限を含んでいますので、クラスター内のすべての ノードはクロックを同期させなければなりません。1 分間隔で、セッションが使用中であれば、更新された有効期限時間を持つ新しいクッキーが生成されます。"
+
+msgid "Single Page Application (SPA) typically wants to avoid redirects, this can be done by removing default page paths:"
+msgstr "シングルページアプリケーション（SPA）は通常、リダイレクトを避けたいものですが、これはデフォルトページパスを削除することによって実現できます:"
+
+msgid "The following properties can be used to configure form based auth:"
+msgstr "以下のプロパティーを使用して、フォームベース認証を設定することができます。"
+
+msgid "icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime"
+msgstr "icon:lock[title=ビルド時に固定] ビルド時に固定される設定プロパティ - それ以外の設定プロパティは実行時に上書き可能"
+
+msgid "[[quarkus-vertx-http-config-group-form-auth-config_configuration]]link:#quarkus-vertx-http-config-group-form-auth-config_configuration[Configuration property]"
+msgstr ""
+
+msgid "Type"
+msgstr "タイプ"
+
+msgid "Default"
+msgstr "デフォルト"
+
+msgid ""
+"icon:lock[title=Fixed at build time] [[quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.enabled]]`link:#quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.enabled[quarkus.http.auth.form.enabled]`\n"
+"\n"
+"[.description]\n"
+"--\n"
+"If form authentication is enabled.\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_HTTP_AUTH_FORM_ENABLED+++[]\n"
+"--"
+msgstr ""
+
+msgid "icon:lock[title=Fixed at build time] [[quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.enabled]]`link:#quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.enabled[quarkus.http.auth.form.enabled]`"
+msgstr ""
+
+msgid "If form authentication is enabled."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_HTTP_AUTH_FORM_ENABLED+++[]"
+msgstr ""
+
+msgid "<i class=\"fa fa-chevron-down\"></i><span>Show more</span>"
+msgstr ""
+
+msgid "boolean"
+msgstr "boolean"
+
+msgid "`false`"
+msgstr "`false`"
+
+msgid ""
+"icon:lock[title=Fixed at build time] [[quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.login-page]]`link:#quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.login-page[quarkus.http.auth.form.login-page]`\n"
+"\n"
+"[.description]\n"
+"--\n"
+"The login page. Redirect to login page can be disabled by setting `quarkus.http.auth.form.login-page=`.\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_HTTP_AUTH_FORM_LOGIN_PAGE+++[]\n"
+"--"
+msgstr ""
+
+msgid "icon:lock[title=Fixed at build time] [[quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.login-page]]`link:#quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.login-page[quarkus.http.auth.form.login-page]`"
+msgstr ""
+
+msgid "The login page. Redirect to login page can be disabled by setting `quarkus.http.auth.form.login-page=`."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_HTTP_AUTH_FORM_LOGIN_PAGE+++[]"
+msgstr ""
+
+msgid "string"
+msgstr "string"
+
+msgid "`/login.html`"
+msgstr ""
+
+msgid ""
+"icon:lock[title=Fixed at build time] [[quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.post-location]]`link:#quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.post-location[quarkus.http.auth.form.post-location]`\n"
+"\n"
+"[.description]\n"
+"--\n"
+"The post location.\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_HTTP_AUTH_FORM_POST_LOCATION+++[]\n"
+"--"
+msgstr ""
+
+msgid "icon:lock[title=Fixed at build time] [[quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.post-location]]`link:#quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.post-location[quarkus.http.auth.form.post-location]`"
+msgstr ""
+
+msgid "The post location."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_HTTP_AUTH_FORM_POST_LOCATION+++[]"
+msgstr ""
+
+msgid "`/j_security_check`"
+msgstr ""
+
+msgid ""
+"icon:lock[title=Fixed at build time] [[quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.username-parameter]]`link:#quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.username-parameter[quarkus.http.auth.form.username-parameter]`\n"
+"\n"
+"[.description]\n"
+"--\n"
+"The username field name.\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_HTTP_AUTH_FORM_USERNAME_PARAMETER+++[]\n"
+"--"
+msgstr ""
+
+msgid "icon:lock[title=Fixed at build time] [[quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.username-parameter]]`link:#quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.username-parameter[quarkus.http.auth.form.username-parameter]`"
+msgstr ""
+
+msgid "The username field name."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_HTTP_AUTH_FORM_USERNAME_PARAMETER+++[]"
+msgstr ""
+
+msgid "`j_username`"
+msgstr ""
+
+msgid ""
+"icon:lock[title=Fixed at build time] [[quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.password-parameter]]`link:#quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.password-parameter[quarkus.http.auth.form.password-parameter]`\n"
+"\n"
+"[.description]\n"
+"--\n"
+"The password field name.\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_HTTP_AUTH_FORM_PASSWORD_PARAMETER+++[]\n"
+"--"
+msgstr ""
+
+msgid "icon:lock[title=Fixed at build time] [[quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.password-parameter]]`link:#quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.password-parameter[quarkus.http.auth.form.password-parameter]`"
+msgstr ""
+
+msgid "The password field name."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_HTTP_AUTH_FORM_PASSWORD_PARAMETER+++[]"
+msgstr ""
+
+msgid "`j_password`"
+msgstr ""
+
+msgid ""
+"icon:lock[title=Fixed at build time] [[quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.error-page]]`link:#quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.error-page[quarkus.http.auth.form.error-page]`\n"
+"\n"
+"[.description]\n"
+"--\n"
+"The error page. Redirect to error page can be disabled by setting `quarkus.http.auth.form.error-page=`.\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_HTTP_AUTH_FORM_ERROR_PAGE+++[]\n"
+"--"
+msgstr ""
+
+msgid "icon:lock[title=Fixed at build time] [[quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.error-page]]`link:#quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.error-page[quarkus.http.auth.form.error-page]`"
+msgstr ""
+
+msgid "The error page. Redirect to error page can be disabled by setting `quarkus.http.auth.form.error-page=`."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_HTTP_AUTH_FORM_ERROR_PAGE+++[]"
+msgstr ""
+
+msgid "`/error.html`"
+msgstr ""
+
+msgid ""
+"icon:lock[title=Fixed at build time] [[quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.landing-page]]`link:#quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.landing-page[quarkus.http.auth.form.landing-page]`\n"
+"\n"
+"[.description]\n"
+"--\n"
+"The landing page to redirect to if there is no saved page to redirect back to. Redirect to landing page can be disabled by setting `quarkus.http.auth.form.landing-page=`.\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_HTTP_AUTH_FORM_LANDING_PAGE+++[]\n"
+"--"
+msgstr ""
+
+msgid "icon:lock[title=Fixed at build time] [[quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.landing-page]]`link:#quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.landing-page[quarkus.http.auth.form.landing-page]`"
+msgstr ""
+
+msgid "The landing page to redirect to if there is no saved page to redirect back to. Redirect to landing page can be disabled by setting `quarkus.http.auth.form.landing-page=`."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_HTTP_AUTH_FORM_LANDING_PAGE+++[]"
+msgstr ""
+
+msgid "`/index.html`"
+msgstr "`/index.html`"
+
+msgid ""
+"icon:lock[title=Fixed at build time] [[quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.location-cookie]]`link:#quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.location-cookie[quarkus.http.auth.form.location-cookie]`\n"
+"\n"
+"[.description]\n"
+"--\n"
+"Option to control the name of the cookie used to redirect the user back to where he wants to get access to.\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_HTTP_AUTH_FORM_LOCATION_COOKIE+++[]\n"
+"--"
+msgstr ""
+
+msgid "icon:lock[title=Fixed at build time] [[quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.location-cookie]]`link:#quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.location-cookie[quarkus.http.auth.form.location-cookie]`"
+msgstr ""
+
+msgid "Option to control the name of the cookie used to redirect the user back to where he wants to get access to."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_HTTP_AUTH_FORM_LOCATION_COOKIE+++[]"
+msgstr ""
+
+msgid "`quarkus-redirect-location`"
+msgstr ""
+
+msgid ""
+"icon:lock[title=Fixed at build time] [[quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.timeout]]`link:#quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.timeout[quarkus.http.auth.form.timeout]`\n"
+"\n"
+"[.description]\n"
+"--\n"
+"The inactivity (idle) timeout When inactivity timeout is reached, cookie is not renewed and a new login is enforced.\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_HTTP_AUTH_FORM_TIMEOUT+++[]\n"
+"--"
+msgstr ""
+
+msgid "icon:lock[title=Fixed at build time] [[quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.timeout]]`link:#quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.timeout[quarkus.http.auth.form.timeout]`"
+msgstr ""
+
+msgid "The inactivity (idle) timeout When inactivity timeout is reached, cookie is not renewed and a new login is enforced."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_HTTP_AUTH_FORM_TIMEOUT+++[]"
+msgstr ""
+
+msgid ""
+"link:https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html[Duration]\n"
+"  link:#duration-note-anchor-{summaryTableId}[icon:question-circle[], title=More information about the Duration format]"
+msgstr ""
+
+msgid "`PT30M`"
+msgstr ""
+
+msgid ""
+"icon:lock[title=Fixed at build time] [[quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.new-cookie-interval]]`link:#quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.new-cookie-interval[quarkus.http.auth.form.new-cookie-interval]`\n"
+"\n"
+"[.description]\n"
+"--\n"
+"How old a cookie can get before it will be replaced with a new cookie with an updated timeout, also referred to as \"renewal-timeout\". Note that smaller values will result in slightly more server load (as new encrypted cookies will be generated more often), however larger values affect the inactivity timeout as the timeout is set when a cookie is generated. For example if this is set to 10 minutes, and the inactivity timeout is 30m, if a users last request is when the cookie is 9m old then the actual timeout will happen 21m after the last request, as the timeout is only refreshed when a new cookie is generated. In other words no timeout is tracked on the server side; the timestamp is encoded and encrypted in the cookie itself, and it is decrypted and parsed with each request.\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_HTTP_AUTH_FORM_NEW_COOKIE_INTERVAL+++[]\n"
+"--"
+msgstr ""
+
+msgid "icon:lock[title=Fixed at build time] [[quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.new-cookie-interval]]`link:#quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.new-cookie-interval[quarkus.http.auth.form.new-cookie-interval]`"
+msgstr ""
+
+msgid "How old a cookie can get before it will be replaced with a new cookie with an updated timeout, also referred to as \"renewal-timeout\". Note that smaller values will result in slightly more server load (as new encrypted cookies will be generated more often), however larger values affect the inactivity timeout as the timeout is set when a cookie is generated. For example if this is set to 10 minutes, and the inactivity timeout is 30m, if a users last request is when the cookie is 9m old then the actual timeout will happen 21m after the last request, as the timeout is only refreshed when a new cookie is generated. In other words no timeout is tracked on the server side; the timestamp is encoded and encrypted in the cookie itself, and it is decrypted and parsed with each request."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_HTTP_AUTH_FORM_NEW_COOKIE_INTERVAL+++[]"
+msgstr ""
+
+msgid "`PT1M`"
+msgstr ""
+
+msgid ""
+"icon:lock[title=Fixed at build time] [[quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.cookie-name]]`link:#quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.cookie-name[quarkus.http.auth.form.cookie-name]`\n"
+"\n"
+"[.description]\n"
+"--\n"
+"The cookie that is used to store the persistent session\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_HTTP_AUTH_FORM_COOKIE_NAME+++[]\n"
+"--"
+msgstr ""
+
+msgid "icon:lock[title=Fixed at build time] [[quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.cookie-name]]`link:#quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.cookie-name[quarkus.http.auth.form.cookie-name]`"
+msgstr ""
+
+msgid "The cookie that is used to store the persistent session"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_HTTP_AUTH_FORM_COOKIE_NAME+++[]"
+msgstr ""
+
+msgid "`quarkus-credential`"
+msgstr ""
+
+msgid ""
+"icon:lock[title=Fixed at build time] [[quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.cookie-path]]`link:#quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.cookie-path[quarkus.http.auth.form.cookie-path]`\n"
+"\n"
+"[.description]\n"
+"--\n"
+"The cookie path for the session and location cookies.\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_HTTP_AUTH_FORM_COOKIE_PATH+++[]\n"
+"--"
+msgstr ""
+
+msgid "icon:lock[title=Fixed at build time] [[quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.cookie-path]]`link:#quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.cookie-path[quarkus.http.auth.form.cookie-path]`"
+msgstr ""
+
+msgid "The cookie path for the session and location cookies."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_HTTP_AUTH_FORM_COOKIE_PATH+++[]"
+msgstr ""
+
+msgid "`/`"
+msgstr "`/`"
+
+msgid ""
+"icon:lock[title=Fixed at build time] [[quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.http-only-cookie]]`link:#quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.http-only-cookie[quarkus.http.auth.form.http-only-cookie]`\n"
+"\n"
+"[.description]\n"
+"--\n"
+"Set the HttpOnly attribute to prevent access to the cookie via JavaScript.\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_HTTP_AUTH_FORM_HTTP_ONLY_COOKIE+++[]\n"
+"--"
+msgstr ""
+
+msgid "icon:lock[title=Fixed at build time] [[quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.http-only-cookie]]`link:#quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.http-only-cookie[quarkus.http.auth.form.http-only-cookie]`"
+msgstr ""
+
+msgid "Set the HttpOnly attribute to prevent access to the cookie via JavaScript."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_HTTP_AUTH_FORM_HTTP_ONLY_COOKIE+++[]"
+msgstr ""
+
+msgid ""
+"icon:lock[title=Fixed at build time] [[quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.cookie-same-site]]`link:#quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.cookie-same-site[quarkus.http.auth.form.cookie-same-site]`\n"
+"\n"
+"[.description]\n"
+"--\n"
+"SameSite attribute for the session and location cookies.\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_HTTP_AUTH_FORM_COOKIE_SAME_SITE+++[]\n"
+"--"
+msgstr ""
+
+msgid "icon:lock[title=Fixed at build time] [[quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.cookie-same-site]]`link:#quarkus-vertx-http-config-group-form-auth-config_quarkus.http.auth.form.cookie-same-site[quarkus.http.auth.form.cookie-same-site]`"
+msgstr ""
+
+msgid "SameSite attribute for the session and location cookies."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_HTTP_AUTH_FORM_COOKIE_SAME_SITE+++[]"
+msgstr ""
+
+msgid "`strict`, `lax`, `none`"
+msgstr ""
+
+#, fuzzy
+msgid "`strict`"
+msgstr "`厳格な`"
+
+msgid "About the Duration format"
+msgstr "期間フォーマットについて"
+
+msgid ""
+"The format for durations uses the standard `java.time.Duration` format.\n"
+"You can learn more about it in the link:https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html#parse-java.lang.CharSequence-[Duration#parse() javadoc]."
+msgstr "期間のフォーマットは標準の `java.time.Duration` フォーマットを使用します。詳細は link:https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html#parse-java.lang.CharSequence-[Duration#parse() javadoc] を参照してください。"
+
+msgid ""
+"You can also provide duration values starting with a number.\n"
+"In this case, if the value consists only of a number, the converter treats the value as seconds.\n"
+"Otherwise, `PT` is implicitly prepended to the value to obtain a standard `java.time.Duration` format."
+msgstr "数値で始まる期間の値を指定することもできます。この場合、値が数値のみで構成されている場合、コンバーターは値を秒として扱います。そうでない場合は、 `PT` が暗黙的に値の前に付加され、標準の `java.time.Duration` 形式が得られます。"
+
+msgid "Mutual TLS Authentication"
+msgstr "相互TLS認証"
+
+msgid "Quarkus provides mTLS authentication so that you can authenticate users based on their X.509 certificates."
+msgstr "QuarkusはmTLS認証を提供しているので、X.509証明書に基づいてユーザーを認証できます。"
+
+msgid "To use this authentication method, you should first enable SSL for your application. For more details, check the xref:http-reference.adoc#ssl[Supporting secure connections with SSL] guide."
+msgstr "この認証方法を使用するには、まずアプリケーションでSSLを有効にする必要があります。詳しくは、 link:http-reference.html#ssl[「Supporting secure connections with SSL]」をご覧ください。"
+
+msgid ""
+"Once your application is accepting secure connections, the next step is to configure a `quarkus.http.ssl.certificate.trust-store-file`\n"
+"holding all the certificates that your application should trust as well as how your application should ask for certificates when\n"
+"a client (e.g.: browser or another service) tries to access one of its protected resources."
+msgstr "アプリケーションが安全な接続を受け入れたら、次のステップは、アプリケーションが信頼すべきすべての証明書を保持する `quarkus.http.ssl.certificate.trust-store-file` を設定し、クライアント(例: ブラウザや他のサービス)が保護されたリソースにアクセスしようとしたときに、アプリケーションがどのように証明書を要求するかを設定します。"
+
+msgid "Configures a key store where the server's private key is located."
+msgstr "サーバーの秘密鍵が置かれている鍵ストアを設定します。"
+
+msgid "Configures a trust store from where the trusted certificates are going to be loaded from."
+msgstr "信頼された証明書がロードされるトラストストアを構成します。"
+
+msgid ""
+"Defines that the server should *always* ask certificates from clients. You can relax this behavior by using `REQUEST` so\n"
+"that the server should still accept requests without a certificate. Useful when you are also supporting authentication methods other than\n"
+"mTLS."
+msgstr "サーバーが *常に*クライアントからの証明書を要求することを定義します。 `REQUEST` を使用することで、この動作を緩和することができます。mTLS 以外の認証方法もサポートしている場合に便利です。"
+
+msgid "Defines a policy where only authenticated users should have access to resources from your application."
+msgstr "認証されたユーザーのみがアプリケーションからリソースにアクセスできるようにするポリシーを定義します。"
+
+msgid ""
+"Once the incoming request matches a valid certificate in the truststore, your application should be able to obtain the subject by\n"
+"just injecting a `SecurityIdentity` as follows:"
+msgstr "受信したリクエストがトラストストアの有効な証明書と一致したら、アプリケーションは以下のように `SecurityIdentity` を注入するだけでサブジェクトを取得できるようになるはずです。"
+
+msgid "You should also be able to get the certificate as follows:"
+msgstr "また、以下のように証明書を取得できるようにしておきましょう:"
+
+msgid "Authorization"
+msgstr "認可"
+
+msgid ""
+"The information from the client certificate can be used to enhance Quarkus `SecurityIdentity`. For example, one can add new roles after checking a client certificate subject name, and so on.\n"
+"Please see the xref:security-customization.adoc#security-identity-customization[SecurityIdentity Customization] section for more information about customizing Quarkus `SecurityIdentity`."
+msgstr "クライアント証明書の情報は、Quarkus `SecurityIdentity` を強化するために使用できます。例えば、クライアント証明書のサブジェクト名を確認した後に新しいロールを追加することなどができます。Quarkus `SecurityIdentity`  のカスタマイズの詳細については、 link:security-customization.html#security-identity-customization[SecurityIdentity Customization]のセクションを参照してください。。"
+
+msgid "Proactive Authentication"
+msgstr "プロアクティブ認証"
+
+msgid ""
+"By default, Quarkus does what we call proactive authentication. This means that if an incoming request has a\n"
+"credential then that request will always be authenticated (even if the target page does not require authentication)."
+msgstr "デフォルトでは、Quarkusはプロアクティブ認証と呼ばれる認証を行います。これは、受信したリクエストにクレデンシャルがある場合、そのリクエストは常に認証されます(ターゲットページが認証を必要としない場合でも)。"
+
+msgid ""
+"This means that requests with an invalid credential will always be rejected, even for public pages. You can change\n"
+"this behavior and only authenticate when required by setting `quarkus.http.auth.proactive=false`."
+msgstr "これは、公開ページであっても、無効なクレデンシャルを持つリクエストは常に拒否されることを意味します。この動作を変更して、 `quarkus.http.auth.proactive=false` を設定することで必要な場合のみ認証を行うことができます。"
+
+msgid ""
+"If you disable proactive authentication then the authentication process will only be run when an identity is requested,\n"
+"either because there are security rules that requires the user to be authenticated, or due to programmatic access to the\n"
+"current identity."
+msgstr "プロアクティブ認証を無効にすると、認証プロセスは ID が要求されたときにのみ実行されます。これは、ユーザーを認証する必要があるセキュリティルールが存在するか、 現在の ID にプログラムによるアクセスがあるためです。"
+
+msgid ""
+"Note that if proactive authentication is in use accessing the `SecurityIdentity` is a blocking operation. This is because\n"
+"authentication may not have happened yet, and accessing it may require calls to external systems such as databases that\n"
+"may block. For blocking applications this is no problem, however if you have disabled authentication in a reactive\n"
+"application this will fail (as you cannot do blocking operations on the IO thread). To work around this you need to\n"
+"`@Inject` an instance of `io.quarkus.security.identity.CurrentIdentityAssociation`, and call the\n"
+"`Uni<SecurityIdentity> getDeferredIdentity();` method. You can then subscribe to the resulting `Uni` and will be notified\n"
+"when authentication is complete and the identity is available."
+msgstr "プロアクティブ認証が使用されている場合、 `SecurityIdentity` へのアクセスはブロックされることに注意してください。これは、認証がまだ行われていない可能性があるためです。また、データベースなどの外部システムを呼び出す必要があるため、ブロックされる可能性があります。ブロッキングアプリケーションでは問題ありませんが、リアクティブアプリケーションで認証を無効にしている場合、これは失敗します(IOスレッドでブロッキング操作を行うことができないため)。これを回避するには、 `io.quarkus.security.identity.CurrentIdentityAssociation` のインスタンスを `@Inject` して、 `Uni<SecurityIdentity> getDeferredIdentity();` メソッドを呼び出す必要があります。そして、生成された `Uni` をサブスクライブすることで、認証が完了し、ID が利用可能になったときに通知されるようになります。"
+
+msgid ""
+"xref:security-authorization.adoc#standard-security-annotations[Standard security annotations] on CDI beans are not supported on IO thread if a non-void secured method returns a value synchronously and proactive authentication is disabled, as they need to access the `SecurityIdentity`.\n"
+"In the example below, we have defined `HelloResource` and `HelloService`. It's easy to see that any GET request to `/hello` will run on IO thread and throw `BlockingOperationNotAllowedException` exception.\n"
+"There is more than one way to fix the example:"
+msgstr "CDI Beanの link:security-authorization.html#standard-security-annotations[標準的なセキュリティアノテーション] は、 `SecurityIdentity` にアクセスする必要があるため、非voidセキュアメソッドが同期的に値を返し、プロアクティブ認証が無効な場合、 IOスレッドでサポートされません。 以下の例では、 `HelloResource` と `HelloService` を定義しました。 `/hello` へのGETリクエストは、 IOスレッドで実行され、 `BlockingOperationNotAllowedException` 例外が投げられることは容易にわかります。この例を修正する方法は1つだけではありません:"
+
+msgid "switch to a worker thread (annotate `hello` endpoint with `@Blocking`)"
+msgstr "ワーカスレッドに切り替える ( `hello` のエンドポイントに `@Blocking` のアノテーションを付ける)"
+
+msgid "change `sayHello` method return type (use reactive or asynchronous data type)"
+msgstr "`sayHello` メソッドの戻り値の型を変更する（リアクティブまたは非同期データ型を使用する）。"
+
+msgid "arguably the safest way is to move `@RolesAllowed` annotation to the endpoint, as accessing `SecurityIdentity` from endpoint methods is never the blocking operation"
+msgstr "エンドポイントメソッドから `SecurityIdentity` へのアクセスはブロック操作にならないため、 `@RolesAllowed` のアノテーションをエンドポイントに移動させるのが最も安全な方法であることは間違いありません。"
+
+msgid "How to customize authentication exception responses"
+msgstr "認証の例外応答をカスタマイズする方法"
+
+msgid "You can use JAX-RS `ExceptionMapper` to capture Quarkus Security authentication exceptions such as `io.quarkus.security.AuthenticationFailedException`, for example:"
+msgstr "JAX-RS `ExceptionMapper` を使用すると、例えば `io.quarkus.security.AuthenticationFailedException` のような Quarkus Security の認証例外を捕捉できます。例:"
+
+msgid "References"
+msgstr "リファレンス"
+
+msgid "xref:security-overview-concept.adoc[Quarkus Security overview]"
+msgstr "xref:security-overview-concept.adoc[Quarkus Security 概要]"

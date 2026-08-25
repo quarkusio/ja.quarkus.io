@@ -1,0 +1,694 @@
+msgid ""
+msgstr ""
+"Language: ja_JP\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: roq-plugin-l10n-adoc\n"
+
+msgid "Using OpenTelemetry"
+msgstr "OpenTelemetryの使用"
+
+msgid ""
+"This guide explains how your Quarkus application can utilize https://opentelemetry.io/[OpenTelemetry] to provide\n"
+"distributed tracing for interactive web applications."
+msgstr "このガイドでは、Quarkusアプリケーションが link:https://opentelemetry.io/[OpenTelemetry]を利用して、インタラクティブなウェブアプリケーションに分散トレーシングを提供する方法を説明します。"
+
+msgid "Prerequisites"
+msgstr "前提条件"
+
+msgid "To complete this guide, you need:"
+msgstr "このガイドを完成させるには、以下が必要です:"
+
+msgid "Roughly 15 minutes"
+msgstr "約15分"
+
+msgid "An IDE"
+msgstr "IDE"
+
+msgid "JDK 11+ installed with `JAVA_HOME` configured appropriately"
+msgstr "JDK 11+ がインストールされ、 `JAVA_HOME`  が適切に設定されていること"
+
+msgid "Apache Maven {maven-version}"
+msgstr "Apache Maven {maven-version}"
+
+msgid "Docker and Docker Compose or xref:podman.adoc[Podman], and Docker Compose"
+msgstr "Docker と Docker Compose、または xref:podman.adoc[Podman] 、および Docker Compose"
+
+msgid "Optionally the xref:cli-tooling.adoc[Quarkus CLI] if you want to use it"
+msgstr "使用したい場合は、 link:cli-tooling.html[Quarkus CLI]"
+
+msgid "Optionally Mandrel or GraalVM installed and xref:building-native-image.adoc#configuring-graalvm[configured appropriately] if you want to build a native executable (or Docker if you use a native container build)"
+msgstr "ネイティブ実行可能ファイルをビルドしたい場合、MandrelまたはGraalVM（あるいはネイティブなコンテナビルドを使用する場合はDocker）をインストールし、 link:building-native-image.html#configuring-graalvm[適切に設定]していること"
+
+msgid "Architecture"
+msgstr "アーキテクチャ"
+
+msgid "In this guide, we create a straightforward REST application to demonstrate distributed tracing."
+msgstr "このガイドでは、分散トレースを実証するための簡単なRESTアプリケーションを作成します。"
+
+msgid "Solution"
+msgstr "ソリューション"
+
+msgid ""
+"We recommend that you follow the instructions in the next sections and create the application step by step.\n"
+"However, you can skip right to the completed example."
+msgstr "次の章で紹介する手順に沿って、ステップを踏んでアプリを作成することをお勧めします。ただし、すぐに完成した例に飛んでも構いません。"
+
+msgid "Clone the Git repository: `git clone {quickstarts-clone-url}`, or download an {quickstarts-archive-url}[archive]."
+msgstr "`git clone {quickstarts-clone-url}` で Git リポジトリーをクローンします。または、{quickstarts-archive-url}[アーカイブ] をダウンロードします。"
+
+msgid "The solution is located in the `opentelemetry-quickstart` {quickstarts-tree-url}/opentelemetry-quickstart[directory]."
+msgstr "このソリューションは、 `opentelemetry-quickstart` {quickstarts-tree-url}/opentelemetry-quickstart[ディレクトリ]にあります。"
+
+msgid "Creating the Maven project"
+msgstr "Mavenプロジェクトの作成"
+
+msgid "First, we need a new project. Create a new project with the following command:"
+msgstr "まず、新しいプロジェクトが必要です。以下のコマンドで新規プロジェクトを作成します。"
+
+msgid "CLI"
+msgstr "コマンドラインインタフェース"
+
+msgid "To create a Gradle project, add the `--gradle` or `--gradle-kotlin-dsl` option."
+msgstr "Gradleプロジェクトを作成するには、 `--gradle` または `--gradle-kotlin-dsl` オプションを追加します。"
+
+msgid "_For more information about how to install the Quarkus CLI and use it, please refer to xref:cli-tooling.adoc[the Quarkus CLI guide]._"
+msgstr "_Quarkus CLIのインストール方法や使用方法については、 xref:cli-tooling.adoc[Quarkus CLIガイド] を参照してください。_"
+
+msgid "Maven"
+msgstr "Maven"
+
+msgid "To create a Gradle project, add the `-DbuildTool=gradle` or `-DbuildTool=gradle-kotlin-dsl` option."
+msgstr "Gradleプロジェクトを作成するには、 `-DbuildTool=gradle` または `-DbuildTool=gradle-kotlin-dsl` オプションを追加します。"
+
+msgid ""
+"This command generates the Maven project and imports the `quarkus-opentelemetry-exporter-otlp` extension,\n"
+"which includes the OpenTelemetry support,\n"
+"and a gRPC span exporter for https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/protocol/otlp.md[OTLP]."
+msgstr "このコマンドは、RESTエンドポイントを持つMavenプロジェクトを生成し、OpenTelemetryのサポートを含む `quarkus-opentelemetry-exporter-otlp` エクステンションと、 link:https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/protocol/otlp.md[OTLP]用のgRPCスパンエクスポーターをインポートします。"
+
+msgid ""
+"If you already have your Quarkus project configured, you can add the `quarkus-opentelemetry-exporter-otlp` extension\n"
+"to your project by running the following command in your project base directory:"
+msgstr "すでにQuarkusプロジェクトが設定されている場合は、プロジェクトのベースディレクトリで以下のコマンドを実行することで、 `quarkus-opentelemetry-exporter-otlp` エクステンションをプロジェクトに追加することができます。"
+
+msgid "This will add the following to your build file:"
+msgstr "これにより、ビルドファイルに以下が追加されます:"
+
+msgid "Examine the JAX-RS resource"
+msgstr "JAX-RSのリソース調査"
+
+msgid "Create a `src/main/java/org/acme/opentelemetry/TracedResource.java` file with the following content:"
+msgstr "`src/main/java/org/acme/opentelemetry/TracedResource.java` のファイルを開くと、以下の内容が表示されます。"
+
+msgid ""
+"Notice that there is no tracing specific code included in the application. By default, requests sent to this\n"
+"endpoint will be traced without any required code changes."
+msgstr ""
+"このアプリケーションには、トレースのためのコードが含まれていないことに注意してください。デフォルトでは、\n"
+"このエンドポイントに送信されたリクエストは、コードの変更を必要とせずにトレースされます。"
+
+msgid "Create the configuration"
+msgstr "コンフィグレーションの作成"
+
+msgid "There are two ways to configure the OTLP gRPC Exporter within the application."
+msgstr "アプリケーション内でOTLP gRPC Exporterを設定するには2つの方法があります。"
+
+msgid "The first approach is by providing the properties within the `src/main/resources/application.properties` file:"
+msgstr "最初のアプローチは、 `src/main/resources/application.properties` ファイル内でプロパティーを提供することです。"
+
+msgid "All spans created from the application will include an OpenTelemetry `Resource` indicating the span was created by the `myservice` application. If not set, it will default to the artifact id."
+msgstr "このアプリケーションから作成されたすべてのスパンには、そのスパンが `myservice` アプリケーションによって作成されたことを示す OpenTelemetry `Resource` が含まれます。設定されていない場合は、デフォルトでアーティファクトIDが設定されます。"
+
+msgid "Whether OpenTelemetry is enabled or not. The default is `true`, but shown here to indicate how it can be disabled"
+msgstr "OpenTelemetryを有効にするかどうか。デフォルトは `true` ですが、ここでは無効にできることを示しています。"
+
+msgid "gRPC endpoint for sending spans"
+msgstr "スパンを送信するためのgRPCエンドポイント"
+
+msgid "Optional gRPC headers commonly used for authentication"
+msgstr "認証によく使われるオプションのgRPCヘッダー"
+
+msgid "Add tracing information into log message."
+msgstr "ログメッセージにトレース情報を追加します。"
+
+msgid "You can also only put the trace info into the access log. In this case you must omit the info in the console log format."
+msgstr "また、アクセスログにのみトレース情報を記載することもできます。この場合、コンソールログ形式の情報を省略する必要があります。"
+
+msgid "Run the application"
+msgstr "アプリケーションの実行"
+
+msgid "The first step is to configure and start the https://opentelemetry.io/docs/collector/[OpenTelemetry Collector] to receive, process and export telemetry data to https://www.jaegertracing.io/[Jaeger] that will display the captured traces."
+msgstr "最初のステップは、テレメトリデータを受信して処理し、キャプチャしたトレースを表示する link:https://www.jaegertracing.io/[Jaeger]にエクスポートするための link:https://opentelemetry.io/docs/collector/[OpenTelemetry Collector]の設定と起動です。"
+
+msgid ""
+"Jaeger supports the OTel protocols out of the box since version 1.35.\n"
+"In this case you do not need to install the collector but can directly send the trace data to Jaeger (after enabling OTLP receivers there, see e.g. this\n"
+"https://medium.com/jaegertracing/introducing-native-support-for-opentelemetry-in-jaeger-eb661be8183c[blog entry])."
+msgstr "Jaegerはバージョン1.35以降、OTelプロトコルをサポートしています。この場合、コレクターをインストールする必要はなく、トレースデータを直接Jaegerに送ることができます（OTLPレシーバーを有効にした後、この link:https://medium.com/jaegertracing/introducing-native-support-for-opentelemetry-in-jaeger-eb661be8183c[ブログエントリ] を参照してください）。"
+
+msgid "Configure the OpenTelemetry Collector by creating an `otel-collector-config.yaml` file:"
+msgstr "`otel-collector-config.yaml` ファイルを作成して OpenTelemetry Collector を設定します。"
+
+msgid "Start the OpenTelemetry Collector and Jaeger system via the following `docker-compose.yml` file that you can launch via `docker-compose up -d`:"
+msgstr "`docker-compose up -d` OpenTelemetry CollectorとJaegerシステムを、以下の `docker-compose.yml` ファイルを介して起動します。"
+
+msgid "Now we are ready to run our application. If using `application.properties` to configure the tracer:"
+msgstr "これでアプリケーションを実行する準備が整いました。トレーサーの設定に `application.properties` を使用している場合:"
+
+msgid "or if configuring the OTLP gRPC endpoint via JVM arguments:"
+msgstr "または、JVM引数でOTLP gRPCエンドポイントを設定する場合:"
+
+msgid "With the OpenTelemetry Collector, Jaeger system and application running, you can make a request to the provided endpoint:"
+msgstr "OpenTelemetry Collector、Jaegerシステム、アプリケーションが動作している状態で、提供されているエンドポイントにリクエストを出すことができます。"
+
+msgid "When the first request has been submitted, you will be able to see the tracing information in the logs:"
+msgstr "最初のリクエストが送信された時点で、ログにトレース情報が表示されるようになります:"
+
+msgid "Then visit the http://localhost:16686[Jaeger UI] to see the tracing information."
+msgstr "その後、 link:http://localhost:16686[Jaeger UI] にアクセスしてトレース情報を確認します。"
+
+msgid "Hit `CTRL+C` to stop the application."
+msgstr "`CTRL+C`  を叩いてアプリケーションを停止させます。"
+
+msgid "JDBC"
+msgstr "JDBC"
+
+msgid "The https://github.com/open-telemetry/opentelemetry-java-instrumentation/tree/main/instrumentation/jdbc/library[JDBC instrumentation] will add a span for each JDBC queries done by your application, to enable it, add the following dependency to your build file:"
+msgstr "link:https://github.com/open-telemetry/opentelemetry-java-instrumentation/tree/main/instrumentation/jdbc/library[JDBCインスツルメンテーション]は、アプリケーションによって実行される各JDBCクエリのためにスパンを追加します。これを有効にするには、次の依存関係をビルドファイルに追加します。"
+
+msgid "As it uses a dedicated JDBC driver, you must configure your datasource and Hibernate ORM to use it."
+msgstr "専用のJDBCドライバを使用するため、データソースとHibernate ORMがそれを使用するように設定する必要があります。"
+
+msgid "Additional configuration"
+msgstr "追加設定"
+
+msgid ""
+"Some use cases will require custom configuration of OpenTelemetry.\n"
+"These sections will outline what is necessary to properly configure it."
+msgstr ""
+"一部のユースケースでは、OpenTelemetry のカスタム設定が必要になります。\n"
+"これらのセクションでは、適切に設定するために必要なものについて概説します。"
+
+msgid "ID Generator"
+msgstr "ID ジェネレーター"
+
+msgid ""
+"The OpenTelemetry extension will use by default a random https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/sdk.md#id-generators[ID Generator]\n"
+"when creating the trace and span identifier."
+msgstr ""
+"OpenTelemetry エクステンションでは、トレースおよびスパンの識別子を作成する際に、デフォルトでランダムな link:https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/sdk.md#id-generators[ID ジェネレーター]\n"
+"を使用します。"
+
+msgid ""
+"Some vendor-specific protocols need a custom ID Generator, you can override the default one by creating a producer.\n"
+"The OpenTelemetry extension will detect the `IdGenerator` CDI bean and will use it when configuring the tracer producer."
+msgstr ""
+"ベンダー固有のプロトコルの中には、カスタム ID ジェネレーターを必要とするものがありますが、\n"
+"プロデューサーを作成することで、デフォルトの ID ジェネレーターを上書きすることができます。OpenTelemetry エクステンションは、 `IdGenerator` CDI Bean を検出し、トレーサープロデューサーを設定する際にそれを使用します。"
+
+msgid "Propagators"
+msgstr "プロパゲーター"
+
+msgid ""
+"OpenTelemetry propagates cross-cutting concerns through https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/context/api-propagators.md[propagators] that will share an underlying `Context` for storing state and accessing\n"
+"data across the lifespan of a distributed transaction."
+msgstr "OpenTelemetry は、 https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/context/api-propagators.md[プロパゲーター] を介して分野横断的な関心事を伝播し、状態を保存するための基になる `Context` を共有し、分散トランザクションの存続期間全体にわたってデータにアクセスします。"
+
+msgid ""
+"By default, the OpenTelemetry extension enables the https://www.w3.org/TR/trace-context/[W3C Trace Context] and the https://www.w3.org/TR/baggage/[W3C Baggage]\n"
+"propagators, you can however choose any of the supported OpenTelemetry propagators by setting the `propagators` config that is described in the <<configuration-reference>>."
+msgstr ""
+"デフォルトでは、OpenTelemetryエクステンションは、link:https://www.w3.org/TR/trace-context/[W3C Trace Context]と link:https://www.w3.org/TR/baggage/[W3C Baggage] \n"
+"プロパゲーターを有効にしていますが、<<configuration-reference>> で説明されている `propagators` 設定を行うことで、サポートされているOpenTelemetryプロパゲーターのいずれかを選択できます。"
+
+msgid ""
+"The `b3`, `b3multi`, `jaeger` and `ottrace` propagators will need the https://github.com/open-telemetry/opentelemetry-java/tree/main/extensions/trace-propagators[trace-propagators]\n"
+"extension to be added as a dependency to your project."
+msgstr ""
+"`b3`, `b3multi`, `jaeger`, `ottrace` のプロパゲーターは、プロジェクトに link:https://github.com/open-telemetry/opentelemetry-java/tree/main/extensions/trace-propagators[trace-propagators]\n"
+"エクステンションを依存関係として追加する必要があります。"
+
+msgid "The `xray` propagator will need the https://github.com/open-telemetry/opentelemetry-java/tree/main/extensions/aws[aws] extension to be added as a dependency to your project."
+msgstr "`xray` プロパゲータは、 link:https://github.com/open-telemetry/opentelemetry-java/tree/main/extensions/aws[aws]エクステンションをプロジェクトに依存関係として追加する必要があります。"
+
+msgid "Resource"
+msgstr "リソース"
+
+msgid ""
+"A https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/overview.md#resources[resource] is a representation\n"
+"of the entity that is producing telemetry, it adds attributes to the exported trace to characterize who is producing the trace."
+msgstr "link:https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/overview.md#resources[リソース]は、テレメトリを生成しているエンティティの表現であり、誰がトレースを生成しているかを特徴づけるために、エクスポートされたトレースに属性を追加します。"
+
+msgid ""
+"You can add attributes by setting the `resource-attributes` tracer config that is described in the <<configuration-reference>>.\n"
+"Since this property can be overridden at runtime, the OpenTelemetry extension will pick up its value following the order of precedence that\n"
+"is described in the xref:config-reference.adoc#configuration-sources[Quarkus Configuration Reference]."
+msgstr "<<configuration-reference,設定リファレンス>> に記述されている `resource-attributes` トレーサーの設定を行うことで属性を追加することができます。 このプロパティは実行時にオーバーライドできるので、OpenTelemetry 拡張は xref:config-reference.adoc#configuration-sources[Quarkus 設定リファレンス] に記述されている優先順位に従ってその値を取得します。"
+
+msgid ""
+"If by any means you need to use a custom resource or one that is provided by one of the https://github.com/open-telemetry/opentelemetry-java/tree/main/sdk-extensions[OpenTelemetry SDK Extensions]\n"
+"you can create multiple resource producers. The OpenTelemetry extension will detect the `Resource` CDI beans and will merge them when configuring the tracer producer."
+msgstr "カスタムリソースや link:https://github.com/open-telemetry/opentelemetry-java/tree/main/sdk-extensions[OpenTelemetry SDK Extensions]で提供されているリソースを使用する必要がある場合は、複数のリソースプロデューサーを作成することができます。OpenTelemetryエクステンションは、 `Resource` CDI Beanを検出し、トレーサー・プロデューサーを構成する際にそれらをマージします。"
+
+msgid "Sampler"
+msgstr "サンプラー"
+
+msgid ""
+"A https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/sdk.md#sampling[sampler] decides whether\n"
+"a trace should be sampled and exported, controlling noise and overhead by reducing the number of sample of traces collected and sent\n"
+"to the collector."
+msgstr "link:https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/sdk.md#sampling[サンプラー]は、トレースをサンプリングしてエクスポートするかどうかを決定し、収集してコレクターに送信するトレースのサンプル数を減らすことで、ノイズやオーバーヘッドを制御します。"
+
+msgid ""
+"You can set a https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/sdk.md#built-in-samplers[built-in sampler]\n"
+"simply by setting the desired sampler config described in the <<configuration-reference>>."
+msgstr "link:https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/sdk.md#built-in-samplers[内蔵サンプラー]の設定は、 link:#configuration-reference[[configuration-reference]]に記載されている希望のサンプラー設定を設定するだけで可能です。"
+
+msgid ""
+"If you need to use a custom sampler or to use one that is provided by one of the https://github.com/open-telemetry/opentelemetry-java/tree/main/sdk-extensions[OpenTelemetry SDK Extensions]\n"
+"you can create a sampler producer. The OpenTelemetry extension will detect the `Sampler` CDI bean and will use it when configuring the tracer producer."
+msgstr "カスタムサンプラーを使用する必要がある場合や、 link:https://github.com/open-telemetry/opentelemetry-java/tree/main/sdk-extensions[OpenTelemetry SDK Extensions]の1つが提供するサンプラーを使用する必要がある場合は、サンプラー・プロデューサーを作成することができます。OpenTelemetryエクステンションは、 `Sampler` CDI Beanを検出し、トレーサープロデューサーを構成する際にそれを使用します。"
+
+msgid "Additional instrumentation"
+msgstr "追加の計器"
+
+msgid ""
+"Some Quarkus extensions will require additional code to ensure traces are propagated to subsequent execution.\n"
+"These sections will outline what is necessary to propagate traces across process boundaries."
+msgstr ""
+"Quarkus エクステンションの中には、トレースが後続の実行に伝搬されることを保証するために追加のコードを必要とするものがあります。\n"
+"これらのセクションでは、プロセスの境界を越えてトレースを伝搬するために必要なことを説明します。"
+
+msgid "The instrumentation documented in this section has been tested with Quarkus and works in both standard and native mode."
+msgstr "このセクションで説明されている計装は、Quarkus でテストされており、標準モードとネイティブモードの両方で動作します。"
+
+msgid "CDI"
+msgstr "CDI"
+
+msgid ""
+"Annotating a method in any CDI aware bean with the `io.opentelemetry.extension.annotations.WithSpan`\n"
+"annotation will create a new Span and establish any required relationships with the current Trace context."
+msgstr "CDI を意識した Bean のメソッドに `io.opentelemetry.extension.annotations.WithSpan` というアノテーションを付けると、新しい Span が作成され、現在の Trace コンテキストと必要な関係が確立されます。"
+
+msgid ""
+"Method parameters can be annotated with the `io.opentelemetry.extension.annotations.SpanAttribute` annotation to\n"
+"indicate which method parameters should be part of the Trace."
+msgstr "メソッドパラメータには、 `io.opentelemetry.extension.annotations.SpanAttribute` アノテーションを付けて、どのメソッドパラメータが Trace の一部となるべきかを示すことができます。"
+
+msgid "Example:"
+msgstr "例:"
+
+msgid "SmallRye Reactive Messaging - Kafka"
+msgstr "SmallRye Reactive Messaging - Kafka"
+
+msgid ""
+"When using the SmallRye Reactive Messaging extension for Kafka,\n"
+"we are able to propagate the span into the Kafka Record with:"
+msgstr "SmallRye Reactive Messaging extension for Kafkaを使用すると、スパンをKafka Recordに伝搬させることができます。"
+
+msgid ""
+"The above creates a `TracingMetadata` object we can add to the `Message` being produced,\n"
+"which retrieves the OpenTelemetry `Context` to extract the current span for propagation."
+msgstr ""
+"上記は、生成されている `Message` に追加できる `TracingMetadata` オブジェクトを作成し、\n"
+"OpenTelemetry `Context` を取得して、伝播のために現在のスパンを抽出しています。"
+
+msgid "OpenTelemetry Configuration Reference"
+msgstr "OpenTelemetry 設定リファレンス"
+
+msgid "<span class=\"icon\"><i class=\"fa fa-lock\" title=\"Fixed at build time\"></i></span> Configuration property fixed at build time - All other configuration properties are overridable at runtime <input type=\"search\" id=\"config-search-1\" placeholder=\"FILTER CONFIGURATION\" disabled>"
+msgstr "<span class=\"icon\"><i class=\"fa fa-lock\" title=\"ビルド時に固定\"></i></span> ビルド時に固定される設定プロパティ - 他のすべての設定プロパティは、実行時にオーバーライド可能 <input type=\"search\" id=\"config-search-1\" placeholder=\"FILTER CONFIGURATION\" disabled>"
+
+msgid "[[quarkus-opentelemetry_configuration]]link:#quarkus-opentelemetry_configuration[Configuration property]"
+msgstr ""
+
+msgid "Type"
+msgstr "タイプ"
+
+msgid "Default"
+msgstr "デフォルト"
+
+msgid ""
+"icon:lock[title=Fixed at build time] [[quarkus-opentelemetry_quarkus.opentelemetry.enabled]]`link:#quarkus-opentelemetry_quarkus.opentelemetry.enabled[quarkus.opentelemetry.enabled]`\n"
+"\n"
+"[.description]\n"
+"--\n"
+"OpenTelemetry support.\n"
+"OpenTelemetry support is enabled by default.\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_OPENTELEMETRY_ENABLED+++[]\n"
+"--"
+msgstr ""
+
+msgid "icon:lock[title=Fixed at build time] [[quarkus-opentelemetry_quarkus.opentelemetry.enabled]]`link:#quarkus-opentelemetry_quarkus.opentelemetry.enabled[quarkus.opentelemetry.enabled]`"
+msgstr ""
+
+msgid ""
+"OpenTelemetry support.\n"
+"OpenTelemetry support is enabled by default."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_OPENTELEMETRY_ENABLED+++[]"
+msgstr ""
+
+msgid "<i class=\"fa fa-chevron-down\"></i><span>Show more</span>"
+msgstr ""
+
+msgid "boolean"
+msgstr "boolean"
+
+msgid "`true`"
+msgstr "`true`"
+
+msgid ""
+"icon:lock[title=Fixed at build time] [[quarkus-opentelemetry_quarkus.opentelemetry.propagators]]`link:#quarkus-opentelemetry_quarkus.opentelemetry.propagators[quarkus.opentelemetry.propagators]`\n"
+"\n"
+"[.description]\n"
+"--\n"
+"Comma separated list of OpenTelemetry propagators which must be supported.\n"
+"Valid values are `b3, b3multi, baggage, jaeger, ottrace, tracecontext, xray`.\n"
+"Default value is `traceContext,baggage`.\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_OPENTELEMETRY_PROPAGATORS+++[]\n"
+"--"
+msgstr ""
+
+msgid "icon:lock[title=Fixed at build time] [[quarkus-opentelemetry_quarkus.opentelemetry.propagators]]`link:#quarkus-opentelemetry_quarkus.opentelemetry.propagators[quarkus.opentelemetry.propagators]`"
+msgstr ""
+
+msgid ""
+"Comma separated list of OpenTelemetry propagators which must be supported.\n"
+"Valid values are `b3, b3multi, baggage, jaeger, ottrace, tracecontext, xray`.\n"
+"Default value is `traceContext,baggage`."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_OPENTELEMETRY_PROPAGATORS+++[]"
+msgstr ""
+
+msgid "list of string"
+msgstr "文字列のリスト"
+
+msgid "`tracecontext,baggage`"
+msgstr ""
+
+msgid ""
+"icon:lock[title=Fixed at build time] [[quarkus-opentelemetry_quarkus.opentelemetry.tracer.enabled]]`link:#quarkus-opentelemetry_quarkus.opentelemetry.tracer.enabled[quarkus.opentelemetry.tracer.enabled]`\n"
+"\n"
+"[.description]\n"
+"--\n"
+"Support for tracing with OpenTelemetry.\n"
+"Support for tracing will be enabled if OpenTelemetry support is enabled and either this value is true, or this value is unset.\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_OPENTELEMETRY_TRACER_ENABLED+++[]\n"
+"--"
+msgstr ""
+
+msgid "icon:lock[title=Fixed at build time] [[quarkus-opentelemetry_quarkus.opentelemetry.tracer.enabled]]`link:#quarkus-opentelemetry_quarkus.opentelemetry.tracer.enabled[quarkus.opentelemetry.tracer.enabled]`"
+msgstr ""
+
+msgid ""
+"Support for tracing with OpenTelemetry.\n"
+"Support for tracing will be enabled if OpenTelemetry support is enabled and either this value is true, or this value is unset."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_OPENTELEMETRY_TRACER_ENABLED+++[]"
+msgstr ""
+
+msgid ""
+"[[quarkus-opentelemetry_quarkus.opentelemetry.tracer.resource-attributes]]`link:#quarkus-opentelemetry_quarkus.opentelemetry.tracer.resource-attributes[quarkus.opentelemetry.tracer.resource-attributes]`\n"
+"\n"
+"[.description]\n"
+"--\n"
+"A comma separated list of name=value resource attributes that represents the entity producing telemetry (eg. `service.name=authservice`).\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_OPENTELEMETRY_TRACER_RESOURCE_ATTRIBUTES+++[]\n"
+"--"
+msgstr ""
+
+msgid "[[quarkus-opentelemetry_quarkus.opentelemetry.tracer.resource-attributes]]`link:#quarkus-opentelemetry_quarkus.opentelemetry.tracer.resource-attributes[quarkus.opentelemetry.tracer.resource-attributes]`"
+msgstr ""
+
+msgid "A comma separated list of name=value resource attributes that represents the entity producing telemetry (eg. `service.name=authservice`)."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_OPENTELEMETRY_TRACER_RESOURCE_ATTRIBUTES+++[]"
+msgstr ""
+
+msgid ""
+"[[quarkus-opentelemetry_quarkus.opentelemetry.tracer.sampler]]`link:#quarkus-opentelemetry_quarkus.opentelemetry.tracer.sampler[quarkus.opentelemetry.tracer.sampler]`\n"
+"\n"
+"[.description]\n"
+"--\n"
+"The sampler to use for tracing.\n"
+"Valid values are `off, on, ratio`.\n"
+"Defaults to `on`.\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_OPENTELEMETRY_TRACER_SAMPLER+++[]\n"
+"--"
+msgstr ""
+
+msgid "[[quarkus-opentelemetry_quarkus.opentelemetry.tracer.sampler]]`link:#quarkus-opentelemetry_quarkus.opentelemetry.tracer.sampler[quarkus.opentelemetry.tracer.sampler]`"
+msgstr ""
+
+msgid ""
+"The sampler to use for tracing.\n"
+"Valid values are `off, on, ratio`.\n"
+"Defaults to `on`."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_OPENTELEMETRY_TRACER_SAMPLER+++[]"
+msgstr ""
+
+msgid "string"
+msgstr "string"
+
+msgid "`on`"
+msgstr "`on`"
+
+msgid ""
+"[[quarkus-opentelemetry_quarkus.opentelemetry.tracer.sampler.ratio]]`link:#quarkus-opentelemetry_quarkus.opentelemetry.tracer.sampler.ratio[quarkus.opentelemetry.tracer.sampler.ratio]`\n"
+"\n"
+"[.description]\n"
+"--\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_OPENTELEMETRY_TRACER_SAMPLER_RATIO+++[]\n"
+"--"
+msgstr ""
+
+msgid "[[quarkus-opentelemetry_quarkus.opentelemetry.tracer.sampler.ratio]]`link:#quarkus-opentelemetry_quarkus.opentelemetry.tracer.sampler.ratio[quarkus.opentelemetry.tracer.sampler.ratio]`"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_OPENTELEMETRY_TRACER_SAMPLER_RATIO+++[]"
+msgstr ""
+
+msgid "double"
+msgstr "double"
+
+msgid ""
+"[[quarkus-opentelemetry_quarkus.opentelemetry.tracer.sampler.parent-based]]`link:#quarkus-opentelemetry_quarkus.opentelemetry.tracer.sampler.parent-based[quarkus.opentelemetry.tracer.sampler.parent-based]`\n"
+"\n"
+"[.description]\n"
+"--\n"
+"If the sampler to use for tracing is parent based.\n"
+"Valid values are `true, false`.\n"
+"Defaults to `true`.\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_OPENTELEMETRY_TRACER_SAMPLER_PARENT_BASED+++[]\n"
+"--"
+msgstr ""
+
+msgid "[[quarkus-opentelemetry_quarkus.opentelemetry.tracer.sampler.parent-based]]`link:#quarkus-opentelemetry_quarkus.opentelemetry.tracer.sampler.parent-based[quarkus.opentelemetry.tracer.sampler.parent-based]`"
+msgstr ""
+
+msgid ""
+"If the sampler to use for tracing is parent based.\n"
+"Valid values are `true, false`.\n"
+"Defaults to `true`."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_OPENTELEMETRY_TRACER_SAMPLER_PARENT_BASED+++[]"
+msgstr ""
+
+msgid ""
+"[[quarkus-opentelemetry_quarkus.opentelemetry.tracer.suppress-non-application-uris]]`link:#quarkus-opentelemetry_quarkus.opentelemetry.tracer.suppress-non-application-uris[quarkus.opentelemetry.tracer.suppress-non-application-uris]`\n"
+"\n"
+"[.description]\n"
+"--\n"
+"Suppress non-application uris from trace collection. This will suppress tracing of `/q` endpoints.\n"
+"Suppressing non-application uris is enabled by default.\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_OPENTELEMETRY_TRACER_SUPPRESS_NON_APPLICATION_URIS+++[]\n"
+"--"
+msgstr ""
+
+msgid "[[quarkus-opentelemetry_quarkus.opentelemetry.tracer.suppress-non-application-uris]]`link:#quarkus-opentelemetry_quarkus.opentelemetry.tracer.suppress-non-application-uris[quarkus.opentelemetry.tracer.suppress-non-application-uris]`"
+msgstr ""
+
+msgid ""
+"Suppress non-application uris from trace collection. This will suppress tracing of `/q` endpoints.\n"
+"Suppressing non-application uris is enabled by default."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_OPENTELEMETRY_TRACER_SUPPRESS_NON_APPLICATION_URIS+++[]"
+msgstr ""
+
+msgid ""
+"[[quarkus-opentelemetry_quarkus.opentelemetry.tracer.include-static-resources]]`link:#quarkus-opentelemetry_quarkus.opentelemetry.tracer.include-static-resources[quarkus.opentelemetry.tracer.include-static-resources]`\n"
+"\n"
+"[.description]\n"
+"--\n"
+"Include static resources from trace collection.\n"
+"Include static resources is disabled by default.\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_OPENTELEMETRY_TRACER_INCLUDE_STATIC_RESOURCES+++[]\n"
+"--"
+msgstr ""
+
+msgid "[[quarkus-opentelemetry_quarkus.opentelemetry.tracer.include-static-resources]]`link:#quarkus-opentelemetry_quarkus.opentelemetry.tracer.include-static-resources[quarkus.opentelemetry.tracer.include-static-resources]`"
+msgstr ""
+
+msgid ""
+"Include static resources from trace collection.\n"
+"Include static resources is disabled by default."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_OPENTELEMETRY_TRACER_INCLUDE_STATIC_RESOURCES+++[]"
+msgstr ""
+
+msgid "`false`"
+msgstr "`false`"
+
+msgid "<span class=\"icon\"><i class=\"fa fa-lock\" title=\"Fixed at build time\"></i></span> Configuration property fixed at build time - All other configuration properties are overridable at runtime <input type=\"search\" id=\"config-search-2\" placeholder=\"FILTER CONFIGURATION\" disabled>"
+msgstr "<span class=\"icon\"><i class=\"fa fa-lock\" title=\"ビルド時に固定\"></i></span> ビルド時に固定される設定プロパティ - 他のすべての設定プロパティは、実行時にオーバーライド可能 <input type=\"search\" id=\"config-search-2\" placeholder=\"FILTER CONFIGURATION\" disabled>"
+
+msgid "[[quarkus-opentelemetry-exporter-otlp_configuration]]link:#quarkus-opentelemetry-exporter-otlp_configuration[Configuration property]"
+msgstr ""
+
+msgid ""
+"icon:lock[title=Fixed at build time] [[quarkus-opentelemetry-exporter-otlp_quarkus.opentelemetry.tracer.exporter.otlp.enabled]]`link:#quarkus-opentelemetry-exporter-otlp_quarkus.opentelemetry.tracer.exporter.otlp.enabled[quarkus.opentelemetry.tracer.exporter.otlp.enabled]`\n"
+"\n"
+"[.description]\n"
+"--\n"
+"OTLP SpanExporter support.\n"
+"OTLP SpanExporter support is enabled by default.\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_OPENTELEMETRY_TRACER_EXPORTER_OTLP_ENABLED+++[]\n"
+"--"
+msgstr ""
+
+msgid "icon:lock[title=Fixed at build time] [[quarkus-opentelemetry-exporter-otlp_quarkus.opentelemetry.tracer.exporter.otlp.enabled]]`link:#quarkus-opentelemetry-exporter-otlp_quarkus.opentelemetry.tracer.exporter.otlp.enabled[quarkus.opentelemetry.tracer.exporter.otlp.enabled]`"
+msgstr ""
+
+msgid ""
+"OTLP SpanExporter support.\n"
+"OTLP SpanExporter support is enabled by default."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_OPENTELEMETRY_TRACER_EXPORTER_OTLP_ENABLED+++[]"
+msgstr ""
+
+msgid ""
+"[[quarkus-opentelemetry-exporter-otlp_quarkus.opentelemetry.tracer.exporter.otlp.endpoint]]`link:#quarkus-opentelemetry-exporter-otlp_quarkus.opentelemetry.tracer.exporter.otlp.endpoint[quarkus.opentelemetry.tracer.exporter.otlp.endpoint]`\n"
+"\n"
+"[.description]\n"
+"--\n"
+"The OTLP endpoint to connect to. The endpoint must start with either http:// or https://.\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_OPENTELEMETRY_TRACER_EXPORTER_OTLP_ENDPOINT+++[]\n"
+"--"
+msgstr ""
+
+msgid "[[quarkus-opentelemetry-exporter-otlp_quarkus.opentelemetry.tracer.exporter.otlp.endpoint]]`link:#quarkus-opentelemetry-exporter-otlp_quarkus.opentelemetry.tracer.exporter.otlp.endpoint[quarkus.opentelemetry.tracer.exporter.otlp.endpoint]`"
+msgstr ""
+
+msgid "The OTLP endpoint to connect to. The endpoint must start with either http:// or https://."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_OPENTELEMETRY_TRACER_EXPORTER_OTLP_ENDPOINT+++[]"
+msgstr ""
+
+msgid ""
+"[[quarkus-opentelemetry-exporter-otlp_quarkus.opentelemetry.tracer.exporter.otlp.headers]]`link:#quarkus-opentelemetry-exporter-otlp_quarkus.opentelemetry.tracer.exporter.otlp.headers[quarkus.opentelemetry.tracer.exporter.otlp.headers]`\n"
+"\n"
+"[.description]\n"
+"--\n"
+"Key-value pairs to be used as headers associated with gRPC requests. The format is similar to the `OTEL_EXPORTER_OTLP_HEADERS` environment variable, a list of key-value pairs separated by the \"=\" character. See link:https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/protocol/exporter.md#specifying-headers-via-environment-variables[Specifying headers] for more details.\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_OPENTELEMETRY_TRACER_EXPORTER_OTLP_HEADERS+++[]\n"
+"--"
+msgstr ""
+
+msgid "[[quarkus-opentelemetry-exporter-otlp_quarkus.opentelemetry.tracer.exporter.otlp.headers]]`link:#quarkus-opentelemetry-exporter-otlp_quarkus.opentelemetry.tracer.exporter.otlp.headers[quarkus.opentelemetry.tracer.exporter.otlp.headers]`"
+msgstr ""
+
+msgid "Key-value pairs to be used as headers associated with gRPC requests. The format is similar to the `OTEL_EXPORTER_OTLP_HEADERS` environment variable, a list of key-value pairs separated by the \"=\" character. See link:https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/protocol/exporter.md#specifying-headers-via-environment-variables[Specifying headers] for more details."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_OPENTELEMETRY_TRACER_EXPORTER_OTLP_HEADERS+++[]"
+msgstr ""
+
+msgid ""
+"[[quarkus-opentelemetry-exporter-otlp_quarkus.opentelemetry.tracer.exporter.otlp.export-timeout]]`link:#quarkus-opentelemetry-exporter-otlp_quarkus.opentelemetry.tracer.exporter.otlp.export-timeout[quarkus.opentelemetry.tracer.exporter.otlp.export-timeout]`\n"
+"\n"
+"[.description]\n"
+"--\n"
+"The maximum amount of time to wait for the collector to process exported spans before an exception is thrown. A value of `0` will disable the timeout: the exporter will continue waiting until either exported spans are processed, or the connection fails, or is closed for some other reason.\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_OPENTELEMETRY_TRACER_EXPORTER_OTLP_EXPORT_TIMEOUT+++[]\n"
+"--"
+msgstr ""
+
+msgid "[[quarkus-opentelemetry-exporter-otlp_quarkus.opentelemetry.tracer.exporter.otlp.export-timeout]]`link:#quarkus-opentelemetry-exporter-otlp_quarkus.opentelemetry.tracer.exporter.otlp.export-timeout[quarkus.opentelemetry.tracer.exporter.otlp.export-timeout]`"
+msgstr ""
+
+msgid "The maximum amount of time to wait for the collector to process exported spans before an exception is thrown. A value of `0` will disable the timeout: the exporter will continue waiting until either exported spans are processed, or the connection fails, or is closed for some other reason."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_OPENTELEMETRY_TRACER_EXPORTER_OTLP_EXPORT_TIMEOUT+++[]"
+msgstr ""
+
+msgid ""
+"link:https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html[Duration]\n"
+"  link:#duration-note-anchor-{summaryTableId}[icon:question-circle[], title=More information about the Duration format]"
+msgstr ""
+
+msgid "`10S`"
+msgstr ""
+
+msgid ""
+"[[quarkus-opentelemetry-exporter-otlp_quarkus.opentelemetry.tracer.exporter.otlp.compression]]`link:#quarkus-opentelemetry-exporter-otlp_quarkus.opentelemetry.tracer.exporter.otlp.compression[quarkus.opentelemetry.tracer.exporter.otlp.compression]`\n"
+"\n"
+"[.description]\n"
+"--\n"
+"Compression method to be used by exporter to compress the payload.\n"
+"See link:https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/protocol/exporter.md#opentelemetry-protocol-exporter[Configuration Options] for the supported compression methods.\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_OPENTELEMETRY_TRACER_EXPORTER_OTLP_COMPRESSION+++[]\n"
+"--"
+msgstr ""
+
+msgid "[[quarkus-opentelemetry-exporter-otlp_quarkus.opentelemetry.tracer.exporter.otlp.compression]]`link:#quarkus-opentelemetry-exporter-otlp_quarkus.opentelemetry.tracer.exporter.otlp.compression[quarkus.opentelemetry.tracer.exporter.otlp.compression]`"
+msgstr ""
+
+msgid ""
+"Compression method to be used by exporter to compress the payload.\n"
+"See link:https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/protocol/exporter.md#opentelemetry-protocol-exporter[Configuration Options] for the supported compression methods."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_OPENTELEMETRY_TRACER_EXPORTER_OTLP_COMPRESSION+++[]"
+msgstr ""
+
+msgid "About the Duration format"
+msgstr "期間フォーマットについて"
+
+msgid ""
+"The format for durations uses the standard `java.time.Duration` format.\n"
+"You can learn more about it in the link:https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html#parse-java.lang.CharSequence-[Duration#parse() javadoc]."
+msgstr "期間のフォーマットは標準の `java.time.Duration` フォーマットを使用します。詳細は link:https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html#parse-java.lang.CharSequence-[Duration#parse() javadoc] を参照してください。"
+
+msgid ""
+"You can also provide duration values starting with a number.\n"
+"In this case, if the value consists only of a number, the converter treats the value as seconds.\n"
+"Otherwise, `PT` is implicitly prepended to the value to obtain a standard `java.time.Duration` format."
+msgstr "数値で始まる期間の値を指定することもできます。この場合、値が数値のみで構成されている場合、コンバーターは値を秒として扱います。そうでない場合は、 `PT` が暗黙的に値の前に付加され、標準の `java.time.Duration` 形式が得られます。"

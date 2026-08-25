@@ -1,0 +1,810 @@
+msgid ""
+msgstr ""
+"Language: ja_JP\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: roq-plugin-l10n-adoc\n"
+
+msgid "Reading properties from Spring Cloud Config Server"
+msgstr "Spring Cloud Config Serverからのプロパティの読み込み"
+
+msgid "This guide explains how your Quarkus application can read configuration properties at runtime from the https://cloud.spring.io/spring-cloud-config[Spring Cloud Config Server]."
+msgstr "このガイドでは、Quarkusアプリケーションが実行時に https://cloud.spring.io/spring-cloud-config[Spring Cloud Config Server]から設定プロパティを読み取る方法を説明します。"
+
+msgid "Prerequisites"
+msgstr "前提条件"
+
+msgid "To complete this guide, you need:"
+msgstr "このガイドを完成させるには、以下が必要です:"
+
+msgid "Roughly 15 minutes"
+msgstr "約15分"
+
+msgid "An IDE"
+msgstr "IDE"
+
+msgid "JDK 17+ installed with `JAVA_HOME` configured appropriately"
+msgstr "JDK 17+がインストールされ、 `JAVA_HOME` が適切に設定されていること"
+
+msgid "Apache Maven {maven-version}"
+msgstr "Apache Maven {maven-version}"
+
+msgid "Optionally the xref:cli-tooling.adoc[Quarkus CLI] if you want to use it"
+msgstr "使用したい場合は、 link:cli-tooling.html[Quarkus CLI]"
+
+msgid "Optionally Mandrel or GraalVM installed and xref:building-native-image.adoc#configuring-graalvm[configured appropriately] if you want to build a native executable (or Docker if you use a native container build)"
+msgstr "ネイティブ実行可能ファイルをビルドしたい場合、MandrelまたはGraalVM（あるいはネイティブなコンテナビルドを使用する場合はDocker）をインストールし、 link:building-native-image.html#configuring-graalvm[適切に設定]していること"
+
+msgid "Solution"
+msgstr "ソリューション"
+
+msgid "We recommend that you follow the instructions in the next sections and create the application step by step."
+msgstr "次項の説明に従って、一歩一歩アプリケーションを作成していくことをお勧めします。"
+
+msgid "Stand up a Config Server"
+msgstr "Config Serverの起動"
+
+msgid ""
+"To stand up the Config Server required for this guide, please follow the instructions outlined https://github.com/spring-guides/gs-centralized-configuration#stand-up-a-config-server[here].\n"
+"The end result of that process is a running Config Server that will provide the `Hello world` value for a configuration property named `message` when the application querying the server is named `a-bootiful-client`."
+msgstr "このガイドに必要なコンフィグサーバーを立ち上げるには、 https://github.com/spring-guides/gs-centralized-configuration#stand-up-a-config-server[こちら]で説明している手順に従ってください。そのプロセスの最終結果は、サーバーにクエリを実行するアプリケーションが `a-bootiful-client` という名前の場合、 `message` という名前の設定プロパティに `Hello world` 値を提供する実行中の設定サーバーです。"
+
+msgid "Creating the Maven project"
+msgstr "Mavenプロジェクトの作成"
+
+msgid "First, we need a new project. Create a new project with the following command:"
+msgstr "まず、新しいプロジェクトが必要です。以下のコマンドで新規プロジェクトを作成します。"
+
+msgid "CLI"
+msgstr "コマンドラインインタフェース"
+
+msgid "To create a Gradle project, add the `--gradle` or `--gradle-kotlin-dsl` option."
+msgstr "Gradleプロジェクトを作成するには、 `--gradle` または `--gradle-kotlin-dsl` オプションを追加します。"
+
+msgid "For more information about how to install and use the Quarkus CLI, see the xref:cli-tooling.adoc[Quarkus CLI] guide."
+msgstr "Quarkus CLIのインストールと使用方法の詳細については、 xref:cli-tooling.adoc[Quarkus CLI] ガイドを参照してください。"
+
+msgid "Maven"
+msgstr "Maven"
+
+msgid "To create a Gradle project, add the `-DbuildTool=gradle` or `-DbuildTool=gradle-kotlin-dsl` option."
+msgstr "Gradleプロジェクトを作成するには、 `-DbuildTool=gradle` または `-DbuildTool=gradle-kotlin-dsl` オプションを追加します。"
+
+msgid "For Windows users:"
+msgstr "Windowsユーザーの場合:"
+
+msgid "If using cmd, (don't use backward slash `\\` and put everything on the same line)"
+msgstr "cmdを使用する場合、（バックスラッシュ `\\` を使用せず、すべてを同じ行に書かないでください）。"
+
+msgid "If using Powershell, wrap `-D` parameters in double quotes e.g. `\"-DprojectArtifactId={create-app-artifact-id}\"`"
+msgstr "Powershellを使用する場合は、 `-D` パラメータを二重引用符で囲んでください。例: `\"-DprojectArtifactId={create-app-artifact-id}\"`"
+
+msgid "This command generates a project which imports the `spring-cloud-config-client` extension."
+msgstr "このコマンドは、 `spring-cloud-config-client` エクステンションをインポートするプロジェクトを生成します。"
+
+msgid ""
+"If you already have your Quarkus project configured, you can add the `spring-cloud-config-client` extension\n"
+"to your project by running the following command in your project base directory:"
+msgstr "すでにQuarkusプロジェクトが設定されている場合は、プロジェクトのベースディレクトリで以下のコマンドを実行することで、 `spring-cloud-config-client` エクステンションをプロジェクトに追加することができます。"
+
+msgid "This will add the following to your build file:"
+msgstr "これにより、ビルドファイルに以下が追加されます:"
+
+msgid "GreetingController"
+msgstr "GreetingController"
+
+msgid ""
+"First, create a simple `GreetingResource` Jakarta REST resource in the\n"
+"`src/main/java/org/acme/spring/cloud/config/client/GreetingResource.java` file that looks like:"
+msgstr "まず、 `src/main/java/org/acme/spring/cloud/config/client/GreetingResource.java` ファイルに、以下のようなシンプルな `GreetingResource` Jakarta REST リソースを作成します："
+
+msgid "As we want to use configuration properties obtained from the Config Server, we will update the `GreetingResource` to inject the `message` property. The updated code will look like this:"
+msgstr "Config Serverから取得した設定プロパティーを使用したいので、 `GreetingResource` を更新して `message` プロパティーを注入します。更新したコードは以下のようになります。"
+
+msgid "Configuring the application"
+msgstr "アプリケーションの設定"
+
+msgid "Quarkus provides various configuration knobs under the `quarkus.spring-cloud-config` root. For the purposes of this guide, our Quarkus application is going to be configured in `application.properties` as follows:"
+msgstr "Quarkusは、 `quarkus.spring-cloud-config` ルートで、さまざまな設定ノブを提供します。このガイドでは、Quarkusアプリケーションは、 `application.properties` で次のように設定されます。"
+
+msgid ""
+"If you are using Gradle, the Gradle setting `rootProject.name` has precedence over `quarkus.application.name`\n"
+"so be sure to set the Gradle property to the application name you want the Spring Cloud Config server to see."
+msgstr "Gradleを使用している場合、Gradleの設定 `rootProject.name` は `quarkus.application.name` よりも優先されるため、GradleプロパティにSpring Cloud Configサーバーに表示させたいアプリケーション名を設定してください。"
+
+msgid "Package and run the application"
+msgstr "アプリケーションをパッケージ化して実行する"
+
+msgid "Run the application with:"
+msgstr "次のコマンドでアプリケーションを実行します。"
+
+msgid "Open your browser to http://localhost:8080/greeting."
+msgstr "ブラウザで http://localhost:8080/greeting を開きます。"
+
+msgid "The result should be: `Hello world` as it is the value obtained from the Spring Cloud Config server."
+msgstr "結果は、Spring Cloud Configサーバから取得した値であるため、 `Hello world` となるはずです。"
+
+msgid "Run the application as a native executable"
+msgstr "アプリケーションをネイティブ実行可能ファイルとして実行する"
+
+msgid "You can of course create a native image using the instructions of the xref:building-native-image.adoc[Building a native executable guide]."
+msgstr "もちろん、 xref:building-native-image.adoc[ネイティブ実行可能ファイルのビルド]の手順でネイティブイメージを作成することもできます。"
+
+msgid "More Spring guides"
+msgstr "その他のSpringガイド"
+
+msgid "Quarkus has more Spring compatibility features. See the following guides for more details:"
+msgstr "Quarkusには、より多くのSpring互換機能があります。詳細については、以下のガイドを参照してください。"
+
+msgid "xref:spring-di.adoc[Quarkus - Extension for Spring DI]"
+msgstr "xref:spring-di.adoc[Quarkus - Spring DI のエクステンション]"
+
+msgid "xref:spring-web.adoc[Quarkus - Extension for Spring Web]"
+msgstr "xref:spring-web.adoc[Quarkus - Spring Web のエクステンション]"
+
+msgid "xref:spring-data-jpa.adoc[Quarkus - Extension for Spring Data JPA]"
+msgstr "xref:spring-data-jpa.adoc[Quarkus - Spring Data JPAのエクステンション]"
+
+msgid "xref:spring-data-rest.adoc[Quarkus - Extension for Spring Data REST]"
+msgstr "xref:spring-data-rest.adoc[Quarkus - Spring Data RESTのエクステンション]"
+
+msgid "xref:spring-security.adoc[Quarkus - Extension for Spring Security]"
+msgstr "xref:spring-security.adoc[Quarkus - Spring Securityのエクステンション]"
+
+msgid "xref:spring-boot-properties.adoc[Quarkus - Extension for Spring Boot properties]"
+msgstr "xref:spring-boot-properties.adoc[Quarkus - Spring Boot プロパティーのエクステンション]"
+
+msgid "xref:spring-cache.adoc[Quarkus - Extension for Spring Cache]"
+msgstr "xref:spring-cache.adoc[Quarkus - Spring Cache のエクステンション]"
+
+msgid "xref:spring-scheduled.adoc[Quarkus - Extension for Spring Scheduled]"
+msgstr "xref:spring-scheduled.adoc[Quarkus - Spring Scheduled のエクステンション]"
+
+msgid "Spring Cloud Config Client Reference"
+msgstr "Spring Cloud Config Client Reference"
+
+msgid "<span class=\"icon\"><i class=\"fa fa-lock\" title=\"Fixed at build time\"></i></span> Configuration property fixed at build time - All other configuration properties are overridable at runtime <input type=\"search\" id=\"config-search-1\" placeholder=\"FILTER CONFIGURATION\" disabled>"
+msgstr "<span class=\"icon\"><i class=\"fa fa-lock\" title=\"ビルド時に固定\"></i></span> ビルド時に固定される設定プロパティ - 他のすべての設定プロパティは、実行時にオーバーライド可能 <input type=\"search\" id=\"config-search-1\" placeholder=\"FILTER CONFIGURATION\" disabled>"
+
+msgid "[.header-title]##Configuration property##"
+msgstr ""
+
+msgid "Type"
+msgstr "タイプ"
+
+msgid "Default"
+msgstr "デフォルト"
+
+msgid ""
+"[[quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-enabled]] [.property-path]##link:#quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-enabled[`quarkus.spring-cloud-config.enabled`]##\n"
+"config_property_copy_button:+++quarkus.spring-cloud-config.enabled+++[]\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"If enabled, will try to read the configuration from a Spring Cloud Config Server\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_SPRING_CLOUD_CONFIG_ENABLED+++[]\n"
+"--"
+msgstr ""
+
+msgid ""
+"[[quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-enabled]] [.property-path]##link:#quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-enabled[`quarkus.spring-cloud-config.enabled`]##\n"
+"config_property_copy_button:+++quarkus.spring-cloud-config.enabled+++[]"
+msgstr ""
+
+msgid "If enabled, will try to read the configuration from a Spring Cloud Config Server"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_SPRING_CLOUD_CONFIG_ENABLED+++[]"
+msgstr ""
+
+msgid "<i class=\"fa fa-chevron-down\"></i><span>Show more</span>"
+msgstr ""
+
+msgid "boolean"
+msgstr "boolean"
+
+msgid "`+++false+++`"
+msgstr ""
+
+msgid ""
+"[[quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-fail-fast]] [.property-path]##link:#quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-fail-fast[`quarkus.spring-cloud-config.fail-fast`]##\n"
+"config_property_copy_button:+++quarkus.spring-cloud-config.fail-fast+++[]\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"If set to true, the application will not stand up if it cannot obtain configuration from the Config Server\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_SPRING_CLOUD_CONFIG_FAIL_FAST+++[]\n"
+"--"
+msgstr ""
+
+msgid ""
+"[[quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-fail-fast]] [.property-path]##link:#quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-fail-fast[`quarkus.spring-cloud-config.fail-fast`]##\n"
+"config_property_copy_button:+++quarkus.spring-cloud-config.fail-fast+++[]"
+msgstr ""
+
+msgid "If set to true, the application will not stand up if it cannot obtain configuration from the Config Server"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_SPRING_CLOUD_CONFIG_FAIL_FAST+++[]"
+msgstr ""
+
+msgid ""
+"[[quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-url]] [.property-path]##link:#quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-url[`quarkus.spring-cloud-config.url`]##\n"
+"config_property_copy_button:+++quarkus.spring-cloud-config.url+++[]\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"The Base URI where the Spring Cloud Config Server is available\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_SPRING_CLOUD_CONFIG_URL+++[]\n"
+"--"
+msgstr ""
+
+msgid ""
+"[[quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-url]] [.property-path]##link:#quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-url[`quarkus.spring-cloud-config.url`]##\n"
+"config_property_copy_button:+++quarkus.spring-cloud-config.url+++[]"
+msgstr ""
+
+msgid "The Base URI where the Spring Cloud Config Server is available"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_SPRING_CLOUD_CONFIG_URL+++[]"
+msgstr ""
+
+msgid "string"
+msgstr "string"
+
+msgid "`+++http://localhost:8888+++`"
+msgstr ""
+
+msgid ""
+"[[quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-name]] [.property-path]##link:#quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-name[`quarkus.spring-cloud-config.name`]##\n"
+"config_property_copy_button:+++quarkus.spring-cloud-config.name+++[]\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"Name of the application on Spring Cloud Config server. Could be a list of names to load multiple files (value separated by a comma)\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_SPRING_CLOUD_CONFIG_NAME+++[]\n"
+"--"
+msgstr ""
+
+msgid ""
+"[[quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-name]] [.property-path]##link:#quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-name[`quarkus.spring-cloud-config.name`]##\n"
+"config_property_copy_button:+++quarkus.spring-cloud-config.name+++[]"
+msgstr ""
+
+msgid "Name of the application on Spring Cloud Config server. Could be a list of names to load multiple files (value separated by a comma)"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_SPRING_CLOUD_CONFIG_NAME+++[]"
+msgstr ""
+
+msgid "`+++${quarkus.application.name:}+++`"
+msgstr ""
+
+msgid ""
+"[[quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-label]] [.property-path]##link:#quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-label[`quarkus.spring-cloud-config.label`]##\n"
+"config_property_copy_button:+++quarkus.spring-cloud-config.label+++[]\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"The label to be used to pull remote configuration properties. The default is set on the Spring Cloud Config Server (generally \"master\" when the server uses a Git backend).\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_SPRING_CLOUD_CONFIG_LABEL+++[]\n"
+"--"
+msgstr ""
+
+msgid ""
+"[[quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-label]] [.property-path]##link:#quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-label[`quarkus.spring-cloud-config.label`]##\n"
+"config_property_copy_button:+++quarkus.spring-cloud-config.label+++[]"
+msgstr ""
+
+msgid "The label to be used to pull remote configuration properties. The default is set on the Spring Cloud Config Server (generally \"master\" when the server uses a Git backend)."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_SPRING_CLOUD_CONFIG_LABEL+++[]"
+msgstr ""
+
+msgid ""
+"[[quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-connection-timeout]] [.property-path]##link:#quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-connection-timeout[`quarkus.spring-cloud-config.connection-timeout`]##\n"
+"config_property_copy_button:+++quarkus.spring-cloud-config.connection-timeout+++[]\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"The amount of time to wait when initially establishing a connection before giving up and timing out.\n"
+"\n"
+"Specify `0` to wait indefinitely.\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_SPRING_CLOUD_CONFIG_CONNECTION_TIMEOUT+++[]\n"
+"--"
+msgstr ""
+
+msgid ""
+"[[quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-connection-timeout]] [.property-path]##link:#quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-connection-timeout[`quarkus.spring-cloud-config.connection-timeout`]##\n"
+"config_property_copy_button:+++quarkus.spring-cloud-config.connection-timeout+++[]"
+msgstr ""
+
+msgid "The amount of time to wait when initially establishing a connection before giving up and timing out."
+msgstr ""
+
+msgid "Specify `0` to wait indefinitely."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_SPRING_CLOUD_CONFIG_CONNECTION_TIMEOUT+++[]"
+msgstr ""
+
+msgid "link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-spring-cloud-config-client_quarkus-spring-cloud-config[icon:question-circle[title=More information about the Duration format]]"
+msgstr ""
+
+msgid "`+++10S+++`"
+msgstr ""
+
+msgid ""
+"[[quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-read-timeout]] [.property-path]##link:#quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-read-timeout[`quarkus.spring-cloud-config.read-timeout`]##\n"
+"config_property_copy_button:+++quarkus.spring-cloud-config.read-timeout+++[]\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"The amount of time to wait for a read on a socket before an exception is thrown.\n"
+"\n"
+"Specify `0` to wait indefinitely.\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_SPRING_CLOUD_CONFIG_READ_TIMEOUT+++[]\n"
+"--"
+msgstr ""
+
+msgid ""
+"[[quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-read-timeout]] [.property-path]##link:#quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-read-timeout[`quarkus.spring-cloud-config.read-timeout`]##\n"
+"config_property_copy_button:+++quarkus.spring-cloud-config.read-timeout+++[]"
+msgstr ""
+
+msgid "The amount of time to wait for a read on a socket before an exception is thrown."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_SPRING_CLOUD_CONFIG_READ_TIMEOUT+++[]"
+msgstr ""
+
+msgid "`+++60S+++`"
+msgstr ""
+
+msgid ""
+"[[quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-username]] [.property-path]##link:#quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-username[`quarkus.spring-cloud-config.username`]##\n"
+"config_property_copy_button:+++quarkus.spring-cloud-config.username+++[]\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"The username to be used if the Config Server has BASIC Auth enabled\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_SPRING_CLOUD_CONFIG_USERNAME+++[]\n"
+"--"
+msgstr ""
+
+msgid ""
+"[[quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-username]] [.property-path]##link:#quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-username[`quarkus.spring-cloud-config.username`]##\n"
+"config_property_copy_button:+++quarkus.spring-cloud-config.username+++[]"
+msgstr ""
+
+msgid "The username to be used if the Config Server has BASIC Auth enabled"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_SPRING_CLOUD_CONFIG_USERNAME+++[]"
+msgstr ""
+
+msgid ""
+"[[quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-password]] [.property-path]##link:#quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-password[`quarkus.spring-cloud-config.password`]##\n"
+"config_property_copy_button:+++quarkus.spring-cloud-config.password+++[]\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"The password to be used if the Config Server has BASIC Auth enabled\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_SPRING_CLOUD_CONFIG_PASSWORD+++[]\n"
+"--"
+msgstr ""
+
+msgid ""
+"[[quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-password]] [.property-path]##link:#quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-password[`quarkus.spring-cloud-config.password`]##\n"
+"config_property_copy_button:+++quarkus.spring-cloud-config.password+++[]"
+msgstr ""
+
+msgid "The password to be used if the Config Server has BASIC Auth enabled"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_SPRING_CLOUD_CONFIG_PASSWORD+++[]"
+msgstr ""
+
+msgid ""
+"[[quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-trust-store]] [.property-path]##link:#quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-trust-store[`quarkus.spring-cloud-config.trust-store`]##\n"
+"config_property_copy_button:+++quarkus.spring-cloud-config.trust-store+++[]\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"TrustStore to be used containing the SSL certificate used by the Config server Can be either a classpath resource or a file system path\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_SPRING_CLOUD_CONFIG_TRUST_STORE+++[]\n"
+"--"
+msgstr ""
+
+msgid ""
+"[[quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-trust-store]] [.property-path]##link:#quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-trust-store[`quarkus.spring-cloud-config.trust-store`]##\n"
+"config_property_copy_button:+++quarkus.spring-cloud-config.trust-store+++[]"
+msgstr ""
+
+msgid "TrustStore to be used containing the SSL certificate used by the Config server Can be either a classpath resource or a file system path"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_SPRING_CLOUD_CONFIG_TRUST_STORE+++[]"
+msgstr ""
+
+msgid "path"
+msgstr "path"
+
+msgid ""
+"[[quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-trust-store-password]] [.property-path]##link:#quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-trust-store-password[`quarkus.spring-cloud-config.trust-store-password`]##\n"
+"config_property_copy_button:+++quarkus.spring-cloud-config.trust-store-password+++[]\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"Password of TrustStore to be used containing the SSL certificate used by the Config server\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_SPRING_CLOUD_CONFIG_TRUST_STORE_PASSWORD+++[]\n"
+"--"
+msgstr ""
+
+msgid ""
+"[[quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-trust-store-password]] [.property-path]##link:#quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-trust-store-password[`quarkus.spring-cloud-config.trust-store-password`]##\n"
+"config_property_copy_button:+++quarkus.spring-cloud-config.trust-store-password+++[]"
+msgstr ""
+
+msgid "Password of TrustStore to be used containing the SSL certificate used by the Config server"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_SPRING_CLOUD_CONFIG_TRUST_STORE_PASSWORD+++[]"
+msgstr ""
+
+msgid ""
+"[[quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-key-store]] [.property-path]##link:#quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-key-store[`quarkus.spring-cloud-config.key-store`]##\n"
+"config_property_copy_button:+++quarkus.spring-cloud-config.key-store+++[]\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"KeyStore to be used containing the SSL certificate for authentication with the Config server Can be either a classpath resource or a file system path\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_SPRING_CLOUD_CONFIG_KEY_STORE+++[]\n"
+"--"
+msgstr ""
+
+msgid ""
+"[[quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-key-store]] [.property-path]##link:#quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-key-store[`quarkus.spring-cloud-config.key-store`]##\n"
+"config_property_copy_button:+++quarkus.spring-cloud-config.key-store+++[]"
+msgstr ""
+
+msgid "KeyStore to be used containing the SSL certificate for authentication with the Config server Can be either a classpath resource or a file system path"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_SPRING_CLOUD_CONFIG_KEY_STORE+++[]"
+msgstr ""
+
+msgid ""
+"[[quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-key-store-password]] [.property-path]##link:#quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-key-store-password[`quarkus.spring-cloud-config.key-store-password`]##\n"
+"config_property_copy_button:+++quarkus.spring-cloud-config.key-store-password+++[]\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"Password of KeyStore to be used containing the SSL certificate for authentication with the Config server\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_SPRING_CLOUD_CONFIG_KEY_STORE_PASSWORD+++[]\n"
+"--"
+msgstr ""
+
+msgid ""
+"[[quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-key-store-password]] [.property-path]##link:#quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-key-store-password[`quarkus.spring-cloud-config.key-store-password`]##\n"
+"config_property_copy_button:+++quarkus.spring-cloud-config.key-store-password+++[]"
+msgstr ""
+
+msgid "Password of KeyStore to be used containing the SSL certificate for authentication with the Config server"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_SPRING_CLOUD_CONFIG_KEY_STORE_PASSWORD+++[]"
+msgstr ""
+
+msgid ""
+"[[quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-key-password]] [.property-path]##link:#quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-key-password[`quarkus.spring-cloud-config.key-password`]##\n"
+"config_property_copy_button:+++quarkus.spring-cloud-config.key-password+++[]\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"Password to recover key from KeyStore for SSL client authentication with the Config server If no value is provided, the key-store-password will be used\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_SPRING_CLOUD_CONFIG_KEY_PASSWORD+++[]\n"
+"--"
+msgstr ""
+
+msgid ""
+"[[quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-key-password]] [.property-path]##link:#quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-key-password[`quarkus.spring-cloud-config.key-password`]##\n"
+"config_property_copy_button:+++quarkus.spring-cloud-config.key-password+++[]"
+msgstr ""
+
+msgid "Password to recover key from KeyStore for SSL client authentication with the Config server If no value is provided, the key-store-password will be used"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_SPRING_CLOUD_CONFIG_KEY_PASSWORD+++[]"
+msgstr ""
+
+msgid ""
+"[[quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-trust-certs]] [.property-path]##link:#quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-trust-certs[`quarkus.spring-cloud-config.trust-certs`]##\n"
+"config_property_copy_button:+++quarkus.spring-cloud-config.trust-certs+++[]\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"When using HTTPS and no keyStore has been specified, whether to trust all certificates\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_SPRING_CLOUD_CONFIG_TRUST_CERTS+++[]\n"
+"--"
+msgstr ""
+
+msgid ""
+"[[quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-trust-certs]] [.property-path]##link:#quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-trust-certs[`quarkus.spring-cloud-config.trust-certs`]##\n"
+"config_property_copy_button:+++quarkus.spring-cloud-config.trust-certs+++[]"
+msgstr ""
+
+msgid "When using HTTPS and no keyStore has been specified, whether to trust all certificates"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_SPRING_CLOUD_CONFIG_TRUST_CERTS+++[]"
+msgstr ""
+
+msgid "`+++${quarkus.tls.trust-all:false}+++`"
+msgstr ""
+
+msgid ""
+"[[quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-headers-header-name]] [.property-path]##link:#quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-headers-header-name[`quarkus.spring-cloud-config.headers.\"header-name\"`]##\n"
+"config_property_copy_button:+++quarkus.spring-cloud-config.headers.\"header-name\"+++[]\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"Custom headers to pass the Spring Cloud Config Server when performing the HTTP request\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_SPRING_CLOUD_CONFIG_HEADERS__HEADER_NAME_+++[]\n"
+"--"
+msgstr ""
+
+msgid ""
+"[[quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-headers-header-name]] [.property-path]##link:#quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-headers-header-name[`quarkus.spring-cloud-config.headers.\"header-name\"`]##\n"
+"config_property_copy_button:+++quarkus.spring-cloud-config.headers.\"header-name\"+++[]"
+msgstr ""
+
+msgid "Custom headers to pass the Spring Cloud Config Server when performing the HTTP request"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_SPRING_CLOUD_CONFIG_HEADERS__HEADER_NAME_+++[]"
+msgstr ""
+
+msgid "Map<String,String>"
+msgstr ""
+
+msgid ""
+"[[quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-profiles]] [.property-path]##link:#quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-profiles[`quarkus.spring-cloud-config.profiles`]##\n"
+"config_property_copy_button:+++quarkus.spring-cloud-config.profiles+++[]\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"The profiles to use for lookup\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_SPRING_CLOUD_CONFIG_PROFILES+++[]\n"
+"--"
+msgstr ""
+
+msgid ""
+"[[quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-profiles]] [.property-path]##link:#quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-profiles[`quarkus.spring-cloud-config.profiles`]##\n"
+"config_property_copy_button:+++quarkus.spring-cloud-config.profiles+++[]"
+msgstr ""
+
+msgid "The profiles to use for lookup"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_SPRING_CLOUD_CONFIG_PROFILES+++[]"
+msgstr ""
+
+msgid "list of string"
+msgstr "文字列のリスト"
+
+msgid ""
+"[[quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-ordinal]] [.property-path]##link:#quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-ordinal[`quarkus.spring-cloud-config.ordinal`]##\n"
+"config_property_copy_button:+++quarkus.spring-cloud-config.ordinal+++[]\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"Microprofile Config ordinal.\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_SPRING_CLOUD_CONFIG_ORDINAL+++[]\n"
+"--"
+msgstr ""
+
+msgid ""
+"[[quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-ordinal]] [.property-path]##link:#quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-ordinal[`quarkus.spring-cloud-config.ordinal`]##\n"
+"config_property_copy_button:+++quarkus.spring-cloud-config.ordinal+++[]"
+msgstr ""
+
+msgid "Microprofile Config ordinal."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_SPRING_CLOUD_CONFIG_ORDINAL+++[]"
+msgstr ""
+
+msgid "int"
+msgstr "int"
+
+msgid "`+++450+++`"
+msgstr ""
+
+msgid ""
+"[[quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-discovery-enabled]] [.property-path]##link:#quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-discovery-enabled[`quarkus.spring-cloud-config.discovery.enabled`]##\n"
+"config_property_copy_button:+++quarkus.spring-cloud-config.discovery.enabled+++[]\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"Enable discovery of the Spring Cloud Config Server\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_SPRING_CLOUD_CONFIG_DISCOVERY_ENABLED+++[]\n"
+"--"
+msgstr ""
+
+msgid ""
+"[[quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-discovery-enabled]] [.property-path]##link:#quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-discovery-enabled[`quarkus.spring-cloud-config.discovery.enabled`]##\n"
+"config_property_copy_button:+++quarkus.spring-cloud-config.discovery.enabled+++[]"
+msgstr ""
+
+msgid "Enable discovery of the Spring Cloud Config Server"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_SPRING_CLOUD_CONFIG_DISCOVERY_ENABLED+++[]"
+msgstr ""
+
+msgid ""
+"[[quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-discovery-service-id]] [.property-path]##link:#quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-discovery-service-id[`quarkus.spring-cloud-config.discovery.service-id`]##\n"
+"config_property_copy_button:+++quarkus.spring-cloud-config.discovery.service-id+++[]\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"The service ID to use when discovering the Spring Cloud Config Server\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_SPRING_CLOUD_CONFIG_DISCOVERY_SERVICE_ID+++[]\n"
+"--"
+msgstr ""
+
+msgid ""
+"[[quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-discovery-service-id]] [.property-path]##link:#quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-discovery-service-id[`quarkus.spring-cloud-config.discovery.service-id`]##\n"
+"config_property_copy_button:+++quarkus.spring-cloud-config.discovery.service-id+++[]"
+msgstr ""
+
+msgid "The service ID to use when discovering the Spring Cloud Config Server"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_SPRING_CLOUD_CONFIG_DISCOVERY_SERVICE_ID+++[]"
+msgstr ""
+
+msgid ""
+"[[quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-discovery-eureka-config-service-url-service-url]] [.property-path]##link:#quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-discovery-eureka-config-service-url-service-url[`quarkus.spring-cloud-config.discovery.eureka-config.service-url.\"service-url\"`]##\n"
+"config_property_copy_button:+++quarkus.spring-cloud-config.discovery.eureka-config.service-url.\"service-url\"+++[]\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"The service URL to use to specify Eureka server\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_SPRING_CLOUD_CONFIG_DISCOVERY_EUREKA_CONFIG_SERVICE_URL__SERVICE_URL_+++[]\n"
+"--"
+msgstr ""
+
+msgid ""
+"[[quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-discovery-eureka-config-service-url-service-url]] [.property-path]##link:#quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-discovery-eureka-config-service-url-service-url[`quarkus.spring-cloud-config.discovery.eureka-config.service-url.\"service-url\"`]##\n"
+"config_property_copy_button:+++quarkus.spring-cloud-config.discovery.eureka-config.service-url.\"service-url\"+++[]"
+msgstr ""
+
+msgid "The service URL to use to specify Eureka server"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_SPRING_CLOUD_CONFIG_DISCOVERY_EUREKA_CONFIG_SERVICE_URL__SERVICE_URL_+++[]"
+msgstr ""
+
+msgid ""
+"[[quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-discovery-eureka-config-registry-fetch-interval-seconds]] [.property-path]##link:#quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-discovery-eureka-config-registry-fetch-interval-seconds[`quarkus.spring-cloud-config.discovery.eureka-config.registry-fetch-interval-seconds`]##\n"
+"config_property_copy_button:+++quarkus.spring-cloud-config.discovery.eureka-config.registry-fetch-interval-seconds+++[]\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"Indicates how often(in seconds) to fetch the registry information from the eureka server.\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_SPRING_CLOUD_CONFIG_DISCOVERY_EUREKA_CONFIG_REGISTRY_FETCH_INTERVAL_SECONDS+++[]\n"
+"--"
+msgstr ""
+
+msgid ""
+"[[quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-discovery-eureka-config-registry-fetch-interval-seconds]] [.property-path]##link:#quarkus-spring-cloud-config-client_quarkus-spring-cloud-config-discovery-eureka-config-registry-fetch-interval-seconds[`quarkus.spring-cloud-config.discovery.eureka-config.registry-fetch-interval-seconds`]##\n"
+"config_property_copy_button:+++quarkus.spring-cloud-config.discovery.eureka-config.registry-fetch-interval-seconds+++[]"
+msgstr ""
+
+msgid "Indicates how often(in seconds) to fetch the registry information from the eureka server."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_SPRING_CLOUD_CONFIG_DISCOVERY_EUREKA_CONFIG_REGISTRY_FETCH_INTERVAL_SECONDS+++[]"
+msgstr ""
+
+msgid "`+++30S+++`"
+msgstr ""
+
+msgid "About the Duration format"
+msgstr "期間フォーマットについて"
+
+msgid ""
+"To write duration values, use the standard `java.time.Duration` format.\n"
+"See the link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html#parse(java.lang.CharSequence)[Duration#parse() Java API documentation] for more information."
+msgstr ""
+"期間の値を書くには、標準の `java.time.Duration` フォーマットを使います。\n"
+"詳細は link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html#parse(java.lang.CharSequence)[Duration#parse() Java API documentation] を参照してください。"
+
+msgid "You can also use a simplified format, starting with a number:"
+msgstr "数字で始まる簡略化した書式を使うこともできます:"
+
+msgid "If the value is only a number, it represents time in seconds."
+msgstr "数値のみの場合は、秒単位の時間を表します。"
+
+msgid "If the value is a number followed by `ms`, it represents time in milliseconds."
+msgstr "数値の後に `ms` が続く場合は、ミリ秒単位の時間を表します。"
+
+msgid "In other cases, the simplified format is translated to the `java.time.Duration` format for parsing:"
+msgstr "その他の場合は、簡略化されたフォーマットが解析のために `java.time.Duration` フォーマットに変換されます："
+
+msgid "If the value is a number followed by `h`, `m`, or `s`, it is prefixed with `PT`."
+msgstr "数値の後に `h` 、 `m` 、 `s` が続く場合は、その前に `PT` が付けられます。"
+
+msgid "If the value is a number followed by `d`, it is prefixed with `P`."
+msgstr "数値の後に `d` が続く場合は、その前に `P` が付けられます。"

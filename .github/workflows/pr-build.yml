@@ -38,12 +38,6 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Cache bundle directory
-        uses: actions/cache@v6
-        with:
-          path: vendor/bundle
-          key: ${{ runner.os }}-gem-${{ hashFiles('**/Gemfile.lock') }}
-
       - name: Cache tsuji.jar
         uses: actions/cache@v6
         with:
@@ -59,18 +53,55 @@ jobs:
           ./tools/git-restore-mtime
 
       - name: Build for preview
-        run: ./tsujiw jekyll build --accept-mt=gemini --additional-configs=_only_latest_guides_config.yml
+        run: |
+          QUARKUS_ROQ_GENERATOR_BATCH=true \
+          QUARKUS_PROFILE=only-latest-guides \
+          ./tsujiw roq build
 
       - name: Reduce the size of the website to be compatible with surge
         run: |
-          cd upstream
-          find assets/images/posts/ -mindepth 1 -maxdepth 1 -type d -mtime +50 -exec rm -rf ../docs/{} \;
-          find newsletter/ -mindepth 1 -maxdepth 1 -type d -mtime +50 -exec rm -rf ../docs/{} \;
-          rm -rf ../docs/assets/stickers
-          rm -rf ../docs/assets/images/worldtour/2023
-          rm -rf ../docs/assets/images/worldtour/2024
-          rm -rf ../docs/assets/images/desktopwallpapers
-          rm -rf ../docs/assets/images/stickers
+          SITE_DIR="docs"
+          
+          # Keep only the 10 most recent newsletters
+          if [ -d "$SITE_DIR/newsletter" ]; then
+            ls -1 "$SITE_DIR/newsletter" |
+              sort -n |
+              head -n -10 |
+              while read -r dir; do
+                rm -rf "$SITE_DIR/newsletter/$dir"
+              done
+          fi
+          
+          CUTOFF=$(date -d '50 days ago' +%Y-%m-%d)
+          RECENT_IMGS=$(mktemp)
+          OLD_IMGS=$(mktemp)
+          POSTS_DIR=upstream/content/posts
+          
+          for post in "$POSTS_DIR"/[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-*.adoc; do
+            POST_DATE=$(basename "$post" | grep -oP '^\d{4}-\d{2}-\d{2}')
+            [ -z "$POST_DATE" ] && continue
+          
+            if [ "$POST_DATE" \> "$CUTOFF" ]; then
+              grep -oP 'images/posts/\K[^/\["\]]+' "$post" \
+                >> "$RECENT_IMGS" 2>/dev/null || true
+            else
+              grep -oP 'images/posts/\K[^/\["\]]+' "$post" \
+                >> "$OLD_IMGS" 2>/dev/null || true
+            fi
+          done
+          
+          comm -23 \
+            <(sort -u "$OLD_IMGS") \
+            <(sort -u "$RECENT_IMGS") |
+            while read -r imgdir; do
+              rm -rf "$SITE_DIR/assets/images/posts/$imgdir"
+            done
+          
+          rm -f "$RECENT_IMGS" "$OLD_IMGS"
+          
+          rm -rf "$SITE_DIR/assets/stickers"
+          rm -rf "$SITE_DIR/assets/images/desktopwallpapers"
+          rm -rf "$SITE_DIR/assets/images/stickers"
 
       - name: Upload site artifact
         uses: actions/upload-artifact@v7
