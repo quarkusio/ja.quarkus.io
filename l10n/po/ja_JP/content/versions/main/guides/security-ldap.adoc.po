@@ -1,0 +1,786 @@
+msgid ""
+msgstr ""
+"Language: ja_JP\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: roq-plugin-l10n-adoc\n"
+
+#, fuzzy
+msgid "Using security with an LDAP realm"
+msgstr "LDAPレルムでのセキュリティの使用"
+
+msgid "This guide demonstrates how your Quarkus application can use an LDAP server to authenticate and authorize your user identities."
+msgstr "このガイドでは、QuarkusアプリケーションがLDAPサーバーを使用してユーザーアイデンティティを認証・認可する方法を説明します。"
+
+msgid "Prerequisites"
+msgstr "前提条件"
+
+msgid "To complete this guide, you need:"
+msgstr "このガイドを完成させるには、以下が必要です:"
+
+msgid "Roughly 15 minutes"
+msgstr "約15分"
+
+msgid "An IDE"
+msgstr "IDE"
+
+msgid "JDK 17+ installed with `JAVA_HOME` configured appropriately"
+msgstr "JDK 17+がインストールされ、 `JAVA_HOME` が適切に設定されていること"
+
+msgid "Apache Maven {maven-version}"
+msgstr "Apache Maven {maven-version}"
+
+msgid "Optionally the xref:cli-tooling.adoc[Quarkus CLI] if you want to use it"
+msgstr "使用したい場合は、 link:cli-tooling.html[Quarkus CLI]"
+
+msgid "Optionally Mandrel or GraalVM installed and xref:building-native-image.adoc#configuring-graalvm[configured appropriately] if you want to build a native executable (or Docker if you use a native container build)"
+msgstr "ネイティブ実行可能ファイルをビルドしたい場合、MandrelまたはGraalVM（あるいはネイティブなコンテナビルドを使用する場合はDocker）をインストールし、 link:building-native-image.html#configuring-graalvm[適切に設定]していること"
+
+msgid "Architecture"
+msgstr "アーキテクチャ"
+
+msgid "In this example, we build a very simple microservice which offers three endpoints:"
+msgstr "この例では、3つのエンドポイントを提供する非常にシンプルなマイクロサービスを構築します:"
+
+msgid "`/api/public`"
+msgstr "`/api/public`"
+
+msgid "`/api/users/me`"
+msgstr "`/api/users/me`"
+
+msgid "`/api/admin`"
+msgstr "`/api/admin`"
+
+msgid ""
+"The `/api/public` endpoint can be accessed anonymously.\n"
+"The `/api/admin` endpoint is protected with RBAC (Role-Based Access Control) where only users granted with the `adminRole` role can access. At this endpoint, we use the `@RolesAllowed` annotation to declaratively enforce the access constraint.\n"
+"The `/api/users/me` endpoint is also protected with RBAC (Role-Based Access Control) where only users granted with the `standardRole` role can access. As a response, it returns a JSON document with details about the user."
+msgstr "`/api/public` エンドポイントは匿名でアクセスできます。 `/api/admin` エンドポイントは RBAC (Role-Based Access Control) で保護されており、 `adminRole` ロールで許可されたユーザーのみがアクセスできます。このエンドポイントでは、 `@RolesAllowed` アノテーションを使用して、アクセス制約を宣言的に強制します。 `/api/users/me` エンドポイントも RBAC (Role-Based Access Control) で保護されており、 `standardRole` ロールで付与されたユーザーのみがアクセスできます。レスポンスとして、ユーザーに関する詳細を含むJSONドキュメントを返します。"
+
+msgid "Solution"
+msgstr "ソリューション"
+
+msgid ""
+"We recommend that you follow the instructions in the next sections and create the application step by step.\n"
+"However, you can go right to the completed example."
+msgstr "次の章で紹介する手順に沿って、ステップを踏んでアプリを作成することをお勧めします。ただし、完成した例にそのまま進んでも構いません。"
+
+msgid "Clone the Git repository: `git clone {quickstarts-clone-url}`, or download an {quickstarts-archive-url}[archive]."
+msgstr "`git clone {quickstarts-clone-url}` で Git リポジトリーをクローンします。または、{quickstarts-archive-url}[アーカイブ] をダウンロードします。"
+
+msgid "The solution is located in the `security-ldap-quickstart` link:{quickstarts-tree-url}/security-ldap-quickstart[directory]."
+msgstr "ソリューションは `security-ldap-quickstart` link:{quickstarts-tree-url}/security-ldap-quickstart[ディレクトリ] にあります。"
+
+msgid "Creating the Maven Project"
+msgstr "Mavenプロジェクトの作成"
+
+msgid "First, we need a new project. Create a new project with the following command:"
+msgstr "まず、新しいプロジェクトが必要です。以下のコマンドで新規プロジェクトを作成します。"
+
+msgid "CLI"
+msgstr "コマンドラインインタフェース"
+
+msgid "To create a Gradle project, add the `--gradle` or `--gradle-kotlin-dsl` option."
+msgstr "Gradleプロジェクトを作成するには、 `--gradle` または `--gradle-kotlin-dsl` オプションを追加します。"
+
+msgid "For more information about how to install and use the Quarkus CLI, see the xref:cli-tooling.adoc[Quarkus CLI] guide."
+msgstr "Quarkus CLIのインストールと使用方法の詳細については、 xref:cli-tooling.adoc[Quarkus CLI] ガイドを参照してください。"
+
+msgid "Maven"
+msgstr "Maven"
+
+msgid "To create a Gradle project, add the `-DbuildTool=gradle` or `-DbuildTool=gradle-kotlin-dsl` option."
+msgstr "Gradleプロジェクトを作成するには、 `-DbuildTool=gradle` または `-DbuildTool=gradle-kotlin-dsl` オプションを追加します。"
+
+msgid "For Windows users:"
+msgstr "Windowsユーザーの場合:"
+
+msgid "If using cmd, (don't use backward slash `\\` and put everything on the same line)"
+msgstr "cmdを使用する場合、（バックスラッシュ `\\` を使用せず、すべてを同じ行に書かないでください）。"
+
+msgid "If using Powershell, wrap `-D` parameters in double quotes e.g. `\"-DprojectArtifactId={create-app-artifact-id}\"`"
+msgstr "Powershellを使用する場合は、 `-D` パラメータを二重引用符で囲んでください。例: `\"-DprojectArtifactId={create-app-artifact-id}\"`"
+
+msgid ""
+"This command generates a project, importing the `elytron-security-ldap` extension\n"
+"which is a `wildfly-elytron-realm-ldap` adapter for Quarkus applications."
+msgstr "このコマンドはプロジェクトを生成し、Quarkusアプリケーションのための `wildfly-elytron-realm-ldap`アダプターである `elytron-security-ldap`拡張をインポートします。"
+
+msgid ""
+"If you already have your Quarkus project configured, you can add the `elytron-security-ldap` extension\n"
+"to your project by running the following command in your project base directory:"
+msgstr "すでにQuarkusプロジェクトが設定されている場合は、プロジェクトのベースディレクトリーで以下のコマンドを実行することで、プロジェクトに `elytron-security-ldap` エクステンションを追加することができます。"
+
+msgid "This will add the following to your build file:"
+msgstr "これにより、ビルドファイルに以下が追加されます:"
+
+msgid "Writing the application"
+msgstr "アプリケーションの記述"
+
+msgid "Let's start by implementing the `/api/public` endpoint. As you can see from the source code below, it is just a regular Jakarta REST resource:"
+msgstr "まず、 `/api/public` のエンドポイントを実装することから始めましょう。以下のソースコードからわかるように、これは通常のJakarta RESTリソースに過ぎません:"
+
+msgid "The source code for the `/api/admin` endpoint is also very simple. The main difference here is that we are using a `@RolesAllowed` annotation to make sure that only users granted with the `adminRole` role can access the endpoint:"
+msgstr "`/api/admin` エンドポイントのソースコードも非常にシンプルです。ここでの主な違いは、 `adminRole` ロールで付与されたユーザーだけがエンドポイントにアクセスできるように `@RolesAllowed` アノテーションを使用していることです。 :"
+
+msgid ""
+"Finally, let's consider the `/api/users/me` endpoint. As you can see from the source code below, we are trusting only users with the `standardRole` role.\n"
+"We are using `SecurityContext` to get access to the current authenticated Principal, and we return the user's name. This information is loaded from the LDAP server."
+msgstr "最後に、 `/api/users/me` エンドポイントについて考えてみましょう。以下のソースコードからわかるように、 `standardRole` ロールを持つユーザーのみを信頼しています。 SecurityContext` を使用して、現在認証されている Principal へのアクセスを取得し、そのユーザ名を返しています。この情報は LDAP サーバーから読み込まれます。"
+
+msgid "Configuring the Application"
+msgstr "アプリケーションの設定"
+
+msgid "You need to provide the URL to an LDAP server. This example requires the LDAP server to have imported link:{quarkus-blob-url}/test-framework/ldap/src/main/resources/quarkus-io.ldif[this LDIF file]."
+msgstr "LDAPサーバーへのURLを提供する必要があります。この例では、LDAPサーバーが link:{quarkus-blob-url}/test-framework/ldap/src/main/resources/quarkus-io.ldif[このLDIFファイル] をインポートしている必要があります。"
+
+msgid "The URL used by our test resource. Tests may leverage `LdapServerTestResource` provided by Quarkus as link:{quickstarts-blob-url}/security-ldap-quickstart/src/test/java/org/acme/elytron/security/ldap/ElytronLdapExtensionTestResources.java[we do] in the test coverage of the example application."
+msgstr "テストリソースが使用する URL。テストは、サンプルアプリケーションのテストカバレッジで link:{quickstarts-blob-url}/security-ldap-quickstart/src/test/java/org/acme/elytron/security/ldap/ElytronLdapExtensionTestResources.java[行っている] ように、Quarkus が提供する `LdapServerTestResource` を活用することができます。"
+
+msgid "`{0}` is substituted by the `uid`."
+msgstr " `{0}` は、 `uid` で置換されます。"
+
+msgid "The `quarkus-elytron-security-ldap` extension requires a dir-context and an identity-mapping with at least one attribute-mapping to authenticate the user and its identity."
+msgstr "`quarkus-elytron-security-ldap` エクステンションは、ユーザーとそのIDを認証するために、dir-contextと、少なくとも1つのattribute-mappingを持つidentity-mappingを必要とします。"
+
+msgid ""
+"By default, Quarkus doesn't cache the credentials obtained from the LDAP directory.\n"
+"Every request to your service will cause an additional roundtrip to the LDAP server."
+msgstr ""
+"デフォルトでは、QuarkusはLDAPディレクトリから取得した認証情報をキャッシュしません。\n"
+"サービスへのリクエストごとに、LDAPサーバーへのラウンドトリップが発生します。"
+
+msgid "It is a common practice to cache these results to improve performance, but the tradeoff is that there will be a delay before the changes in the LDAP get effective in your service."
+msgstr "パフォーマンスを向上させるためにこれらの結果をキャッシュするのは一般的な方法ですが、LDAPの変更がサービスで有効になるまでに遅れが生じるというトレードオフがあります。"
+
+msgid "To enable the cache, set `quarkus.security.ldap.cache.enabled=true` in your configuration file."
+msgstr "キャッシュを有効にするには、設定ファイルで `quarkus.security.ldap.cache.enabled=true` を設定してください。"
+
+msgid ""
+"The default cache max-age is `60s`.\n"
+"It can be configured by setting `quarkus.security.ldap.cache.max-age`."
+msgstr ""
+"デフォルトのキャッシュ max-age は `60s` です。 \n"
+"`quarkus.security.ldap.cache.max-age` を設定することで設定できます。"
+
+msgid "The number of cache entries is limited by `quarkus.security.ldap.cache.size`, which defaults to `100`."
+msgstr "キャッシュ・エントリ数は `quarkus.security.ldap.cache.size` で制限され、デフォルトは `100` です。"
+
+msgid "Map LDAP groups to <code>SecurityIdentity</code> roles"
+msgstr ""
+
+msgid ""
+"Previously described application configuration showed how to map `CN` attribute of the LDAP Distinguished Name group to a Quarkus `SecurityIdentity` role.\n"
+"More specifically, the `standardRole` CN was mapped to a `SecurityIdentity` role and thus allowed access to the `UserResource#me` endpoint.\n"
+"However, required `SecurityIdentity` roles may differ between applications and you may need to map LDAP groups to local `SecurityIdentity` roles like in the example below:"
+msgstr ""
+"前述したアプリケーション設定では、LDAP識別名グループの `CN` 属性をQuarkusの `SecurityIdentity` ロールにマッピングする方法を示しました。\n"
+"具体的には、 `standardRole` CNが `SecurityIdentity` ロールにマップされ、 `UserResource#me` エンドポイントへのアクセスが許可されました。\n"
+"ただし、必要な `SecurityIdentity` ロールはアプリケーションによって異なる場合があり、以下の例のようにLDAPグループをローカルの `SecurityIdentity` ロールにマッピングする必要がある場合があります："
+
+msgid "Map the `standardRole` role to the application-specific `SecurityIdentity` role `user`."
+msgstr "`standardRole` ロールをアプリケーション固有の `SecurityIdentity` ロール `user` にマッピングします。"
+
+msgid "Testing the Application"
+msgstr "アプリケーションのテスト"
+
+msgid ""
+"The application is now protected and the identities are provided by our LDAP server.\n"
+"Let's start the application in dev mode:"
+msgstr "これで、アプリケーションは保護され、ID は LDAP サーバーから提供されるようになりました。 アプリケーションを開発モードで起動してみましょう。 :"
+
+msgid "The very first thing to check is to ensure the anonymous access works."
+msgstr "まず最初に確認すべきは、匿名でのアクセスが可能かどうかということです。"
+
+msgid "Now, let's try to hit a protected resource anonymously."
+msgstr "では、匿名で保護されたリソースを攻撃してみましょう。"
+
+msgid "So far so good, now let's try with an allowed user."
+msgstr "ここまでは順調ですが、今度は許可されたユーザーで試してみましょう。"
+
+msgid ""
+"By providing the `adminUser:adminUserPassword` credentials, the extension authenticated the user and loaded their roles.\n"
+"The `adminUser` user is authorized to access to the protected resources."
+msgstr "`adminUser:adminUserPassword` 資格情報を提供することで、エクステンションはユーザーを認証し、そのロールをロードしました。 `adminUser` ユーザーは、保護されたリソースへのアクセスを許可されています。"
+
+msgid "The user `adminUser` should be forbidden to access a resource protected with `@RolesAllowed(\"standardRole\")` because it doesn't have this role."
+msgstr "ユーザー `adminUser` は、この役割を持っていないので、 `@RolesAllowed(\"standardRole\")` で保護されたリソースへのアクセスを禁止する必要があります。"
+
+msgid "Finally, using the user `standardUser` works and the security context contains the principal details (username for instance)."
+msgstr "最後に、ユーザー `standardUser` を使用すると動作し、セキュリティーコンテキストには主要な詳細(例えばユーザー名)が含まれています。"
+
+msgid "Configuration Reference"
+msgstr "設定リファレンス"
+
+msgid "<span class=\"icon\"><i class=\"fa fa-lock\" title=\"Fixed at build time\"></i></span> Configuration property fixed at build time - All other configuration properties are overridable at runtime <input type=\"search\" id=\"config-search-1\" placeholder=\"FILTER CONFIGURATION\" disabled>"
+msgstr "<span class=\"icon\"><i class=\"fa fa-lock\" title=\"ビルド時に固定\"></i></span> ビルド時に固定される設定プロパティ - 他のすべての設定プロパティは、実行時にオーバーライド可能 <input type=\"search\" id=\"config-search-1\" placeholder=\"FILTER CONFIGURATION\" disabled>"
+
+msgid "[.header-title]##Configuration property##"
+msgstr ""
+
+msgid "Type"
+msgstr "タイプ"
+
+msgid "Default"
+msgstr "デフォルト"
+
+msgid ""
+"icon:lock[title=Fixed at build time] [[quarkus-elytron-security-ldap_quarkus-security-ldap-enabled]] [.property-path]##link:#quarkus-elytron-security-ldap_quarkus-security-ldap-enabled[`+++quarkus.security.ldap.enabled+++`]##\n"
+"config_property_copy_button:+++quarkus.security.ldap.enabled+++[]\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"The option to enable the ldap elytron module\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_SECURITY_LDAP_ENABLED+++[]\n"
+"--"
+msgstr ""
+
+msgid ""
+"icon:lock[title=Fixed at build time] [[quarkus-elytron-security-ldap_quarkus-security-ldap-enabled]] [.property-path]##link:#quarkus-elytron-security-ldap_quarkus-security-ldap-enabled[`+++quarkus.security.ldap.enabled+++`]##\n"
+"config_property_copy_button:+++quarkus.security.ldap.enabled+++[]"
+msgstr ""
+
+msgid "The option to enable the ldap elytron module"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_SECURITY_LDAP_ENABLED+++[]"
+msgstr ""
+
+msgid "<i class=\"fa fa-chevron-down\"></i><span>Show more</span>"
+msgstr ""
+
+msgid "boolean"
+msgstr "boolean"
+
+msgid "`+++false+++`"
+msgstr ""
+
+msgid ""
+"icon:lock[title=Fixed at build time] [[quarkus-elytron-security-ldap_quarkus-security-ldap-realm-name]] [.property-path]##link:#quarkus-elytron-security-ldap_quarkus-security-ldap-realm-name[`+++quarkus.security.ldap.realm-name+++`]##\n"
+"config_property_copy_button:+++quarkus.security.ldap.realm-name+++[]\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"The elytron realm name\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_SECURITY_LDAP_REALM_NAME+++[]\n"
+"--"
+msgstr ""
+
+msgid ""
+"icon:lock[title=Fixed at build time] [[quarkus-elytron-security-ldap_quarkus-security-ldap-realm-name]] [.property-path]##link:#quarkus-elytron-security-ldap_quarkus-security-ldap-realm-name[`+++quarkus.security.ldap.realm-name+++`]##\n"
+"config_property_copy_button:+++quarkus.security.ldap.realm-name+++[]"
+msgstr ""
+
+msgid "The elytron realm name"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_SECURITY_LDAP_REALM_NAME+++[]"
+msgstr ""
+
+msgid "string"
+msgstr "string"
+
+msgid "`+++Quarkus+++`"
+msgstr ""
+
+msgid ""
+"[[quarkus-elytron-security-ldap_quarkus-security-ldap-direct-verification]] [.property-path]##link:#quarkus-elytron-security-ldap_quarkus-security-ldap-direct-verification[`+++quarkus.security.ldap.direct-verification+++`]##\n"
+"config_property_copy_button:+++quarkus.security.ldap.direct-verification+++[]\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"Provided credentials are verified against ldap?\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_SECURITY_LDAP_DIRECT_VERIFICATION+++[]\n"
+"--"
+msgstr ""
+
+msgid ""
+"[[quarkus-elytron-security-ldap_quarkus-security-ldap-direct-verification]] [.property-path]##link:#quarkus-elytron-security-ldap_quarkus-security-ldap-direct-verification[`+++quarkus.security.ldap.direct-verification+++`]##\n"
+"config_property_copy_button:+++quarkus.security.ldap.direct-verification+++[]"
+msgstr ""
+
+msgid "Provided credentials are verified against ldap?"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_SECURITY_LDAP_DIRECT_VERIFICATION+++[]"
+msgstr ""
+
+msgid "`+++true+++`"
+msgstr ""
+
+msgid ""
+"[[quarkus-elytron-security-ldap_quarkus-security-ldap-dir-context-url]] [.property-path]##link:#quarkus-elytron-security-ldap_quarkus-security-ldap-dir-context-url[`+++quarkus.security.ldap.dir-context.url+++`]##\n"
+"config_property_copy_button:+++quarkus.security.ldap.dir-context.url+++[]\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"The url of the ldap server\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_SECURITY_LDAP_DIR_CONTEXT_URL+++[]\n"
+"--"
+msgstr ""
+
+msgid ""
+"[[quarkus-elytron-security-ldap_quarkus-security-ldap-dir-context-url]] [.property-path]##link:#quarkus-elytron-security-ldap_quarkus-security-ldap-dir-context-url[`+++quarkus.security.ldap.dir-context.url+++`]##\n"
+"config_property_copy_button:+++quarkus.security.ldap.dir-context.url+++[]"
+msgstr ""
+
+msgid "The url of the ldap server"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_SECURITY_LDAP_DIR_CONTEXT_URL+++[]"
+msgstr ""
+
+msgid "required icon:exclamation-circle[title=Configuration property is required]"
+msgstr ""
+
+msgid ""
+"[[quarkus-elytron-security-ldap_quarkus-security-ldap-dir-context-principal]] [.property-path]##link:#quarkus-elytron-security-ldap_quarkus-security-ldap-dir-context-principal[`+++quarkus.security.ldap.dir-context.principal+++`]##\n"
+"config_property_copy_button:+++quarkus.security.ldap.dir-context.principal+++[]\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"The principal: user which is used to connect to ldap server (also named \"bindDn\")\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_SECURITY_LDAP_DIR_CONTEXT_PRINCIPAL+++[]\n"
+"--"
+msgstr ""
+
+msgid ""
+"[[quarkus-elytron-security-ldap_quarkus-security-ldap-dir-context-principal]] [.property-path]##link:#quarkus-elytron-security-ldap_quarkus-security-ldap-dir-context-principal[`+++quarkus.security.ldap.dir-context.principal+++`]##\n"
+"config_property_copy_button:+++quarkus.security.ldap.dir-context.principal+++[]"
+msgstr ""
+
+msgid "The principal: user which is used to connect to ldap server (also named \"bindDn\")"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_SECURITY_LDAP_DIR_CONTEXT_PRINCIPAL+++[]"
+msgstr ""
+
+msgid ""
+"[[quarkus-elytron-security-ldap_quarkus-security-ldap-dir-context-password]] [.property-path]##link:#quarkus-elytron-security-ldap_quarkus-security-ldap-dir-context-password[`+++quarkus.security.ldap.dir-context.password+++`]##\n"
+"config_property_copy_button:+++quarkus.security.ldap.dir-context.password+++[]\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"The password which belongs to the principal (also named \"bindCredential\")\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_SECURITY_LDAP_DIR_CONTEXT_PASSWORD+++[]\n"
+"--"
+msgstr ""
+
+msgid ""
+"[[quarkus-elytron-security-ldap_quarkus-security-ldap-dir-context-password]] [.property-path]##link:#quarkus-elytron-security-ldap_quarkus-security-ldap-dir-context-password[`+++quarkus.security.ldap.dir-context.password+++`]##\n"
+"config_property_copy_button:+++quarkus.security.ldap.dir-context.password+++[]"
+msgstr ""
+
+msgid "The password which belongs to the principal (also named \"bindCredential\")"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_SECURITY_LDAP_DIR_CONTEXT_PASSWORD+++[]"
+msgstr ""
+
+msgid ""
+"[[quarkus-elytron-security-ldap_quarkus-security-ldap-dir-context-referral-mode]] [.property-path]##link:#quarkus-elytron-security-ldap_quarkus-security-ldap-dir-context-referral-mode[`+++quarkus.security.ldap.dir-context.referral-mode+++`]##\n"
+"config_property_copy_button:+++quarkus.security.ldap.dir-context.referral-mode+++[]\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"how ldap redirects are handled\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_SECURITY_LDAP_DIR_CONTEXT_REFERRAL_MODE+++[]\n"
+"--"
+msgstr ""
+
+msgid ""
+"[[quarkus-elytron-security-ldap_quarkus-security-ldap-dir-context-referral-mode]] [.property-path]##link:#quarkus-elytron-security-ldap_quarkus-security-ldap-dir-context-referral-mode[`+++quarkus.security.ldap.dir-context.referral-mode+++`]##\n"
+"config_property_copy_button:+++quarkus.security.ldap.dir-context.referral-mode+++[]"
+msgstr ""
+
+msgid "how ldap redirects are handled"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_SECURITY_LDAP_DIR_CONTEXT_REFERRAL_MODE+++[]"
+msgstr ""
+
+msgid "`ignore`, `follow`, `throw`"
+msgstr ""
+
+msgid "`+++ignore+++`"
+msgstr ""
+
+msgid ""
+"[[quarkus-elytron-security-ldap_quarkus-security-ldap-dir-context-connect-timeout]] [.property-path]##link:#quarkus-elytron-security-ldap_quarkus-security-ldap-dir-context-connect-timeout[`+++quarkus.security.ldap.dir-context.connect-timeout+++`]##\n"
+"config_property_copy_button:+++quarkus.security.ldap.dir-context.connect-timeout+++[]\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"The connect timeout\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_SECURITY_LDAP_DIR_CONTEXT_CONNECT_TIMEOUT+++[]\n"
+"--"
+msgstr ""
+
+msgid ""
+"[[quarkus-elytron-security-ldap_quarkus-security-ldap-dir-context-connect-timeout]] [.property-path]##link:#quarkus-elytron-security-ldap_quarkus-security-ldap-dir-context-connect-timeout[`+++quarkus.security.ldap.dir-context.connect-timeout+++`]##\n"
+"config_property_copy_button:+++quarkus.security.ldap.dir-context.connect-timeout+++[]"
+msgstr ""
+
+msgid "The connect timeout"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_SECURITY_LDAP_DIR_CONTEXT_CONNECT_TIMEOUT+++[]"
+msgstr ""
+
+msgid "link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-elytron-security-ldap_quarkus-security[icon:question-circle[title=More information about the Duration format]]"
+msgstr ""
+
+msgid "`+++5S+++`"
+msgstr ""
+
+msgid ""
+"[[quarkus-elytron-security-ldap_quarkus-security-ldap-dir-context-read-timeout]] [.property-path]##link:#quarkus-elytron-security-ldap_quarkus-security-ldap-dir-context-read-timeout[`+++quarkus.security.ldap.dir-context.read-timeout+++`]##\n"
+"config_property_copy_button:+++quarkus.security.ldap.dir-context.read-timeout+++[]\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"The read timeout\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_SECURITY_LDAP_DIR_CONTEXT_READ_TIMEOUT+++[]\n"
+"--"
+msgstr ""
+
+msgid ""
+"[[quarkus-elytron-security-ldap_quarkus-security-ldap-dir-context-read-timeout]] [.property-path]##link:#quarkus-elytron-security-ldap_quarkus-security-ldap-dir-context-read-timeout[`+++quarkus.security.ldap.dir-context.read-timeout+++`]##\n"
+"config_property_copy_button:+++quarkus.security.ldap.dir-context.read-timeout+++[]"
+msgstr ""
+
+msgid "The read timeout"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_SECURITY_LDAP_DIR_CONTEXT_READ_TIMEOUT+++[]"
+msgstr ""
+
+msgid "`+++60S+++`"
+msgstr ""
+
+msgid ""
+"[[quarkus-elytron-security-ldap_quarkus-security-ldap-cache-enabled]] [.property-path]##link:#quarkus-elytron-security-ldap_quarkus-security-ldap-cache-enabled[`+++quarkus.security.ldap.cache.enabled+++`]##\n"
+"config_property_copy_button:+++quarkus.security.ldap.cache.enabled+++[]\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"If set to true, request to the LDAP server are cached\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_SECURITY_LDAP_CACHE_ENABLED+++[]\n"
+"--"
+msgstr ""
+
+msgid ""
+"[[quarkus-elytron-security-ldap_quarkus-security-ldap-cache-enabled]] [.property-path]##link:#quarkus-elytron-security-ldap_quarkus-security-ldap-cache-enabled[`+++quarkus.security.ldap.cache.enabled+++`]##\n"
+"config_property_copy_button:+++quarkus.security.ldap.cache.enabled+++[]"
+msgstr ""
+
+msgid "If set to true, request to the LDAP server are cached"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_SECURITY_LDAP_CACHE_ENABLED+++[]"
+msgstr ""
+
+msgid ""
+"[[quarkus-elytron-security-ldap_quarkus-security-ldap-cache-max-age]] [.property-path]##link:#quarkus-elytron-security-ldap_quarkus-security-ldap-cache-max-age[`+++quarkus.security.ldap.cache.max-age+++`]##\n"
+"config_property_copy_button:+++quarkus.security.ldap.cache.max-age+++[]\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"The duration that an entry can stay in the cache\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_SECURITY_LDAP_CACHE_MAX_AGE+++[]\n"
+"--"
+msgstr ""
+
+msgid ""
+"[[quarkus-elytron-security-ldap_quarkus-security-ldap-cache-max-age]] [.property-path]##link:#quarkus-elytron-security-ldap_quarkus-security-ldap-cache-max-age[`+++quarkus.security.ldap.cache.max-age+++`]##\n"
+"config_property_copy_button:+++quarkus.security.ldap.cache.max-age+++[]"
+msgstr ""
+
+msgid "The duration that an entry can stay in the cache"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_SECURITY_LDAP_CACHE_MAX_AGE+++[]"
+msgstr ""
+
+msgid ""
+"[[quarkus-elytron-security-ldap_quarkus-security-ldap-cache-size]] [.property-path]##link:#quarkus-elytron-security-ldap_quarkus-security-ldap-cache-size[`+++quarkus.security.ldap.cache.size+++`]##\n"
+"config_property_copy_button:+++quarkus.security.ldap.cache.size+++[]\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"The maximum number of entries to keep in the cache\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_SECURITY_LDAP_CACHE_SIZE+++[]\n"
+"--"
+msgstr ""
+
+msgid ""
+"[[quarkus-elytron-security-ldap_quarkus-security-ldap-cache-size]] [.property-path]##link:#quarkus-elytron-security-ldap_quarkus-security-ldap-cache-size[`+++quarkus.security.ldap.cache.size+++`]##\n"
+"config_property_copy_button:+++quarkus.security.ldap.cache.size+++[]"
+msgstr ""
+
+msgid "The maximum number of entries to keep in the cache"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_SECURITY_LDAP_CACHE_SIZE+++[]"
+msgstr ""
+
+msgid "int"
+msgstr "int"
+
+msgid "`+++100+++`"
+msgstr ""
+
+msgid ""
+"[[quarkus-elytron-security-ldap_quarkus-security-ldap-identity-mapping-rdn-identifier]] [.property-path]##link:#quarkus-elytron-security-ldap_quarkus-security-ldap-identity-mapping-rdn-identifier[`+++quarkus.security.ldap.identity-mapping.rdn-identifier+++`]##\n"
+"config_property_copy_button:+++quarkus.security.ldap.identity-mapping.rdn-identifier+++[]\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"The identifier which correlates to the provided user (also named \"baseFilter\")\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_SECURITY_LDAP_IDENTITY_MAPPING_RDN_IDENTIFIER+++[]\n"
+"--"
+msgstr ""
+
+msgid ""
+"[[quarkus-elytron-security-ldap_quarkus-security-ldap-identity-mapping-rdn-identifier]] [.property-path]##link:#quarkus-elytron-security-ldap_quarkus-security-ldap-identity-mapping-rdn-identifier[`+++quarkus.security.ldap.identity-mapping.rdn-identifier+++`]##\n"
+"config_property_copy_button:+++quarkus.security.ldap.identity-mapping.rdn-identifier+++[]"
+msgstr ""
+
+msgid "The identifier which correlates to the provided user (also named \"baseFilter\")"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_SECURITY_LDAP_IDENTITY_MAPPING_RDN_IDENTIFIER+++[]"
+msgstr ""
+
+msgid "`+++uid+++`"
+msgstr ""
+
+msgid ""
+"[[quarkus-elytron-security-ldap_quarkus-security-ldap-identity-mapping-search-base-dn]] [.property-path]##link:#quarkus-elytron-security-ldap_quarkus-security-ldap-identity-mapping-search-base-dn[`+++quarkus.security.ldap.identity-mapping.search-base-dn+++`]##\n"
+"config_property_copy_button:+++quarkus.security.ldap.identity-mapping.search-base-dn+++[]\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"The dn where we look for users\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_SECURITY_LDAP_IDENTITY_MAPPING_SEARCH_BASE_DN+++[]\n"
+"--"
+msgstr ""
+
+msgid ""
+"[[quarkus-elytron-security-ldap_quarkus-security-ldap-identity-mapping-search-base-dn]] [.property-path]##link:#quarkus-elytron-security-ldap_quarkus-security-ldap-identity-mapping-search-base-dn[`+++quarkus.security.ldap.identity-mapping.search-base-dn+++`]##\n"
+"config_property_copy_button:+++quarkus.security.ldap.identity-mapping.search-base-dn+++[]"
+msgstr ""
+
+msgid "The dn where we look for users"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_SECURITY_LDAP_IDENTITY_MAPPING_SEARCH_BASE_DN+++[]"
+msgstr ""
+
+msgid ""
+"[[quarkus-elytron-security-ldap_quarkus-security-ldap-identity-mapping-search-recursive]] [.property-path]##link:#quarkus-elytron-security-ldap_quarkus-security-ldap-identity-mapping-search-recursive[`+++quarkus.security.ldap.identity-mapping.search-recursive+++`]##\n"
+"config_property_copy_button:+++quarkus.security.ldap.identity-mapping.search-recursive+++[]\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"If the child nodes are also searched for identities\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_SECURITY_LDAP_IDENTITY_MAPPING_SEARCH_RECURSIVE+++[]\n"
+"--"
+msgstr ""
+
+msgid ""
+"[[quarkus-elytron-security-ldap_quarkus-security-ldap-identity-mapping-search-recursive]] [.property-path]##link:#quarkus-elytron-security-ldap_quarkus-security-ldap-identity-mapping-search-recursive[`+++quarkus.security.ldap.identity-mapping.search-recursive+++`]##\n"
+"config_property_copy_button:+++quarkus.security.ldap.identity-mapping.search-recursive+++[]"
+msgstr ""
+
+msgid "If the child nodes are also searched for identities"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_SECURITY_LDAP_IDENTITY_MAPPING_SEARCH_RECURSIVE+++[]"
+msgstr ""
+
+msgid ""
+"[[quarkus-elytron-security-ldap_quarkus-security-ldap-identity-mapping-attribute-mappings-attribute-mappings-from]] [.property-path]##link:#quarkus-elytron-security-ldap_quarkus-security-ldap-identity-mapping-attribute-mappings-attribute-mappings-from[`+++quarkus.security.ldap.identity-mapping.attribute-mappings.\"attribute-mappings\".from+++`]##\n"
+"config_property_copy_button:+++quarkus.security.ldap.identity-mapping.attribute-mappings.\"attribute-mappings\".from+++[]\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"The roleAttributeId from which is mapped (e.g. \"cn\")\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_SECURITY_LDAP_IDENTITY_MAPPING_ATTRIBUTE_MAPPINGS__ATTRIBUTE_MAPPINGS__FROM+++[]\n"
+"--"
+msgstr ""
+
+msgid ""
+"[[quarkus-elytron-security-ldap_quarkus-security-ldap-identity-mapping-attribute-mappings-attribute-mappings-from]] [.property-path]##link:#quarkus-elytron-security-ldap_quarkus-security-ldap-identity-mapping-attribute-mappings-attribute-mappings-from[`+++quarkus.security.ldap.identity-mapping.attribute-mappings.\"attribute-mappings\".from+++`]##\n"
+"config_property_copy_button:+++quarkus.security.ldap.identity-mapping.attribute-mappings.\"attribute-mappings\".from+++[]"
+msgstr ""
+
+msgid "The roleAttributeId from which is mapped (e.g. \"cn\")"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_SECURITY_LDAP_IDENTITY_MAPPING_ATTRIBUTE_MAPPINGS__ATTRIBUTE_MAPPINGS__FROM+++[]"
+msgstr ""
+
+msgid ""
+"[[quarkus-elytron-security-ldap_quarkus-security-ldap-identity-mapping-attribute-mappings-attribute-mappings-to]] [.property-path]##link:#quarkus-elytron-security-ldap_quarkus-security-ldap-identity-mapping-attribute-mappings-attribute-mappings-to[`+++quarkus.security.ldap.identity-mapping.attribute-mappings.\"attribute-mappings\".to+++`]##\n"
+"config_property_copy_button:+++quarkus.security.ldap.identity-mapping.attribute-mappings.\"attribute-mappings\".to+++[]\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"The identifier whom the attribute is mapped to (in Quarkus: \"groups\", in WildFly this is \"Roles\")\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_SECURITY_LDAP_IDENTITY_MAPPING_ATTRIBUTE_MAPPINGS__ATTRIBUTE_MAPPINGS__TO+++[]\n"
+"--"
+msgstr ""
+
+msgid ""
+"[[quarkus-elytron-security-ldap_quarkus-security-ldap-identity-mapping-attribute-mappings-attribute-mappings-to]] [.property-path]##link:#quarkus-elytron-security-ldap_quarkus-security-ldap-identity-mapping-attribute-mappings-attribute-mappings-to[`+++quarkus.security.ldap.identity-mapping.attribute-mappings.\"attribute-mappings\".to+++`]##\n"
+"config_property_copy_button:+++quarkus.security.ldap.identity-mapping.attribute-mappings.\"attribute-mappings\".to+++[]"
+msgstr ""
+
+msgid "The identifier whom the attribute is mapped to (in Quarkus: \"groups\", in WildFly this is \"Roles\")"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_SECURITY_LDAP_IDENTITY_MAPPING_ATTRIBUTE_MAPPINGS__ATTRIBUTE_MAPPINGS__TO+++[]"
+msgstr ""
+
+msgid "`+++groups+++`"
+msgstr ""
+
+msgid ""
+"[[quarkus-elytron-security-ldap_quarkus-security-ldap-identity-mapping-attribute-mappings-attribute-mappings-filter]] [.property-path]##link:#quarkus-elytron-security-ldap_quarkus-security-ldap-identity-mapping-attribute-mappings-attribute-mappings-filter[`+++quarkus.security.ldap.identity-mapping.attribute-mappings.\"attribute-mappings\".filter+++`]##\n"
+"config_property_copy_button:+++quarkus.security.ldap.identity-mapping.attribute-mappings.\"attribute-mappings\".filter+++[]\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"The filter (also named \"roleFilter\")\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_SECURITY_LDAP_IDENTITY_MAPPING_ATTRIBUTE_MAPPINGS__ATTRIBUTE_MAPPINGS__FILTER+++[]\n"
+"--"
+msgstr ""
+
+msgid ""
+"[[quarkus-elytron-security-ldap_quarkus-security-ldap-identity-mapping-attribute-mappings-attribute-mappings-filter]] [.property-path]##link:#quarkus-elytron-security-ldap_quarkus-security-ldap-identity-mapping-attribute-mappings-attribute-mappings-filter[`+++quarkus.security.ldap.identity-mapping.attribute-mappings.\"attribute-mappings\".filter+++`]##\n"
+"config_property_copy_button:+++quarkus.security.ldap.identity-mapping.attribute-mappings.\"attribute-mappings\".filter+++[]"
+msgstr ""
+
+msgid "The filter (also named \"roleFilter\")"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_SECURITY_LDAP_IDENTITY_MAPPING_ATTRIBUTE_MAPPINGS__ATTRIBUTE_MAPPINGS__FILTER+++[]"
+msgstr ""
+
+msgid ""
+"[[quarkus-elytron-security-ldap_quarkus-security-ldap-identity-mapping-attribute-mappings-attribute-mappings-filter-base-dn]] [.property-path]##link:#quarkus-elytron-security-ldap_quarkus-security-ldap-identity-mapping-attribute-mappings-attribute-mappings-filter-base-dn[`+++quarkus.security.ldap.identity-mapping.attribute-mappings.\"attribute-mappings\".filter-base-dn+++`]##\n"
+"config_property_copy_button:+++quarkus.security.ldap.identity-mapping.attribute-mappings.\"attribute-mappings\".filter-base-dn+++[]\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"The filter base dn (also named \"rolesContextDn\")\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_SECURITY_LDAP_IDENTITY_MAPPING_ATTRIBUTE_MAPPINGS__ATTRIBUTE_MAPPINGS__FILTER_BASE_DN+++[]\n"
+"--"
+msgstr ""
+
+msgid ""
+"[[quarkus-elytron-security-ldap_quarkus-security-ldap-identity-mapping-attribute-mappings-attribute-mappings-filter-base-dn]] [.property-path]##link:#quarkus-elytron-security-ldap_quarkus-security-ldap-identity-mapping-attribute-mappings-attribute-mappings-filter-base-dn[`+++quarkus.security.ldap.identity-mapping.attribute-mappings.\"attribute-mappings\".filter-base-dn+++`]##\n"
+"config_property_copy_button:+++quarkus.security.ldap.identity-mapping.attribute-mappings.\"attribute-mappings\".filter-base-dn+++[]"
+msgstr ""
+
+msgid "The filter base dn (also named \"rolesContextDn\")"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_SECURITY_LDAP_IDENTITY_MAPPING_ATTRIBUTE_MAPPINGS__ATTRIBUTE_MAPPINGS__FILTER_BASE_DN+++[]"
+msgstr ""
+
+msgid "About the Duration format"
+msgstr "期間フォーマットについて"
+
+msgid ""
+"To write duration values, use the standard `java.time.Duration` format.\n"
+"See the link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html#parse(java.lang.CharSequence)[Duration#parse() Java API documentation] for more information."
+msgstr ""
+"期間の値を書くには、標準の `java.time.Duration` フォーマットを使います。\n"
+"詳細は link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html#parse(java.lang.CharSequence)[Duration#parse() Java API documentation] を参照してください。"
+
+msgid "You can also use a simplified format, starting with a number:"
+msgstr "数字で始まる簡略化した書式を使うこともできます:"
+
+msgid "If the value is only a number, it represents time in seconds."
+msgstr "数値のみの場合は、秒単位の時間を表します。"
+
+msgid "If the value is a number followed by `ms`, it represents time in milliseconds."
+msgstr "数値の後に `ms` が続く場合は、ミリ秒単位の時間を表します。"
+
+msgid "In other cases, the simplified format is translated to the `java.time.Duration` format for parsing:"
+msgstr "その他の場合は、簡略化されたフォーマットが解析のために `java.time.Duration` フォーマットに変換されます："
+
+msgid "If the value is a number followed by `h`, `m`, or `s`, it is prefixed with `PT`."
+msgstr "数値の後に `h` 、 `m` 、 `s` が続く場合は、その前に `PT` が付けられます。"
+
+msgid "If the value is a number followed by `d`, it is prefixed with `P`."
+msgstr "数値の後に `d` が続く場合は、その前に `P` が付けられます。"
+
+msgid "References"
+msgstr "リファレンス"
+
+msgid "https://en.wikipedia.org/wiki/Lightweight_Directory_Access_Protocol[LDAP]"
+msgstr "https://en.wikipedia.org/wiki/Lightweight_Directory_Access_Protocol[LDAP]"
+
+msgid "xref:security-overview.adoc[Quarkus Security overview]"
+msgstr "xref:security-overview.adoc[Quarkus Securityの概要]"

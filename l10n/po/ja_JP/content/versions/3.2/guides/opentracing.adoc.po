@@ -1,0 +1,761 @@
+msgid ""
+msgstr ""
+"Language: ja_JP\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: roq-plugin-l10n-adoc\n"
+
+msgid "Using OpenTracing"
+msgstr "OpenTracingの使用"
+
+msgid ""
+"This guide explains how your Quarkus application can utilize OpenTracing to provide distributed tracing for\n"
+"interactive web applications."
+msgstr "このガイドでは、QuarkusアプリケーションがOpenTracingを利用してインタラクティブなウェブアプリケーションのための分散トレースを提供する方法について説明します。"
+
+msgid "xref:opentelemetry.adoc[OpenTelemetry] is the recommended approach to tracing and telemetry for Quarkus."
+msgstr "link:opentelemetry.html[OpenTelemetry] は、Quarkusのトレースとテレメトリーに対する推奨アプローチです。"
+
+msgid "When Quarkus will upgrade to Eclipse MicroProfile 6, the SmallRye OpenTracing support will be discontinued."
+msgstr "QuarkusがEclipse MicroProfile 6にアップグレードされると、SmallRye OpenTracingのサポートが停止されます。"
+
+msgid "This technology is considered {extension-status}."
+msgstr "この技術は、{extension-status}と考えられています。"
+
+msgid "Being _deprecated_ means that this extension is likely to be replaced or removed in a future version of Quarkus."
+msgstr "_deprecated_ は、このエクステンションが Quarkus の将来のバージョンで置き換えられるか削除される可能性が高いことを意味します。"
+
+msgid "For a full list of possible statuses, check our https://quarkus.io/faq/#what-are-the-extension-statuses[FAQ entry]."
+msgstr "とりうるステータスの完全なリストについては、 link:https://quarkus.io/faq/#extension-status[FAQの項目] を参照してください。"
+
+msgid "Prerequisites"
+msgstr "前提条件"
+
+msgid "To complete this guide, you need:"
+msgstr "このガイドを完成させるには、以下が必要です:"
+
+msgid "Roughly 15 minutes"
+msgstr "約15分"
+
+msgid "An IDE"
+msgstr "IDE"
+
+msgid "JDK 11+ installed with `JAVA_HOME` configured appropriately"
+msgstr "JDK 11+ がインストールされ、 `JAVA_HOME`  が適切に設定されていること"
+
+msgid "Apache Maven {maven-version}"
+msgstr "Apache Maven {maven-version}"
+
+msgid "A working container runtime (Docker or xref:podman.adoc[Podman])"
+msgstr "動作するコンテナランタイム(Docker, xref:podman.adoc[Podman])"
+
+msgid "Optionally the xref:cli-tooling.adoc[Quarkus CLI] if you want to use it"
+msgstr "使用したい場合は、 link:cli-tooling.html[Quarkus CLI]"
+
+msgid "Optionally Mandrel or GraalVM installed and xref:building-native-image.adoc#configuring-graalvm[configured appropriately] if you want to build a native executable (or Docker if you use a native container build)"
+msgstr "ネイティブ実行可能ファイルをビルドしたい場合、MandrelまたはGraalVM（あるいはネイティブなコンテナビルドを使用する場合はDocker）をインストールし、 link:building-native-image.html#configuring-graalvm[適切に設定]していること"
+
+msgid "Architecture"
+msgstr "アーキテクチャ"
+
+msgid "In this guide, we create a straightforward REST application to demonstrate distributed tracing."
+msgstr "このガイドでは、分散トレースを実証するための簡単なRESTアプリケーションを作成します。"
+
+msgid "Solution"
+msgstr "ソリューション"
+
+msgid ""
+"We recommend that you follow the instructions in the next sections and create the application step by step.\n"
+"However, you can skip right to the completed example."
+msgstr "次の章で紹介する手順に沿って、ステップを踏んでアプリを作成することをお勧めします。ただし、すぐに完成した例に飛んでも構いません。"
+
+msgid "Clone the Git repository: `git clone {quickstarts-clone-url}`, or download an {quickstarts-archive-url}[archive]."
+msgstr "`git clone {quickstarts-clone-url}` で Git リポジトリーをクローンします。または、{quickstarts-archive-url}[アーカイブ] をダウンロードします。"
+
+msgid "The solution is located in the `opentracing-quickstart` link:{quickstarts-tree-url}/opentracing-quickstart[directory]."
+msgstr "ソリューションは `opentracing-quickstart` link:{quickstarts-tree-url}/opentracing-quickstart[ディレクトリ] にあります。"
+
+msgid "Creating the Maven project"
+msgstr "Mavenプロジェクトの作成"
+
+msgid "First, we need a new project. Create a new project with the following command:"
+msgstr "まず、新しいプロジェクトが必要です。以下のコマンドで新規プロジェクトを作成します。"
+
+msgid "CLI"
+msgstr "コマンドラインインタフェース"
+
+msgid "To create a Gradle project, add the `--gradle` or `--gradle-kotlin-dsl` option."
+msgstr "Gradleプロジェクトを作成するには、 `--gradle` または `--gradle-kotlin-dsl` オプションを追加します。"
+
+msgid "For more information about how to install and use the Quarkus CLI, see the xref:cli-tooling.adoc[Quarkus CLI] guide."
+msgstr "Quarkus CLIのインストールと使用方法の詳細については、 xref:cli-tooling.adoc[Quarkus CLI] ガイドを参照してください。"
+
+msgid "Maven"
+msgstr "Maven"
+
+msgid "To create a Gradle project, add the `-DbuildTool=gradle` or `-DbuildTool=gradle-kotlin-dsl` option."
+msgstr "Gradleプロジェクトを作成するには、 `-DbuildTool=gradle` または `-DbuildTool=gradle-kotlin-dsl` オプションを追加します。"
+
+msgid ""
+"This command generates the Maven project and imports the `smallrye-opentracing` extension, which\n"
+"includes the OpenTracing support and the default https://www.jaegertracing.io/[Jaeger] tracer."
+msgstr "このコマンドはMaven プロジェクトを生成し、OpenTracingのサポートとデフォルトの link:https://www.jaegertracing.io/[Jaeger] トレーサーを含む `smallrye-opentracing` エクステンションをインポートします。"
+
+msgid ""
+"If you already have your Quarkus project configured, you can add the `smallrye-opentracing` extension\n"
+"to your project by running the following command in your project base directory:"
+msgstr "すでにQuarkusプロジェクトが設定されている場合は、プロジェクトのベースディレクトリーで以下のコマンドを実行することで、プロジェクトに `smallrye-opentracing` エクステンションを追加することができます。"
+
+msgid "This will add the following to your build file:"
+msgstr "これにより、ビルドファイルに以下が追加されます:"
+
+msgid "Examine the Jakarta REST resource"
+msgstr "Jakarta REST リソースの調査"
+
+msgid "Create the `src/main/java/org/acme/opentracing/TracedResource.java` file with the following content:"
+msgstr "以下の内容で `src/main/java/org/acme/opentracing/TracedResource.java` ファイルを作成します:"
+
+msgid "The log event carries OpenTracing information as well. In order to print OpenTracing information to the console output, the console log handler with the required OpenTracing event's keys needs to be defined in the `application.properties` file."
+msgstr "ログイベントは OpenTracing の情報も含んでいます。OpenTracingの情報をコンソール出力するためには、必要なOpenTracingイベントのキーを持つコンソールログハンドラを `application.properties` ファイルで定義する必要があります。"
+
+msgid ""
+"Notice that there is no tracing specific code included in the application. By default, requests sent to this\n"
+"endpoint will be traced without any code changes being required. It is also possible to enhance the tracing information.\n"
+"This can be achieved by https://github.com/smallrye/smallrye-opentracing/[SmallRye OpenTracing] an implementation of\n"
+"https://github.com/eclipse/microprofile-opentracing/[MicroProfile OpenTracing]."
+msgstr "このアプリケーションにはトレース用のコードが含まれていないことに注意してください。デフォルトでは、このエンドポイントに送信されたリクエストは、コードを変更することなくトレースされます。トレース情報を拡張することも可能です。これは、  link:https://github.com/eclipse/microprofile-opentracing/[MicroProfile OpenTracing] の実装である link:https://github.com/smallrye/smallrye-opentracing/[SmallRye OpenTracing] で実現できます。"
+
+msgid "Create the configuration"
+msgstr "コンフィグレーションの作成"
+
+msgid "There are two ways to configure the Jaeger tracer within the application."
+msgstr "アプリケーション内でJaeger トレーサーを設定するには、2つの方法があります。"
+
+msgid "The first approach is by providing the properties within the `src/main/resources/application.properties` file:"
+msgstr "最初のアプローチは、 `src/main/resources/application.properties` ファイル内でプロパティーを提供することです。"
+
+msgid "If the `quarkus.jaeger.service-name` property (or `JAEGER_SERVICE_NAME` environment variable) is not provided then a \"no-op\" tracer will be configured, resulting in no tracing data being reported to the backend."
+msgstr "`quarkus.jaeger.service-name` プロパティー (または `JAEGER_SERVICE_NAME` 環境変数) が提供されていない場合は、\"no-op\" トレーサーが設定され、結果としてトレースデータはバックエンドに報告されません。"
+
+msgid "Set up a sampler that uses a constant sampling strategy."
+msgstr "定数サンプリングを行うサンプラーを設定します。"
+
+msgid "Sample all requests. Set sampler-param to somewhere between 0 and 1, e.g. 0.50, if you do not wish to sample all requests."
+msgstr "すべてのリクエストをサンプリングします。すべてのリクエストをサンプリングしたくない場合は、sampler-param を 0 から 1 の間のどこかに設定します (例: 0.50)。"
+
+msgid "Add trace IDs into log message."
+msgstr "ログメッセージにトレースIDを追加します。"
+
+msgid "The second approach is to supply the properties as https://www.jaegertracing.io/docs/latest/client-features/[environment variables]. These can be specified using `jvm.args` as shown in the following section."
+msgstr "2つ目の方法は、プロパティを link:https://www.jaegertracing.io/docs/latest/client-features/[環境変数] として指定する方法です。これらは、次のセクションに示すように `jvm.args` として指定できます。"
+
+msgid "Run the application"
+msgstr "アプリケーションの実行"
+
+msgid "The first step is to start the tracing system to collect and display the captured traces:"
+msgstr "まず、キャプチャしたトレースを収集して表示するためのトレースシステムを起動します。"
+
+msgid "Now we are ready to run our application. If using `application.properties` to configure the tracer:"
+msgstr "これでアプリケーションを実行する準備が整いました。トレーサーの設定に `application.properties` を使用している場合:"
+
+msgid "or if configuring the tracer via environment variables:"
+msgstr "または、環境変数でトレーサーを設定する場合:"
+
+msgid "Once both the application and tracing system are started, you can make a request to the provided endpoint:"
+msgstr "アプリケーションとトレースシステムの両方が起動したら、提供されたエンドポイントにリクエストを行うことができます:"
+
+msgid "When the first request has been submitted, the Jaeger tracer within the app will be initialized:"
+msgstr "最初のリクエストが送信されると、アプリ内のJaegerトレーサーが初期化されます:"
+
+msgid "Then visit the http://localhost:16686[Jaeger UI] to see the tracing information."
+msgstr "その後、 link:http://localhost:16686[Jaeger UI] にアクセスしてトレース情報を確認します。"
+
+msgid "Hit `CTRL+C` to stop the application."
+msgstr "`CTRL+C`  を叩いてアプリケーションを停止させます。"
+
+msgid "Tracing additional methods"
+msgstr "追加メソッドのトレース"
+
+msgid ""
+"REST endpoints are automatically traced.\n"
+"If you need to trace additional methods, you can add the `org.eclipse.microprofile.opentracing.Traced` annotation to CDI bean classes or their non-private methods."
+msgstr "REST エンドポイントは自動的にトレースされます。追加でメソッドをトレースする必要がある場合は、CDI beanのクラスや非privateのメソッドに `org.eclipse.microprofile.opentracing.Traced` アノテーションを追加することができます。"
+
+msgid "This can be useful to trace incoming requests from non-REST calls (like request coming from a message) or to create spans inside a trace."
+msgstr "これは、非RESTコール(メッセージからのリクエストなど)からの着信リクエストをトレースしたり、トレース内にスパンを作成したりするのに便利です。"
+
+msgid "Here is an example of a `FrancophoneService` which methods are traced."
+msgstr "ここでは、メソッドがトレースされている `FrancophoneService` の例を示します。"
+
+msgid "Additional instrumentation"
+msgstr "追加の計器"
+
+msgid "The https://github.com/opentracing-contrib[OpenTracing API Contributions project] offers additional instrumentation that can be used to add tracing to a large variety of technologies/components."
+msgstr "link:https://github.com/opentracing-contrib[OpenTracing API Contributionsプロジェクト] では、様々な技術/コンポーネントにトレースを追加するために使用できる追加の計器 (Instrumentation) を提供しています。"
+
+msgid "The instrumentation documented in this section has been tested with Quarkus and works in both standard and native mode."
+msgstr "このセクションで説明されている計装は、Quarkus でテストされており、標準モードとネイティブモードの両方で動作します。"
+
+msgid "JDBC"
+msgstr "JDBC"
+
+msgid "The https://github.com/opentracing-contrib/java-jdbc[JDBC instrumentation] will add a span for each JDBC queries done by your application, to enable it, add the following dependency to your build file:"
+msgstr "link:https://github.com/opentracing-contrib/java-jdbc[JDBC Instrumentation] は 、アプリケーションが実行するJDBCクエリごとにスパンを追加します。これを有効にするには、ビルドファイルに次の依存関係を追加します:"
+
+msgid "Then, you need to enable it in the configuration:"
+msgstr "そして、コンフィギュレーションで有効にする必要があります。"
+
+msgid ""
+"`quarkus.datasource.jdbc.tracing` is a build time configuration property:\n"
+"it makes sure all the tracing infrastructure is included in your application."
+msgstr " `quarkus.datasource.jdbc.tracing` は、ビルド時設定プロパティです。すべてのトレース基盤がアプリケーションに含まれていることを確認します。"
+
+msgid ""
+"This is especially important when building a native executable as we need to\n"
+"make sure the OpenTracing JDBC driver has been registered for reflection,\n"
+"together with the underlying JDBC driver."
+msgstr "これはネイティブ実行可能ファイルをビルドする際に特に重要で、OpenTracing JDBCドライバが、基盤となるJDBCドライバとともに、リフレクション用に登録されていることを確認する必要があるからです。"
+
+msgid ""
+"The Agroal extension will take care of adjusting the JDBC URL with the `tracing` prefix\n"
+"when tracing is enabled,\n"
+"so you do not have to adjust the JDBC URL yourself."
+msgstr "トレースが有効な場合、JDBC の URL を `tracing` というプレフィックスで調整するのは Agroal エクステンションが担当するので、自分で JDBC の URL を調整する必要はありません。"
+
+msgid ""
+"By default, when `quarkus.datasource.jdbc.tracing` is true, tracing is enabled at runtime\n"
+"but you can explicitly disable it by setting the following property:"
+msgstr "デフォルトでは、 `quarkus.datasource.jdbc.tracing` が true の場合、実行時にトレースが有効になりますが、以下のプロパティを設定することで、明示的にトレースを無効にすることができます。"
+
+msgid "This way, you can have your Quarkus application ready for tracing and toggle JDBC tracing at runtime."
+msgstr "こうすることで、Quarkusアプリケーションをトレースできる状態にし、実行時にJDBCトレースを切り換えることができます。"
+
+msgid "Kafka"
+msgstr "Kafka"
+
+msgid "The https://github.com/opentracing-contrib/java-kafka-client[Kafka instrumentation] will add a span for each message sent to or received from a Kafka topic. To enable it, add the following dependency to your build file:"
+msgstr "link:https://github.com/opentracing-contrib/java-kafka-client[Kafka instrumentation] は、Kafka トピックとの間で送受信されるメッセージごとにスパンを追加します。これを有効にするには、ビルドファイルに以下の依存関係を追加します:"
+
+msgid "It contains OpenTracing interceptors that must be registered on Kafka producers and consumers."
+msgstr "KafkaのProducerとConsumerに登録しなければならないOpenTracingのインターセプターが含まれています。"
+
+msgid "If you followed the xref:kafka.adoc[Kafka guide], the interceptors can be added on the `generated-price` and the `prices` channels as follows:"
+msgstr "link:kafka[Kafkaのガイド] に従った場合、以下のように `generated-price` と `prices` のチャンネルにインターセプターを追加することができます:"
+
+msgid "MongoDB client"
+msgstr "MongoDBクライアント"
+
+msgid "The https://github.com/opentracing-contrib/java-mongo-driver[Mongo Driver instrumentation] will add a span for each command executed by your application. To enable it, add the following dependency to your build file:"
+msgstr "link:https://github.com/opentracing-contrib/java-mongo-driver[Mongo Driver instrumentation] は 、アプリケーションが実行するコマンドごとにスパンを追加します。これを有効にするには、ビルドファイルに次の依存関係を追加します:"
+
+msgid ""
+"It contains the OpenTracing CommandListener that will be registered on the configuration of the mongo client.\n"
+"Following the xref:mongodb.adoc[MongoDB guide], the command listener will be registered defining the config property as follows:"
+msgstr "mongoクライアントのコンフィギュレーションに登録されるOpenTracing CommandListenerが含まれています。 link:mongodb[MongoDBのガイド]に従うと、コマンドリスナーは以下のようにconfigプロパティを定義して登録されます。"
+
+msgid "Zipkin compatibility mode"
+msgstr "Zipkin互換モード"
+
+msgid "To enable it, add the following dependency to your build file:"
+msgstr "これを有効にするには、ビルドファイルに以下の依存関係を追加します:"
+
+msgid ""
+"It contains the dependencies to convert the request to zipkin format.\n"
+"The zipkin compatibility mode will be activated after defining the config property as follows:"
+msgstr "リクエストを zipkin 形式に変換するための依存関係が含まれています。以下のようにconfigプロパティを定義すると、zipkin互換モードが有効になります。"
+
+msgid "Jaeger Configuration Reference"
+msgstr "Jaeger構成リファレンス"
+
+msgid "<span class=\"icon\"><i class=\"fa fa-lock\" title=\"Fixed at build time\"></i></span> Configuration property fixed at build time - All other configuration properties are overridable at runtime <input type=\"search\" id=\"config-search-1\" placeholder=\"FILTER CONFIGURATION\" disabled>"
+msgstr "<span class=\"icon\"><i class=\"fa fa-lock\" title=\"ビルド時に固定\"></i></span> ビルド時に固定される設定プロパティ - 他のすべての設定プロパティは、実行時にオーバーライド可能 <input type=\"search\" id=\"config-search-1\" placeholder=\"FILTER CONFIGURATION\" disabled>"
+
+msgid "[[quarkus-jaeger_configuration]]link:#quarkus-jaeger_configuration[Configuration property]"
+msgstr ""
+
+msgid "Type"
+msgstr "タイプ"
+
+msgid "Default"
+msgstr "デフォルト"
+
+msgid ""
+"icon:lock[title=Fixed at build time] [[quarkus-jaeger_quarkus-jaeger-enabled]]`link:#quarkus-jaeger_quarkus-jaeger-enabled[quarkus.jaeger.enabled]`\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"Defines if the Jaeger extension is enabled.\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_JAEGER_ENABLED+++[]\n"
+"--"
+msgstr ""
+
+msgid "icon:lock[title=Fixed at build time] [[quarkus-jaeger_quarkus-jaeger-enabled]]`link:#quarkus-jaeger_quarkus-jaeger-enabled[quarkus.jaeger.enabled]`"
+msgstr ""
+
+msgid "Defines if the Jaeger extension is enabled."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_JAEGER_ENABLED+++[]"
+msgstr ""
+
+msgid "<i class=\"fa fa-chevron-down\"></i><span>Show more</span>"
+msgstr ""
+
+msgid "boolean"
+msgstr "boolean"
+
+msgid "`true`"
+msgstr "`true`"
+
+msgid ""
+"icon:lock[title=Fixed at build time] [[quarkus-jaeger_quarkus-jaeger-metrics-enabled]]`link:#quarkus-jaeger_quarkus-jaeger-metrics-enabled[quarkus.jaeger.metrics.enabled]`\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"Whether metrics are published in case a metrics extension is present.\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_JAEGER_METRICS_ENABLED+++[]\n"
+"--"
+msgstr ""
+
+msgid "icon:lock[title=Fixed at build time] [[quarkus-jaeger_quarkus-jaeger-metrics-enabled]]`link:#quarkus-jaeger_quarkus-jaeger-metrics-enabled[quarkus.jaeger.metrics.enabled]`"
+msgstr ""
+
+msgid "Whether metrics are published in case a metrics extension is present."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_JAEGER_METRICS_ENABLED+++[]"
+msgstr ""
+
+msgid "`false`"
+msgstr "`false`"
+
+msgid ""
+"[[quarkus-jaeger_quarkus-jaeger-endpoint]]`link:#quarkus-jaeger_quarkus-jaeger-endpoint[quarkus.jaeger.endpoint]`\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"The traces endpoint, in case the client should connect directly to the Collector, like http://jaeger-collector:14268/api/traces\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_JAEGER_ENDPOINT+++[]\n"
+"--"
+msgstr ""
+
+msgid "[[quarkus-jaeger_quarkus-jaeger-endpoint]]`link:#quarkus-jaeger_quarkus-jaeger-endpoint[quarkus.jaeger.endpoint]`"
+msgstr ""
+
+msgid "The traces endpoint, in case the client should connect directly to the Collector, like http://jaeger-collector:14268/api/traces"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_JAEGER_ENDPOINT+++[]"
+msgstr ""
+
+msgid "link:https://docs.oracle.com/javase/8/docs/api/java/net/URI.html[URI]"
+msgstr ""
+
+msgid ""
+"[[quarkus-jaeger_quarkus-jaeger-auth-token]]`link:#quarkus-jaeger_quarkus-jaeger-auth-token[quarkus.jaeger.auth-token]`\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"Authentication Token to send as \"Bearer\" to the endpoint\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_JAEGER_AUTH_TOKEN+++[]\n"
+"--"
+msgstr ""
+
+msgid "[[quarkus-jaeger_quarkus-jaeger-auth-token]]`link:#quarkus-jaeger_quarkus-jaeger-auth-token[quarkus.jaeger.auth-token]`"
+msgstr ""
+
+msgid "Authentication Token to send as \"Bearer\" to the endpoint"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_JAEGER_AUTH_TOKEN+++[]"
+msgstr ""
+
+msgid "string"
+msgstr "string"
+
+msgid ""
+"[[quarkus-jaeger_quarkus-jaeger-user]]`link:#quarkus-jaeger_quarkus-jaeger-user[quarkus.jaeger.user]`\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"Username to send as part of \"Basic\" authentication to the endpoint\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_JAEGER_USER+++[]\n"
+"--"
+msgstr ""
+
+msgid "[[quarkus-jaeger_quarkus-jaeger-user]]`link:#quarkus-jaeger_quarkus-jaeger-user[quarkus.jaeger.user]`"
+msgstr ""
+
+msgid "Username to send as part of \"Basic\" authentication to the endpoint"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_JAEGER_USER+++[]"
+msgstr ""
+
+msgid ""
+"[[quarkus-jaeger_quarkus-jaeger-password]]`link:#quarkus-jaeger_quarkus-jaeger-password[quarkus.jaeger.password]`\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"Password to send as part of \"Basic\" authentication to the endpoint\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_JAEGER_PASSWORD+++[]\n"
+"--"
+msgstr ""
+
+msgid "[[quarkus-jaeger_quarkus-jaeger-password]]`link:#quarkus-jaeger_quarkus-jaeger-password[quarkus.jaeger.password]`"
+msgstr ""
+
+msgid "Password to send as part of \"Basic\" authentication to the endpoint"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_JAEGER_PASSWORD+++[]"
+msgstr ""
+
+msgid ""
+"[[quarkus-jaeger_quarkus-jaeger-agent-host-port]]`link:#quarkus-jaeger_quarkus-jaeger-agent-host-port[quarkus.jaeger.agent-host-port]`\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"The hostname and port for communicating with agent via UDP\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_JAEGER_AGENT_HOST_PORT+++[]\n"
+"--"
+msgstr ""
+
+msgid "[[quarkus-jaeger_quarkus-jaeger-agent-host-port]]`link:#quarkus-jaeger_quarkus-jaeger-agent-host-port[quarkus.jaeger.agent-host-port]`"
+msgstr ""
+
+msgid "The hostname and port for communicating with agent via UDP"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_JAEGER_AGENT_HOST_PORT+++[]"
+msgstr ""
+
+msgid "host:port"
+msgstr ""
+
+msgid ""
+"[[quarkus-jaeger_quarkus-jaeger-reporter-log-spans]]`link:#quarkus-jaeger_quarkus-jaeger-reporter-log-spans[quarkus.jaeger.reporter-log-spans]`\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"Whether the reporter should also log the spans\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_JAEGER_REPORTER_LOG_SPANS+++[]\n"
+"--"
+msgstr ""
+
+msgid "[[quarkus-jaeger_quarkus-jaeger-reporter-log-spans]]`link:#quarkus-jaeger_quarkus-jaeger-reporter-log-spans[quarkus.jaeger.reporter-log-spans]`"
+msgstr ""
+
+msgid "Whether the reporter should also log the spans"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_JAEGER_REPORTER_LOG_SPANS+++[]"
+msgstr ""
+
+msgid ""
+"[[quarkus-jaeger_quarkus-jaeger-reporter-max-queue-size]]`link:#quarkus-jaeger_quarkus-jaeger-reporter-max-queue-size[quarkus.jaeger.reporter-max-queue-size]`\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"The reporter's maximum queue size\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_JAEGER_REPORTER_MAX_QUEUE_SIZE+++[]\n"
+"--"
+msgstr ""
+
+msgid "[[quarkus-jaeger_quarkus-jaeger-reporter-max-queue-size]]`link:#quarkus-jaeger_quarkus-jaeger-reporter-max-queue-size[quarkus.jaeger.reporter-max-queue-size]`"
+msgstr ""
+
+msgid "The reporter's maximum queue size"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_JAEGER_REPORTER_MAX_QUEUE_SIZE+++[]"
+msgstr ""
+
+msgid "int"
+msgstr "int"
+
+msgid ""
+"[[quarkus-jaeger_quarkus-jaeger-reporter-flush-interval]]`link:#quarkus-jaeger_quarkus-jaeger-reporter-flush-interval[quarkus.jaeger.reporter-flush-interval]`\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"The reporter's flush interval\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_JAEGER_REPORTER_FLUSH_INTERVAL+++[]\n"
+"--"
+msgstr ""
+
+msgid "[[quarkus-jaeger_quarkus-jaeger-reporter-flush-interval]]`link:#quarkus-jaeger_quarkus-jaeger-reporter-flush-interval[quarkus.jaeger.reporter-flush-interval]`"
+msgstr ""
+
+msgid "The reporter's flush interval"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_JAEGER_REPORTER_FLUSH_INTERVAL+++[]"
+msgstr ""
+
+msgid ""
+"link:https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html[Duration]\n"
+"  link:#duration-note-anchor-{summaryTableId}[icon:question-circle[title=More information about the Duration format]]"
+msgstr ""
+
+msgid ""
+"[[quarkus-jaeger_quarkus-jaeger-sampler-type]]`link:#quarkus-jaeger_quarkus-jaeger-sampler-type[quarkus.jaeger.sampler-type]`\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"The sampler type (const, probabilistic, ratelimiting or remote)\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_JAEGER_SAMPLER_TYPE+++[]\n"
+"--"
+msgstr ""
+
+msgid "[[quarkus-jaeger_quarkus-jaeger-sampler-type]]`link:#quarkus-jaeger_quarkus-jaeger-sampler-type[quarkus.jaeger.sampler-type]`"
+msgstr ""
+
+msgid "The sampler type (const, probabilistic, ratelimiting or remote)"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_JAEGER_SAMPLER_TYPE+++[]"
+msgstr ""
+
+msgid ""
+"[[quarkus-jaeger_quarkus-jaeger-sampler-param]]`link:#quarkus-jaeger_quarkus-jaeger-sampler-param[quarkus.jaeger.sampler-param]`\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"The sampler parameter (number)\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_JAEGER_SAMPLER_PARAM+++[]\n"
+"--"
+msgstr ""
+
+msgid "[[quarkus-jaeger_quarkus-jaeger-sampler-param]]`link:#quarkus-jaeger_quarkus-jaeger-sampler-param[quarkus.jaeger.sampler-param]`"
+msgstr ""
+
+msgid "The sampler parameter (number)"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_JAEGER_SAMPLER_PARAM+++[]"
+msgstr ""
+
+msgid "link:https://docs.oracle.com/javase/8/docs/api/java/math/BigDecimal.html[BigDecimal]"
+msgstr ""
+
+msgid ""
+"[[quarkus-jaeger_quarkus-jaeger-sampler-manager-host-port]]`link:#quarkus-jaeger_quarkus-jaeger-sampler-manager-host-port[quarkus.jaeger.sampler-manager-host-port]`\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"The host name and port when using the remote controlled sampler\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_JAEGER_SAMPLER_MANAGER_HOST_PORT+++[]\n"
+"--"
+msgstr ""
+
+msgid "[[quarkus-jaeger_quarkus-jaeger-sampler-manager-host-port]]`link:#quarkus-jaeger_quarkus-jaeger-sampler-manager-host-port[quarkus.jaeger.sampler-manager-host-port]`"
+msgstr ""
+
+msgid "The host name and port when using the remote controlled sampler"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_JAEGER_SAMPLER_MANAGER_HOST_PORT+++[]"
+msgstr ""
+
+msgid ""
+"[[quarkus-jaeger_quarkus-jaeger-service-name]]`link:#quarkus-jaeger_quarkus-jaeger-service-name[quarkus.jaeger.service-name]`\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"The service name\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_JAEGER_SERVICE_NAME+++[]\n"
+"--"
+msgstr ""
+
+msgid "[[quarkus-jaeger_quarkus-jaeger-service-name]]`link:#quarkus-jaeger_quarkus-jaeger-service-name[quarkus.jaeger.service-name]`"
+msgstr ""
+
+msgid "The service name"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_JAEGER_SERVICE_NAME+++[]"
+msgstr ""
+
+msgid ""
+"[[quarkus-jaeger_quarkus-jaeger-tags]]`link:#quarkus-jaeger_quarkus-jaeger-tags[quarkus.jaeger.tags]`\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"A comma separated list of name = value tracer level tags, which get added to all reported spans. The value can also refer to an environment variable using the format $++{++envVarName:default++}++, where the :default is optional, and identifies a value to be used if the environment variable cannot be found\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_JAEGER_TAGS+++[]\n"
+"--"
+msgstr ""
+
+msgid "[[quarkus-jaeger_quarkus-jaeger-tags]]`link:#quarkus-jaeger_quarkus-jaeger-tags[quarkus.jaeger.tags]`"
+msgstr ""
+
+msgid "A comma separated list of name = value tracer level tags, which get added to all reported spans. The value can also refer to an environment variable using the format $++{++envVarName:default++}++, where the :default is optional, and identifies a value to be used if the environment variable cannot be found"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_JAEGER_TAGS+++[]"
+msgstr ""
+
+msgid ""
+"[[quarkus-jaeger_quarkus-jaeger-propagation]]`link:#quarkus-jaeger_quarkus-jaeger-propagation[quarkus.jaeger.propagation]`\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"Comma separated list of formats to use for propagating the trace context. Defaults to the standard Jaeger format. Valid values are jaeger and b3\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_JAEGER_PROPAGATION+++[]\n"
+"--"
+msgstr ""
+
+msgid "[[quarkus-jaeger_quarkus-jaeger-propagation]]`link:#quarkus-jaeger_quarkus-jaeger-propagation[quarkus.jaeger.propagation]`"
+msgstr ""
+
+msgid "Comma separated list of formats to use for propagating the trace context. Defaults to the standard Jaeger format. Valid values are jaeger and b3"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_JAEGER_PROPAGATION+++[]"
+msgstr ""
+
+msgid ""
+"[[quarkus-jaeger_quarkus-jaeger-sender-factory]]`link:#quarkus-jaeger_quarkus-jaeger-sender-factory[quarkus.jaeger.sender-factory]`\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"The sender factory class name\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_JAEGER_SENDER_FACTORY+++[]\n"
+"--"
+msgstr ""
+
+msgid "[[quarkus-jaeger_quarkus-jaeger-sender-factory]]`link:#quarkus-jaeger_quarkus-jaeger-sender-factory[quarkus.jaeger.sender-factory]`"
+msgstr ""
+
+msgid "The sender factory class name"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_JAEGER_SENDER_FACTORY+++[]"
+msgstr ""
+
+msgid ""
+"[[quarkus-jaeger_quarkus-jaeger-log-trace-context]]`link:#quarkus-jaeger_quarkus-jaeger-log-trace-context[quarkus.jaeger.log-trace-context]`\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"Whether the trace context should be logged.\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_JAEGER_LOG_TRACE_CONTEXT+++[]\n"
+"--"
+msgstr ""
+
+msgid "[[quarkus-jaeger_quarkus-jaeger-log-trace-context]]`link:#quarkus-jaeger_quarkus-jaeger-log-trace-context[quarkus.jaeger.log-trace-context]`"
+msgstr ""
+
+msgid "Whether the trace context should be logged."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_JAEGER_LOG_TRACE_CONTEXT+++[]"
+msgstr ""
+
+msgid ""
+"[[quarkus-jaeger_quarkus-jaeger-disable-tracer-registration]]`link:#quarkus-jaeger_quarkus-jaeger-disable-tracer-registration[quarkus.jaeger.disable-tracer-registration]`\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"Whether the registration of tracer as the global tracer should be disabled. This setting should only be turned on in tests that need to install a mock tracer.\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_JAEGER_DISABLE_TRACER_REGISTRATION+++[]\n"
+"--"
+msgstr ""
+
+msgid "[[quarkus-jaeger_quarkus-jaeger-disable-tracer-registration]]`link:#quarkus-jaeger_quarkus-jaeger-disable-tracer-registration[quarkus.jaeger.disable-tracer-registration]`"
+msgstr ""
+
+msgid "Whether the registration of tracer as the global tracer should be disabled. This setting should only be turned on in tests that need to install a mock tracer."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_JAEGER_DISABLE_TRACER_REGISTRATION+++[]"
+msgstr ""
+
+msgid ""
+"icon:lock[title=Fixed at build time] [[quarkus-jaeger_quarkus-jaeger-zipkin-compatibility-mode]]`link:#quarkus-jaeger_quarkus-jaeger-zipkin-compatibility-mode[quarkus.jaeger.zipkin.compatibility-mode]`\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"Whether jaeger should run in zipkin compatibility mode\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_JAEGER_ZIPKIN_COMPATIBILITY_MODE+++[]\n"
+"--"
+msgstr ""
+
+msgid "icon:lock[title=Fixed at build time] [[quarkus-jaeger_quarkus-jaeger-zipkin-compatibility-mode]]`link:#quarkus-jaeger_quarkus-jaeger-zipkin-compatibility-mode[quarkus.jaeger.zipkin.compatibility-mode]`"
+msgstr ""
+
+msgid "Whether jaeger should run in zipkin compatibility mode"
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_JAEGER_ZIPKIN_COMPATIBILITY_MODE+++[]"
+msgstr ""
+
+msgid "About the Duration format"
+msgstr "期間フォーマットについて"
+
+msgid ""
+"To write duration values, use the standard `java.time.Duration` format.\n"
+"See the link:https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/time/Duration.html#parse(java.lang.CharSequence)[Duration#parse() javadoc] for more information."
+msgstr ""
+"期間の値を書くには、標準の `java.time.Duration` フォーマットを使います。\n"
+"詳細は link:https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/time/Duration.html#parse(java.lang.CharSequence)[Duration#parse() javadoc] を参照してください。"
+
+msgid "You can also use a simplified format, starting with a number:"
+msgstr "数字で始まる簡略化した書式を使うこともできます:"
+
+msgid "If the value is only a number, it represents time in seconds."
+msgstr "数値のみの場合は、秒単位の時間を表します。"
+
+msgid "If the value is a number followed by `ms`, it represents time in milliseconds."
+msgstr "数値の後に `ms` が続く場合は、ミリ秒単位の時間を表します。"
+
+msgid "In other cases, the simplified format is translated to the `java.time.Duration` format for parsing:"
+msgstr "その他の場合は、簡略化されたフォーマットが解析のために `java.time.Duration` フォーマットに変換されます："
+
+msgid "If the value is a number followed by `h`, `m`, or `s`, it is prefixed with `PT`."
+msgstr "数値の後に `h` 、 `m` 、 `s` が続く場合は、その前に `PT` が付けられます。"
+
+msgid "If the value is a number followed by `d`, it is prefixed with `P`."
+msgstr "数値の後に `d` が続く場合は、その前に `P` が付けられます。"

@@ -1,0 +1,210 @@
+msgid ""
+msgstr ""
+"Language: ja_JP\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: roq-plugin-l10n-adoc\n"
+
+#, fuzzy
+msgid "Disclaimer about retries"
+msgstr "再試行に関する免責事項"
+
+#, fuzzy
+msgid ""
+"Last week, David, a Quarkus user, asked me about retrying an asynchronous operation.\n"
+"David has a _picky_ remote HTTP service, which sometimes misbehaves.\n"
+"Easy answer!\n"
+"Just do: `uni.onFailure().retry().atMost(x)`.\n"
+"But, David is curious, and asked me a second question: how does retry work?\n"
+"Well, that’s simple; it just retries...\n"
+"As you can imagine, that did not satisfy David’s curiosity."
+msgstr "先週、QuarkusユーザーのDavidから、非同期操作の再試行について質問を受けました。DavidはリモートのHTTPサービスを _気難しくして_ おり、時々動作不良を起こします。答えは簡単です！ `uni.onFailure().retry().atMost(x)` を実行するだけです。しかし、Davidは好奇心旺盛で、私に2つ目の質問をしました。まあ、それは簡単です。再試行するだけです......ご想像の通り、それはDavidの好奇心を満足させるものではありませんでした。"
+
+#, fuzzy
+msgid ""
+"While I was answering to David, I realized that retrying is not that simple and deserves more explanation.\n"
+"That’s what we are going to see in this blog post."
+msgstr "デビッドに答えている間に、再試行はそれほど単純ではなく、もっと説明が必要だと気づきました。それがこのブログ記事で紹介することです。"
+
+#, fuzzy
+msgid ""
+"Okay, if you are the kind of reader who skips the terms and conditions, you can jump to the next section.\n"
+"But, for others, I need to warn you about retries.\n"
+"Retries may not be the solution to your problem, as it can be terrible.\n"
+"Retrying can only be done if your system can handle duplicated requests or messages.\n"
+"In other words, you can only retry if your system is idempotent, i.e., sending a request or a message multiple times does not change the overall state.\n"
+"In doubt, check before implementing a retry, as it can harm your system."
+msgstr "さて、もしあなたが利用規約を読み飛ばすような読者であれば、次のセクションにジャンプしてください。しかし、他の方のために、再試行について警告しておく必要があります。リトライはあなたの問題の解決にはならないかもしれません。再試行は、システムが重複したリクエストやメッセージを扱える場合にのみ行えます。言い換えると、リトライできるのはシステムが冪等である場合、 つまりリクエストやメッセージを複数回送っても全体の状態が変わらない場合だけです。疑問があれば、リトライを実行する前に確認してください。"
+
+#, fuzzy
+msgid "Disclaimer said! Let’s look under the hood of retry."
+msgstr "と免責事項がありました！リトライのフードを覗いてみましょう。"
+
+#, fuzzy
+msgid "Retry is about resubscribing"
+msgstr "リトライとは、再登録のことです。"
+
+#, fuzzy
+msgid "Let’s imagine you have a `Uni` representing your asynchronous action, like in David’s case, an invocation of a remote service:"
+msgstr "例えば、Davidの場合、リモートサービスの呼び出しのような非同期アクションを表す `Uni` があるとしましょう："
+
+#, fuzzy
+msgid ""
+"Unis are lazy.\n"
+"Until someone subscribes to them, nothing happens.\n"
+"In our case, the request is only sent to the remote service when someone subscribes to the `uni`.\n"
+"So to execute the request, we need to subscribe:"
+msgstr "ユニは怠け者です。誰かが購読するまで、何も起こりません。私たちの場合、誰かが `uni` を購読したときにのみ、リクエストはリモートサービスに送信されます。 リクエストを実行するには、購読する必要があります："
+
+#, fuzzy
+msgid ""
+"In Quarkus, most of the time, you return the `Uni`, and Quarkus subscribes to it.\n"
+"So, don't be mistaken, there is a subscription, you may not see it."
+msgstr "Quarkusでは、ほとんどの場合、 `Uni` 。そのため、サブスクリプションがあることを勘違いしないでください。"
+
+#, fuzzy
+msgid ""
+"This laziness is the retry secret.\n"
+"In the following sequence diagram, you can see that the request is sent when we get a subscriber:"
+msgstr "この怠惰さがリトライの秘密です。次のシーケンス図では、購読者を得たときにリクエストが送信されることがわかります："
+
+#, fuzzy
+msgid "image:/assets/images/posts/mutiny-retry/subscription.webp[]"
+msgstr "image:/assets/images/posts/mutiny-retry/subscription.webp[alt=\"subscription\"]"
+
+#, fuzzy
+msgid "An interesting consequence of this is that if you subscribe twice, you emit two requests, and so get two responses:"
+msgstr "このことの興味深い帰結は、2回サブスクライブすると、2つのリクエストを発することになり、2つのレスポンスを得ることができるということです："
+
+#, fuzzy
+msgid "image:/assets/images/posts/mutiny-retry/double-subscription.webp[]"
+msgstr "image:/assets/images/posts/mutiny-retry/double-subscription.webp[alt=\"double subscription\"]"
+
+#, fuzzy
+msgid ""
+"But let’s go back to retry.\n"
+"What’s a retry?\n"
+"A retry is a reaction to a failure, so you are going to write: `uni.onFailure().retry()`.\n"
+"You also need to indicate how long do you want to retry:"
+msgstr "リトライの話に戻りましょう。リトライとは？リトライは失敗に対するリアクションなので、 `uni.onFailure().retry()` と書くことになります。また、リトライする時間を指定する必要があります："
+
+#, fuzzy
+msgid "In this snippet, we retry _indefinitely_ until we get a successful result."
+msgstr "このスニペットでは、成功する結果が得られるまで、 _無限に_ リトライしています。"
+
+#, fuzzy
+msgid ""
+"But, how does it work under the hood?\n"
+"It’s quite simple.\n"
+"If it gets a failure, it just re-subscribes:"
+msgstr "でも、ボンネットの中はどうなっているの？とてもシンプルです。失敗したら再登録するだけです："
+
+#, fuzzy
+msgid "image:/assets/images/posts/mutiny-retry/retry.webp[]"
+msgstr "image:/assets/images/posts/mutiny-retry/retry.webp[alt=\"retry\"]"
+
+#, fuzzy
+msgid ""
+"It resubscribes until it gets a successful response.\n"
+"In other words, retrying is resubscribing."
+msgstr "応答があるまで再試行します。つまり、リトライは再購読です。"
+
+#, fuzzy
+msgid "How many times should I retry?"
+msgstr "何回リトライすればいいですか？"
+
+#, fuzzy
+msgid ""
+"That’s always a good question.\n"
+"Should I retry _indefinitely_?\n"
+"Most probably, not.\n"
+"Indefinitely can be very long, and it could never end if the called service fails continuously."
+msgstr "それはいつもいい質問ですね。 _無期限に_ リトライすべきでしょうか？おそらく、しません。無期限というのは非常に長くなる可能性がありますし、呼び出されたサービスが失敗し続ければ、永遠に終わらない可能性もあります。"
+
+#, fuzzy
+msgid "You can configure the number of retries using `atMost`:"
+msgstr "リトライ回数は、 `atMost` を使って設定することができます："
+
+#, fuzzy
+msgid ""
+"`atMost` indicates that at most `n` attempts will be done before failing.\n"
+"If we still get a failure after that number of resubscription, the last failure is sent to the subscriber."
+msgstr "`atMost` は、失敗するまでに最大で 試行されることを示します。その回数再サブスクリプションしても失敗した場合、最後の失敗がサブスクライバに送られます。 `n`"
+
+#, fuzzy
+msgid "image:/assets/images/posts/mutiny-retry/retry-failed.webp[]"
+msgstr "image:/assets/images/posts/mutiny-retry/retry-failed.webp[alt=\"retry failed\"]"
+
+#, fuzzy
+msgid "You can also use `until` and decide to retry by looking at the received failure:"
+msgstr "また、 `until` 、受信した失敗を見て再試行を決定することもできます："
+
+#, fuzzy
+msgid "Bonus: Exponential backoff"
+msgstr "ボーナス：指数バックオフ"
+
+#, fuzzy
+msgid ""
+"So far, our retries happen immediately.\n"
+"It might not be very wise, and separating a bit our retries may give better results, especially when facing intermittent failures due to the load or other external causes.\n"
+"Using exponential backoff provides a reasonable tradeoff.\n"
+"Retrying with exponential backoff:"
+msgstr "今のところ、リトライは即座に行われます。これはあまり賢明ではないかもしれません。特に、負荷やその他の外的要因による断続的な障害に直面した場合、リトライを少し区切った方が良い結果が得られるかもしれません。指数関数的バックオフを使うことで、合理的なトレードオフが可能になります。指数関数的バックオフによる再試行"
+
+#, fuzzy
+msgid "retries after an initial delay,"
+msgstr "最初の遅延の後に再試行、"
+
+#, fuzzy
+msgid "on every failure, it doubles the previous delay, with an optional maximum,"
+msgstr "失敗するたびに、前の遅延の2倍になります、"
+
+#, fuzzy
+msgid "it can use a jitter to add a random duration to the delay,"
+msgstr "ジッターを使用して、遅延にランダムな時間を追加することができます、"
+
+#, fuzzy
+msgid "it can have a max delay if needed,"
+msgstr "必要であれば、最大ディレイも可能です、"
+
+#, fuzzy
+msgid "it is still constrained by `atMost`"
+msgstr "に制約されます。 `atMost`"
+
+#, fuzzy
+msgid ""
+"This last snippet configures the retry with exponential backoff.\n"
+"The first retry happens after 1 second, and then it doubles every time without an upper limit.\n"
+"Random jitter is applied to delays.\n"
+"If, unfortunately, after ten attempts, it still fails, the failure is sent to the subscriber."
+msgstr "この最後のスニペットは、指数関数的バックオフで再試行を設定します。最初のリトライは1秒後に起こり、その後は上限なしで毎回2倍になります。遅延にはランダムジッターが適用されます。残念ながら10回試しても失敗した場合、その失敗がサブスクライバに送信されます。"
+
+#, fuzzy
+msgid "Demo time!"
+msgstr "デモの時間！"
+
+#, fuzzy
+msgid ""
+"Ok, enough talking.\n"
+"I’ve built a simple playground where you can adjust and try the various retry policies: https://gist.github.com/cescoffier/e9abce907a1c3d05d70bea3dae6dc3d5.\n"
+"You can _jbang_ the script by downloading it and running `jbang Retry.java`, or just run:"
+msgstr "さて、話はここまで。様々なリトライポリシーを調整したり試したりできる簡単なプレイグラウンドを link:https://gist.github.com/cescoffier/e9abce907a1c3d05d70bea3dae6dc3d5[作りました: https://gist.github.com/cescoffier/e9abce907a1c3d05d70bea3dae6dc3d5。] スクリプトをダウンロードして `jbang Retry.java` を実行することで _jbang_ できます："
+
+#, fuzzy
+msgid "The called service fails 50% of the time (well, it uses a random, so statistically 50% of the time)."
+msgstr "呼び出されたサービスは50％の確率で失敗します（まあ、ランダムを使うので統計的には50％ですが）。"
+
+#, fuzzy
+msgid ""
+"That concludes this blog post.\n"
+"Again, before using retry, please verify that your system can support it.\n"
+"Retrying is resubscribing.\n"
+"You can configure how long, how many times, and when retrying should be attempted.\n"
+"There are many more options offered by Mutiny, like `when` or using deadlines (`expireIn` and `expireAt`) when using exponential backoff.\n"
+"You can try all these with the provided playground."
+msgstr "以上でこのブログ記事を終わります。繰り返しになりますが、再試行を使用する前に、お使いのシステムが再試行に対応しているかどうかを確認してください。再試行とは再登録のことです。再試行する期間、回数、タイミングを設定できます。Mutiny には、 `when` や、指数バックオフを使用する場合のデッドライン ( `expireIn` と `expireAt` ) の使用など、他にも多くのオプションがあります。提供されているプレイグラウンドを使って、これらすべてを試すことができます。"
+
+#, fuzzy
+msgid "Stay tuned! We have plenty of other gems to discuss here!"
+msgstr "ご期待ください！この他にも珠玉の作品をたくさんご紹介しています！"

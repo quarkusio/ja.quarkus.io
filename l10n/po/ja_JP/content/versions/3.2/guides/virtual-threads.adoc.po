@@ -1,0 +1,349 @@
+msgid ""
+msgstr ""
+"Language: ja_JP\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: roq-plugin-l10n-adoc\n"
+
+msgid "Writing simpler reactive REST services with Quarkus Virtual Thread support"
+msgstr "仮想スレッドを使ったさらにシンプルなQuarkusでのリアクティブRESTサービスの作成"
+
+msgid "This guide explains how to benefit from Java 19 virtual threads when writing REST services in Quarkus."
+msgstr "このガイドではQuarkusでRESTサービスを記述する際にJava 19の仮想スレッドを利用する方法について説明します。"
+
+msgid ""
+"This is the reference guide for using virtual threads to write reactive REST services.\n"
+"Please refer to the xref:rest-json.adoc[Writing JSON REST services guides] for a lightweight introduction to reactive REST\n"
+"services and to the xref:resteasy-reactive.adoc[Writing REST Services with RESTEasy Reactive] guide for a detailed presentation."
+msgstr "これは仮想スレッドを使用してリアクティブ REST サービスを記述するためのリファレンスガイドです。リアクティブ REST サービスの軽い導入としてはxref:rest-json.adoc[JSON RESTサービスの実装] を参照してください。詳細な説明については xref:resteasy-reactive.adoc[RESTEASY REACTIVE を使用して REST サービスを作成する] を参照してください。"
+
+msgid "What are virtual threads ?"
+msgstr "仮想スレッドとは何ですか？"
+
+msgid "Terminology"
+msgstr "用語解説"
+
+msgid "OS thread"
+msgstr "OS スレッド"
+
+msgid "A \"thread-like\" data-structure managed by the Operating System."
+msgstr "オペレーティングシステムによって管理される「スレッド(より糸)のような」なデータ構造。"
+
+msgid "Platform thread"
+msgstr "プラットフォームスレッド"
+
+msgid ""
+"Up until Java 19, every instance of the link:{thread}[Thread] class was a platform thread, that is, a wrapper around an OS thread.\n"
+"Creating a platform threads creates an OS thread, blocking a platform thread blocks an OS thread."
+msgstr "Java 19 まではlink:{thread}[Thread] クラスのすべてのインスタンスはプラットフォームスレッド、つまり OSスレッドのラッパーでした。プラットフォームスレッドを作成するとOSスレッドが作成され、プラットフォームスレッドをブロックするとOSスレッドがブロックされます。"
+
+msgid "Virtual thread"
+msgstr "仮想スレッド"
+
+msgid ""
+"Lightweight, JVM-managed threads. They extend the link:{thread}[Thread] class but are not tied to one specific OS thread.\n"
+"Thus, scheduling virtual threads is the responsibility of the JVM."
+msgstr ""
+"軽量で、JVM が管理するスレッド。link:{thread}[スレッド] クラスを拡張していますが、1 つの特定の OS スレッドに関連付けられていません。\n"
+"したがって、仮想スレッドのスケジューリングは JVM の責任となります。"
+
+msgid "Carrier thread"
+msgstr "キャリアースレッド"
+
+msgid ""
+"A platform thread used to execute a virtual thread is called a carrier.\n"
+"This isn't a class distinct from link:{Thread}[Thread] or VirtualThread but rather a functional denomination."
+msgstr "仮想スレッドを実行するために使用されるプラットフォームスレッドをキャリアと呼びます。これは link:{Thread}[Thread] や VirtualThreadとは別のクラスではなく、機能的な呼称です。"
+
+msgid "Differences between virtual threads and platform threads"
+msgstr "仮想スレッドとプラットフォームスレッドの違い"
+
+msgid "We will give a brief overview of the topic here, please refer to the link:{vthreadjep}[JEP 425] for more information."
+msgstr "ここではその概要を説明しますが、詳細はは link:{vthreadjep}[JEP 425] を確認してください。"
+
+msgid "Virtual threads are a feature available since Java 19 aiming at providing a cheap alternative to platform threads for I/O-bound workloads."
+msgstr "仮想スレッドはI/Oバウンドワークロードのためのプラットフォームスレッドの安価な代替を提供することを目的としたJava 19から利用可能な機能です。"
+
+msgid ""
+"Until now, platform threads were the concurrency unit of the JVM.\n"
+"They are a wrapper over OS structures.\n"
+"This means that creating a Java platform thread actually results in creating a \"thread-like\" structure in your operating system."
+msgstr "これまでプラットフォームスレッドはJVMの並行処理単位でした。これはOSの構造のラッパーです。つまり、Javaプラットフォームスレッドを作成することは、実際にはOSに\"スレッド(より糸)のような\"構造を作成することになるのです。"
+
+msgid ""
+"Virtual threads on the other hand are managed by the JVM. In order to be executed, they need to be mounted on a platform thread\n"
+"(which acts as a carrier to that virtual thread).\n"
+"As such, they have been designed to offer the following characteristics:"
+msgstr "一方で仮想スレッドはJVMによって管理されます。実行するにはプラットフォームスレッド（その仮想スレッドのキャリアとして機能する）にマウントされる必要があります。なので次のような特徴を持つように設計されています:"
+
+msgid "Lightweight "
+msgstr "軽量"
+
+msgid ""
+"Virtual threads occupy less space than platform threads in memory.\n"
+"Hence, it becomes possible to use more virtual threads than platform threads simultaneously without blowing up the heap.\n"
+"By default, platform threads are created with a stack of about 1 MB where virtual threads stack is \"pay-as-you-go\".\n"
+"You can find these numbers along with other motivations for virtual threads in this presentation given by the lead developer of project Loom: https://youtu.be/lIq-x_iI-kc?t=543."
+msgstr "仮想スレッドはプラットフォームスレッドよりもメモリ上で占有する領域が小さくなります。したがってヒープを爆発させずにプラットフォームスレッドよりも多くの仮想スレッドを同時に使用することが可能になります。デフォルトでは、プラットフォームスレッドは約1MBのスタックで作成され、仮想スレッドのスタックは\"使った分だけ\"です。これらの数字と仮想スレッドの他の論拠はLoomプロジェクトのリードディベロッパーが行ったプレゼンテーションで知ることができます: https://youtu.be/lIq-x_iI-kc?t=543 。"
+
+msgid "Cheap to create"
+msgstr "作成が安価"
+
+msgid ""
+"Creating a platform thread in Java takes time.\n"
+"Currently, techniques such as pooling where threads are created once then reused are strongly encouraged to minimize the\n"
+"time lost in starting them (as well as limiting the maximum number of threads to keep memory consumption low).\n"
+"Virtual threads are supposed to be disposable entities that we create when we need them,\n"
+"it is discouraged to pool them or to reuse them for different tasks."
+msgstr "Javaでプラットフォームスレッドを作成するのは時間がかかります。現時点ではスレッドの起動にかかる時間を最小限にするために、一度作成したスレッドを再利用するプーリングなどの技術を使うことが強く推奨されています（同様にメモリ消費を抑えるためにスレッドの最大数を制限することも推奨されています）。仮想スレッドは必要なときに作る使い捨ての存在であり、スレッドをプールしたり異なるタスクに再利用したりすることは推奨されません。"
+
+msgid "Cheap to block"
+msgstr "安価なブロック"
+
+msgid ""
+"When performing blocking I/O, the underlying OS thread wrapped by the Java platform thread is put in a\n"
+"wait queue and a context switch occurs to load a new thread context onto the CPU core. This operation takes time.\n"
+"Since virtual threads are managed by the JVM, no underlying OS thread is blocked when they perform a blocking operation.\n"
+"Their state is simply stored in the heap and another Virtual thread is executed on the same Java platform thread."
+msgstr "ブロッキングI/Oを実行する場合、JavaプラットフォームのスレッドにラップされたOSスレッドは待ち行列に入れられ、新しいスレッドコンテキストをCPUコアにロードするためにコンテキストスイッチが発生します。この操作には時間がかかります。仮想スレッドはJVMによって管理されるためブロッキング処理を実行してもOSスレッドがブロックされることはありません。その状態は単にヒープに格納され、別の仮想スレッドが同じJavaプラットフォームのスレッドで実行されます。"
+
+msgid "Virtual threads are useful for I/O-bound workloads only"
+msgstr "仮想スレッドはI/Oバウンドワークロードにのみに有効"
+
+msgid ""
+"We now know that we can create way more virtual threads than platform threads. One could be tempted to use virtual threads\n"
+"to perform long computations (CPU-bound workload).\n"
+"This is useless if not counterproductive.\n"
+"CPU-bound doesn't consist in quickly swapping threads while they need to wait for the completion of an I/O but in leaving\n"
+"them attached to a CPU-core to actually compute something.\n"
+"In this scenario, it is useless to have thousands of threads if we have tens of CPU-cores, virtual threads won't enhance\n"
+"the performance of CPU-bound workloads."
+msgstr "私たちはプラットフォームスレッドよりもはるかに多くの仮想スレッドを作成できることを知っています。長い計算を行うために仮想スレッドを使いたくなるかもしれません（CPUバウンドワークロード）。これは逆効果とまでは言いませんが無駄になります。CPUバウンドとはI/Oの完了を待つ間にスレッドをすばやくスワップすることではなく、実際に何かを計算するためにスレッドをCPUコアに接続したままにしておくことです。このシナリオでは数十個のCPUコアに対して数千個のスレッドを持つことは無意味であり、仮想スレッドがCPUバウンドワークロードの性能を向上させることはありません。"
+
+msgid "Bringing virtual threads to reactive REST services"
+msgstr "リアクティブなRESTサービスに仮想スレッドを導入する"
+
+msgid ""
+"Since virtual threads are disposable entities, the fundamental idea of quarkus-loom is to offload the execution of an\n"
+"endpoint handler on a new virtual thread instead of running it on an event-loop (in the case of RESTeasy-reactive) or a\n"
+"platform worker thread."
+msgstr "仮想スレッドは使い捨てのエンティティなので、quarkus-loomの基本的な考え方では、エンドポイントハンドラをイベントループ（RESTeasy-reactiveの場合）やプラットフォームワーカスレッドで実行せずに新しい仮想スレッドでオフロードします。"
+
+msgid ""
+"To do so, it suffices to add the link:{runonvthread}[@RunOnVirtualThread] annotation to the endpoint.\n"
+"If the JDK is compatible (Java 19 or later versions) then the endpoint will be offloaded to a virtual thread.\n"
+"It will then be possible to perform blocking operations without blocking the platform thread upon which the virtual\n"
+"thread is mounted."
+msgstr "そのためには、エンドポイントに link:{runonvthread}[@RunOnVirtualThread] アノテーションを追加すれば十分です。JDKに互換性がある場合（Java 19またはそれ以降のバージョン）はエンドポイントは仮想スレッドにオフロードされます。この場合は仮想スレッドがマウントされているプラットフォームスレッドをブロックせずにブロック操作を実行できるようになります。"
+
+msgid ""
+"This annotation can only be used in conjunction with endpoints annotated with link:{blockingannotation}[@Blocking] or\n"
+"considered blocking because of their signature.\n"
+"You can visit xref:resteasy-reactive.adoc#execution-model-blocking-non-blocking[Execution model, blocking, non-blocking]\n"
+"for more information."
+msgstr "このアノテーションは link:{blockingannotation}[@Blocking] アノテーションが付けられたエンドポイント、またはそのシグネチャのためにブロッキングとみなされるエンドポイントとの組み合わせでのみ使用することができます。詳しくは xref:resteasy-reactive.adoc#実行モデルブロッキングノンブロッキング[実行モデル、ブロッキング、ノンブロッキング] をご確認ください。"
+
+msgid "Getting started"
+msgstr "はじめに"
+
+msgid "Add the following import to your build file:"
+msgstr "次のインポートをビルドファイルに追加します:"
+
+msgid "You also need to make sure that you are using the version 19 of Java, this can be enforced in your pom.xml file with the following:"
+msgstr "また、Javaのバージョン19を使用する必要があります。これは、pom.xmlファイルで次のように指定することができます:"
+
+msgid "Virtual threads are still an experimental feature, you need to start your application with the `--enable-preview` flag:"
+msgstr "仮想スレッドはまだ実験的な機能なので、 `--enable-preview` フラグを付けてアプリケーションを起動する必要があります:"
+
+msgid ""
+"The example below shows the differences between three endpoints, all of them querying a fortune in the database then\n"
+"returning it to the client."
+msgstr "以下の例は3つのエンドポイントの違いを示しています。これらのエンドポイントはすべてデータベースにクエリーを投げてクライアントに結果を返しています。"
+
+msgid "the first one uses the traditional blocking style, it is considered blocking due to its signature."
+msgstr "1 つ目は伝統的なブロッキングスタイルを採用しており、そのシグネチャーからブロッキングとみなされます。"
+
+msgid "the second one uses Mutiny reactive streams in a declarative style, it is considered non-blocking due to its signature."
+msgstr "2つ目はMutinyのリアクティブストリームを宣言的なスタイルで使用し、そのシグネチャによりノンブロッキングとみなされます。"
+
+msgid ""
+"the third one uses Mutiny reactive streams in a synchronous way, since it doesn't return a \"reactive type\" it is\n"
+"considered blocking and the link:{runonvthread}[@RunOnVirtualThread] annotation can be used."
+msgstr "3つ目はMutinyのリアクティブストリームを同期的に使うもので\"リアクティブ型\"を返さないのでブロッキングとみなされ、 link:{runonvthread}[@RunOnVirtualThread] アノテーションが使えます。"
+
+msgid ""
+"When using Mutiny, alternative \"xAndAwait\" methods are provided to be used with virtual threads.\n"
+"They ensure that waiting for the completion of the I/O will not \"pin\" the carrier thread and deteriorate performance.\n"
+"Pinning is a phenomenon that we describe in xref:Pinning cases[this section]."
+msgstr "Mutinyを使用する場合は仮想スレッドで使用するための代替の\"xAndAwait\"メソッドが提供されます。これらは、I/Oの完了を待っても、キャリアスレッドを\"拘束\"して性能を悪化させないようにするものです。拘束とは、 xref:拘束の場合[このセクション] で説明する現象です。"
+
+msgid ""
+"In other words, the mutiny environment is a safe environment for virtual threads.\n"
+"The guarantees offered by Mutiny are detailed later."
+msgstr "つまり、mutiny環境は仮想スレッドにとって安全な環境なのです。Mutinyが提供する保証については後で詳しく説明します。"
+
+msgid "Simplifying complex logic"
+msgstr "複雑なロジックの簡略化"
+
+msgid ""
+"The previous example is trivial and doesn't capture how imperative style can simplify complex reactive operations.\n"
+"Below is a more complex example.\n"
+"The endpoints must now fetch all the fortunes in the database, then append a quote to each fortune before finally returning\n"
+"the result to the client."
+msgstr "先ほどの例はささいなもので、命令型スタイルが複雑なリアクティブ操作をいかに簡略化できるかをとらえていません。次はもっと複雑な例です。エンドポイントはデータベース内のすべての運勢(fortune)を取得し、 結果をクライアントに返す前にそれぞれの運勢に引用文を追加します。"
+
+msgid "Pinning cases"
+msgstr "ピニングの場合"
+
+msgid ""
+"The notion of \"cheap blocking\" might not always be true: in certain occasions a virtual thread might \"pin\" its carrier\n"
+"(the platform thread it is mounted upon).\n"
+"In this situation, the platform thread is blocked exactly as it would have been in a typical blocking scenario."
+msgstr "仮想スレッドがそのキャリア(マウントされているプラットフォームスレッド)を\"拘束\"する場合があります。この場合はプラットフォームスレッドは通常のブロッキングシナリオと同じようにブロックされます。"
+
+msgid "According to link:{vthreadjep}[JEP 425] this can happen in two situations:"
+msgstr "link:{vthreadjep}[JEP 425] によると、これは2つの状況で発生する場合があります:"
+
+msgid "when a virtual thread performs a blocking operation inside a `synchronized` block or method"
+msgstr "仮想スレッドが `synchronized` ブロックまたはメソッドの内部でブロッキング操作を実行する場合"
+
+msgid "when it executes a blocking operation inside a native method or a foreign function"
+msgstr "ネイティブメソッドや外部関数内でブロッキング操作を実行した場合"
+
+msgid ""
+"It can be fairly easy to avoid these situations in our own code, but it is hard to verify every dependency we use.\n"
+"Typically, while experimenting with virtual-threads, we realized that using the link:{pgsql-driver}[postgresql-JDBC driver]\n"
+"results in frequent pinning."
+msgstr "自分たちのコードでこのような状況を回避するのはかなり簡単ですが、使用する依存関係をすべて検証するのは困難です。典型的な例としては、仮想スレッドの実験をしているときに link:{pgsql-driver}[postgresqlのJDBCドライバ] を使うと拘束が多発することに気づきました。"
+
+msgid "The JDBC problem"
+msgstr "postgresqlのJDBCの問題"
+
+msgid ""
+"Our experiments so far show that when a virtual thread queries a database using the JDBC driver, it will pin its carrier\n"
+"thread during the entire operation."
+msgstr "これまでの実験から、仮想スレッドがJDBCドライバを使ってデータベースに問い合わせを行う操作をしている間、仮想スレッドがキャリアスレッドを拘束することが分かっています。"
+
+msgid "Let's show the code of the `findAllBlocking()` method we used in the first example"
+msgstr "最初の例で使用した `findAllBlocking()` メソッドのコードを表示してみましょう。"
+
+msgid ""
+"The actual query happens at `ResultSet rs = preparedStatement.executeQuery();`, here is how it is implemented in the\n"
+"postgresql-jdbc driver 42.5.0:"
+msgstr "実際のクエリは `ResultSet rs = preparedStatement.executeQuery();` で実行されます。以下は、postgresql-jdbc ドライバ 42.5.0 で実装されている方法です:"
+
+msgid ""
+"This `synchronized` block is the culprit.\n"
+"Replacing it with a lock is a good solution, but it won't be enough: `synchronized` blocks are also used in `executeWithFlags(int flag)`.\n"
+"A systematic review of the postgresql-jdbc driver is necessary to make sure that it is compliant with virtual threads."
+msgstr "この `synchronized` のブロックが原因です。ロックに置き換えることは良い解決策ですが、それだけでは十分ではありません。 `synchronized` ブロックは、 `executeWithFlags(int flag)` でも使用されています。postgresqlのjdbcドライバが仮想スレッドに準拠していることを確認するためには体系的なレビューが必要になります。"
+
+msgid "Reactive drivers at the rescue"
+msgstr "リアクティブドライバによる救いの手"
+
+msgid ""
+"The vertx-sql-client is a reactive client, hence it is not supposed to block while waiting for the completion of a\n"
+"transaction with the database.\n"
+"However, when using the link:{mutiny-vertx-sql}[smallrye-mutiny-vertx-sqlclient] it is possible to use a variant method\n"
+"that will await for the completion of the transaction, mimicking a blocking behaviour."
+msgstr "vertx-sql-client はリアクティブクライアントであり、データベースとのトランザクションの完了を待っている間はブロックしないことになっています。しかしながら、 link:{mutiny-vertx-sql}[smallrye-mutiny-vertx-sqlclient] を使用する場合、トランザクションの完了を待つ可変メソッドを使用し、ブロッキングの挙動を模倣することが可能です。"
+
+msgid "Below is the `FortuneRepository` except the blocking we've seen earlier has been replaced by reactive methods."
+msgstr "以下はブロッキングがリアクティブメソッドに置き換えられているだけの、先ほど見た `FortuneRepository` です。"
+
+msgid ""
+"Contrary to the link:{pgsql-driver}[postgresql-jdbc driver], no `synchronized` block is used where it shouldn't be, and\n"
+"the `await` behaviour is implemented using locks and latches that won't cause pinning."
+msgstr "link:{pgsql-driver}[postgresqlのjdbcドライバ] とは逆に、 `synchronized` ブロックが使用されるべきではない場所で使用されることはなく、 `await` 動作は、拘束を発生させないロックとラッチを使用して実装されています。"
+
+msgid ""
+"Using the synchronous methods of the link:{mutiny-vertx-sql}[smallrye-mutiny-vertx-sqlclient] along with virtual threads\n"
+"will allow you to use the synchronous blocking style, avoid pinning the carrier thread, and get performance close to a pure\n"
+"reactive implementation."
+msgstr "link:{mutiny-vertx-sql}[smallrye-mutiny-vertx-sqlclient] の同期メソッドと仮想スレッドを使用することで、同期ブロッキングスタイルを使用でき、キャリアスレッドの拘束を回避し、純粋なリアクティブ実装に近い性能を得ることができます。"
+
+msgid "A point about performance"
+msgstr "性能に関するポイント"
+
+msgid ""
+"Our experiments seem to indicate that Quarkus with virtual threads will scale better than Quarkus blocking (offloading\n"
+"the computation on a pool of platform worker threads) but not as well as Quarkus reactive.\n"
+"The memory consumption especially might be an issue: if your system needs to keep its memory footprint low we would\n"
+"advise you stick to using reactive constructs."
+msgstr "我々の実験は、仮想スレッドを使用したQuarkusは、Quarkus blocking（プラットフォームワーカスレッドのプールに計算をオフロードする）よりもスケーラビリティが高く、Quarkus reactiveほどにはスケーラビリティが高くないことを示しているようです。特にメモリ消費量が問題です。もし、システムがメモリフットプリントを低く抑える必要がある場合は、リアクティブの仕組みを使用することをお勧めします。"
+
+msgid ""
+"This degradation of performance doesn't seem to come from virtual threads themselves but from the interactions between\n"
+"Vert.x/Netty (Quarkus underlying reactive engine) and the virtual threads.\n"
+"This was illustrated in the issue that we will now describe."
+msgstr "この性能低下は仮想スレッドそのものが原因ではなく、Vert.x/Netty（Quarkusの基盤となるリアクティブエンジン）と仮想スレッドの間の相互作用に起因しているようです。このことは、これから説明する問題にも表れています。"
+
+msgid "The Netty problem"
+msgstr "Nettyの問題"
+
+msgid ""
+"For JSON serialization, Netty uses their custom implementation of thread locals, `FastThreadLocal` to store buffers.\n"
+"When using virtual threads in quarkus, the number of virtual threads simultaneously living in the service is directly\n"
+"related to the incoming traffic.\n"
+"It is possible to get hundreds of thousands, if not millions, of them."
+msgstr "JSONのシリアライゼーションでは、Nettyはスレッドローカルの独自実装を使用しています。 `FastThreadLocal` にバッファを保存します。Quarkusで仮想スレッドを使用する場合、サービス内に同時に存在する仮想スレッドの数は受信するトラフィックに直接関係します。数百万とまではいかなくても、数十万程度はあり得ます。"
+
+msgid ""
+"If they need to serialize some data to JSON they will end up creating as many instances of `FastThreadLocal`, resulting\n"
+"on a massive memory consumption as well as exacerbated pressure on the garbage collector.\n"
+"This will eventually affect the performance of the application and inhibit its scalability."
+msgstr "もし、データをJSONにシリアライズする必要がある場合、多数の `FastThreadLocal` のインスタンスを作成することになることから大量のメモリを消費し、ガベージコレクタにかかる負担も大きくなってしまいます。これは最終的にアプリケーションの性能に影響を与え、スケーラビリティを阻害することになります。"
+
+msgid ""
+"This is a perfect example of the mismatch between the reactive stack and the virtual threads.\n"
+"The fundamental hypothesis are completely different and result in different optimizations.\n"
+"Netty expects a system using few event-loops (as many event-loops as CPU cores by default in Quarkus), but it gets hundreds\n"
+"of thousands of threads.\n"
+"You can refer to link:https://mail.openjdk.org/pipermail/loom-dev/2022-July/004844.html[this mail] to get more information\n"
+"on how we envision our future with virtual threads."
+msgstr "これはリアクティブスタックと仮想スレッドのミスマッチの好例です。根本的な仮説が全く異なるため、結果として最適化も異なってきます。Nettyは少数のイベントループ(QuarkusのデフォルトではCPUのコア数と同じ数のイベントループ)を使用するシステムを想定していますが、何十万ものスレッドを取得します。私たちが仮想スレッドを使ってどのような未来を描いているかについては、 link:https://mail.openjdk.org/pipermail/loom-dev/2022-July/004844.html[このメール] を参照してください。"
+
+msgid "Our solution to the Netty problem"
+msgstr "Nettyの問題に対する我々の解決策"
+
+msgid ""
+"In order to avoid this wasting of resource without modifying Netty upstream, we wrote an extension that modifies the\n"
+"bytecode of the class responsible for creating the thread locals at build time.\n"
+"Using this extension, performance of virtual threads in Quarkus for the Json Serialization test of the Techempower suite\n"
+"increased by nearly 80%, making it almost as good as reactive endpoints."
+msgstr "アップストリームのNettyに手を加えることなくこのリソースの浪費を避けるために、ビルド時にスレッドローカルの作成を担当するクラスのバイトコードを変更するエクステンションを書きました。このエクステンションを使うと、TechempowerスイートのJsonのSerializationのテストにおけるQuarkusの仮想スレッドのパフォーマンスが80%近く向上し、リアクティブエンドポイントとほぼ同等になりました。"
+
+msgid "To use it, it needs to be added as a dependency:"
+msgstr "使用するにはこれを依存関係として追加する必要があります:"
+
+msgid "Furthermore, some operations undertaken by this extension need special access, it is necessary to"
+msgstr "また、このエクステンションで行う作業の中には、特別なアクセスが必要なものがあります、次のことが必要になります"
+
+msgid "compile the application with the flag `-Dnet.bytebuddy.experimental`"
+msgstr "`-Dnet.bytebuddy.experimental` フラグを付けてコンパイルをする"
+
+msgid "open the `java.base.lang` module at runtime with the flag `--add-opens java.base/java.lang=ALL-UNNAMED`"
+msgstr "実行時に `--add-opens java.base/java.lang=ALL-UNNAMED` フラグをつけて `java.base.lang` モジュールを開く"
+
+msgid "This extension is only intended to improve performance, it is perfectly fine not to use it."
+msgstr "このエクステンションはあくまでパフォーマンス向上のためのもので、使わなくても全く問題ありません。"
+
+msgid "Concerning dev mode"
+msgstr "devモードについて"
+
+msgid ""
+"If you want to use quarkus with the dev mode, it won't be possible to manually specify the flags we mentioned along this guide.\n"
+"Instead, you want to specify them all in the configuration of the `quarkus-maven-plugin` as presented below."
+msgstr "Quarkusをdevモードで使用したい場合、このガイドで説明したフラグを手動で指定することはできません。 代わりに以下のように `quarkus-maven-plugin` の設定で指定します。"
+
+msgid ""
+"If you don't want to specify the opening of the `java.lang` module in your pom.xml file, you can also specify it as an argument\n"
+"when you start the dev mode."
+msgstr "pom.xml ファイルに `java.lang` モジュールのオープンを指定したくない場合は、devモードの起動時に引数として指定することもできます。"
+
+msgid "The configuration of the quarkus-maven-plugin will be simpler:"
+msgstr "quarkus-maven-pluginの設定はシンプルになるでしょう:"
+
+msgid "And the command will become:"
+msgstr "また、コマンドは次のようになります:"

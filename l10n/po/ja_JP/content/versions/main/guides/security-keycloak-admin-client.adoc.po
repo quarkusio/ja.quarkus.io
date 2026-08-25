@@ -1,0 +1,484 @@
+msgid ""
+msgstr ""
+"Language: ja_JP\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: roq-plugin-l10n-adoc\n"
+
+msgid "Using Keycloak Admin Client"
+msgstr "Keycloak Admin Clientの使用"
+
+msgid "The Quarkus Keycloak Admin Client and its reactive twin support Keycloak Admin Client which can be used to configure a running Keycloak server."
+msgstr "Quarkus Keycloak Admin Clientとそのreactiveの2つは、実行中のKeycloakサーバーを設定するために使用できるKeycloak Admin Clientをサポートしています。"
+
+msgid "This guide demonstrates how you can leverage the xref:cdi-reference.adoc[Quarkus ArC] and inject the admin client to your Quarkus application, as well as how to create it directly in the application code."
+msgstr "このガイドでは、 link:cdi-reference.html[Quarkus ArC] を活用して、Quarkusアプリケーションに管理者クライアントを注入する方法と、アプリケーションコードで直接作成する方法について説明します。"
+
+msgid "To learn more about the Keycloak Admin Client, please refer to its https://www.keycloak.org/docs/latest/server_development/#example-using-java[reference guide]."
+msgstr "Keycloak Admin Clientの詳細については、 link:https://www.keycloak.org/docs/latest/server_development/#example-using-java[リファレンスガイド] を参照してください。"
+
+msgid "Prerequisites"
+msgstr "前提条件"
+
+msgid "To complete this guide, you need:"
+msgstr "このガイドを完成させるには、以下が必要です:"
+
+msgid "Roughly 15 minutes"
+msgstr "約15分"
+
+msgid "An IDE"
+msgstr "IDE"
+
+msgid "JDK 17+ installed with `JAVA_HOME` configured appropriately"
+msgstr "JDK 17+がインストールされ、 `JAVA_HOME` が適切に設定されていること"
+
+msgid "Apache Maven {maven-version}"
+msgstr "Apache Maven {maven-version}"
+
+msgid "A working container runtime (Docker or xref:podman.adoc[Podman])"
+msgstr "動作するコンテナランタイム(Docker, xref:podman.adoc[Podman])"
+
+msgid "Optionally the xref:cli-tooling.adoc[Quarkus CLI] if you want to use it"
+msgstr "使用したい場合は、 link:cli-tooling.html[Quarkus CLI]"
+
+msgid "Optionally Mandrel or GraalVM installed and xref:building-native-image.adoc#configuring-graalvm[configured appropriately] if you want to build a native executable (or Docker if you use a native container build)"
+msgstr "ネイティブ実行可能ファイルをビルドしたい場合、MandrelまたはGraalVM（あるいはネイティブなコンテナビルドを使用する場合はDocker）をインストールし、 link:building-native-image.html#configuring-graalvm[適切に設定]していること"
+
+msgid "https://www.keycloak.org[Keycloak]"
+msgstr "https://www.keycloak.org[Keycloak]"
+
+msgid "Creating the Project"
+msgstr "プロジェクトの作成"
+
+msgid ""
+"First, we need a new project.\n"
+"Create a new project with the following command:"
+msgstr "まず、新しいプロジェクトが必要です。以下のコマンドで新規プロジェクトを作成します。"
+
+msgid "CLI"
+msgstr "コマンドラインインタフェース"
+
+msgid "To create a Gradle project, add the `--gradle` or `--gradle-kotlin-dsl` option."
+msgstr "Gradleプロジェクトを作成するには、 `--gradle` または `--gradle-kotlin-dsl` オプションを追加します。"
+
+msgid "For more information about how to install and use the Quarkus CLI, see the xref:cli-tooling.adoc[Quarkus CLI] guide."
+msgstr "Quarkus CLIのインストールと使用方法の詳細については、 xref:cli-tooling.adoc[Quarkus CLI] ガイドを参照してください。"
+
+msgid "Maven"
+msgstr "Maven"
+
+msgid "To create a Gradle project, add the `-DbuildTool=gradle` or `-DbuildTool=gradle-kotlin-dsl` option."
+msgstr "Gradleプロジェクトを作成するには、 `-DbuildTool=gradle` または `-DbuildTool=gradle-kotlin-dsl` オプションを追加します。"
+
+msgid "For Windows users:"
+msgstr "Windowsユーザーの場合:"
+
+msgid "If using cmd, (don't use backward slash `\\` and put everything on the same line)"
+msgstr "cmdを使用する場合、（バックスラッシュ `\\` を使用せず、すべてを同じ行に書かないでください）。"
+
+msgid "If using Powershell, wrap `-D` parameters in double quotes e.g. `\"-DprojectArtifactId={create-app-artifact-id}\"`"
+msgstr "Powershellを使用する場合は、 `-D` パラメータを二重引用符で囲んでください。例: `\"-DprojectArtifactId={create-app-artifact-id}\"`"
+
+msgid "This command generates a project which imports the `keycloak-admin-rest-client` and `rest-jackson` extensions."
+msgstr "このコマンドは、 `keycloak-admin-rest-client` と `rest-jackson` のエクステンションをインポートしたプロジェクトを生成します。"
+
+msgid ""
+"If you already have your Quarkus project configured, you can add the `keycloak-admin-rest-client` and `rest-jackson` extensions\n"
+"to your project by running the following command in your project base directory:"
+msgstr "Quarkusプロジェクトがすでに設定されている場合は、プロジェクトのベースディレクトリで次のコマンドを実行することで、 `keycloak-admin-rest-client` と `rest-jackson` のエクステンションをプロジェクトに追加できます："
+
+msgid "This will add the following to your build file:"
+msgstr "これにより、ビルドファイルに以下が追加されます:"
+
+msgid "We also are going to need a simple resource with a `Keycloak` injected as request scoped CDI bean."
+msgstr "また、リクエストスコープのCDI Beanとして注入された `Keycloak` を持つ単純なリソースが必要になってきます。"
+
+msgid "Create  a default Keycloak Admin Client which can perform Keycloak `master` realm administration tasks as an `admin-cli` client, such as adding new realms, clients and users."
+msgstr "新しいレルム、クライアント、ユーザーの追加など、 `admin-cli` クライアントとしてKeycloak `master` レルム管理タスクを実行できるデフォルトのKeycloak Admin Clientを作成します。"
+
+msgid "The only configuration which is required to create this Keycloak Admin Client is a Keycloak server URL."
+msgstr "このKeycloak Admin Clientを作成するために必要な設定は、KeycloakサーバーのURLのみです:"
+
+msgid "For example:"
+msgstr "例えば、以下のようになります:"
+
+msgid "or"
+msgstr "あるいは\n"
+
+msgid "It is important that `quarkus.keycloak.admin-client.server-url` is configured if you would like to have `Keycloak` injected. The injection will fail if you attempt to inject `Keycloak` without configuring this property."
+msgstr "`Keycloak` をインジェクションしたい場合は、 `quarkus.keycloak.admin-client.server-url` を設定することが重要です。このプロパティを設定せずに `Keycloak` をインジェクションしようとすると、インジェクションは失敗します。"
+
+msgid "Injecting Keycloak Admin Client instead of creating it directly in the application code is a simpler and more flexible option but you can create the same admin client manually if necessary:"
+msgstr "アプリケーションコードで直接作成する代わりにKeycloak Admin Clientをインジェクトすることは、よりシンプルで柔軟なオプションですが、必要であれば同じAdmin Clientを手動で作成することができます:"
+
+msgid "For more details consult https://www.keycloak.org/docs/latest/server_development/#admin-rest-api[Keycloak Admin REST API documentation]."
+msgstr "詳細については、 link:https://www.keycloak.org/docs/latest/server_development/#admin-rest-api[Keycloak Admin REST APIドキュメント] を参照してください。"
+
+msgid "You can configure Keycloak Admin Client to administer other realms and clients. It can use either a `password` or `client_credentials` grant to acquire an access token to call the Admin REST API which requires authorization."
+msgstr "Keycloak Admin Clientは、他のレルムやクライアントを管理するように設定することができます。 `password` または `client_credentials` グラントを使用してアクセストークンを取得し、認証が必要なAdmin REST APIを呼び出すことができます。"
+
+msgid "If you exchange user's credentials for the access token, here is an example configuration for the `password` grant type:"
+msgstr "ユーザーの認証情報をアクセストークンと交換する場合、 `password` のグラントタイプの設定例を以下に示します:"
+
+msgid "Use `password` grant type."
+msgstr "`password` グラントタイプを使用する。"
+
+msgid "An example using the `client-credentials` grant type needs only a minor adjustments:"
+msgstr "`client-credentials` のグラントタイプを使用した例では、わずかな調整で済みます:"
+
+msgid "Use `client_credentials` grant type."
+msgstr "`client_credentials` グラントタイプを使用する。"
+
+msgid "Configuring TLS"
+msgstr "TLS の設定"
+
+msgid ""
+"To configure a TLS connection for the Keycloak Admin Client, use the TLS Registry extension and point the Keycloak Admin Client to respective TLS configuration.\n"
+"For example, you can configure mutual TLS (mTLS) like this:"
+msgstr ""
+"Keycloak管理クライアントにTLS接続を設定するには、TLSレジストリエクステンションを使用して、Keycloak管理クライアントにそれぞれのTLS設定を指定します。\n"
+"例えば、次のように相互TLS（mTLS）を設定できます："
+
+msgid "Testing"
+msgstr "テスト"
+
+msgid ""
+"The preferred approach for testing Keycloak Admin Client against Keycloak is xref:security-openid-connect-dev-services.adoc[Dev Services for Keycloak].\n"
+"`Dev Services for Keycloak` will start and initialize a test container.\n"
+"Then, it will create a `quarkus` realm and a `quarkus-app` client (`secret` secret) and add `alice` (`admin` and `user` roles) and `bob` (`user` role) users, where all of these properties can be customized."
+msgstr ""
+"Keycloakに対するKeycloak Admin Clientのテストには、 xref:security-openid-connect-dev-services.adoc[Dev Services for Keycloak] を使用します。 \n"
+"`Dev Services for Keycloak` はテストコンテナを起動して初期化します。そして、 `quarkus` realmと `quarkus-app` client ( `secret` secret)を作成し、 `alice` ( `admin` と `user` role)と `bob` ( `user` role)のユーザーを追加します。"
+
+msgid "For example, by default, a test container will be available at a randomly allocated port but you can make both Keycloak Admin Client and the container use the same port as follows:"
+msgstr "例えば、デフォルトでは、テストコンテナはランダムに割り当てられたポートで利用可能ですが、以下のようにKeycloak Admin Clientとコンテナの両方が同じポートを使用するようにすることができます："
+
+msgid "Configure the Keycloak container to listen on the `45180` port by default"
+msgstr "デフォルトで `45180` ポートをリッスンするようにKeycloakコンテナを設定します。"
+
+msgid "Configure the Keycloak Admin Client to use the same port"
+msgstr "同じポートを使用するようにKeycloak Admin Clientを設定します。"
+
+msgid "Quarkus Keycloak Admin Client Configuration Reference"
+msgstr "Quarkus Keycloak Admin クライアント設定リファレンス"
+
+msgid "<span class=\"icon\"><i class=\"fa fa-lock\" title=\"Fixed at build time\"></i></span> Configuration property fixed at build time - All other configuration properties are overridable at runtime <input type=\"search\" id=\"config-search-1\" placeholder=\"FILTER CONFIGURATION\" disabled>"
+msgstr "<span class=\"icon\"><i class=\"fa fa-lock\" title=\"ビルド時に固定\"></i></span> ビルド時に固定される設定プロパティ - 他のすべての設定プロパティは、実行時にオーバーライド可能 <input type=\"search\" id=\"config-search-1\" placeholder=\"FILTER CONFIGURATION\" disabled>"
+
+msgid "[.header-title]##Configuration property##"
+msgstr ""
+
+msgid "Type"
+msgstr "タイプ"
+
+msgid "Default"
+msgstr "デフォルト"
+
+msgid ""
+"icon:lock[title=Fixed at build time] [[quarkus-keycloak-admin-client_quarkus-keycloak-admin-client-enabled]] [.property-path]##link:#quarkus-keycloak-admin-client_quarkus-keycloak-admin-client-enabled[`+++quarkus.keycloak.admin-client.enabled+++`]##\n"
+"config_property_copy_button:+++quarkus.keycloak.admin-client.enabled+++[]\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"Set to true if Keycloak Admin Client injection is supported.\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_KEYCLOAK_ADMIN_CLIENT_ENABLED+++[]\n"
+"--"
+msgstr ""
+
+msgid ""
+"icon:lock[title=Fixed at build time] [[quarkus-keycloak-admin-client_quarkus-keycloak-admin-client-enabled]] [.property-path]##link:#quarkus-keycloak-admin-client_quarkus-keycloak-admin-client-enabled[`+++quarkus.keycloak.admin-client.enabled+++`]##\n"
+"config_property_copy_button:+++quarkus.keycloak.admin-client.enabled+++[]"
+msgstr ""
+
+msgid "Set to true if Keycloak Admin Client injection is supported."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_KEYCLOAK_ADMIN_CLIENT_ENABLED+++[]"
+msgstr ""
+
+msgid "<i class=\"fa fa-chevron-down\"></i><span>Show more</span>"
+msgstr ""
+
+msgid "boolean"
+msgstr "boolean"
+
+msgid "`+++true+++`"
+msgstr ""
+
+msgid ""
+"[[quarkus-keycloak-admin-client_quarkus-keycloak-admin-client-server-url]] [.property-path]##link:#quarkus-keycloak-admin-client_quarkus-keycloak-admin-client-server-url[`+++quarkus.keycloak.admin-client.server-url+++`]##\n"
+"config_property_copy_button:+++quarkus.keycloak.admin-client.server-url+++[]\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"Keycloak server URL, for example, `https://host:port`. When the Keycloak Dev Services is started and this property is not configured, Quarkus points the 'quarkus.keycloak.admin-client.server-url' configuration property to started Keycloak container. In other cases, when this property is not set then the Keycloak Admin Client injection will fail - use `org.keycloak.admin.client.KeycloakBuilder` to create the client instead.\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_KEYCLOAK_ADMIN_CLIENT_SERVER_URL+++[]\n"
+"--"
+msgstr ""
+
+msgid ""
+"[[quarkus-keycloak-admin-client_quarkus-keycloak-admin-client-server-url]] [.property-path]##link:#quarkus-keycloak-admin-client_quarkus-keycloak-admin-client-server-url[`+++quarkus.keycloak.admin-client.server-url+++`]##\n"
+"config_property_copy_button:+++quarkus.keycloak.admin-client.server-url+++[]"
+msgstr ""
+
+msgid "Keycloak server URL, for example, `https://host:port`. When the Keycloak Dev Services is started and this property is not configured, Quarkus points the 'quarkus.keycloak.admin-client.server-url' configuration property to started Keycloak container. In other cases, when this property is not set then the Keycloak Admin Client injection will fail - use `org.keycloak.admin.client.KeycloakBuilder` to create the client instead."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_KEYCLOAK_ADMIN_CLIENT_SERVER_URL+++[]"
+msgstr ""
+
+msgid "string"
+msgstr "string"
+
+msgid ""
+"[[quarkus-keycloak-admin-client_quarkus-keycloak-admin-client-realm]] [.property-path]##link:#quarkus-keycloak-admin-client_quarkus-keycloak-admin-client-realm[`+++quarkus.keycloak.admin-client.realm+++`]##\n"
+"config_property_copy_button:+++quarkus.keycloak.admin-client.realm+++[]\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"Realm.\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_KEYCLOAK_ADMIN_CLIENT_REALM+++[]\n"
+"--"
+msgstr ""
+
+msgid ""
+"[[quarkus-keycloak-admin-client_quarkus-keycloak-admin-client-realm]] [.property-path]##link:#quarkus-keycloak-admin-client_quarkus-keycloak-admin-client-realm[`+++quarkus.keycloak.admin-client.realm+++`]##\n"
+"config_property_copy_button:+++quarkus.keycloak.admin-client.realm+++[]"
+msgstr ""
+
+msgid "Realm."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_KEYCLOAK_ADMIN_CLIENT_REALM+++[]"
+msgstr ""
+
+msgid "`+++master+++`"
+msgstr ""
+
+msgid ""
+"[[quarkus-keycloak-admin-client_quarkus-keycloak-admin-client-client-id]] [.property-path]##link:#quarkus-keycloak-admin-client_quarkus-keycloak-admin-client-client-id[`+++quarkus.keycloak.admin-client.client-id+++`]##\n"
+"config_property_copy_button:+++quarkus.keycloak.admin-client.client-id+++[]\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"Client id.\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_KEYCLOAK_ADMIN_CLIENT_CLIENT_ID+++[]\n"
+"--"
+msgstr ""
+
+msgid ""
+"[[quarkus-keycloak-admin-client_quarkus-keycloak-admin-client-client-id]] [.property-path]##link:#quarkus-keycloak-admin-client_quarkus-keycloak-admin-client-client-id[`+++quarkus.keycloak.admin-client.client-id+++`]##\n"
+"config_property_copy_button:+++quarkus.keycloak.admin-client.client-id+++[]"
+msgstr ""
+
+msgid "Client id."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_KEYCLOAK_ADMIN_CLIENT_CLIENT_ID+++[]"
+msgstr ""
+
+msgid "`+++admin-cli+++`"
+msgstr ""
+
+msgid ""
+"[[quarkus-keycloak-admin-client_quarkus-keycloak-admin-client-client-secret]] [.property-path]##link:#quarkus-keycloak-admin-client_quarkus-keycloak-admin-client-client-secret[`+++quarkus.keycloak.admin-client.client-secret+++`]##\n"
+"config_property_copy_button:+++quarkus.keycloak.admin-client.client-secret+++[]\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"Client secret. Required with a `client_credentials` grant type.\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_KEYCLOAK_ADMIN_CLIENT_CLIENT_SECRET+++[]\n"
+"--"
+msgstr ""
+
+msgid ""
+"[[quarkus-keycloak-admin-client_quarkus-keycloak-admin-client-client-secret]] [.property-path]##link:#quarkus-keycloak-admin-client_quarkus-keycloak-admin-client-client-secret[`+++quarkus.keycloak.admin-client.client-secret+++`]##\n"
+"config_property_copy_button:+++quarkus.keycloak.admin-client.client-secret+++[]"
+msgstr ""
+
+msgid "Client secret. Required with a `client_credentials` grant type."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_KEYCLOAK_ADMIN_CLIENT_CLIENT_SECRET+++[]"
+msgstr ""
+
+msgid ""
+"[[quarkus-keycloak-admin-client_quarkus-keycloak-admin-client-username]] [.property-path]##link:#quarkus-keycloak-admin-client_quarkus-keycloak-admin-client-username[`+++quarkus.keycloak.admin-client.username+++`]##\n"
+"config_property_copy_button:+++quarkus.keycloak.admin-client.username+++[]\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"Username. Required with a `password` grant type.\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_KEYCLOAK_ADMIN_CLIENT_USERNAME+++[]\n"
+"--"
+msgstr ""
+
+msgid ""
+"[[quarkus-keycloak-admin-client_quarkus-keycloak-admin-client-username]] [.property-path]##link:#quarkus-keycloak-admin-client_quarkus-keycloak-admin-client-username[`+++quarkus.keycloak.admin-client.username+++`]##\n"
+"config_property_copy_button:+++quarkus.keycloak.admin-client.username+++[]"
+msgstr ""
+
+msgid "Username. Required with a `password` grant type."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_KEYCLOAK_ADMIN_CLIENT_USERNAME+++[]"
+msgstr ""
+
+msgid "`+++admin+++`"
+msgstr ""
+
+msgid ""
+"[[quarkus-keycloak-admin-client_quarkus-keycloak-admin-client-password]] [.property-path]##link:#quarkus-keycloak-admin-client_quarkus-keycloak-admin-client-password[`+++quarkus.keycloak.admin-client.password+++`]##\n"
+"config_property_copy_button:+++quarkus.keycloak.admin-client.password+++[]\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"Password. Required with a `password` grant type.\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_KEYCLOAK_ADMIN_CLIENT_PASSWORD+++[]\n"
+"--"
+msgstr ""
+
+msgid ""
+"[[quarkus-keycloak-admin-client_quarkus-keycloak-admin-client-password]] [.property-path]##link:#quarkus-keycloak-admin-client_quarkus-keycloak-admin-client-password[`+++quarkus.keycloak.admin-client.password+++`]##\n"
+"config_property_copy_button:+++quarkus.keycloak.admin-client.password+++[]"
+msgstr ""
+
+msgid "Password. Required with a `password` grant type."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_KEYCLOAK_ADMIN_CLIENT_PASSWORD+++[]"
+msgstr ""
+
+msgid ""
+"[[quarkus-keycloak-admin-client_quarkus-keycloak-admin-client-scope]] [.property-path]##link:#quarkus-keycloak-admin-client_quarkus-keycloak-admin-client-scope[`+++quarkus.keycloak.admin-client.scope+++`]##\n"
+"config_property_copy_button:+++quarkus.keycloak.admin-client.scope+++[]\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"OAuth 2.0 link:https://datatracker.ietf.org/doc/html/rfc6749#section-3.3[Access Token Scope].\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_KEYCLOAK_ADMIN_CLIENT_SCOPE+++[]\n"
+"--"
+msgstr ""
+
+msgid ""
+"[[quarkus-keycloak-admin-client_quarkus-keycloak-admin-client-scope]] [.property-path]##link:#quarkus-keycloak-admin-client_quarkus-keycloak-admin-client-scope[`+++quarkus.keycloak.admin-client.scope+++`]##\n"
+"config_property_copy_button:+++quarkus.keycloak.admin-client.scope+++[]"
+msgstr ""
+
+msgid "OAuth 2.0 link:https://datatracker.ietf.org/doc/html/rfc6749#section-3.3[Access Token Scope]."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_KEYCLOAK_ADMIN_CLIENT_SCOPE+++[]"
+msgstr ""
+
+msgid ""
+"[[quarkus-keycloak-admin-client_quarkus-keycloak-admin-client-grant-type]] [.property-path]##link:#quarkus-keycloak-admin-client_quarkus-keycloak-admin-client-grant-type[`+++quarkus.keycloak.admin-client.grant-type+++`]##\n"
+"config_property_copy_button:+++quarkus.keycloak.admin-client.grant-type+++[]\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"OAuth Grant Type.\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_KEYCLOAK_ADMIN_CLIENT_GRANT_TYPE+++[]\n"
+"--"
+msgstr ""
+
+msgid ""
+"[[quarkus-keycloak-admin-client_quarkus-keycloak-admin-client-grant-type]] [.property-path]##link:#quarkus-keycloak-admin-client_quarkus-keycloak-admin-client-grant-type[`+++quarkus.keycloak.admin-client.grant-type+++`]##\n"
+"config_property_copy_button:+++quarkus.keycloak.admin-client.grant-type+++[]"
+msgstr ""
+
+msgid "OAuth Grant Type."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_KEYCLOAK_ADMIN_CLIENT_GRANT_TYPE+++[]"
+msgstr ""
+
+msgid "`password`, `client-credentials`"
+msgstr ""
+
+msgid "`+++password+++`"
+msgstr ""
+
+msgid ""
+"[[quarkus-keycloak-admin-client_quarkus-keycloak-admin-client-tls-configuration-name]] [.property-path]##link:#quarkus-keycloak-admin-client_quarkus-keycloak-admin-client-tls-configuration-name[`+++quarkus.keycloak.admin-client.tls-configuration-name+++`]##\n"
+"config_property_copy_button:+++quarkus.keycloak.admin-client.tls-configuration-name+++[]\n"
+"\n"
+"\n"
+"[.description]\n"
+"--\n"
+"The name of the TLS configuration to use.\n"
+"\n"
+"If a name is configured, it uses the configuration from `quarkus.tls.<name>.++*++` If a name is configured, but no TLS configuration is found with that name then an error will be thrown.\n"
+"\n"
+"The default TLS configuration is *not* used by default.\n"
+"\n"
+"\n"
+"Environment variable: env_var_with_copy_button:+++QUARKUS_KEYCLOAK_ADMIN_CLIENT_TLS_CONFIGURATION_NAME+++[]\n"
+"--"
+msgstr ""
+
+msgid ""
+"[[quarkus-keycloak-admin-client_quarkus-keycloak-admin-client-tls-configuration-name]] [.property-path]##link:#quarkus-keycloak-admin-client_quarkus-keycloak-admin-client-tls-configuration-name[`+++quarkus.keycloak.admin-client.tls-configuration-name+++`]##\n"
+"config_property_copy_button:+++quarkus.keycloak.admin-client.tls-configuration-name+++[]"
+msgstr ""
+
+msgid "The name of the TLS configuration to use."
+msgstr ""
+
+msgid "If a name is configured, it uses the configuration from `quarkus.tls.<name>.++*++` If a name is configured, but no TLS configuration is found with that name then an error will be thrown."
+msgstr ""
+
+msgid "The default TLS configuration is *not* used by default."
+msgstr ""
+
+msgid "Environment variable: env_var_with_copy_button:+++QUARKUS_KEYCLOAK_ADMIN_CLIENT_TLS_CONFIGURATION_NAME+++[]"
+msgstr ""
+
+msgid "References"
+msgstr "リファレンス"
+
+msgid "https://www.keycloak.org/documentation.html[Keycloak Documentation]"
+msgstr "https://www.keycloak.org/documentation.html[Keycloak Documentation]"
+
+msgid "xref:security-keycloak-authorization.adoc[Keycloak Authorization extension]"
+msgstr "link:security-keycloak-authorization.html[Keycloak Authorization エクステンション]"
+
+msgid "xref:security-oidc-code-flow-authentication.adoc[OIDC code flow mechanism for protecting web applications]"
+msgstr "xref:security-oidc-code-flow-authentication.adoc[ウェブアプリケーションを保護する OIDC コードフローメカニズム]"
+
+msgid "xref:security-oidc-bearer-token-authentication.adoc[OIDC Bearer token authentication]"
+msgstr "xref:security-oidc-bearer-token-authentication.adoc[OIDC ベアラートークン認証]"
+
+msgid "xref:security-openid-connect-client.adoc[OpenID Connect Client and Token Propagation Quickstart]"
+msgstr "xref:security-openid-connect-client.adoc[OpenID Connectクライアントとトークンの伝搬クイックスタート]"
+
+msgid "xref:security-overview.adoc[Quarkus Security overview]"
+msgstr "xref:security-overview.adoc[Quarkus Securityの概要]"
