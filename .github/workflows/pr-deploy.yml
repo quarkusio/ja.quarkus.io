@@ -26,11 +26,14 @@ jobs:
         uses: actions/github-script@v9
         with:
           script: |
-            const { data: prs } =
-              await github.rest.repos.listPullRequestsAssociatedWithCommit({
-                ...context.repo,
-                commit_sha: context.payload.workflow_run.head_sha
-              });
+            const owner = context.payload.workflow_run.head_repository.owner.login;
+            const branch = context.payload.workflow_run.head_branch;
+
+            const { data: prs } = await github.rest.pulls.list({
+              ...context.repo,
+              state: 'all',
+              head: `${owner}:${branch}`
+            });
 
             if (prs.length !== 1) {
               core.setFailed(`Expected one pull request, found ${prs.length}`);
