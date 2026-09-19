@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+
+
+
+<head>
+  <title>To Cache or Not to Cache Virtual Threads - Quarkus</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="
+  connect-src 'self' https://analytics.ossupstream.org/ https://search.quarkus.io https://ajax.googleapis.com;
+  script-src 'self' 'unsafe-inline' 'unsafe-eval'
+      
+      https://app.requestly.io/
+      jsonip.com
+      https://ajax.googleapis.com
+      https://use.fontawesome.com
+      http://www.youtube.com
+      https://giscus.app
+      https://analytics.ossupstream.org/
+      https://app.mailjet.com;
+
+  style-src 'self' https://fonts.googleapis.com https://use.fontawesome.com;
+  img-src 'self' * data:;
+  media-src 'self';
+  frame-src https://www.youtube.com https://player.restream.io https://app.mailjet.com http://xy0p2.mjt.lu https://mj.quarkus.io https://giscus.app;
+  base-uri 'none';
+  object-src 'none';
+  form-action 'none';
+  font-src 'self' https://use.fontawesome.com https://fonts.gstatic.com;" />
+  <script src="/assets/javascript/highlight.pack.js" type="text/javascript"></script>
+  <META HTTP-EQUIV='X-XSS-Protection' CONTENT="1; mode=block">
+  <META HTTP-EQUIV='X-Content-Type-Options' CONTENT="nosniff">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Quarkus: Supersonic Subatomic Java">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@QuarkusIO"> 
+  <meta name="twitter:creator" content="@QuarkusIO">
+  <meta property="og:url" content="https://quarkus.io/blog/to-cache-or-not-to-cache-virtual-threads/" />
+  <meta property="og:title" content="To Cache or Not to Cache Virtual Threads" />
+  <meta property="og:description" content="Quarkus: Supersonic Subatomic Java" />
+  <meta property="og:image" content="https://quarkus.io/assets/images/quarkus_card.png" />
+  <link rel="canonical" href="https://quarkus.io/blog/to-cache-or-not-to-cache-virtual-threads/">
+  <link rel="shortcut icon" type="image/png" href="/favicon.ico" >
+  <link rel="stylesheet" href="/guides/stylesheet/config.css" />
+    <script type="module" src="/static/bundle/app-UNQQD6ED.js"></script>
+      <link rel="stylesheet" href="/static/bundle/app-QXE7YFJJ.css" />
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.5.2/css/all.css" crossorigin="anonymous">
+  <link rel="alternate" type="application/rss+xml"  href="/feed.xml" title="Quarkus - Supersonic Subatomic Java">
+  <script src="/assets/javascript/hl.js" type="text/javascript"></script>
+  <link rel="alternate" hreflang="x-default" href="https://quarkus.io/" />  
+  <script src="/assets/javascript/tracking.js"></script>
+  <script src="/assets/javascript/colormode.js" type="text/javascript"></script>
+
+</head>
+
+<body class="post">
+
+<div class="nav-wrapper">
+  <div class="grid-wrapper">
+    <div class="width-12-12">
+      <input type="checkbox" id="checkbox" />
+      <nav id="main-nav" class="main-nav">
+        <div class="logo-wrapper">
+           <a href="/"><img src="/assets/images/quarkus_logo_horizontal_rgb_600px_reverse.webp" class="project-logo" title="Quarkus" alt="Quarkus"></a>
+        </div>
+    <label class="nav-toggle" for="checkbox"> <i class="fa fa-bars"></i>
+</label>
+    <ul id="menu" class="menu">
+      <li class="dropdown">
+        <span href="#">Why<i class="fas fa-chevron-down firsti"></i></span>
+        <ul class="submenu">
+          <li><a href="/about" class="">WHAT IS QUARKUS?</a></li>
+          <li><a href="/developer-joy" class="">DEVELOPER JOY</a></li>
+          <li><a href="/performance" class="">PERFORMANCE</a></li>
+          <li><a href="/kubernetes-native" class="">KUBERNETES NATIVE</a></li>
+          <li><a href="/standards" class="">STANDARDS</a></li>
+          <li><a href="/versatility" class="">VERSATILITY</a></li>
+          <li><a href="/container-first" class="">CONTAINER FIRST</a></li>
+          <li class="tertiarydropdown">
+            <span href="#">USING SPRING?<i class="fas fa-chevron-down"></i></span>
+            <ul class="tertiarymenu">
+              <li><a href="/spring" class="">SPRING OVERVIEW</a></li>
+              <li><a href="/spring/migrate/" class="">MIGRATE TO QUARKUS</a></li>
+            </ul>
+          </li>
+          <li class="tertiarydropdown">
+            <span href="#">AI<i class="fas fa-chevron-down"></i></span>
+            <ul class="tertiarymenu">
+              <li><a href="/ai" class="">AI
+OVERVIEW</a></li>
+              <li><a href="/java-for-ai" class="">JAVA FOR AI</a></li>
+              <li><a href="/quarkus-for-ai" class="">WHY QUARKUS FOR AI</a></li>
+              <li><a href="/ai-blueprints" class="">AI BLUEPRINTS</a></li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+      <li class="dropdown">
+        <span href="#">Learn<i class="fas fa-chevron-down firsti"></i></span>
+        <ul class="submenu">
+          <li><a href="/get-started" class="">GET STARTED</a></li>
+          <li><a href="/guides" class="">DOCUMENTATION</a></li>
+          <li><a href="/releases/" class="">RELEASES</a></li>
+          <li><a href="/userstories/" class="">USER STORIES</a></li>  
+          <li><a href="/qtips" class="">"Q" TIP VIDEOS</a></li>          
+          <li><a href="/books" class="">BOOKS</a></li>
+          </ul>
+      </li>
+      <li class="dropdown">
+        <span href="#">Extensions<i class="fas fa-chevron-down firsti"></i></span>
+        <ul class="submenu">
+          
+          <!-- Note that quarkus.io is hardcoded here, because it is the only url which supports extensions -->
+<li><a href="https://quarkus.io/extensions/" class="">BROWSE EXTENSIONS</a></li>
+          <li><a href="/faq/#what-is-a-quarkus-extension" class="">USE
+EXTENSIONS</a></li>
+          <li><a href="/guides/writing-extensions" class="">CREATE
+EXTENSIONS</a></li>
+          <li><a href="https://hub.quarkiverse.io" class="">SHARE EXTENSIONS</a></li>
+        </ul>
+      </li>
+      <li class="dropdown">
+        <span href="#">Community<i class="fas fa-chevron-down firsti"></i></span>
+        <ul class="submenu">
+          <li><a href="/support/" class="">SUPPORT</a></li>
+          <li><a href="/blog" class="active">BLOG</a></li>
+          <li><a href="/discussion" class="">DISCUSSION</a></li>
+          <li><a href="/working-groups" class="">WORKING GROUPS</a></li>
+          <li><a href="/insights" class="">PODCAST</a></li>
+          <li><a href="/events" class="">EVENTS</a></li>
+          <li><a href="/newsletter" class="">NEWSLETTER</a></li>
+          <li><a href="https://github.com/orgs/quarkusio/projects/13/views/1" class="">ROADMAP</a></li>
+          <li><a href="/benefactors" class="">BENEFACTORS</a></li>
+          </ul>
+      </li>
+      <li>
+        <a href="https://code.quarkus.io" class="button-cta secondary
+white">コーディングを開始</a>
+      </li>
+      <li class="dropdown">
+        <span href="/language/"><div class="fas fa-globe langicon"></div><i class="fas fa-chevron-down"></i></span>
+        <ul class="submenu">
+          <li><a href="https://quarkus.io/blog/to-cache-or-not-to-cache-virtual-threads/" >OFFICIAL (ENGLISH)</a></li>
+          <li><a href="https://pt.quarkus.io/blog/to-cache-or-not-to-cache-virtual-threads/">PORTUGUÊS (BR)</a></li>
+          <li><a href="https://es.quarkus.io/blog/to-cache-or-not-to-cache-virtual-threads/">ESPAÑOL</a></li>
+          <li><a href="https://cn.quarkus.io/blog/to-cache-or-not-to-cache-virtual-threads/">简体中文</a></li>
+          <li><a href="https://ja.quarkus.io/blog/to-cache-or-not-to-cache-virtual-threads/">日本語</a></li>
+          </ul>
+      </li>
+      <li>
+        <span href="#" class="modeswitcher" id='theme-toggle'><i class="fas
+fa-sun"></i><i class="fas fa-moon"></i><i class="fas fa-cog"></i></span>
+      </li>
+    </ul>
+      </nav>
+    </div>
+  </div>
+</div>
+  <div class="content">
+<div class="full-width-breadcrumb-bg align-self">
+  <div class="width-12-12">
+      <p class="returnlink"><a href="/blog">Blog</a> <i class="fas fa-chevron-right"></i> To Cache or Not to Cache Virtual Threads</p>
+  </div>
+</div>
+
+<div class="post-page grid-wrapper">
+  <div class="width-8-12 width-12-12-m doc-content">
+    <div class="grid-wrapper">
+      <div class="width-12-12">
+        <div class="post-date">
+          July 28, 2026 
+            <span class="tags"><a href="/blog/tag/virtual-threads">#virtual-threads</a><a href="/blog/tag/performance">#performance</a><a href="/blog/tag/loom">#loom</a></span>
+        </div>
+        <h1 class="post-title">To Cache or Not to Cache Virtual Threads</h1>
+        <div class="grid-wrapper">
+          <div class="width-8-12 width-12-12-m byline-wrapper">
+            <p class="byline">
+              By 
+                
+                  <img class="headshot" src="https://www.gravatar.com/avatar/2c6af69cf6a15dbb87f6cb0463ddd986" alt="Francesco Nigro avatar">
+                  <a href="/author/fnigro">Francesco Nigro</a>
+                  
+            </p>
+          </div>
+          <div class="width-12-12">
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+<div class="title">This article was substantially revised on 11 September 2026</div>
+<div class="paragraph">
+<p>The version published on 28 July 2026 explained what we measured with a cause that turned out to be wrong: the benchmark it rested on had a bug. <a href="https://github.com/pchilano">Patricio Chilano Mateo</a> questioned the explanation in a <a href="https://github.com/openjdk/loom/pull/228#issuecomment-5529741290">review of the original findings</a>, and following that question is what turned the bug up. Everything below has been re-measured. The advice — don&#8217;t pool virtual threads — is unchanged; the reason for it is not.</p>
+</div>
+<details>
+<summary class="title">What exactly changed</summary>
+<div class="content">
+<div class="ulist">
+<ul>
+<li>
+<p><strong>The bug.</strong> The benchmark serialised JSON with Jackson on its default <code>ThreadLocal</code>-based buffer recycling. Because each request ran on its own virtual thread, that pinned a buffer set per thread — around 200 MB of live heap in the pooled arm against essentially none in the unpooled one — inflating heap occupancy and garbage collector work in precisely the configuration under test. Every figure in this article was re-measured with a non-<code>ThreadLocal</code> recycler.</p>
+</li>
+<li>
+<p><strong>What the original blamed, and this version does not.</strong> It attributed the throughput collapse on a 1 GB heap to <code>StackChunk</code> churn: oversized chunks abandoned in the old generation, forcing the collector into Full GCs. With the confound removed that attribution does not hold. The collapse is still there on a smaller heap, and this version reports it as something we observed and cannot explain.</p>
+</li>
+<li>
+<p><strong>What was dropped.</strong> The experimental JVM patch the original built toward (<a href="https://github.com/openjdk/loom/pull/228">openjdk/loom#228</a>) is no longer part of the story. Once the benchmark was fixed it showed no benefit worth reporting.</p>
+</li>
+<li>
+<p><strong>What survived, and is now better supported.</strong> Pooling really does retain around 60 MB of <code>StackChunk</code> for the life of the pool. The original called those chunks "C1-sized"; logging every frame as it is frozen shows they are interpreted first and C1 after. New in this version: <strong>why</strong> they are never released — a pooled thread never returns out of its worker loop, so the frames the JVM pushed to start it never leave the chunk, and a chunk is only unlinked once it is empty.</p>
+</li>
+<li>
+<p><strong>What did not change.</strong> The conclusion, and the 3% win at 4 GB.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The superseded version remains readable in the site&#8217;s history: <a href="https://github.com/quarkusio/quarkusio.github.io/blob/96231ef2117ed1501e38d9e46d55feb739d84081/content/posts/2026-07-23-to-cache-or-not-to-cache-virtual-threads.adoc">the article as published on 28 July 2026</a>.</p>
+</div>
+</div>
+</details>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The official guidance on virtual threads is clear:</p>
+</div>
+<div class="quoteblock">
+<blockquote>
+<div class="paragraph">
+<p>Virtual threads are cheap and plentiful, and thus should never be pooled: A new virtual thread should be created for every application task.</p>
+</div>
+</blockquote>
+<div class="attribution">
+&#8212; Ron Pressler &amp; Alan Bateman, <a href="https://openjdk.org/jeps/444">JEP 444: Virtual Threads</a>
+</div>
+</div>
+<div class="imageblock text-center">
+<div class="content">
+<img src="/assets/images/posts/to-cache-or-not-to-cache-vts/meme-bell-curve.png" alt="Bell curve meme" width="520">
+</div>
+</div>
+<div class="paragraph">
+<p>As part of our work on <a href="https://youtu.be/Oy005l5vHtE">improving Quarkus performance with virtual threads</a> and <a href="https://youtu.be/oWE_kYB4Wns">investigating Loom&#8217;s scheduling behavior</a>, we wanted to know whether ignoring that advice is worth it — not in principle, but in bytes: what does pooling buy, what does it cost, and does either show up in throughput?</p>
+</div>
+<div class="paragraph">
+<p>The short answer: pooling allocates about 8% less per request, exactly as advertised, and that changes nothing we can measure. It also keeps about 60 MB of heap alive for as long as the pool lives, and on a slightly smaller heap that is enough to change how the garbage collector behaves. It saves the cheap thing and keeps the expensive one.</p>
+</div>
+<div class="sect1">
+<h2 id="_why_would_you_pool_virtual_threads">Why Would You Pool Virtual Threads?</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Pooling threads is a well-established pattern. We do it for platform threads in frameworks like Quarkus because they are expensive to create — each one maps to an OS thread with a pre-allocated stack. <strong>Virtual threads are designed to be cheap, so the architects of Project Loom say pooling is unnecessary.</strong> But a brave and careless developer might still consider it: creating a virtual thread allocates a <code>Thread</code> object, its thread-local storage, and internal scheduling structures. If you reuse virtual threads, you skip all of that.</p>
+</div>
+<div class="sect2">
+<h3 id="_the_benchmark">The benchmark</h3>
+<div class="paragraph">
+<p><strong>The workload we care about</strong> is the typical Java enterprise pattern: an HTTP server receives requests, <strong>dispatches each one to a virtual thread that performs blocking I/O</strong>, then returns a response.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="/assets/images/posts/to-cache-or-not-to-cache-vts/quarkus-architecture.png" alt="Quarkus architecture">
+</div>
+</div>
+<div class="paragraph">
+<p>Ours simplifies that to its essential shape: a Netty HTTP server receives requests, hands each one to a VT that makes a blocking HTTP call (via Apache HttpClient) to a mock backend with 30ms think time, parses the JSON it gets back, then returns the response. 10,000 concurrent connections, 8 carriers, a <strong>30-second warmup</strong> followed by a <strong>30-second measurement phase</strong>. Two modes, which we will call <strong>unpooled</strong> — a fresh virtual thread created for every request, as JEP 444 prescribes — and <strong>pooled</strong>, an executor that parks finished virtual threads and reuses them, growing on demand up to 10,000 threads. With 10,000 connections all sending at once, it reaches that ceiling in the first seconds of every run. Every run uses ParallelGC; the cost we end up measuring is promotion behaviour, which is collector-specific, and we did not test G1.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="/assets/images/posts/to-cache-or-not-to-cache-vts/benchmark-architecture.png" alt="Benchmark architecture">
+</div>
+</div>
+<div class="paragraph">
+<p>Every figure below is a mean over repeated runs, with the range wherever the spread matters — <a href="https://quarkus.io/blog/fairness-in-benchmarking/">averages hide outliers</a>, and here the outliers turned out to be the most interesting thing we found.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_what_pooling_buys">What Pooling Buys</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Start where the case for pooling is strongest — a 4 GB heap, room to spare:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 66.6666%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">4 GB heap</th>
+<th class="tableblock halign-left valign-top">TPS</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">unpooled</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">165,344</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">pooled, 10,000 VTs</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">170,182</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Pooling wins, by just under 3%. The slowest pooled run still beat the fastest unpooled one.</p>
+</div>
+<div class="paragraph">
+<p>One caveat: waking a pooled VT with <code>LockSupport.unpark()</code> queues it on the carrier&#8217;s <strong>local</strong> queue, while <code>Thread.start()</code> uses the <strong>external</strong> one (<code>VirtualThread.java</code>), so the 3% may be the queue rather than the allocation; nothing here separates them.</p>
+</div>
+<div class="paragraph">
+<p>Now take the room away. Same benchmark, 1 GB heap, and this time we counted what was allocated — the sum of eden occupancy at every collection, from the GC log:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 40%;">
+<col style="width: 20%;">
+<col style="width: 20%;">
+<col style="width: 20%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">1 GB heap</th>
+<th class="tableblock halign-left valign-top">TPS</th>
+<th class="tableblock halign-left valign-top">allocation rate, measurement window</th>
+<th class="tableblock halign-left valign-top">GC pause</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">unpooled</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">155,302</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2,174–2,323 MB/s</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4.9 s</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">pooled</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">156,854</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>1,981–2,133 MB/s</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">5.0 s</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>The saving is real: 8.6% less allocation over the run, with both arms serving the same throughput to within 1%. Per request that is 14.8 KB against 13.6 KB — about 1.3 KB saved.</p>
+</div>
+<div class="paragraph">
+<p>We did not identify what pooling allocates in exchange — and it does allocate something, because an unpooled thread&#8217;s frozen stack alone is a 2.2 KB object per request, so avoiding it should have saved more than 1.3 KB.</p>
+</div>
+<div class="paragraph">
+<p>And the saving changes nothing downstream. Young collections, Full GCs (two in every run, both arms), pause time and throughput are all inside the run-to-run spread. Allocation that dies young is reclaimed by moving a pointer; 8% less of it is 8% less of something that was already nearly free.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_what_pooling_costs">What Pooling Costs</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code>jcmd GC.class_histogram</code> forces a Full GC and counts what is still reachable — the heap you cannot get rid of. Run mid-load, at the same point in every run:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">1 GB heap</th>
+<th class="tableblock halign-left valign-top">live heap</th>
+<th class="tableblock halign-left valign-top">of which StackChunk</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">unpooled</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">389–422 MB</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>5–13 MB</strong> (2.3–6.1K chunks)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">pooled</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">453–505 MB</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>69–93 MB</strong> (16.5–20.8K chunks)</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Pooling costs about 60 MB of live heap — about 6 KB per pooled thread — and <code>StackChunk</code> is the only class that grows: comparing one run of each kind, nothing else moves by more than a megabyte.</p>
+</div>
+<div class="paragraph">
+<p>Where that 60 MB comes from. A blocked virtual thread&#8217;s stack is copied into a heap object that is sized once, for the stack it holds, and never resized. In the first seconds of a run the code is not yet C2-compiled, and code C2 has not reached needs about four times more stack words, so early freezes mint chunks of roughly a thousand words where a warm one needs 270.</p>
+</div>
+<div class="paragraph">
+<p>A young collection then promotes that chunk, and a promoted chunk cannot take the next freeze: <strong>a fresh small one goes in front of it and the fat one stays behind</strong>. It stays for good, because the JVM unlinks it only once it is empty, and what it still holds is the thread&#8217;s entry frames — the ones that return only when the thread terminates, which a pooled thread never does.</p>
+</div>
+<div class="paragraph">
+<p>Every pooled thread ends up carrying one, ten thousand of them is the 60 MB. An unpooled thread terminates with its request; its entry frames return, the chunk empties, and it dies with the thread. <strong>Pooling does not only retain threads. It retains the JVM&#8217;s warm-up state.</strong></p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="/assets/images/posts/to-cache-or-not-to-cache-vts/stackchunk-warmup.svg" alt="What a pooled virtual thread carries: a warm-up-sized chunk" width="promoted" height="then kept behind a small reusable tail">
+</div>
+</div>
+<details>
+<summary class="title">What a StackChunk is</summary>
+<div class="content">
+<div class="paragraph">
+<p>When a virtual thread parks — blocks on I/O, waits on a lock, sleeps — the JVM frees the <strong>carrier thread</strong> by <strong>freezing</strong> the VT&#8217;s call stack: copying it into a <code>StackChunk</code>, a regular Java heap object holding an integral number of frames plus an oop bitmap so the GC can find references inside them. On unpark it <strong>thaws</strong> the stack back onto a carrier.</p>
+</div>
+<div class="paragraph">
+<p>Sources: <a href="https://github.com/openjdk/jdk/blob/master/src/hotspot/share/oops/instanceStackChunkKlass.hpp"><code>InstanceStackChunkKlass.hpp</code></a> and <a href="https://github.com/openjdk/jdk/blob/master/src/hotspot/share/runtime/continuationFreezeThaw.cpp"><code>continuationFreezeThaw.cpp</code></a>, from <a href="https://github.com/openjdk/jdk/commit/9583e3657e43cc1c6f2101a64534564db2a9bd84">JDK-8284161</a>.</p>
+</div>
+</div>
+</details>
+<div class="paragraph">
+<p>A heap dump of one run of each kind shows exactly that picture:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 60%;">
+<col style="width: 20%;">
+<col style="width: 20%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">heap dump, 1 GB</th>
+<th class="tableblock halign-left valign-top">unpooled</th>
+<th class="tableblock halign-left valign-top">pooled</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">live virtual threads</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4,473</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">10,017</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">parent + tail pairs</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">24</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>10,024</strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">tail capacity</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">—</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">268 words, same as an unpooled chunk</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">parent capacity</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">—</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">27% at ~270 words; <strong>69% at 750–1,300</strong></p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Every one of the 10,024 parents still holds 8 to 95 words — the entry frames, read out of the JVM by name — and seven in ten were born three to five times bigger than a tail. That size is warm-up code: with C2 disabled (<code>-XX:TieredStopAtLevel=1</code>) the same park freezes 1,184 words instead of 298; in a normal run, frames logged at freeze time are mostly interpreted at 3.8 s, all C1 by 4.2 s, and C2 by 4.4 s, by which point the chunks have stopped being fat. The pool&#8217;s threads are all promoted in those first seconds, and <strong>whatever they were holding then is what they keep</strong>.</p>
+</div>
+<div class="paragraph">
+<p>And it is held whatever the pool is doing: at the instant of the 1 GB dump, half the pooled threads were sitting idle in the pool, and their chunks are the same size as the busy ones'. It is the cost of the pool existing, not working.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_where_the_60_mb_lives">Where the 60 MB Lives</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Sixty megabytes that never die is old-generation occupancy, and the old generation records where the start-up burst — 10,000 connections opening and sending at once — leaves each arm:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">after the start-up burst, 1 GB heap</th>
+<th class="tableblock halign-left valign-top">old gen occupied, of 683 MB</th>
+<th class="tableblock halign-left valign-top">old gen free</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">unpooled</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">367–417 MB</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">266–316 MB</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">pooled</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">436–521 MB</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>162–247 MB</strong></p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>No overlap: pooled ends the burst with 60–100 MB less free old generation, in every run, and holds it for the life of the pool. At 1 GB that cost nothing we could measure.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="title">What we observed on a smaller heap</div>
+<div class="paragraph">
+<p>On a 900 MB heap — 100 MB smaller, everything else identical, GC ergonomics logging on — four of twelve pooled runs went into hundreds of Full GCs (288, 595, 768 and 771), and three of them lost 39–48% of their throughput. None of eight unpooled runs did. In every one of those runs the collector logged, before each Full GC, that it had skipped the young collection because its predicted promotion exceeded the free space in the old generation (<code>-Xlog:gc+ergo=debug</code>, <code>Run full-gc; predicted promotion size &gt;= max free space in old-gen</code>).</p>
+</div>
+<div class="paragraph">
+<p>We saw the same at 1 GB, twice in twelve runs. We can say what the collector did, not why these runs and not their siblings.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_verdict">Verdict</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Pooling buys about 8% less allocation.</strong> Measured in every run, and it moves nothing — young collections, Full GCs, pause and throughput are all inside the spread. What it saves is the cheap thing.</p>
+</li>
+<li>
+<p><strong>It costs about 60 MB of live heap</strong>: one warm-up-sized chunk per pooled thread, 94% empty, held for the life of the pool whether the thread is working or idle. Budget about 6 KB of permanent old-generation heap per pooled thread.</p>
+</li>
+<li>
+<p><strong>That heap is old-generation occupancy</strong>: 60–100 MB less free old gen after start-up, every run. At 1 GB it cost nothing we could measure; at 900 MB a third of pooled runs and no unpooled run fell into hundreds of Full GCs — reported, not explained.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>We tested one pool size, 10,000. The mechanism is per thread, so we would expect the cost to scale with the pool, but we did not measure that.</p>
+</div>
+<div class="paragraph">
+<p>The advice was right. The reason is less dramatic than we expected: pooling saves the thing the collector was already handling for free, and keeps the thing it is not.</p>
+</div>
+<div class="paragraph">
+<p>Thanks to <a href="https://github.com/pchilano">Patricio Chilano Mateo</a>, whose review of the original findings started all of this. The story it turned up is a better one than it replaced.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_references">リファレンス</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://openjdk.org/jeps/444">JEP 444: Virtual Threads</a> — Ron Pressler &amp; Alan Bateman</p>
+</li>
+<li>
+<p><a href="https://github.com/openjdk/loom/pull/228#issuecomment-5529741290">openjdk/loom#228, review comment</a> — Patricio Chilano Mateo&#8217;s questions on the original article</p>
+</li>
+<li>
+<p><a href="https://github.com/openjdk/jdk/commit/9583e3657e43cc1c6f2101a64534564db2a9bd84">JDK-8284161</a> — the commit introducing StackChunk and continuation freeze/thaw</p>
+</li>
+<li>
+<p><a href="https://github.com/openjdk/jdk/blob/master/src/hotspot/share/runtime/continuationFreezeThaw.cpp"><code>continuationFreezeThaw.cpp</code></a> — the freeze/thaw implementation</p>
+</li>
+</ul>
+</div>
+</div>
+</div>          </div>
+          <div class="width-12-12"><div class="share-page">
+  <a class="share-linkedin" href="https://www.linkedin.com/shareArticle?mini=true&url=https://quarkus.io/blog/to-cache-or-not-to-cache-virtual-threads/&title=To Cache or Not to Cache Virtual Threads" rel="nofollow" target="_blank" title="Share on LinkedIn">
+    <i class="fa-brands fa-linkedin fa-xl"></i>
+  </a>
+  <a class="share-x" href="https://x.com/intent/tweet?text=To Cache or Not to Cache Virtual Threads&url=https://quarkus.io/blog/to-cache-or-not-to-cache-virtual-threads/&via=quarkusio&related=quarkusio" rel="nofollow" target="_blank" title="Share on X">
+    <i class="fa-brands fa-square-x-twitter fa-xl"></i>
+  </a>
+  <a class="share-facebook" href="https://facebook.com/sharer.php?u=https://quarkus.io/blog/to-cache-or-not-to-cache-virtual-threads/" rel="nofollow" target="_blank" title="Share on Facebook">
+    <i class="fa-brands fa-square-facebook fa-xl"></i>
+  </a>
+  <a class="share-reddit" href="http://www.reddit.com/submit?url=https://quarkus.io/blog/to-cache-or-not-to-cache-virtual-threads/" onclick="window.open(this.href, 'pop-up', 'left=20,top=20,width=900,height=500,toolbar=1,resizable=0'); return false;" title="Share on Reddit" >
+    <i class="fa-brands fa-square-reddit fa-xl"></i>
+  </a>
+  <a class="share-email" href="mailto:?subject=To Cache or Not to Cache Virtual Threads&amp;body=To Cache or Not to Cache Virtual Threads https://quarkus.io/blog/to-cache-or-not-to-cache-virtual-threads/" title="Share via Email" >
+    <i class="fa-solid fa-envelope fa-xl"></i>
+  </a>
+</div>
+</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="post-page grid-wrapper">
+  <div class="width-8-12 width-12-12-m doc-content">
+  <script src="https://giscus.app/client.js"
+        data-repo="quarkusio/quarkus"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkxMzk5MTQ5MzI="
+        data-category="Quarkus Blog/Website"
+        data-category-id="DIC_kwDOCFbutM4CAFFV"
+        data-mapping="og:title"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        crossorigin="anonymous"
+        async>
+  </script>
+  </div>
+</div>
+  </div>
+
+<div class="content project-footer">
+  <div class="footer-section">
+    <div class="logo-wrapper">
+      <a href="/"><img loading="lazy" src="/assets/images/quarkus_logo_horizontal_rgb_reverse.svg" class="project-logo" title="Quarkus" alt="Quarkus"></a>
+    </div>
+  </div>
+  <div class="grid-wrapper">
+    <p class="grid__item width-3-12">Quarkus is open. All dependencies of this project are available under the <a href='https://www.apache.org/licenses/LICENSE-2.0' target='_blank'>Apache Software License 2.0</a> or compatible license. <i class='fab fa-creative-commons'></i><i class='fab fa-creative-commons-by'></i> <a href='https://creativecommons.org/licenses/by/3.0/' target='_blank'>CC by 3.0</a><br /><br />This website was built with <a href='https://iamroq.dev/' target='_blank'>Roq</a> on Quarkus, is hosted on <a href='https://pages.github.com/' target='_blank'>GitHub Pages</a> and is completely open source. If you want to make it better, <a href='https://github.com/quarkusio/quarkusio.github.io' target='_blank'>fork the website</a> and show us what you’ve got.</p>
+
+      <div class="width-1-12 project-links">
+        <span>ナビゲーション</span>
+        <ul class="footer-links">
+            <li><a href="/" target="_blank">ホーム</a></li>
+            <li><a href="/about" target="_blank">Quarkusについて</a></li>
+            <li><a href="/blog" target="_blank">ブログ</a></li>
+            <li><a href="/insights" target="_blank">ポッドキャスト</a></li>
+            <li><a href="/events" target="_blank">イベント</a></li>
+            <li><a href="/newsletter" target="_blank">ニュースレター</a></li>
+            <li><a href="/userstories" target="_blank">ユーザーストーリー</a></li>
+            <li><a href="https://github.com/orgs/quarkusio/projects/13/views/1" target="_blank">ロードマップ</a></li>
+            <li><a href="/releases" target="_blank">Releases</a></li>
+            <li><a href="/security" target="_blank">セキュリティ&nbsp;ポリシー</a></li>
+            <li><a href="/usage" target="_blank">使用方法</a></li>
+            <li><a href="/brand" target="_blank">ブランド</a></li>
+            <li><a href="/desktopwallpapers" target="_blank">壁紙</a></li>
+            <li><a href="https://www.redhat.com/en/about/privacy-policy" target="_blank">プライバシーポリシー</a></li>
+            <li><a href="/sitemap" target="_blank">Sitemap</a></li>
+        </ul>
+      </div>
+      <div class="width-1-12 project-links">
+        <span>フォローする</span>
+        <ul class="footer-links">
+            <li><a href="https://x.com/quarkusio" target="_blank">X</a></li>
+            <li><a href="https://bsky.app/profile/quarkus.io" target="_blank">Bluesky</a></li>
+            <li><a rel="me" href="https://fosstodon.org/@quarkusio"
+target="_blank">Mastodon</a></li>
+            <li><a href="https://www.threads.com/@quarkusio" target="_blank">Threads</a></li>
+            <li><a href="https://www.facebook.com/quarkusio" target="_blank">Facebook</a></li>
+            <li><a href="https://www.linkedin.com/company/quarkusio/" target="_blank">Linkedin</a></li>
+            <li><a href="https://www.youtube.com/channel/UCaW8QG_QoIk_FnjLgr5eOqg" target="_blank">Youtube</a></li>
+            <li><a href="https://www.tiktok.com/@quarkusio" target="_blank">TikTok</a></li>
+            <li><a href="https://www.instagram.com/quarkusio" target="_blank">Instagram</a></li>
+            <li><a href="https://github.com/quarkusio" target="_blank">GitHub</a></li>
+        </ul>
+      </div>
+      <div class="width-2-12 project-links">
+        <span>ヘルプ</span>
+        <ul class="footer-links">
+            <li><a href="/support" target="_blank">サポート</a></li>
+            <li><a href="/guides" target="_blank">ガイド</a></li>
+            <li><a href="/faq" target="_blank">FAQ</a></li>
+            <li><a href="/get-started" target="_blank">入門</a></li>
+            <li><a href="https://stackoverflow.com/questions/tagged/quarkus" target="_blank">Stack Overflow</a></li>
+            <li><a href="https://github.com/quarkusio/quarkus/discussions" target="_blank">ディスカッション</a></li>
+            <li><a href="https://groups.google.com/forum/#!forum/quarkus-dev" target="_blank">開発メーリングリスト</a></li>
+            <li><a href="https://stats.uptimerobot.com/ze1PfweT2p" target="_blank">Quarkus サービスステータス</a></li>
+        </ul>
+      </div>
+      <div class="width-1-12 project-links">
+        <span>言語</span>
+        <ul class="footer-links">
+            <li><a href=" https://quarkus.io/ " target="_blank">English</a></li>
+            <li><a href="https://pt.quarkus.io/" target="_blank">ポルトガル語 &nbsp;(ブラジル)</a></li>
+            <li><a href=" https://es.quarkus.io/ " target="_blank">Español</a></li>
+            <li><a href="https://cn.quarkus.io/" target="_blank">简体中文</a></li>
+            <li><a href=" https://ja.quarkus.io/ " target="_blank">日本語</a></li>
+        </ul>
+      </div>
+      <div class="width-4-12 more-links">
+        <span>Quarkusはコミュニティプロジェクトで構成されています</span>
+        <ul class="footer-links">
+            <li><a blah href="https://vertx.io/" target="_blank">Eclipse Vert.x</a></li>
+            <li><a blah href="https://smallrye.io" target="_blank">SmallRye</a></li>
+            <li><a blah href="https://hibernate.org" target="_blank">Hibernate ORM</a></li>
+            <li><a blah href="https://netty.io" target="_blank">Netty</a></li>
+            <li><a blah href="https://resteasy.github.io" target="_blank">RESTEasy</a></li>
+            <li><a blah href="https://camel.apache.org" target="_blank">Apache Camel</a></li>
+            <li><a blah href="https://microprofile.io" target="_blank">Eclipse MicroProfile</a></li>
+            <li><a blah href="https://code.quarkus.io/" target="_blank">その他多数...</a></li>
+        </ul>
+      </div>
+  </div>
+</div>
+<div class="content cf-footer">
+  <div class="flexcontainer">
+    <div class="cf-logo">
+      <a class="cf-logo" href="https://www.commonhaus.org/" target="_blank"><img loading="lazy" src="https://raw.githubusercontent.com/commonhaus/artwork/main/foundation/brand/svg/CF_logo_horizontal_single_reverse.svg" alt="Commonhaus Foundation logo"/></a>
+    </div>
+    <div class="license">
+      Copyright © <a href="/">Quarkus</a>. All rights reserved. For details on our
+trademarks, please visit our <a
+href="https://www.commonhaus.org/policies/trademark-policy/">Trademark
+Policy</a> and <a href="https://www.commonhaus.org/trademarks/">Trademark
+List</a>. Trademarks of third parties are owned by their respective holders
+and their mention here does not suggest any endorsement or association.
+    </div>
+  </div>
+</div>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js" integrity="sha384-8gBf6Y4YYq7Jx97PIqmTwLPin4hxIzQw5aDmUg/DDhul9fFpbbLcLh3nTIIDJKhx" crossorigin="anonymous"></script>
+  <script type="text/javascript" src="/assets/javascript/mobile-nav.js"></script>
+  <script type="text/javascript" src="/assets/javascript/scroll-down.js"></script>
+  <script src="/guides/javascript/config.js" type="text/javascript"></script>
+  <script src="/assets/javascript/guides-version-dropdown.js" type="text/javascript"></script>
+  <script src="/assets/javascript/guide-nav-drawer.js" type="text/javascript"></script>
+  <script src="/assets/javascript/guide-toc-scroll.js" type="text/javascript"></script>
+  <script src="/assets/javascript/back-to-top.js" type="text/javascript"></script>
+  <script src="/assets/javascript/clipboard.min.js" type="text/javascript"></script>
+  <script src="/assets/javascript/copy.js" type="text/javascript"></script>
+  <script src="/assets/javascript/asciidoc-tabs.js" type="text/javascript"></script>
+  <script src="/assets/javascript/future-date.js" type="text/javascript"></script>
+  <script src="/assets/javascript/randomize.js" type="text/javascript"></script>
+  <script src="/assets/javascript/time.js" type="text/javascript"></script>
+</body>
+
+</html>
