@@ -1,0 +1,283 @@
+msgid ""
+msgstr ""
+"Language: ja_JP\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: roq-plugin-l10n-adoc\n"
+
+msgid "Creating the extension"
+msgstr ""
+
+msgid ""
+"From time to time, I see tweets or articles claiming they don't see the "
+"point of Quarkus because \"who needs fast startup?\", \"I have plenty of "
+"memory\" or \"what is the point of live reload?\"."
+msgstr ""
+
+msgid ""
+"I could write an article debunking these arguments and explain how the "
+"latter makes your development workflow much more efficient and how the "
+"former makes the latter possible, even if fast boots are not your thing.\n"
+"But for the sake of this blog post, let's admit these persons are absolutely "
+"right and these are not good reasons to use Quarkus."
+msgstr ""
+
+msgid ""
+"So now what? Back to `<insert your favorite framework here>`? Not so fast..."
+msgstr ""
+
+msgid ""
+"Quarkus didn't achieve fast startup and low memory footprint by using dark "
+"magic or lazy loading tricks but by entirely rethinking the way Java "
+"applications are bootstrapped.\n"
+"The whole point of Quarkus is to move as much work as possible to the build "
+"time and this journey made us create a framework to push work at build time "
+"that can be leveraged in Quarkus extensions."
+msgstr ""
+
+msgid "A Quarkus extension? That sounds like a lot of work?"
+msgstr ""
+
+msgid ""
+"No, really, it is not.\n"
+"You can develop your own extensions very easily and they can solve some out "
+"of the ordinary problems in a very simple way."
+msgstr ""
+
+msgid ""
+"Last week, one of of our users (hey, Juan!) asked this question on Zulip:"
+msgstr ""
+
+msgid ""
+"Hi! I'm trying to understand how to find classes with some criteria and add "
+"them to the dependency injection context, for example: I want to find all "
+"classes whose name ends with \"MessageTransformer\" and add them to the "
+"context, I want to find those classes in an external library, so I can't add "
+"annotations to them."
+msgstr ""
+
+msgid ""
+"Let's see how we can solve this issue by developing a custom extension."
+msgstr ""
+
+msgid "Creating the extension is as simple as:"
+msgstr ""
+
+msgid ""
+"It will ask for a `groupId` - let's keep the default `org.acme` - and an "
+"extension id - I went for `message-transformers-as-beans`."
+msgstr ""
+
+msgid "Then you can import your new extension into your favorite IDE."
+msgstr ""
+
+msgid "Structure of the extension"
+msgstr ""
+
+msgid ""
+"There is a lot to say about extensions but, in the context of this blog "
+"post, we will keep it short.\n"
+"The extension is composed of three Maven modules:"
+msgstr ""
+
+msgid "The parent module - nothing to see here"
+msgstr ""
+
+msgid "The deployment module - this is the one of interest for our blog post"
+msgstr ""
+
+msgid "The runtime module - in this blog post, we won't modify it"
+msgstr ""
+
+msgid ""
+"Let's keep it simple: the deployment module is what will be used at build "
+"time, the runtime module is what will be used at runtime."
+msgstr ""
+
+msgid ""
+"In our case, we want to declare new beans and this is something we do at "
+"build time, so deployment module, here we come!"
+msgstr ""
+
+msgid "Processors and build steps"
+msgstr ""
+
+msgid ""
+"If you have a look at your `deployment` module, you will see a "
+"`MessageTransformersAsBeansProcessor` and you can see a method annotated "
+"with the `@BuildStep` annotation in it."
+msgstr ""
+
+msgid ""
+"Quarkus build is populated by these build steps and they are following a "
+"consumer/producer model with dependency injection.\n"
+"The items being consumed and produced are called ``BuildItem``s."
+msgstr ""
+
+msgid ""
+"The build step that is automatically generated is easy to understand.\n"
+"It produces a `FeatureBuildItem` which will be consumed by Quarkus startup "
+"and you will see the extension name in the list displayed by Quarkus at "
+"startup:"
+msgstr ""
+
+msgid "The Jandex index"
+msgstr ""
+
+msgid ""
+"Now that we are done with the scaffolding, let's think a bit about what we "
+"want to achieve:\n"
+"we need to find all the classes in a given package whose name ends with "
+"`MessageTransformer`."
+msgstr ""
+
+msgid ""
+"An important assumption of Quarkus is that the application lives in a closed "
+"world.\n"
+"You cannot dynamically add a jar at runtime to your Quarkus application and "
+"expect it to work."
+msgstr ""
+
+msgid ""
+"While it can be seen as a limitation, it opens all sorts of possibilities,\n"
+"one of which is the ability to index the classes and their annotations to "
+"easily look them up."
+msgstr ""
+
+msgid ""
+"This index, based on https://github.com/wildfly/jandex[Jandex], is a very "
+"important part of the Quarkus bootstrap."
+msgstr ""
+
+msgid ""
+"The Jandex index doesn't contain all the classes around but is, by default, "
+"limited to the application classes and the dependencies containing either a "
+"pre-built index or an empty `META-INF/beans.xml`."
+msgstr ""
+
+msgid ""
+"In our case, we want to list the classes of an external dependency so we "
+"will need to add them to the index.\n"
+"We can do that very easily by adding a build step to "
+"`MessageTransformersAsBeansProcessor`:"
+msgstr ""
+
+msgid ""
+"This will add the content of the `my.group.id:my-artifact-id` jar to the "
+"index."
+msgstr ""
+
+msgid "Declaring additional beans"
+msgstr ""
+
+msgid "Now that we have our classes indexed, we want to make them CDI beans."
+msgstr ""
+
+msgid "This can be achieved by adding another build step:"
+msgstr ""
+
+msgid "Consume the Jandex index"
+msgstr ""
+
+msgid "Inject the additional beans producer"
+msgstr ""
+
+msgid "Get all known classes from the index"
+msgstr ""
+
+msgid "Filter out abstract classes"
+msgstr ""
+
+msgid "Get the FQCN of the class"
+msgstr ""
+
+msgid "Only keep classes from the root package we target"
+msgstr ""
+
+msgid "Only keep ``MessageTransformer``s"
+msgstr ""
+
+msgid "Produce an `AdditionalBeanBuildItem`"
+msgstr ""
+
+msgid ""
+"Make the beans unremovable to prevent ArC from removing the beans if they "
+"are only programatically consumed"
+msgstr ""
+
+msgid ""
+"Set the default scope to `@ApplicationScoped` - can be any CDI scope of your "
+"preference"
+msgstr ""
+
+msgid ""
+"With this build step, any non-abstract class from our root package `my."
+"package` whose name ends with `MessageTransformer`\n"
+"will be made an `@ApplicationScoped` CDI bean."
+msgstr ""
+
+msgid ""
+"Cherry on top, all this work is done at build time and you don't need to "
+"scan your entire classpath at runtime."
+msgstr ""
+
+msgid ""
+"Usually, we look up classes in the index with an interface, a superclass or "
+"an annotation.\n"
+"It is less brittle and faster than crawling the whole index and filter by "
+"name."
+msgstr ""
+
+msgid ""
+"But the point here was to do with the constraints of the user and it wasn't "
+"an option to adapt the external dependency."
+msgstr ""
+
+msgid "That&#8217;s all, folks!"
+msgstr ""
+
+msgid ""
+"Obviously, this is a very simple example and you can do much more complex "
+"things with a Quarkus extension."
+msgstr ""
+
+msgid ""
+"But the whole point of this blog post was to demonstrate that you can easily "
+"leverage our extension framework to solve real-life issues.\n"
+"And **in ~10 minutes of coding, our problem is gone**."
+msgstr ""
+
+msgid "Next one?"
+msgstr ""
+
+msgid "Come Join Us"
+msgstr ""
+
+msgid ""
+"We value your feedback a lot so please report bugs, ask for improvements... "
+"Let's build something great together!"
+msgstr ""
+
+msgid ""
+"If you are a Quarkus user or just curious, don't be shy and join our "
+"welcoming community:"
+msgstr ""
+
+msgid ""
+"provide feedback on https://github.com/quarkusio/quarkus/issues[GitHub];"
+msgstr ""
+
+msgid ""
+"craft some code and https://github.com/quarkusio/quarkus/pulls[push a PR];"
+msgstr ""
+
+msgid ""
+"discuss with us on https://quarkusio.zulipchat.com/[Zulip] and on the https:/"
+"/groups.google.com/d/forum/quarkus-dev[mailing list];"
+msgstr ""
+
+msgid ""
+"ask your questions on https://stackoverflow.com/questions/tagged/"
+"quarkus[Stack Overflow]."
+msgstr ""
