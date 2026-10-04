@@ -1,0 +1,677 @@
+msgid ""
+msgstr ""
+"Language: ja_JP\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: roq-plugin-l10n-adoc\n"
+
+msgid "Using Reactive Routes"
+msgstr ""
+
+msgid ""
+"Reactive routes propose an alternative approach to implement HTTP endpoints "
+"where you declare and chain _routes_.\n"
+"This approach became very popular in the JavaScript world, with frameworks "
+"like Express.Js or Hapi.\n"
+"Quarkus also offers the possibility to use reactive routes.\n"
+"You can implement REST API with routes only or combine them with Jakarta "
+"REST resources and servlets."
+msgstr ""
+
+msgid ""
+"The code presented in this guide is available in this {quickstarts-base-"
+"url}[GitHub repository] under the link:{quickstarts-tree-url}/reactive-"
+"routes-quickstart[`reactive-routes-quickstart` directory]"
+msgstr ""
+
+msgid "Quarkus HTTP"
+msgstr ""
+
+msgid ""
+"Before going further, let's have a look at the HTTP layer of Quarkus.\n"
+"Quarkus HTTP support is based on a non-blocking and reactive engine (Eclipse "
+"Vert.x and Netty).\n"
+"All the HTTP requests your application receive are handled by _event loops_ "
+"(I/O Thread) and then are routed towards the code that manages the request.\n"
+"Depending on the destination, it can invoke the code managing the request on "
+"a worker thread (Servlet, Jax-RS) or use the IO Thread (reactive route).\n"
+"Note that because of this, a reactive route must be non-blocking or "
+"explicitly declare its blocking nature (which would result by being called "
+"on a worker thread)."
+msgstr ""
+
+msgid "image:http-architecture.png[alt=Quarkus HTTP Architecture]"
+msgstr ""
+
+msgid ""
+"See the xref:quarkus-reactive-architecture.adoc[Quarkus Reactive "
+"Architecture documentation] for further details on this topic."
+msgstr ""
+
+msgid "Declaring reactive routes"
+msgstr ""
+
+msgid ""
+"The first way to use reactive routes is to use the `@Route` annotation.\n"
+"To have access to this annotation, you need to add the `quarkus-reactive-"
+"routes` extension by running this command:"
+msgstr ""
+
+msgid "This will add the following to your build file:"
+msgstr ""
+
+msgid "Then in a _bean_, you can use the `@Route` annotation as follows:"
+msgstr ""
+
+msgid ""
+"If there is a reactive route found on a class with no scope annotation then "
+"`@jakarta.inject.Singleton` is added automatically."
+msgstr ""
+
+msgid ""
+"The `@Route` annotation indicates that the method is a reactive route. "
+"Again, by default, the code contained in the method must not block."
+msgstr ""
+
+msgid ""
+"The method gets a https://vertx.io/docs/apidocs/io/vertx/ext/web/"
+"RoutingContext.html[`RoutingContext`] as a parameter. From the "
+"`RoutingContext` you can retrieve the HTTP request (using `request()`) and "
+"write the response using `response().end(...)`."
+msgstr ""
+
+msgid ""
+"If the annotated method does not return `void` the arguments are optional."
+msgstr ""
+
+msgid ""
+"`RoutingExchange` is a convenient wrapper of `RoutingContext` which provides "
+"some useful methods."
+msgstr ""
+
+msgid ""
+"The `RoutingExchange` is used to retrieve the request query parameter `name`."
+""
+msgstr ""
+
+msgid ""
+"The path defines a parameter `name` which can be injected inside the method "
+"parameters using the annotation `@Param`."
+msgstr ""
+
+msgid ""
+"More details about using the `RoutingContext` is available in the https://"
+"vertx.io/docs/vertx-web/java/[Vert.x Web documentation]."
+msgstr ""
+
+msgid "The `@Route` annotation allows you to configure:"
+msgstr ""
+
+msgid ""
+"The `path` - for routing by path, using the https://vertx.io/docs/vertx-web/"
+"java/#_capturing_path_parameters[Vert.x Web format]"
+msgstr ""
+
+msgid ""
+"The `regex` - for routing with regular expressions, see https://vertx.io/"
+"docs/vertx-web/java/#_routing_with_regular_expressions[for more details]"
+msgstr ""
+
+msgid ""
+"The `methods` - the HTTP verbs triggering the route such as `GET`, `POST`..."
+msgstr ""
+
+msgid ""
+"The `type` - it can be _normal_ (non-blocking), _blocking_ (method "
+"dispatched on a worker thread), or _failure_ to indicate that this route is "
+"called on failures"
+msgstr ""
+
+msgid ""
+"The `order` - the order of the route when several routes are involved in "
+"handling the incoming request.\n"
+"Must be positive for regular user routes."
+msgstr ""
+
+msgid "The produced and consumed mime types using `produces`, and `consumes`"
+msgstr ""
+
+msgid "For instance, you can declare a blocking route as follows:"
+msgstr ""
+
+msgid ""
+"Alternatively, you can use `@io.smallrye.common.annotation.Blocking` and "
+"omit the `type = Route.HandlerType.BLOCKING`:"
+msgstr ""
+
+msgid ""
+"When `@Blocking` is used, the `type` attribute of the `@Route` is ignored."
+msgstr ""
+
+msgid ""
+"The `@Route` annotation is repeatable and so you can declare several routes "
+"for a single method:"
+msgstr ""
+
+msgid "Each route can use different paths, methods..."
+msgstr ""
+
+msgid ""
+"If no content-type header is set, then we will try to use the most "
+"acceptable content type by matching the accept header with the value of the "
+"`Route` produces attribute as defined by `io.vertx.ext.web.RoutingContext."
+"getAcceptableContentType()`."
+msgstr ""
+
+msgid ""
+"If the `accept` header matches `text/html`, we set the content type "
+"automatically to `text/html`."
+msgstr ""
+
+msgid "Executing route on a virtual thread"
+msgstr ""
+
+msgid ""
+"You can annotate a route method with `@io.smallrye.common.annotation."
+"RunOnVirtualThread` in order to execute it on a virtual thread.\n"
+"However, keep in mind that not everything can run safely on virtual threads.\n"
+"You should read the xref:virtual-threads.adoc#run-code-on-virtual-threads-"
+"using-runonvirtualthread[Virtual thread support reference] carefully and get "
+"acquainted with all the details."
+msgstr ""
+
+msgid "Handling conflicting routes"
+msgstr ""
+
+msgid ""
+"You may end up with multiple routes matching a given path.\n"
+"In the following example, both route matches `/accounts/me`:"
+msgstr ""
+
+msgid ""
+"As a consequence, the result is not the expected one as the first route is "
+"called with the path parameter `id` set to `me`.\n"
+"To avoid the conflict, use the `order` attribute:"
+msgstr ""
+
+msgid ""
+"By giving a lower order to the second route, it gets evaluated first.\n"
+"If the request path matches, it is invoked, otherwise the other routes are "
+"evaluated."
+msgstr ""
+
+msgid "<code>@RouteBase</code>"
+msgstr ""
+
+msgid ""
+"This annotation can be used to configure some defaults for reactive routes "
+"declared on a class."
+msgstr ""
+
+msgid ""
+"The `path` value is used as a prefix for any route method declared on the "
+"class where `Route#path()` is used."
+msgstr ""
+
+msgid ""
+"The value of `produces()` is used for content-based routing for all routes "
+"where `Route#produces()` is empty."
+msgstr ""
+
+msgid "Reactive Route Methods"
+msgstr ""
+
+msgid ""
+"A route method must be a non-private non-static method of a CDI bean.\n"
+"If the annotated method returns `void` then it has to accept at least one "
+"argument - see the supported types below.\n"
+"If the annotated method does not return `void` then the arguments are "
+"optional."
+msgstr ""
+
+msgid "A route method can accept arguments of the following types:"
+msgstr ""
+
+msgid "`io.vertx.ext.web.RoutingContext`"
+msgstr ""
+
+msgid "`io.quarkus.vertx.web.RoutingExchange`"
+msgstr ""
+
+msgid "`io.vertx.core.http.HttpServerRequest`"
+msgstr ""
+
+msgid "`io.vertx.core.http.HttpServerResponse`"
+msgstr ""
+
+msgid "`io.vertx.mutiny.core.http.HttpServerRequest`"
+msgstr ""
+
+msgid "`io.vertx.mutiny.core.http.HttpServerResponse`"
+msgstr ""
+
+msgid ""
+"Furthermore, it is possible to inject the `HttpServerRequest` parameters "
+"into method parameters annotated with `@io.quarkus.vertx.web.Param` using "
+"the following types:"
+msgstr ""
+
+msgid "Parameter Type"
+msgstr ""
+
+msgid "Obtained via"
+msgstr ""
+
+msgid "`java.lang.String`"
+msgstr ""
+
+msgid "`routingContext.request().getParam()`"
+msgstr ""
+
+msgid "`java.util.Optional<String>`"
+msgstr ""
+
+msgid "`java.util.List<String>`"
+msgstr ""
+
+msgid "`routingContext.request().params().getAll()`"
+msgstr ""
+
+msgid ""
+"The `HttpServerRequest` headers can be injected into method parameters "
+"annotated with `@io.quarkus.vertx.web.Header` using the following types:"
+msgstr ""
+
+msgid "`routingContext.request().getHeader()`"
+msgstr ""
+
+msgid "`routingContext.request().headers().getAll()`"
+msgstr ""
+
+msgid ""
+"The request body can be injected into a method parameter annotated with `@io."
+"quarkus.vertx.web.Body` using the following types:"
+msgstr ""
+
+msgid "`routingContext.getBodyAsString()`"
+msgstr ""
+
+msgid "`io.vertx.core.buffer.Buffer`"
+msgstr ""
+
+msgid "`routingContext.getBody()`"
+msgstr ""
+
+msgid "`io.vertx.core.json.JsonObject`"
+msgstr ""
+
+msgid "`routingContext.getBodyAsJson()`"
+msgstr ""
+
+msgid "`io.vertx.core.json.JsonArray`"
+msgstr ""
+
+msgid "`routingContext.getBodyAsJsonArray()`"
+msgstr ""
+
+msgid "any other type"
+msgstr ""
+
+msgid "`routingContext.getBodyAsJson().mapTo(MyPojo.class)`"
+msgstr ""
+
+msgid ""
+"A failure handler can declare a single method parameter whose type extends "
+"`Throwable`.\n"
+"The type of the parameter is used to match the result of "
+"`RoutingContext#failure()`."
+msgstr ""
+
+msgid "Returning Unis"
+msgstr ""
+
+msgid "In a reactive route, you can return a `Uni` directly:"
+msgstr ""
+
+msgid "Returning `Unis` is convenient when using a reactive client:"
+msgstr ""
+
+msgid "The item produced by the returned `Uni` can be:"
+msgstr ""
+
+msgid "A string - written into the HTTP response directly."
+msgstr ""
+
+msgid ""
+"A `io.vertx.core.buffer.Buffer` - written into the HTTP response directly."
+msgstr ""
+
+msgid ""
+"An object - written into the HTTP response after having been encoded into "
+"JSON.\n"
+"The `content-type` header is set to `application/json` if not already set."
+msgstr ""
+
+msgid ""
+"If the returned `Uni` produces a failure (or is `null`), an HTTP 500 "
+"response is written."
+msgstr ""
+
+msgid "Returning a `Uni<Void>` produces a 204 response (no content)."
+msgstr ""
+
+msgid "Returning results"
+msgstr ""
+
+msgid "You can also return a result directly:"
+msgstr ""
+
+msgid ""
+"Be aware, the processing must be **non-blocking** as reactive routes are "
+"invoked on the IO Thread.\n"
+"Otherwise, set the `type` attribute of the `@Route` annotation to `Route."
+"HandlerType.BLOCKING`, or use the `@io.smallrye.common.annotation.Blocking` "
+"annotation."
+msgstr ""
+
+msgid "The method can return:"
+msgstr ""
+
+msgid "Returning Multis"
+msgstr ""
+
+msgid ""
+"A reactive route can return a `Multi`.\n"
+"The items are written one by one, in the response.\n"
+"The response `Transfer-Encoding` header is set to `chunked`."
+msgstr ""
+
+msgid "Produces `helloworld!`"
+msgstr ""
+
+msgid ""
+"A `Multi<String>` - the items are written one by one (one per _chunk_) in "
+"the response."
+msgstr ""
+
+msgid ""
+"A `Multi<Buffer>` - the buffers are written one by one (one per _chunk_) "
+"without any processing."
+msgstr ""
+
+msgid ""
+"A `Multi<Object>` - the items are encoded to JSON written one by one in the "
+"response."
+msgstr ""
+
+msgid "The previous snippet produces:"
+msgstr ""
+
+msgid "Streaming JSON Array items"
+msgstr ""
+
+msgid ""
+"You can return a `Multi` to produce a JSON Array, where every item is an "
+"item from this array.\n"
+"The response is written item by item to the client.\n"
+"To do that set the `produces` attribute to `\"application/json\"` (or "
+"`ReactiveRoutes.APPLICATION_JSON`)."
+msgstr ""
+
+msgid ""
+"Only `Multi<String>`, `Multi<Object>` and `Multi<Void>` can be written into "
+"the JSON Array.\n"
+"Using a `Multi<Void>` produces an empty array.\n"
+"You cannot use `Multi<Buffer>`.\n"
+"If you need to use `Buffer`, transform the content into a JSON or String "
+"representation first."
+msgstr ""
+
+msgid "Deprecation of <code>asJsonArray</code>"
+msgstr ""
+
+msgid ""
+"The `ReactiveRoutes.asJsonArray` has been deprecated as it is not compatible "
+"with the security layer of Quarkus."
+msgstr ""
+
+msgid "Event Stream and Server-Sent Event support"
+msgstr ""
+
+msgid ""
+"You can return a `Multi` to produce an event source (stream of server sent "
+"events).\n"
+"To enable this feature, set the `produces` attribute to `\"text/event-"
+"stream\"` (or `ReactiveRoutes.EVENT_STREAM`), such as in:"
+msgstr ""
+
+msgid "This method would produce:"
+msgstr ""
+
+msgid ""
+"You can also implement the `io.quarkus.vertx.web.ReactiveRoutes."
+"ServerSentEvent` interface to customize the `event` and `id` section of the "
+"server sent event:"
+msgstr ""
+
+msgid "Using a `Multi<PersonEvent>` would produce:"
+msgstr ""
+
+msgid "Deprecation of <code>asEventStream</code>"
+msgstr ""
+
+msgid ""
+"The `ReactiveRoutes.asEventStream` has been deprecated as it is not "
+"compatible with the security layer of Quarkus."
+msgstr ""
+
+msgid "Json Stream in NDJSON format"
+msgstr ""
+
+msgid ""
+"You can return a `Multi` to produce a newline delimited stream of JSON "
+"values.\n"
+"To enable this feature, set the `produces` attribute of the `@Route` "
+"annotation to `\"application/x-ndjson\"` (or `ReactiveRoutes.ND_JSON`):"
+msgstr ""
+
+msgid ""
+"You can also provide strings instead of objects, in that case the strings "
+"will be wrapped in quotes to become valid JSON values:"
+msgstr ""
+
+msgid "Deprecation of <code>asJsonStream</code>"
+msgstr ""
+
+msgid ""
+"The `ReactiveRoutes.asJsonStream` has been deprecated as it is not "
+"compatible with the security layer of Quarkus."
+msgstr ""
+
+msgid "Using Bean Validation"
+msgstr ""
+
+msgid ""
+"You can combine reactive routes and Bean Validation.\n"
+"First, don't forget to add the `quarkus-hibernate-validator` extension to "
+"your project.\n"
+"Then, you can add constraints to your route parameter (annotated with "
+"`@Param` or `@Body`):"
+msgstr ""
+
+msgid ""
+"If the parameters do not pass the tests, it returns an HTTP 400 response.\n"
+"If the request accepts JSON payload, the response follows the https://"
+"opensource.zalando.com/problem/constraint-violation/[Problem] format."
+msgstr ""
+
+msgid ""
+"When returning an object or a `Uni`, you can also use the `@Valid` "
+"annotation:"
+msgstr ""
+
+msgid ""
+"If the item produced by the route does not pass the validation, it returns "
+"an HTTP 500 response.\n"
+"If the request accepts JSON payload, the response follows the https://"
+"opensource.zalando.com/problem/constraint-violation/[Problem] format."
+msgstr ""
+
+msgid ""
+"Note that only `@Valid` is supported on the return type.\n"
+"The returned class can use any constraint.\n"
+"In the case of `Uni`, it checks the item produced asynchronously."
+msgstr ""
+
+msgid "Using the Vert.x Web Router"
+msgstr ""
+
+msgid ""
+"You can also register your route directly on the _HTTP routing layer_ by "
+"registering routes directly on the `Router` object.\n"
+"To retrieve the `Router` instance at startup:"
+msgstr ""
+
+msgid ""
+"Check the https://vertx.io/docs/vertx-web/java/"
+"#_basic_vert_x_web_concepts[Vert.x Web documentation] to know more about the "
+"route registration, options, and available handlers."
+msgstr ""
+
+msgid ""
+"`Router` access is provided by the `quarkus-vertx-http` extension.\n"
+"If you use `quarkus-rest` or `quarkus-reactive-routes`, the extension will "
+"be added automatically."
+msgstr ""
+
+msgid ""
+"You can also receive the Mutiny variant of the Router (`io.vertx.mutiny.ext."
+"web.Router`):"
+msgstr ""
+
+msgid "Intercepting HTTP requests"
+msgstr ""
+
+msgid ""
+"You can also register filters that would intercept incoming HTTP requests.\n"
+"Note that these filters are also applied for servlets, Jakarta REST "
+"resources, and reactive routes."
+msgstr ""
+
+msgid ""
+"For example, the following code snippet registers a filter adding an HTTP "
+"header:"
+msgstr ""
+
+msgid ""
+"The `RouteFilter#value()` defines the priority used to sort the filters - "
+"filters with higher priority are called first."
+msgstr ""
+
+msgid ""
+"The filter is likely required to call the `next()` method to continue the "
+"chain."
+msgstr ""
+
+msgid "HTTP Compression"
+msgstr ""
+
+msgid ""
+"The body of an HTTP response is not compressed by default.\n"
+"You can enable the HTTP compression support by means of `quarkus.http.enable-"
+"compression=true`."
+msgstr ""
+
+msgid ""
+"If compression support is enabled then the response body is compressed if:"
+msgstr ""
+
+msgid ""
+"the route method is annotated with `@io.quarkus.vertx.http.Compressed`, or"
+msgstr ""
+
+msgid ""
+"the `Content-Type` header is set and the value is a compressed media type as "
+"configured via `quarkus.http.compress-media-types`."
+msgstr ""
+
+msgid "The response body is never compressed if:"
+msgstr ""
+
+msgid ""
+"the route method is annotated with `@io.quarkus.vertx.http.Uncompressed`, or"
+msgstr ""
+
+msgid "the `Content-Type` header is not set."
+msgstr ""
+
+msgid "Adding OpenAPI and Swagger UI"
+msgstr ""
+
+msgid ""
+"You can add support for link:https://www.openapis.org/[OpenAPI] and link:"
+"https://swagger.io/tools/swagger-ui/[Swagger UI] by using the `quarkus-"
+"smallrye-openapi` extension."
+msgstr ""
+
+msgid "Add the extension by running this command:"
+msgstr ""
+
+msgid ""
+"This is enough to generate a basic OpenAPI schema document from your Vert.x "
+"Routes:"
+msgstr ""
+
+msgid "You will see the generated OpenAPI schema document:"
+msgstr ""
+
+msgid "Also see xref:openapi-swaggerui.adoc[the OpenAPI Guide]."
+msgstr ""
+
+msgid "Adding MicroProfile OpenAPI Annotations"
+msgstr ""
+
+msgid ""
+"You can use link:https://github.com/eclipse/microprofile-open-"
+"api[MicroProfile OpenAPI] to better document your schema,\n"
+"for instance, adding header info, or specifying the return type on `void` "
+"methods might be useful:"
+msgstr ""
+
+msgid "Header information about your API."
+msgstr ""
+
+msgid "Defining the response."
+msgstr ""
+
+msgid "This will generate this OpenAPI schema:"
+msgstr ""
+
+msgid "Using Swagger UI"
+msgstr ""
+
+msgid ""
+"Swagger UI is included by default when running in `dev` or `test` mode, and "
+"can optionally be added to `prod` mode.\n"
+"For more information, see the <<openapi-swaggerui.adoc#dev-mode,Swagger UI>> "
+"guide."
+msgstr ""
+
+msgid ""
+"Navigate to link:http://localhost:8080/q/swagger-ui/[localhost:8080/q/"
+"swagger-ui/] and observe the Swagger UI screen:"
+msgstr ""
+
+msgid "image:reactive-routes-guide-screenshot01.png[alt=Swagger UI]"
+msgstr ""
+
+msgid "Conclusion"
+msgstr ""
+
+msgid ""
+"This guide has introduced how you can use reactive routes to define an HTTP "
+"endpoint.\n"
+"It also describes the structure of the Quarkus HTTP layer and how to write "
+"filters."
+msgstr ""

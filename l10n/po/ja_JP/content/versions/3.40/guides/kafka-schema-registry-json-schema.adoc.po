@@ -1,0 +1,529 @@
+msgid ""
+msgstr ""
+"Language: ja_JP\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: roq-plugin-l10n-adoc\n"
+
+msgid "Using Apache Kafka with Schema Registry and JSON Schema"
+msgstr ""
+
+msgid ""
+"This guide shows how your Quarkus application can use Apache Kafka, https://"
+"json-schema.org/[JSON Schema] serialized\n"
+"records, and connect to a schema registry (such as the https://docs."
+"confluent.io/platform/current/schema-registry/index.html[Confluent Schema "
+"Registry] or https://www.apicur.io/registry/[Apicurio Registry])."
+msgstr ""
+
+msgid ""
+"If you are not familiar with Kafka and Kafka in Quarkus in particular, "
+"consider\n"
+"first going through the xref:kafka.adoc[Using Apache Kafka with Reactive "
+"Messaging] guide."
+msgstr ""
+
+msgid "Prerequisites"
+msgstr ""
+
+msgid "To complete this guide, you need:"
+msgstr ""
+
+msgid "Roughly {prerequisites-time}"
+msgstr ""
+
+msgid "An IDE"
+msgstr ""
+
+msgid "JDK 17+ installed with `JAVA_HOME` configured appropriately"
+msgstr ""
+
+msgid "Apache Maven {maven-version}"
+msgstr ""
+
+msgid ""
+"Docker and Docker Compose or xref:podman.adoc[Podman], and Docker Compose"
+msgstr ""
+
+msgid ""
+"Optionally the xref:cli-tooling.adoc[Quarkus CLI] if you want to use it"
+msgstr ""
+
+msgid ""
+"Optionally Mandrel or GraalVM installed and xref:building-native-image."
+"adoc#configuring-graalvm[configured appropriately] if you want to build a "
+"native executable (or Docker if you use a native container build)"
+msgstr ""
+
+msgid "Architecture"
+msgstr ""
+
+msgid ""
+"In this guide we are going to implement a REST resource, namely "
+"`MovieResource`, that\n"
+"will consume movie DTOs and put them in a Kafka topic."
+msgstr ""
+
+msgid ""
+"Then, we will implement a consumer that will consume and collect messages "
+"from the same topic.\n"
+"The collected messages will be then exposed by another resource, "
+"`ConsumedMovieResource`, via\n"
+"https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/"
+"Using_server-sent_events[Server-Sent Events]."
+msgstr ""
+
+msgid ""
+"The _Movies_ will be serialized and deserialized using JSON Schema.\n"
+"The schema, describing the _Movie_, is stored in Apicurio Registry.\n"
+"The same concept applies if you are using the Confluent JSON Schema _serde_ "
+"and Confluent Schema Registry."
+msgstr ""
+
+msgid "Solution"
+msgstr ""
+
+msgid ""
+"Follow the instructions in the next sections to create the application step "
+"by step."
+msgstr ""
+
+msgid "Creating the Maven Project"
+msgstr ""
+
+msgid ""
+"First, we need a new project. Create a new project with the following "
+"command:"
+msgstr ""
+
+msgid "CLI"
+msgstr ""
+
+msgid ""
+"To create a Gradle project, add the `--gradle` or `--gradle-kotlin-dsl` "
+"option."
+msgstr ""
+
+msgid ""
+"For more information about how to install and use the Quarkus CLI, see the "
+"xref:cli-tooling.adoc[Quarkus CLI] guide."
+msgstr ""
+
+msgid "Maven"
+msgstr ""
+
+msgid ""
+"To create a Gradle project, add the `-DbuildTool=gradle` or `-DbuildTool="
+"gradle-kotlin-dsl` option."
+msgstr ""
+
+msgid "For Windows users:"
+msgstr ""
+
+msgid ""
+"If using cmd, (don't use backward slash `\\` and put everything on the same "
+"line)"
+msgstr ""
+
+msgid ""
+"If using Powershell, wrap `-D` parameters in double quotes e.g. `\"-"
+"DprojectArtifactId={create-app-artifact-id}\"`"
+msgstr ""
+
+msgid ""
+"If you use Confluent Schema Registry, you don't need the `quarkus-apicurio-"
+"registry-json-schema` extension.\n"
+"Instead, you need the `quarkus-confluent-registry-json-schema` extension and "
+"a few more dependencies.\n"
+"See <<confluent>> for details."
+msgstr ""
+
+msgid "Json Schema"
+msgstr ""
+
+msgid ""
+"Json Schema is a data serialization system. Data structures are described "
+"using schemas.\n"
+"The first thing we need to do is to create a schema describing the `Movie` "
+"structure.\n"
+"Create a file called `src/main/resources/json-schema.json` with the schema "
+"for our record (Kafka message):"
+msgstr ""
+
+msgid ""
+"Note that auto-generating the Java class from the JSON Schema definition is "
+"not possible. Therefore, you must define the Java class as follows so it can "
+"be used by the serialization process:"
+msgstr ""
+
+msgid "The <code>Movie</code> producer"
+msgstr ""
+
+msgid ""
+"Having defined the schema, we can now jump to implementing the "
+"`MovieResource`."
+msgstr ""
+
+msgid ""
+"Let's open the `MovieResource`, inject an https://quarkus.io/blog/reactive-"
+"messaging-emitter/[`Emitter`] of `Movie` DTO and implement a `@POST` method\n"
+"that consumes `Movie` and sends it through the `Emitter`:"
+msgstr ""
+
+msgid ""
+"Now, we need to _map_ the `movies` channel (the `Emitter` emits to this "
+"channel) to a Kafka topic and also _map_ the schema to be used on this "
+"channel.\n"
+"To achieve this, edit the `application.properties` file, and add the "
+"following content:"
+msgstr ""
+
+msgid ""
+"Note that unlike in the avro serialization, xref:kafka.adoc#serialization-"
+"autodetection[autodetect] can't be used with JSON Schema, so we must define "
+"the  `value.serializer`.\n"
+"Just like with avro, we still have to define the `apicurio.registry.auto-"
+"register` property."
+msgstr ""
+
+msgid ""
+"If you use Confluent Schema Registry, in this case you must define the "
+"`value.serializer` as well with the value `io.confluent.kafka.serializers."
+"json.KafkaJsonSchemaSerializer`.\n"
+"It is also detected automatically.\n"
+"The Confluent Schema Registry analogue of `apicurio.registry.auto-register` "
+"is called `auto.register.schemas`.\n"
+"It defaults to `true`, so it doesn't have to be configured in this example.\n"
+"It can be explicitly set to `false` if you want to disable automatic schema "
+"registration."
+msgstr ""
+
+msgid "The <code>Movie</code> consumer"
+msgstr ""
+
+msgid ""
+"So, we can write records into Kafka containing our `Movie` data.\n"
+"That data is serialized using JSON Schema.\n"
+"Now, it's time to implement a consumer for them."
+msgstr ""
+
+msgid ""
+"Let's create `ConsumedMovieResource` that will consume `Movie` messages\n"
+"from the `movies-from-kafka` channel and will expose it via Server-Sent "
+"Events:"
+msgstr ""
+
+msgid ""
+"The last bit of the application's code is the configuration of the `movies-"
+"from-kafka` channel in\n"
+"`application.properties`:"
+msgstr ""
+
+msgid "Again, unlike with Avro, we have to define the `value.deserializer`."
+msgstr ""
+
+msgid ""
+"If you use Confluent Schema Registry, you must configure `value."
+"deserializer` as well with the value ´io.confluent.kafka.serializers.json."
+"KafkaJsonSchemaDeserializer´.\n"
+"They are both detected automatically."
+msgstr ""
+
+msgid "Running the application"
+msgstr ""
+
+msgid "Start the application in dev mode:"
+msgstr ""
+
+msgid ""
+"Kafka broker and Apicurio Registry instance are started automatically thanks "
+"to Dev Services.\n"
+"See xref:kafka-dev-services.adoc[Dev Services for Kafka] and xref:apicurio-"
+"registry-dev-services.adoc[Dev Services for Apicurio Registry] for more "
+"details."
+msgstr ""
+
+msgid ""
+"You might have noticed that we didn't configure the schema registry URL "
+"anywhere.\n"
+"This is because Dev Services for Apicurio Registry configures all Kafka "
+"channels in Quarkus Messaging to use the automatically started registry "
+"instance."
+msgstr ""
+
+msgid ""
+"Apicurio Registry, in addition to its native API, also exposes an endpoint "
+"that is API-compatible with Confluent Schema Registry.\n"
+"Therefore, this automatic configuration works both for Apicurio Registry "
+"serde and Confluent Schema Registry serde."
+msgstr ""
+
+msgid ""
+"However, note that there's no Dev Services support for running Confluent "
+"Schema Registry itself.\n"
+"If you want to use a running instance of Confluent Schema Registry, "
+"configure its URL, together with the URL of a Kafka broker:"
+msgstr ""
+
+msgid ""
+"In the second terminal, query the `ConsumedMovieResource` resource with "
+"`curl`:"
+msgstr ""
+
+msgid "In the third one, post a few movies:"
+msgstr ""
+
+msgid ""
+"Observe what is printed in the second terminal. You should see something "
+"along the lines of:"
+msgstr ""
+
+msgid "Running in JVM or Native mode"
+msgstr ""
+
+msgid ""
+"When not running in dev or test mode, you will need to start your own Kafka "
+"broker and Apicurio Registry.\n"
+"The easiest way to get them running is to use `docker-compose` to start the "
+"appropriate containers."
+msgstr ""
+
+msgid ""
+"Create a `docker-compose.yaml` file at the root of the project with the "
+"following content:"
+msgstr ""
+
+msgid ""
+"Before starting the application, let's first start the Kafka broker and "
+"Apicurio Registry:"
+msgstr ""
+
+msgid "You can build the application with:"
+msgstr ""
+
+msgid "And run it in JVM mode with:"
+msgstr ""
+
+msgid ""
+"Specifying the registry URL on the command line is not very convenient, so "
+"you can add a configuration property only for the `prod` profile:"
+msgstr ""
+
+msgid "You can build a native executable with:"
+msgstr ""
+
+msgid "and run it with:"
+msgstr ""
+
+msgid "Testing the application"
+msgstr ""
+
+msgid ""
+"As mentioned above, Dev Services for Kafka and Apicurio Registry "
+"automatically start and configure a Kafka broker and Apicurio Registry "
+"instance in dev mode and for tests.\n"
+"Hence, we don't have to set up Kafka and Apicurio Registry ourselves.\n"
+"We can just focus on writing the test."
+msgstr ""
+
+msgid ""
+"First, let's add test dependencies on REST Client and Awaitility to the "
+"build file:"
+msgstr ""
+
+msgid ""
+"In the test, we will send movies in a loop and check if the "
+"`ConsumedMovieResource` returns\n"
+"what we send."
+msgstr ""
+
+msgid "Manual setup"
+msgstr ""
+
+msgid ""
+"If we couldn't use Dev Services and wanted to start a Kafka broker and "
+"Apicurio Registry instance manually, we would define a xref:getting-started-"
+"testing.adoc#quarkus-test-resource[QuarkusTestResourceLifecycleManager]."
+msgstr ""
+
+msgid "Migrating from Apicurio Registry 2.x to 3.x"
+msgstr ""
+
+msgid "Schema ID Format Change"
+msgstr ""
+
+msgid ""
+"Apicurio Registry 3.x changed the schema ID format from **8-byte (long)** to "
+"**4-byte (int)** identifiers.\n"
+"This means messages produced with v2 cannot be consumed by v3 applications "
+"(and vice versa) without explicit configuration."
+msgstr ""
+
+msgid "Migration Scenarios"
+msgstr ""
+
+msgid ""
+"**New applications (no existing v2 messages):** No configuration needed. The "
+"v3 defaults will be used automatically."
+msgstr ""
+
+msgid ""
+"**Consuming existing v2 messages:** Configure the `Legacy8ByteIdHandler` for "
+"channels that need to read v2-produced messages:"
+msgstr ""
+
+msgid ""
+"**Producing v2-compatible messages:** If downstream consumers still use v2, "
+"configure the producer:"
+msgstr ""
+
+msgid "Standard ID Handlers: Fixed Format"
+msgstr ""
+
+msgid ""
+"Both v2 (8-byte) and v3 (4-byte) formats use the same magic byte.\n"
+"The standard ID handlers (`Legacy8ByteIdHandler` and "
+"`Default4ByteIdHandler`) read a fixed number of bytes based on "
+"configuration—there is no per-message auto-detection."
+msgstr ""
+
+msgid "**With standard ID handlers, gradual migration only works when:**"
+msgstr ""
+
+msgid "Each topic has messages in ONE format (either v2 or v3, not both)"
+msgstr ""
+
+msgid "Per-channel configuration routes each topic to the correct ID handler"
+msgstr ""
+
+msgid ""
+"You can have producers and consumers using both formats in the same Apicurio "
+"Registry instance, but not mixing them in the same topic."
+msgstr ""
+
+msgid "Migration Paths for Topics with Existing v2 Messages"
+msgstr ""
+
+msgid ""
+"For topics that already contain v2 messages, valid migration approaches are:"
+msgstr ""
+
+msgid ""
+"**Stop and drain:** Stop producers → drain topic completely → upgrade all "
+"services → restart with v3 configuration"
+msgstr ""
+
+msgid ""
+"**New topic migration:** Create a new v3 topic and migrate traffic to it"
+msgstr ""
+
+msgid ""
+"**Accept transient failures:** Accept transient failures during the "
+"switchover period"
+msgstr ""
+
+msgid ""
+"**Optimistic fallback handler:** Use the `OptimisticFallbackIdHandler` for "
+"gradual migration (see below)"
+msgstr ""
+
+msgid "Optimistic Fallback ID Handler"
+msgstr ""
+
+msgid ""
+"Apicurio Registry provides an `OptimisticFallbackIdHandler` that can help "
+"with gradual migration from v2 to v3.\n"
+"This handler:"
+msgstr ""
+
+msgid "**Writes** new messages with 4-byte (v3) IDs"
+msgstr ""
+
+msgid "**Reads** both 4-byte (v3) and 8-byte (v2) IDs"
+msgstr ""
+
+msgid "This approach enables a gradual migration where:"
+msgstr ""
+
+msgid ""
+"Upgrade consumers first with `OptimisticFallbackIdHandler` (they can read "
+"both v2 and v3 messages)"
+msgstr ""
+
+msgid "Then upgrade producers (they start writing v3 format)"
+msgstr ""
+
+msgid ""
+"Once all v2 messages are consumed, optionally switch to "
+"`Default4ByteIdHandler`"
+msgstr ""
+
+msgid "Compatibility with Apicurio Registry 2.x Server"
+msgstr ""
+
+msgid ""
+"The Apicurio Registry 3.x client libraries continue to work with Apicurio "
+"Registry 2.x servers.\n"
+"However, note that Apicurio Registry 2.x is no longer actively maintained."
+msgstr ""
+
+msgid "Additional Resources"
+msgstr ""
+
+msgid ""
+"https://www.apicur.io/registry/docs/apicurio-registry/3.0.x/index."
+"html[Apicurio Registry 3.x Documentation]"
+msgstr ""
+
+msgid ""
+"https://www.apicur.io/registry/docs/apicurio-registry/3.1.x/getting-started/"
+"assembly-migrating-registry-v2-v3.html[Apicurio Registry Deployment "
+"Migration Guide]"
+msgstr ""
+
+msgid ""
+"https://www.apicur.io/blog/2025/03/30/migrate-registry-2-to-3[Official "
+"Apicurio Migration Guide]"
+msgstr ""
+
+msgid ""
+"https://www.apicur.io/blog/2025/04/03/evolving-serialization[Apicurio SerDes "
+"Evolution Blog Post]"
+msgstr ""
+
+msgid "Using the Confluent Schema Registry"
+msgstr ""
+
+msgid ""
+"If you want to use the Confluent Schema Registry, you need the `quarkus-"
+"confluent-registry-json-schema` extension, instead of the `quarkus-apicurio-"
+"registry-json-schema` extension.\n"
+"Also, you need to add a few dependencies and a custom Maven repository to "
+"your `pom.xml` / `build.gradle` file:"
+msgstr ""
+
+msgid ""
+"In JVM mode, any version of `io.confluent:kafka-json-schema-serializer` can "
+"be used.\n"
+"In native mode, Quarkus supports the following versions: `6.2.x`, `7.0.x`, "
+"`7.1.x`, `7.2.x`, `7.3.x`."
+msgstr ""
+
+msgid ""
+"For version `7.4.x` and `7.5.x`, due to an issue with the Confluent Schema "
+"Serializer, you need to add another dependency:"
+msgstr ""
+
+msgid ""
+"For any other versions, the native configuration may need to be adjusted."
+msgstr ""
+
+msgid "Further reading"
+msgstr ""
+
+msgid ""
+"link:https://smallrye.io/smallrye-reactive-messaging/smallrye-reactive-"
+"messaging/3.4/kafka/kafka.html[SmallRye Reactive Messaging Kafka] "
+"documentation"
+msgstr ""

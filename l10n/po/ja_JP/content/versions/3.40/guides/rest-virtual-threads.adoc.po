@@ -1,0 +1,308 @@
+msgid ""
+msgstr ""
+"Language: ja_JP\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: roq-plugin-l10n-adoc\n"
+
+msgid "Use virtual threads in REST applications"
+msgstr ""
+
+msgid ""
+"In this guide, we see how you can use virtual threads in a REST application.\n"
+"Because virtual threads are all about I/O, we will also use the REST client."
+msgstr ""
+
+msgid "Prerequisites"
+msgstr ""
+
+msgid "To complete this guide, you need:"
+msgstr ""
+
+msgid "Roughly 15 minutes"
+msgstr ""
+
+msgid "An IDE"
+msgstr ""
+
+msgid "JDK 17+ installed with `JAVA_HOME` configured appropriately"
+msgstr ""
+
+msgid "Apache Maven {maven-version}"
+msgstr ""
+
+msgid ""
+"Optionally the xref:cli-tooling.adoc[Quarkus CLI] if you want to use it"
+msgstr ""
+
+msgid ""
+"Optionally Mandrel or GraalVM installed and xref:building-native-image."
+"adoc#configuring-graalvm[configured appropriately] if you want to build a "
+"native executable (or Docker if you use a native container build)"
+msgstr ""
+
+msgid "Architecture"
+msgstr ""
+
+msgid ""
+"The application built into this guide is quite simple.\n"
+"It calls a weather service for two cities (Valence, France, and Athens, "
+"Greece) and decides the best place based on the current temperature."
+msgstr ""
+
+msgid "Create the Maven project"
+msgstr ""
+
+msgid ""
+"First, we need a new project. Create a new project with the following "
+"command:"
+msgstr ""
+
+msgid "CLI"
+msgstr ""
+
+msgid ""
+"To create a Gradle project, add the `--gradle` or `--gradle-kotlin-dsl` "
+"option."
+msgstr ""
+
+msgid ""
+"For more information about how to install and use the Quarkus CLI, see the "
+"xref:cli-tooling.adoc[Quarkus CLI] guide."
+msgstr ""
+
+msgid "Maven"
+msgstr ""
+
+msgid ""
+"To create a Gradle project, add the `-DbuildTool=gradle` or `-DbuildTool="
+"gradle-kotlin-dsl` option."
+msgstr ""
+
+msgid "For Windows users:"
+msgstr ""
+
+msgid ""
+"If using cmd, (don't use backward slash `\\` and put everything on the same "
+"line)"
+msgstr ""
+
+msgid ""
+"If using Powershell, wrap `-D` parameters in double quotes e.g. `\"-"
+"DprojectArtifactId={create-app-artifact-id}\"`"
+msgstr ""
+
+msgid ""
+"This command generates a new project importing the Quarkus REST (formerly "
+"RESTEasy Reactive), REST client, and https://github.com/FasterXML/"
+"jackson[Jackson] extensions,\n"
+"and in particular, adds the following dependencies:"
+msgstr ""
+
+msgid ""
+"You might wonder why we use _reactive_ extensions.\n"
+"Virtual threads have limitations, and we can only integrate them properly "
+"when using the reactive extensions.\n"
+"No worries: your code will be written 100% in a synchronous / imperative "
+"style."
+msgstr ""
+
+msgid ""
+"Check the xref:./virtual-threads.adoc#why-not[virtual thread reference "
+"guide] for details."
+msgstr ""
+
+msgid "Prepare the <code>pom.xml</code> file"
+msgstr ""
+
+msgid "We need to customize the `pom.xml` file to use virtual threads."
+msgstr ""
+
+msgid ""
+"1) Locate the line with `<maven.compiler.release>17</maven.compiler."
+"release>`, and replace it with:"
+msgstr ""
+
+msgid ""
+"2) In the maven-surefire-plugin and maven-failsafe-plugin configurations, "
+"add the following `argLine` parameter:"
+msgstr ""
+
+msgid ""
+"The `-Djdk.tracePinnedThreads` will detect pinned carrier threads while "
+"running tests on Java 21-23 (See xref:./virtual-threads.adoc#pinning[the "
+"virtual thread reference guide for details])."
+msgstr ""
+
+msgid "--enable-preview on Java 19 and 20"
+msgstr ""
+
+msgid ""
+"If you are using a Java 19 or 20, add the `--enable-preview` flag in the "
+"`argLine` and as `parameters` of the maven compiler plugin.\n"
+"Note that we strongly recommend Java 21."
+msgstr ""
+
+msgid "Create the weather client"
+msgstr ""
+
+msgid ""
+"This section is not about virtual threads.\n"
+"Because we need to do some I/O to demonstrate virtual threads usage, we need "
+"a client doing I/O operations.\n"
+"In addition, the REST client is virtual thread friendly: it does not pin and "
+"handle propagation correctly."
+msgstr ""
+
+msgid ""
+"Create the `src/main/java/org/acme/WeatherService.java` class with the "
+"following content:"
+msgstr ""
+
+msgid ""
+"This class models the HTTP interaction with the weather service.\n"
+"Read more about the rest client in the dedicated xref:./rest-client."
+"adoc[guide]."
+msgstr ""
+
+msgid "Create the HTTP endpoint"
+msgstr ""
+
+msgid ""
+"Now, create the `src/main/java/org/acme/TheBestPlaceToBeResource.java` class "
+"with the following content:"
+msgstr ""
+
+msgid "Instructs Quarkus to invoke this method on a virtual thread"
+msgstr ""
+
+msgid "Run the application in dev mode"
+msgstr ""
+
+msgid ""
+"Make sure that you use OpenJDK and JVM versions supporting virtual thread "
+"and launch the _dev mode_ with `./mvnw quarkus:dev`:"
+msgstr ""
+
+msgid "Must be 19+, we recommend 21+"
+msgstr ""
+
+msgid "Launch the dev mode"
+msgstr ""
+
+msgid ""
+"Then, in a browser, open http://localhost:8080.\n"
+"You should get something like:"
+msgstr ""
+
+msgid "As you can see, the endpoint runs on a virtual thread."
+msgstr ""
+
+msgid "It's essential to understand what happened behind the scene:"
+msgstr ""
+
+msgid ""
+"Quarkus creates the virtual thread to invoke your endpoint (because of the "
+"`@RunOnVirtualThread` annotation)."
+msgstr ""
+
+msgid ""
+"When the code invokes the rest client, the virtual thread is blocked, BUT "
+"the carrier thread is not blocked (that's the virtual thread _magic touch_)."
+msgstr ""
+
+msgid ""
+"Once the first invocation of the rest client completes, the virtual thread "
+"is rescheduled and continues its execution."
+msgstr ""
+
+msgid ""
+"The second rest client invocation happens, and the virtual thread is blocked "
+"again (but not the carrier thread)."
+msgstr ""
+
+msgid ""
+"Finally, when the second invocation of the rest client completes, the "
+"virtual thread is rescheduled and continues its execution."
+msgstr ""
+
+msgid "The method returns the result. The virtual thread terminates."
+msgstr ""
+
+msgid "The result is captured by Quarkus and written in the HTTP response"
+msgstr ""
+
+msgid "Verify pinning using tests"
+msgstr ""
+
+msgid ""
+"In the `pom.xml,` we added an `argLine` argument to the surefire and "
+"failsafe plugins:"
+msgstr ""
+
+msgid ""
+"The `-Djdk.tracePinnedThreads` dumps the stack trace if a virtual thread "
+"cannot be _unmounted_ smoothly (meaning that it blocks the carrier thread).\n"
+"That's what we call _pinning_ (more info in xref:./virtual-threads."
+"adoc#pinning[the virtual thread reference guide])."
+msgstr ""
+
+msgid ""
+"We recommend enabling pinning detection in tests.\n"
+"Thus, you can check that your application behaves correctly when using "
+"virtual threads.\n"
+"Just check your log after having run the test.\n"
+"If you see a stack trace (on Java 21-23) or pinning events (using the junit-"
+"virtual-threads extension), better check what's wrong.\n"
+"If your code (or one of your dependencies) pins, it might be better to use "
+"regular worker threads instead."
+msgstr ""
+
+msgid ""
+"Create the `src/test/java/org/acme/TheBestPlaceToBeResourceTest.java` class "
+"with the following content:"
+msgstr ""
+
+msgid ""
+"It is a straightforward test, but at least it will detect if our application "
+"is pinning.\n"
+"Run the test with either:"
+msgstr ""
+
+msgid "`r` in dev mode (using continuous testing)"
+msgstr ""
+
+msgid "`./mvnw test`"
+msgstr ""
+
+msgid ""
+"As you will see, it does not pin - no stack trace.\n"
+"It is because the REST client is implemented in a virtual-thread-friendly "
+"way."
+msgstr ""
+
+msgid "The same approach can be used with integration tests."
+msgstr ""
+
+msgid "Conclusion"
+msgstr ""
+
+msgid ""
+"This guide shows how you can use virtual threads with Quarkus REST and the "
+"REST client.\n"
+"Learn more about virtual threads support on:"
+msgstr ""
+
+msgid ""
+"xref:./messaging-virtual-threads.adoc[@RunOnVirtualThread in messaging "
+"applications] (this guide covers Apache Kafka)"
+msgstr ""
+
+msgid "xref:./grpc-virtual-threads.adoc[@RunOnVirtualThread in gRPC services]"
+msgstr ""
+
+msgid ""
+"xref:./virtual-threads.adoc[the virtual thread reference guide] (include "
+"native compilation and containerization)"
+msgstr ""
