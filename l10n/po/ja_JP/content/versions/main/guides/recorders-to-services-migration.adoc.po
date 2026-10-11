@@ -1,0 +1,318 @@
+msgid ""
+msgstr ""
+"Language: ja_JP\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: roq-plugin-l10n-adoc\n"
+
+msgid "Recorders-to-Services Migration Guide"
+msgstr ""
+
+msgid ""
+"This guide describes how to migrate Quarkus extensions from the legacy "
+"`@Record`/`@Recorder` pattern to the modern `ServiceRegistrar` service "
+"system."
+msgstr ""
+
+msgid ""
+"The `ServiceRegistrar` service system replaces `@Recorder` with a typed "
+"service model. Services declare dependencies explicitly and execute in "
+"dependency order, not build step order. The system is designed for "
+"incremental migration — converted and unconverted extensions may coexist."
+msgstr ""
+
+msgid "Architectural Differences"
+msgstr ""
+
+msgid "Explicit Dependencies Only"
+msgstr ""
+
+msgid ""
+"Services get **no** implicit ordering from the build step graph. All "
+"ordering comes from `require()`, `after()`, `before()`, or "
+"`afterBuildItem()`."
+msgstr ""
+
+msgid "Services are Independent from Recorders in the Same Step"
+msgstr ""
+
+msgid ""
+"Even if a build step method contains both a `@Record` call and an "
+"`ServiceRegistrar` call, the service and recorder are separate nodes in the "
+"build execution plan with no implicit ordering between them."
+msgstr ""
+
+msgid "Values Flow Through the Dependency Graph"
+msgstr ""
+
+msgid ""
+"Service values are passed from producer to consumer via indexed dependency "
+"access on `ServiceNode`, not through the `StartupContext` maps (except when "
+"using recorder proxy bridges)."
+msgstr ""
+
+msgid "Prerequisites"
+msgstr ""
+
+msgid ""
+"Before converting, verify that all runtime dependencies of your recorder are "
+"available as services:"
+msgstr ""
+
+msgid "Dependency Type"
+msgstr ""
+
+msgid "Availability"
+msgstr ""
+
+msgid "`ArcContainer`"
+msgstr ""
+
+msgid "Service in `ArcProcessor#initializeContainer`"
+msgstr ""
+
+msgid "`BeanContainer`"
+msgstr ""
+
+msgid "Service in `ArcProcessor#createBeanContainer`"
+msgstr ""
+
+msgid "`ScheduledExecutorService`"
+msgstr ""
+
+msgid "Aliased by `ThreadPoolSetup`"
+msgstr ""
+
+msgid "`@ConfigMapping` (`RUN_TIME`)"
+msgstr ""
+
+msgid "Auto-registered by `ConfigServiceRegistrationStep`"
+msgstr ""
+
+msgid "`@ConfigMapping` (`BUILD_AND_RUN_TIME_FIXED`)"
+msgstr ""
+
+msgid "Auto-registered as static-init"
+msgstr ""
+
+msgid "`@ConfigMapping` (`BUILD_TIME`)"
+msgstr ""
+
+msgid "**Cannot be a service** — extract values into local variables first"
+msgstr ""
+
+msgid ""
+"If other runtime objects are needed, search the codebase for "
+"`aliasRecorderValue` or `forService` to see if they are published as "
+"services."
+msgstr ""
+
+msgid "Step-by-Step Conversion"
+msgstr ""
+
+msgid "1. Analyze the Recorder"
+msgstr ""
+
+msgid "For each `@Recorder` method, determine:"
+msgstr ""
+
+msgid ""
+"**Return type**: becomes the service type. `RuntimeValue<X>` unwraps to `X`. "
+"`void` becomes `Void.class` (using `reg.forService(String name)`)."
+msgstr ""
+
+msgid ""
+"**Parameters**: `RuntimeValue<X>` parameters become `.require(X.class)`. "
+"Simple values (String, int, boolean, enum) can be captured by the lambda. "
+"Immutable collections (`List.of()`, `Set.of()`) can be captured."
+msgstr ""
+
+msgid ""
+"**Instance fields**: configuration `RuntimeValue`s injected via a "
+"constructor should be resolved via `.require(ConfigType.class)`."
+msgstr ""
+
+msgid "**Trivial methods**: can be inlined directly into the lambda."
+msgstr ""
+
+msgid "2. Convert the Recorder Class"
+msgstr ""
+
+msgid ""
+"**Trivial methods**: delete them and inline their logic into the lambda."
+msgstr ""
+
+msgid ""
+"**Complex methods**: remove the `@Recorder` annotation, make methods "
+"`static`, and unwrap `RuntimeValue` parameters and return types."
+msgstr ""
+
+msgid ""
+"If all methods are converted, delete the recorder class. Otherwise, keep "
+"`@Recorder` only for remaining legacy methods."
+msgstr ""
+
+msgid "3. Convert the Build Step"
+msgstr ""
+
+msgid "Let's look at a classic conversion."
+msgstr ""
+
+msgid "Before:"
+msgstr ""
+
+msgid "After:"
+msgstr ""
+
+msgid "4. Declare Dependencies Explicitly"
+msgstr ""
+
+msgid ""
+"Every dependency must be explicit. There is no implicit ordering from the "
+"build step graph."
+msgstr ""
+
+msgid "Old Recorder Pattern"
+msgstr ""
+
+msgid "New Service Pattern"
+msgstr ""
+
+msgid "`recorder.method(beanContainer.getValue())`"
+msgstr ""
+
+msgid "`.require(BeanContainer.class)`"
+msgstr ""
+
+msgid "`recorder.method(someRuntimeValue)`"
+msgstr ""
+
+msgid "`.require(SomeType.class)`"
+msgstr ""
+
+msgid "`recorder.method(config.maxSize())`"
+msgstr ""
+
+msgid "Capture `int maxSize = config.maxSize()` before the lambda"
+msgstr ""
+
+msgid "`@Consume(SyntheticBeansRuntimeInitBuildItem.class)` on step"
+msgstr ""
+
+msgid "`.afterBuildItem(SyntheticBeansRuntimeInitBuildItem.class)` on service"
+msgstr ""
+
+msgid "Bridging to Build Step Ordering (<code>afterBuildItem()</code>)"
+msgstr ""
+
+msgid ""
+"When a service depends on state produced by a legacy recorder (e.g., "
+"synthetic beans must be initialized), declare the dependency via "
+"`afterBuildItem()`:"
+msgstr ""
+
+msgid ""
+"This resolves the producing step's nodes and creates ordering edges.\n"
+"NOTE: `afterBuildItem()` is deprecated — it exists only for recorder "
+"coexistence. Once the producing recorder is converted to a service, replace "
+"with `require()` or `after()`, or drop it as appropriate."
+msgstr ""
+
+msgid "Cross-Phase Dependencies"
+msgstr ""
+
+msgid ""
+"Runtime services can `require()` static-init services. The framework "
+"automatically creates a `CROSS_PHASE_PROXY` node that reads the value from "
+"the `serviceValues` map."
+msgstr ""
+
+msgid "Coexistence and Bridge APIs"
+msgstr ""
+
+msgid ""
+"During the transitional period, the `ServiceRegistrar` provides bridge APIs "
+"to allow incremental migration of extensions."
+msgstr ""
+
+msgid "1. Recorder $\\rightarrow$ Service Bridge"
+msgstr ""
+
+msgid ""
+"If you have a value produced by a legacy recorder that a new service needs "
+"to depend on, register it using `aliasRecorderValue`:"
+msgstr ""
+
+msgid ""
+"Downstream services can now simply use `.require(MyLegacyValue.class)`."
+msgstr ""
+
+msgid "2. Service $\\rightarrow$ Recorder Bridge"
+msgstr ""
+
+msgid ""
+"If an unconverted legacy recorder or an existing build item consumes a value "
+"that is now produced by a service, use the service-to-recorder bridge "
+"methods:"
+msgstr ""
+
+msgid ""
+"**`serviceAsRuntimeValue`**: Produces a `RuntimeValue<T>` proxy for a "
+"runtime service."
+msgstr ""
+
+msgid ""
+"**`staticInitServiceAsRuntimeValue`**: Produces a `RuntimeValue<T>` proxy "
+"for a static-init service."
+msgstr ""
+
+msgid ""
+"**`getRecorderProxy`**: Produces a bare `T` proxy (for proxyable interfaces/"
+"classes)."
+msgstr ""
+
+msgid "Common Conversion Pitfalls"
+msgstr ""
+
+msgid "ClassLoader &amp; Thread Context ClassLoader (TCCL)"
+msgstr ""
+
+msgid ""
+"Recorder bytecode always ran with the **runtime classloader as the TCCL**. "
+"Any recorder code that captured `Thread.currentThread()."
+"getContextClassLoader()` for later use relied on that.\n"
+"* After converting, ensure that the service still runs with the runtime CL "
+"as TCCL, and that captured/inherited CLs are the runtime CL (not the system "
+"`AppClassLoader`).\n"
+"* Clean up threads or `ThreadLocal`s your service owns in `onStop()`; never "
+"leak the `QuarkusClassLoader`."
+msgstr ""
+
+msgid "Concrete Class Proxying"
+msgstr ""
+
+msgid ""
+"`staticInitServiceAsRecorderValue(ConcreteClass.class)` fails if the class "
+"has a non-trivial constructor. Use `staticInitServiceAsRuntimeValue()` "
+"instead — `RuntimeValue` is always proxyable."
+msgstr ""
+
+msgid "Package-Private Visibility"
+msgstr ""
+
+msgid ""
+"Lambda bytecode runs at runtime but references runtime classes directly. "
+"Package-private classes become inaccessible from the generated consolidated "
+"class. Ensure any classes referenced within the lambda are `public`."
+msgstr ""
+
+msgid "Never Reference Deployment Classes inside Service Lambdas"
+msgstr ""
+
+msgid ""
+"Always place helper methods, custom interfaces, or static factory methods "
+"inside your **runtime** module classes (which are present at runtime). Doing "
+"so inside your processor class compiles successfully but throws "
+"`NoClassDefFoundError` at runtime."
+msgstr ""
