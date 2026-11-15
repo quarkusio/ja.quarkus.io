@@ -1,0 +1,360 @@
+msgid ""
+msgstr ""
+"Language: ja_JP\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: roq-plugin-l10n-adoc\n"
+
+msgid "Introduction"
+msgstr ""
+
+msgid ""
+"You built a standard Quarkus application: REST endpoints, a service layer, a "
+"database. Then you are given a new requirement: \"When an order is placed, "
+"send an event to Kafka so the analytics team can track it.\" A week later "
+"another one: \"Also notify the partner loyalty system via their REST API and "
+"make sure to handle it properly when their API is down.\" And another one: "
+"\"The partner is going to start sending us CSV order files.\"..."
+msgstr ""
+
+msgid ""
+"Each of these requirements is an integration task, and Quarkus already gives "
+"you building blocks for all of them: Reactive Messaging for Kafka, the REST "
+"client with fault tolerance for the loyalty API, a scheduled job for file "
+"polling."
+msgstr ""
+
+msgid ""
+"But you could also hand all three to Apache Camel, which covers them with a "
+"single model. Retry with backoff, error policies, JSON and CSV conversion, "
+"file polling that moves handled files aside: each one is a built-in step you "
+"declare on a route, a line at a time, in the same vocabulary whichever "
+"system you are talking to."
+msgstr ""
+
+msgid ""
+"And it runs inside the application you already have. https://camel.apache."
+"org/camel-quarkus/next/[Camel Quarkus] packages over 300 of Camel's https://"
+"camel.apache.org/components/next/[components] as Quarkus extensions, as "
+"natural to use as any other CDI bean."
+msgstr ""
+
+msgid ""
+"In this post we start from a working Quarkus REST application and "
+"progressively extend it with three integration capabilities using Camel. "
+"You'll see exactly what changes in your existing code and what stays "
+"untouched."
+msgstr ""
+
+msgid "The starting point"
+msgstr ""
+
+msgid "Here's what we're starting with: a simple order management REST API."
+msgstr ""
+
+msgid ""
+"`Order` is a POJO with four fields (`id`, `customer`, `type`, `amount`), a "
+"no-arg constructor and an all-args one. `OrderRepository` is an "
+"`@ApplicationScoped` CDI bean that stores orders in memory."
+msgstr ""
+
+msgid "Start it up and make sure it works:"
+msgstr ""
+
+msgid "You should get:"
+msgstr ""
+
+msgid "Now let's extend it."
+msgstr ""
+
+msgid "Adding Camel to the project"
+msgstr ""
+
+msgid "Add the Camel Quarkus extensions we'll need:"
+msgstr ""
+
+msgid ""
+"If you don't have the https://quarkus.io/guides/cli-tooling[Quarkus CLI] you "
+"can add directly in your `pom.xml`:"
+msgstr ""
+
+msgid ""
+"the `quarkus-camel-bom` to `<dependencyManagement>` so versions are managed:"
+msgstr ""
+
+msgid "the dependencies:"
+msgstr ""
+
+msgid ""
+"If you have Podman or Docker running, Quarkus Dev Services will start a "
+"Kafka broker automatically. Camel Quarkus extensions are built like any "
+"other Quarkus extension, so dev mode, Dev Services, configuration and native "
+"image all work the way you already expect."
+msgstr ""
+
+msgid ""
+"Camel routes are CDI beans that extend `RouteBuilder`. Quarkus discovers "
+"them like any other bean:"
+msgstr ""
+
+msgid ""
+"At this point, nothing has changed in your existing code. Your REST "
+"endpoints, services, and beans are unaffected."
+msgstr ""
+
+msgid "Sending order events to Kafka"
+msgstr ""
+
+msgid ""
+"*The first requirement:* every time an order is placed, publish an event to "
+"a Kafka topic so downstream systems (analytics, warehouse, notifications) "
+"can react to it."
+msgstr ""
+
+msgid "Using Camel, the change to your existing code is two lines:"
+msgstr ""
+
+msgid ""
+"`ProducerTemplate` is Camel's bridge from your existing code into a Camel "
+"route. A _route_ in Camel is a processing pipeline: it starts from an input "
+"(a URI like `direct:`, `kafka:`, or `file:`), applies a chain of steps "
+"(transformation, filtering, logging) and then sends the result to one or "
+"more outputs. Think of it as a method chain that wires I/O and processing "
+"together in one place. In Camel Quarkus, `ProducerTemplate` is automatically "
+"available as a CDI bean. You just need to `@Inject` it. The `sendBody` call "
+"pushes the order object into the `direct:order-placed` endpoint, which is "
+"the entry point of your Camel route."
+msgstr ""
+
+msgid "Here's that Camel route we need to add:"
+msgstr ""
+
+msgid ""
+"The Camel route does three steps: receive the order, serialize it to JSON, "
+"send it to Kafka."
+msgstr ""
+
+msgid "And the Kafka configuration to add in `application.properties`:"
+msgstr ""
+
+msgid ""
+"Dev Services injects the broker address it started into `kafka.bootstrap."
+"servers`, and `camel.component.kafka.brokers` passes it on to the Camel "
+"Kafka component, falling back to `localhost:9092` against an external broker."
+""
+msgstr ""
+
+msgid "*Try it*, create an order and watch the console:"
+msgstr ""
+
+msgid "In the logs:"
+msgstr ""
+
+msgid "Your order is persisted _and_ published to Kafka."
+msgstr ""
+
+msgid ""
+"*Extensions used:* `camel-quarkus-kafka`, `camel-quarkus-jackson`, `camel-"
+"quarkus-direct`"
+msgstr ""
+
+msgid "Notifying the loyalty system"
+msgstr ""
+
+msgid ""
+"*The second requirement:* also call the partner's loyalty API over HTTP so "
+"customers earn points when they place an order. The partner's API is "
+"unreliable, so you need to handle retries with backoff."
+msgstr ""
+
+msgid ""
+"The order event Camel route already handles the Kafka step. Let's add the "
+"loyalty notification: three more lines in the same route, plus an error "
+"policy:"
+msgstr ""
+
+msgid ""
+"The body is still the JSON produced by `marshal().json()` for Kafka, so "
+"`setHeader` tags the outgoing request as `application/json` for the partner "
+"API."
+msgstr ""
+
+msgid ""
+"The `onException` block retries any failed step up to 3 times with "
+"exponential backoff (1s, 2s, 4s). If the loyalty API returns a 500 or the "
+"connection times out, Camel retries automatically. `handled(true)` means "
+"that if all attempts fail, the error is logged and the route moves on. The "
+"order is still safely persisted, since that happened before the Camel call. "
+"Note that the policy covers every step in the route, the Kafka send "
+"included, not just the HTTP call."
+msgstr ""
+
+msgid ""
+"The route injects the partner's host from configuration with "
+"`@ConfigProperty`:"
+msgstr ""
+
+msgid ""
+"If you want to integrate another external service later, you can add one "
+"more `.to(\"http://...\")` line."
+msgstr ""
+
+msgid "*Try it*, create another order and watch both integrations fire:"
+msgstr ""
+
+msgid "The two integrations are triggered from a single `sendBody` call."
+msgstr ""
+
+msgid "*Extension used:* `camel-quarkus-http`"
+msgstr ""
+
+msgid "Ingesting files from a partner"
+msgstr ""
+
+msgid ""
+"*The third requirement:* a partner drops CSV order files into a directory. "
+"The application should parse each file, ingest the orders, and move the "
+"original to a `done` directory. The failed files go to a `failed` directory."
+msgstr ""
+
+msgid ""
+"File ingestion has a lot of small details: polling, partial writes, moving "
+"handled files aside, keeping failures separate."
+msgstr ""
+
+msgid "The whole thing is one self-contained route:"
+msgstr ""
+
+msgid ""
+"The consumer polls the directory; `readLock`, `move` and `moveFailed` on the "
+"URI cover the other three. Camel's built-in `CsvDataFormat` parses the file "
+"content into rows, skipping the header. After `split(body())`, each exchange "
+"carries one row as a `List<String>`. `orderConverter` is a small bean that "
+"maps each row to an `Order`:"
+msgstr ""
+
+msgid ""
+"`orderRepository` is your existing CDI bean, referenced by name. For Camel "
+"to look up the bean by name, add `@Named(\"orderRepository\")` to "
+"`OrderRepository`. Since `.bean(\"name\")` resolves the method reflectively, "
+"also add `@RegisterForReflection` so the lookup keeps working in native mode."
+""
+msgstr ""
+
+msgid ""
+"*Try it*, from the directory where you started `mvn quarkus:dev`, drop a CSV "
+"file and verify:"
+msgstr ""
+
+msgid ""
+"You'll see the orders from the CSV file alongside any you created via the "
+"REST API. The original file has been moved to `orders/done/`. A malformed "
+"file would go to `orders/failed/` instead."
+msgstr ""
+
+msgid ""
+"*Extensions used:* `camel-quarkus-file`, `camel-quarkus-csv`, `camel-quarkus-"
+"bean`"
+msgstr ""
+
+msgid "How the two fit together"
+msgstr ""
+
+msgid "In the code you already had, this is all that changed:"
+msgstr ""
+
+msgid "`@Inject ProducerTemplate producerTemplate` in `OrderResource`"
+msgstr ""
+
+msgid ""
+"`producerTemplate.sendBody(\"direct:order-placed\", order)` in "
+"`OrderResource`"
+msgstr ""
+
+msgid ""
+"`@Named(\"orderRepository\")` and `@RegisterForReflection` on "
+"`OrderRepository`"
+msgstr ""
+
+msgid "Everything else is new classes sitting alongside the old ones."
+msgstr ""
+
+msgid ""
+"Beyond that, the two sides share one runtime. Any bean annotated `@Named` or "
+"`@Identifier` is reachable from a route with `.bean(\"beanName\")`, or by "
+"type with `.bean(MyService.class)`. Your JAX-RS endpoints keep being served "
+"by Quarkus HTTP, and routes using `platform-http` can share that same server."
+" Camel settings go in the same `application.properties` under the `camel.*` "
+"namespace, and `quarkus dev` hot-reloads a route like any other class."
+msgstr ""
+
+msgid ""
+"In the end, the goal of this blog post was to show that Camel is easy to "
+"pick up and integrates seamlessly with Quarkus. Additionally it gets more "
+"valuable as the number of systems you integrate with grows. For a single "
+"Kafka topic, Reactive Messaging is enough. By the third integration, having "
+"the Camel route model and DSL is what makes the difference."
+msgstr ""
+
+msgid "Going further"
+msgstr ""
+
+msgid ""
+"This post covered three patterns, but the 300+ components available as Camel "
+"Quarkus extensions cover databases, cloud services, messaging systems, SaaS "
+"APIs, and protocols from FTP to AS2. Each follows the same model: add the "
+"`camel-quarkus-*` extension, use its URI in a route."
+msgstr ""
+
+msgid ""
+"Camel implements the https://camel.apache.org/components/next/eips/"
+"enterprise-integration-patterns.html[Enterprise Integration Patterns]. Here "
+"are a few that would naturally extend this example:"
+msgstr ""
+
+msgid ""
+"*Content-Based Router:* use `.choice().when()` to route priority orders to a "
+"fast-track queue and standard orders to the normal flow."
+msgstr ""
+
+msgid ""
+"*Wire Tap:* use `.wireTap(\"seda:audit\")` to send a copy of the order event "
+"to an audit log without slowing down the main route."
+msgstr ""
+
+msgid ""
+"*Throttle:* use `.throttle(10)` to rate-limit calls to the partner loyalty "
+"API."
+msgstr ""
+
+msgid ""
+"*Dead Letter Channel:* replace the `onException` log-and-swallow with "
+"`errorHandler(deadLetterChannel(\"file:orders/errors\"))` to persist failed "
+"order events to disk for later inspection or reprocessing."
+msgstr ""
+
+msgid ""
+"*More protocols:* need to call a SOAP service, send to an AMQP broker, or "
+"drop files on an SFTP server? Each has a Camel Quarkus extension."
+msgstr ""
+
+msgid "To explore more:"
+msgstr ""
+
+msgid ""
+"https://camel.apache.org/camel-quarkus/latest/[Camel Quarkus documentation]"
+msgstr ""
+
+msgid ""
+"https://github.com/apache/camel-quarkus-examples[Camel Quarkus examples on "
+"GitHub]"
+msgstr ""
+
+msgid ""
+"The companion sample project for this post is available on https://github."
+"com/apache/camel-quarkus-examples/tree/main/quarkus-to-camel-quarkus[GitHub]."
+" It has two modules: `quarkus-orders` (the starting point) and `camel-"
+"quarkus-orders` (the result). Clone it, then `cd camel-quarkus-orders && mvn "
+"quarkus:dev` to see both routes in action."
+msgstr ""

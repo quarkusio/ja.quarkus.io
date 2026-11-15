@@ -42,7 +42,7 @@ msgstr ""
 #. type: Hash Value: jobs check-links steps uses
 #: .github/workflows/check-external-links.yml:1
 #, no-wrap
-msgid "actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654"
+msgid "actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad"
 msgstr ""
 
 #. type: Hash Value: jobs check-links steps with distribution
@@ -66,7 +66,7 @@ msgstr ""
 #. type: Hash Value: jobs check-links steps uses
 #: .github/workflows/check-external-links.yml:1
 #, no-wrap
-msgid "actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae"
+msgid "actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9"
 msgstr ""
 
 #. type: Hash Value: jobs check-links steps with key
@@ -138,7 +138,7 @@ msgstr ""
 #. type: Hash Value: jobs check-links steps run
 #: .github/workflows/check-external-links.yml:1
 #, no-wrap
-msgid "mvn exec:java -e -Dexec.classpathScope=test -Dexec.mainClass=com.microsoft.playwright.CLI -Dexec.args=\"install --with-deps --only-shell chromium\""
+msgid "mvn exec:java -e -Dexec.classpathScope=test -Dexec.mainClass=com.microsoft.playwright.CLI -Dexec.args=\"install --only-shell chromium\""
 msgstr ""
 
 #. type: Hash Value: jobs check-links steps env PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS
@@ -156,7 +156,7 @@ msgstr ""
 #. type: Hash Value: jobs check-links steps run
 #: .github/workflows/check-external-links.yml:1
 #, no-wrap
-msgid "mvn -B test -Pe2e -Dtest.url=https://quarkus.io -Dtest.crawl.check-external=true -Dtest.crawl.results-file=target/broken-links.json -Dtest.crawl.dated-cutoff-months=12 -Dtest.crawl.exclude-paths=/guides/,/version/2,/version/3,/version/4,/version/main/guides/doc-reference,/extensions,/quarkus-workshop-langchain4j -Dtest.crawl.exclude-urls=linkedin.com/shareArticle,x.com/intent,twitter.com/intent"
+msgid "mvn -B test -Pe2e -Dtest.url=https://quarkus.io -Dtest.crawl.check-external=true -Dtest.crawl.results-file=target/broken-links.json -Dtest.crawl.dated-cutoff-months=12 -Dtest.crawl.exclude-paths=/guides/,/version/2,/version/3,/version/4,/version/main/guides/doc-reference,/extensions,/quarkus-workshop-langchain4j,/almanac -Dtest.crawl.exclude-urls=linkedin.com/shareArticle,x.com/intent,twitter.com/intent,servicenow.com"
 msgstr ""
 
 #. type: Hash Value: jobs check-links steps timeout-minutes
@@ -186,11 +186,13 @@ msgid ""
 "  UNCHECKABLE=$(jq '.summary.uncheckableCount' target/broken-links.json)\n"
 "  OLD_CONTENT=$(jq '.summary.oldContentCount' target/broken-links.json)\n"
 "  TOTAL=$(jq '.summary.totalBrokenLinks' target/broken-links.json)\n"
+"  FRAGMENTS=$(jq '.summary.brokenFragmentCount // 0' target/broken-links.json)\n"
 "  echo \"## $TOTAL Broken Links Found\" >> \"$GITHUB_STEP_SUMMARY\"\n"
 "  echo \"\" >> \"$GITHUB_STEP_SUMMARY\"\n"
 "  echo \"- **$REPORTABLE** reportable (will raise defects)\" >> \"$GITHUB_STEP_SUMMARY\"\n"
 "  echo \"- **$UNCHECKABLE** uncheckable (401/403/410 - informational only)\" >> \"$GITHUB_STEP_SUMMARY\"\n"
 "  echo \"- **$OLD_CONTENT** in old content (blogs/newsletters older than cutoff - informational only)\" >> \"$GITHUB_STEP_SUMMARY\"\n"
+"  echo \"- **$FRAGMENTS** broken fragment anchors (will raise defects)\" >> \"$GITHUB_STEP_SUMMARY\"\n"
 "  echo \"\" >> \"$GITHUB_STEP_SUMMARY\"\n"
 "  if [ \"$REPORTABLE\" -gt 0 ]; then\n"
 "    echo \"### Reportable Broken Links (will raise defects)\" >> \"$GITHUB_STEP_SUMMARY\"\n"
@@ -198,6 +200,14 @@ msgid ""
 "    echo \"| URL | Status | Found On |\" >> \"$GITHUB_STEP_SUMMARY\"\n"
 "    echo \"|-----|--------|----------|\" >> \"$GITHUB_STEP_SUMMARY\"\n"
 "    jq -r '.reportable[] | \"| \\(.url) | \\(.status) \\(.statusText) | \\(.referrer) |\"' target/broken-links.json >> \"$GITHUB_STEP_SUMMARY\"\n"
+"    echo \"\" >> \"$GITHUB_STEP_SUMMARY\"\n"
+"  fi\n"
+"  if [ \"$FRAGMENTS\" -gt 0 ]; then\n"
+"    echo \"### Broken Fragment Anchors (will raise defects)\" >> \"$GITHUB_STEP_SUMMARY\"\n"
+"    echo \"\" >> \"$GITHUB_STEP_SUMMARY\"\n"
+"    echo \"| URL | Found On |\" >> \"$GITHUB_STEP_SUMMARY\"\n"
+"    echo \"|-----|----------|\" >> \"$GITHUB_STEP_SUMMARY\"\n"
+"    jq -r '.brokenFragments[] | \"| \\(.url) | \\(.referrer) |\"' target/broken-links.json >> \"$GITHUB_STEP_SUMMARY\"\n"
 "    echo \"\" >> \"$GITHUB_STEP_SUMMARY\"\n"
 "  fi\n"
 "  if [ \"$UNCHECKABLE\" -gt 0 ]; then\n"
@@ -227,6 +237,11 @@ msgid ""
 "    echo \"REPORTABLE ($REPORTABLE links - will raise defects):\"\n"
 "    jq -r '.reportable[] | \"\\(.status) \\(.url)\\n       linked from: \\(.referrer)\\n\"' target/broken-links.json\n"
 "  fi\n"
+"  if [ \"$FRAGMENTS\" -gt 0 ]; then\n"
+"    echo \"\"\n"
+"    echo \"BROKEN FRAGMENT ANCHORS ($FRAGMENTS - will raise defects):\"\n"
+"    jq -r '.brokenFragments[] | \"\\(.url)\\n       linked from: \\(.referrer)\\n\"' target/broken-links.json\n"
+"  fi\n"
 "  if [ \"$UNCHECKABLE\" -gt 0 ]; then\n"
 "    echo \"\"\n"
 "    echo \"UNCHECKABLE ($UNCHECKABLE links - informational only):\"\n"
@@ -239,10 +254,22 @@ msgid ""
 "  fi\n"
 "  echo \"=== End of Report ===\"\n"
 "  echo \"\"\n"
-"  echo \"Total: $TOTAL broken link(s) ($REPORTABLE reportable, $UNCHECKABLE uncheckable, $OLD_CONTENT in old content)\"\n"
+"  echo \"Total: $TOTAL broken link(s) ($REPORTABLE reportable, $UNCHECKABLE uncheckable, $OLD_CONTENT in old content), $FRAGMENTS broken fragment anchor(s)\"\n"
 "else\n"
 "  echo \"No results file found — crawler may not have completed.\"\n"
 "fi\n"
+msgstr ""
+
+#. type: Hash Value: jobs check-links steps name
+#: .github/workflows/check-external-links.yml:1
+#, no-wrap
+msgid "Set up JBang"
+msgstr ""
+
+#. type: Hash Value: jobs check-links steps uses
+#: .github/workflows/check-external-links.yml:1
+#, no-wrap
+msgid "jbangdev/setup-jbang@main"
 msgstr ""
 
 #. type: Hash Value: jobs check-links steps if
@@ -257,22 +284,23 @@ msgstr ""
 msgid "Raise defects if needed"
 msgstr ""
 
-#. type: Hash Value: jobs check-links steps uses
+#. type: Hash Value: jobs check-links steps run
 #: .github/workflows/check-external-links.yml:1
 #, no-wrap
-msgid "jbangdev/jbang-action@v0.137.0"
+msgid ""
+"jbang tools/dead-link-issue.java \\\n"
+"  --token=${{ secrets.LINK_CHECKER_ISSUE_REPORTING_TOKEN }} \\\n"
+"  --guideIssueRepo=quarkusio/quarkus \\\n"
+"  --siteIssueRepo=${{ github.repository }} \\\n"
+"  --runId=${{ github.run_id }} \\\n"
+"  --siteUrl=https://quarkus.io \\\n"
+"  --resultsFile=target/broken-links.json\n"
 msgstr ""
 
-#. type: Array Element: on pull_request paths
+#. type: Hash Value: jobs check-links steps shell
 #: .github/workflows/check-external-links.yml:1
 #, no-wrap
-msgid "tools/dead-link-issue.java"
-msgstr ""
-
-#. type: Hash Value: jobs check-links steps with scriptargs
-#: .github/workflows/check-external-links.yml:1
-#, no-wrap
-msgid "--token=${{ secrets.GITHUB_TOKEN }} --guideIssueRepo=quarkusio/quarkus --siteIssueRepo=${{ github.repository }} --runId=${{ github.run_id }} --siteUrl=https://quarkus.io --resultsFile=target/broken-links.json"
+msgid "bash"
 msgstr ""
 
 #. type: Hash Value: jobs check-links steps if
@@ -287,10 +315,18 @@ msgstr ""
 msgid "Dry-run defect report"
 msgstr ""
 
-#. type: Hash Value: jobs check-links steps with scriptargs
+#. type: Hash Value: jobs check-links steps run
 #: .github/workflows/check-external-links.yml:1
 #, no-wrap
-msgid "--token=${{ secrets.GITHUB_TOKEN }} --guideIssueRepo=quarkusio/quarkus --siteIssueRepo=${{ github.repository }} --runId=${{ github.run_id }} --siteUrl=https://quarkus.io --resultsFile=target/broken-links.json --dryRun"
+msgid ""
+"jbang tools/dead-link-issue.java \\\n"
+"  --token=${{ secrets.GITHUB_TOKEN }} \\\n"
+"  --guideIssueRepo=quarkusio/quarkus \\\n"
+"  --siteIssueRepo=${{ github.repository }} \\\n"
+"  --runId=${{ github.run_id }} \\\n"
+"  --siteUrl=https://quarkus.io \\\n"
+"  --resultsFile=target/broken-links.json \\\n"
+"  --dryRun\n"
 msgstr ""
 
 #. type: Hash Value: name
@@ -315,6 +351,12 @@ msgstr ""
 #: .github/workflows/check-external-links.yml:1
 #, no-wrap
 msgid "src/test/java/io/quarkusio/BrowserTest.java"
+msgstr ""
+
+#. type: Array Element: on pull_request paths
+#: .github/workflows/check-external-links.yml:1
+#, no-wrap
+msgid "tools/dead-link-issue.java"
 msgstr ""
 
 #. type: Hash Value: on schedule cron

@@ -21,13 +21,13 @@ msgstr ""
 msgid "Build"
 msgstr "Build"
 
-#. type: Hash Value: jobs build-report runs-on
+#. type: Hash Value: jobs theme runs-on
 #: .github/workflows/build.yml:1
 #, no-wrap
 msgid "ubuntu-latest"
 msgstr ""
 
-#. type: Hash Value: jobs build steps uses
+#. type: Hash Value: jobs theme steps uses
 #: .github/workflows/build.yml:1
 #, no-wrap
 msgid "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1"
@@ -36,34 +36,34 @@ msgstr ""
 #. type: Hash Value: jobs build steps with fetch-depth
 #: .github/workflows/build.yml:1
 #, no-wrap
-msgid "5000"
-msgstr "5000"
+msgid "0"
+msgstr ""
 
-#. type: Hash Value: jobs build steps name
+#. type: Hash Value: jobs theme steps name
 #: .github/workflows/build.yml:1
 #, no-wrap
 msgid "Set up JDK"
 msgstr ""
 
-#. type: Hash Value: jobs build-report steps uses
+#. type: Hash Value: jobs theme steps uses
 #: .github/workflows/build.yml:1
 #, no-wrap
-msgid "actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c"
+msgid "actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad"
 msgstr ""
 
-#. type: Hash Value: jobs build steps with cache
+#. type: Hash Value: jobs theme steps with cache
 #: .github/workflows/build.yml:1
 #, no-wrap
 msgid "maven"
 msgstr "maven"
 
-#. type: Hash Value: jobs build-report steps with distribution
+#. type: Hash Value: jobs theme steps with distribution
 #: .github/workflows/build.yml:1
 #, no-wrap
 msgid "temurin"
 msgstr ""
 
-#. type: Hash Value: jobs build-report steps with java-version
+#. type: Hash Value: jobs theme steps with java-version
 #: .github/workflows/build.yml:1
 #, no-wrap
 msgid "25"
@@ -123,18 +123,6 @@ msgstr ""
 msgid "~/.cache/ms-playwright"
 msgstr ""
 
-#. type: Hash Value: jobs build steps name
-#: .github/workflows/build.yml:1
-#, no-wrap
-msgid "Restore mtime"
-msgstr ""
-
-#. type: Hash Value: jobs build steps run
-#: .github/workflows/build.yml:1
-#, no-wrap
-msgid "./tools/git-restore-mtime"
-msgstr ""
-
 #. type: Hash Value: jobs build steps id
 #: .github/workflows/build.yml:1
 #, no-wrap
@@ -151,13 +139,20 @@ msgstr ""
 #: .github/workflows/build.yml:1
 #, no-wrap
 msgid ""
-"if [ -n \"${{ github.event.pull_request.base.sha }}\" ]; then\n"
-"  CHANGED=$(git diff --name-only ${{ github.event.pull_request.base.sha }}..HEAD -- \\\n"
+"if git rev-parse -q --verify HEAD^2 >/dev/null; then\n"
+"  BASE_COMMIT=$(git rev-parse HEAD^1)\n"
+"else\n"
+"  BASE_COMMIT=$(git merge-base \"${{ github.event.pull_request.base.sha }}\" HEAD 2>/dev/null || true)\n"
+"fi\n"
+"echo \"base_commit=$BASE_COMMIT\" >> $GITHUB_OUTPUT\n"
+"if [ -n \"$BASE_COMMIT\" ]; then\n"
+"  CHANGED=$(git diff --name-only \"$BASE_COMMIT\" HEAD -- \\\n"
 "    .github/workflows/build.yml \\\n"
 "    pom.xml \\\n"
 "    config/ \\\n"
 "    src/ \\\n"
-"    templates/ 2>/dev/null || true)\n"
+"    templates/ \\\n"
+"    theme/ 2>/dev/null || true)\n"
 "else\n"
 "  CHANGED=\"not-a-pr\"\n"
 "fi\n"
@@ -166,36 +161,6 @@ msgid ""
 "else\n"
 "  echo \"include_versions=false\" >> $GITHUB_OUTPUT\n"
 "fi\n"
-msgstr ""
-
-#. type: Hash Value: jobs build steps name
-#: .github/workflows/build.yml:1
-#, no-wrap
-msgid "Build with Maven"
-msgstr ""
-
-#. type: Hash Value: jobs build steps run
-#: .github/workflows/build.yml:1
-#, no-wrap
-msgid ""
-"export QUARKUS_ROQ_GENERATOR_BATCH=true\n"
-"export SITE_FUTURE=true\n"
-"if [ \"${{ steps.infra.outputs.include_versions }}\" != \"true\" ]; then\n"
-"  export QUARKUS_PROFILE=only-latest-guides\n"
-"fi\n"
-"mvn -B package quarkus:run -DskipTests\n"
-msgstr ""
-
-#. type: Hash Value: jobs build steps name
-#: .github/workflows/build.yml:1
-#, no-wrap
-msgid "Compile tests"
-msgstr ""
-
-#. type: Hash Value: jobs build steps run
-#: .github/workflows/build.yml:1
-#, no-wrap
-msgid "mvn -B test-compile"
 msgstr ""
 
 #. type: Hash Value: jobs build steps if
@@ -213,7 +178,57 @@ msgstr ""
 #. type: Hash Value: jobs build steps run
 #: .github/workflows/build.yml:1
 #, no-wrap
-msgid "mvn exec:java -e -Dexec.classpathScope=test -Dexec.mainClass=com.microsoft.playwright.CLI -Dexec.args=\"install --with-deps --only-shell chromium\""
+msgid "mvn -B test-compile exec:java -e -Dexec.classpathScope=test -Dexec.mainClass=com.microsoft.playwright.CLI -Dexec.args=\"install --only-shell chromium\""
+msgstr ""
+
+#. type: Hash Value: jobs build steps env PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid "1"
+msgstr "1"
+
+#. type: Hash Value: jobs build steps name
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid "Build with Maven"
+msgstr ""
+
+#. type: Hash Value: jobs build steps run
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid ""
+"export QUARKUS_ROQ_GENERATOR_BATCH=true\n"
+"export SITE_FUTURE=true\n"
+"PROFILE_ARG=\"\"\n"
+"if [ \"${{ steps.infra.outputs.include_versions }}\" != \"true\" ]; then\n"
+"  export QUARKUS_PROFILE=only-latest-guides\n"
+"  PROFILE_ARG=\"-Dquarkus.test.profile=test,only-latest-guides\"\n"
+"fi\n"
+"mvn -B package quarkus:run $PROFILE_ARG\n"
+msgstr ""
+
+#. type: Hash Value: jobs build steps name
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid "Cache jbang"
+msgstr ""
+
+#. type: Hash Value: jobs build steps with key
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid "${{ runner.os }}-jbang-${{ hashFiles('.github/workflows/build.yml') }}"
+msgstr ""
+
+#. type: Hash Value: jobs build steps with path
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid "~/.jbang/cache"
+msgstr ""
+
+#. type: Hash Value: jobs build steps with restore-keys
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid "${{ runner.os }}-jbang-"
 msgstr ""
 
 #. type: Hash Value: jobs build steps uses
@@ -236,12 +251,6 @@ msgid ""
 "jbang roq@quarkiverse/quarkus-roq serve target/roq/ -p 8090 &\n"
 msgstr ""
 
-#. type: Hash Value: jobs build steps env PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS
-#: .github/workflows/build.yml:1
-#, no-wrap
-msgid "1"
-msgstr "1"
-
 #. type: Hash Value: jobs build steps name
 #: .github/workflows/build.yml:1
 #, no-wrap
@@ -251,7 +260,7 @@ msgstr ""
 #. type: Hash Value: jobs build steps run
 #: .github/workflows/build.yml:1
 #, no-wrap
-msgid "mvn -B test -Dtest.url=http://localhost:8090"
+msgid "mvn -B test -Pfullsite -Dquarkus.test.profile=test,only-latest-guides"
 msgstr ""
 
 #. type: Hash Value: jobs build steps id
@@ -270,18 +279,41 @@ msgstr ""
 #: .github/workflows/build.yml:1
 #, no-wrap
 msgid ""
-"if [ \"${{ steps.infra.outputs.include_versions }}\" = \"true\" ]; then\n"
-"  echo \"mode=full\" >> $GITHUB_OUTPUT\n"
+"INFRA=\"${{ steps.infra.outputs.include_versions }}\"\n"
+"if [ \"$INFRA\" = \"true\" ]; then\n"
+"  echo \"infra=true\" >> $GITHUB_OUTPUT\n"
 "  echo \"Infrastructure files changed, running full link check\"\n"
-"  exit 0\n"
 "fi\n"
+"scope() {\n"
+"  echo \"pages=$1\" >> $GITHUB_OUTPUT\n"
+"  if [ \"$INFRA\" = \"true\" ]; then\n"
+"    echo \"mode=full\" >> $GITHUB_OUTPUT\n"
+"  else\n"
+"    echo \"mode=$1\" >> $GITHUB_OUTPUT\n"
+"  fi\n"
+"}\n"
 "git fetch origin gh-pages --filter=blob:none 2>/dev/null || {\n"
-"  echo \"mode=full\" >> $GITHUB_OUTPUT\n"
+"  scope full\n"
+"  echo \"reason=fetch-failed\" >> $GITHUB_OUTPUT\n"
 "  echo \"Could not fetch gh-pages, running full link check\"\n"
 "  exit 0\n"
 "}\n"
-"git worktree add --detach /tmp/gh-pages origin/gh-pages 2>/dev/null || {\n"
-"  echo \"mode=full\" >> $GITHUB_OUTPUT\n"
+"BASE_COMMIT=\"${{ steps.infra.outputs.base_commit }}\"\n"
+"DEPLOYED=origin/gh-pages\n"
+"if [ -n \"$BASE_COMMIT\" ]; then\n"
+"  while read -r commit subject; do\n"
+"    source_sha=${subject#deploy: }\n"
+"    [[ $source_sha =~ ^[0-9a-f]{40}$ ]] || continue\n"
+"    if git merge-base --is-ancestor \"$source_sha\" \"$BASE_COMMIT\" 2>/dev/null; then\n"
+"      DEPLOYED=$commit\n"
+"      break\n"
+"    fi\n"
+"  done < <(git log origin/gh-pages --max-count=500 --format='%H %s')\n"
+"fi\n"
+"echo \"Comparing the built site with gh-pages commit $DEPLOYED (branch point $BASE_COMMIT)\"\n"
+"git worktree add --detach /tmp/gh-pages \"$DEPLOYED\" 2>/dev/null || {\n"
+"  scope full\n"
+"  echo \"reason=checkout-failed\" >> $GITHUB_OUTPUT\n"
 "  echo \"Could not check out gh-pages, running full link check\"\n"
 "  exit 0\n"
 "}\n"
@@ -289,7 +321,8 @@ msgid ""
 "RSYNC_OUT=$(rsync -rcn --out-format='%n' \\\n"
 "  --include='*/' --include='*.html' --exclude='*' \\\n"
 "  target/roq/ /tmp/gh-pages/ 2>/dev/null) || {\n"
-"  echo \"mode=full\" >> $GITHUB_OUTPUT\n"
+"  scope full\n"
+"  echo \"reason=compare-failed\" >> $GITHUB_OUTPUT\n"
 "  echo \"Site comparison failed, running full link check\"\n"
 "  git worktree remove /tmp/gh-pages 2>/dev/null || true\n"
 "  exit 0\n"
@@ -297,19 +330,20 @@ msgid ""
 "CHANGED=$(echo \"$RSYNC_OUT\" | grep '\\.html$' | grep -v '^version/main/' || true)\n"
 "git worktree remove /tmp/gh-pages 2>/dev/null || true\n"
 "if [ -z \"$CHANGED\" ]; then\n"
-"  echo \"mode=skip\" >> $GITHUB_OUTPUT\n"
-"  echo \"No HTML files changed, skipping link crawl\"\n"
+"  scope skip\n"
+"  echo \"No HTML files changed compared to the live site\"\n"
 "  exit 0\n"
 "fi\n"
 "COUNT=$(echo \"$CHANGED\" | wc -l | tr -d ' ')\n"
+"echo \"count=$COUNT\" >> $GITHUB_OUTPUT\n"
 "echo \"$COUNT changed HTML file(s)\"\n"
 "echo \"$CHANGED\" | sed 's|/[^/]*$||' | sort | uniq -c | sort -rn | head -20\n"
 "if [ \"$COUNT\" -gt 200 ]; then\n"
-"  echo \"mode=full\" >> $GITHUB_OUTPUT\n"
+"  scope full\n"
 "  echo \"More than 200 files changed, running full link check\"\n"
 "else\n"
 "  PATHS=$(echo \"$CHANGED\" | sed 's|index\\.html$||; s|^|/|' | tr '\\n' ',' | sed 's/,$//')\n"
-"  echo \"mode=partial\" >> $GITHUB_OUTPUT\n"
+"  scope partial\n"
 "  echo \"paths=$PATHS\" >> $GITHUB_OUTPUT\n"
 "  echo \"Targeted check: $PATHS\"\n"
 "fi\n"
@@ -368,7 +402,11 @@ msgid ""
 "if [ \"${{ steps.infra.outputs.include_versions }}\" = \"true\" ]; then\n"
 "  EXCLUDE_ARG=\"\"\n"
 "fi\n"
-"mvn -B test -Pe2e -Dtest.url=http://localhost:8090 \\\n"
+"PROFILE_ARG=\"\"\n"
+"if [ \"${{ steps.infra.outputs.include_versions }}\" != \"true\" ]; then\n"
+"  PROFILE_ARG=\"-Dquarkus.test.profile=test,only-latest-guides\"\n"
+"fi\n"
+"mvn -B test -Pe2e $PROFILE_ARG \\\n"
 "  -Dtest.crawl.check-external=false \\\n"
 "  $EXCLUDE_ARG \\\n"
 "  $CHANGED_PATHS_ARG\n"
@@ -389,7 +427,7 @@ msgstr ""
 #. type: Hash Value: jobs build steps uses
 #: .github/workflows/build.yml:1
 #, no-wrap
-msgid "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a"
+msgid "actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9"
 msgstr ""
 
 #. type: Hash Value: jobs build steps with name
@@ -512,6 +550,51 @@ msgstr ""
 msgid "echo ${{ github.event.number }} > ./target/roq/pr-id.txt"
 msgstr ""
 
+#. type: Hash Value: jobs build steps env CHANGED_COUNT
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid "${{ steps.link_scope.outputs.count }}"
+msgstr ""
+
+#. type: Hash Value: jobs build steps env CHANGED_PATHS
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid "${{ steps.link_scope.outputs.paths }}"
+msgstr ""
+
+#. type: Hash Value: jobs build steps env INFRA
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid "${{ steps.link_scope.outputs.infra }}"
+msgstr ""
+
+#. type: Hash Value: jobs build steps env PAGES_MODE
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid "${{ steps.link_scope.outputs.pages }}"
+msgstr ""
+
+#. type: Hash Value: jobs build steps env REASON
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid "${{ steps.link_scope.outputs.reason }}"
+msgstr ""
+
+#. type: Hash Value: jobs build steps name
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid "Store changed pages"
+msgstr ""
+
+#. type: Hash Value: jobs build steps run
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid ""
+"if [ -n \"$PAGES_MODE\" ]; then\n"
+"  printf '%s\\n%s\\n%s\\n%s\\n%s\\n' \"$PAGES_MODE\" \"$CHANGED_PATHS\" \"$CHANGED_COUNT\" \"$INFRA\" \"$REASON\" > ./target/roq/changed-pages.txt\n"
+"fi\n"
+msgstr ""
+
 #. type: Hash Value: jobs build steps name
 #: .github/workflows/build.yml:1
 #, no-wrap
@@ -592,16 +675,16 @@ msgstr "3"
 msgid "Build report"
 msgstr ""
 
-#. type: Hash Value: jobs build-report needs
+#. type: Array Element: jobs build-report needs
 #: .github/workflows/build.yml:1
 #, no-wrap
-msgid "[build]"
+msgid "build"
 msgstr ""
 
 #. type: Hash Value: jobs build-report steps uses
 #: .github/workflows/build.yml:1
 #, no-wrap
-msgid "actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c"
+msgid "actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333"
 msgstr ""
 
 #. type: Hash Value: jobs build-report steps with build-reports-artifacts-path
@@ -640,10 +723,64 @@ msgstr ""
 msgid "${{ secrets.GITHUB_TOKEN }}"
 msgstr ""
 
-#. type: Hash Value: on pull_request types
+#. type: Hash Value: jobs theme name
 #: .github/workflows/build.yml:1
 #, no-wrap
-msgid "[opened, synchronize]"
+msgid "Theme"
+msgstr ""
+
+#. type: Hash Value: jobs theme steps name
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid "Package the theme"
+msgstr ""
+
+#. type: Hash Value: jobs theme steps run
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid "mvn -B -f theme/pom.xml install"
+msgstr ""
+
+#. type: Hash Value: jobs theme steps name
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid "Build the example site with the packaged theme"
+msgstr ""
+
+#. type: Hash Value: jobs theme steps run
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid "QUARKUS_ROQ_GENERATOR_BATCH=true mvn -B package quarkus:run -DskipTests"
+msgstr ""
+
+#. type: Hash Value: jobs theme steps working-directory
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid "theme/example-minimal-site"
+msgstr ""
+
+#. type: Hash Value: jobs theme steps name
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid "Check the example site"
+msgstr ""
+
+#. type: Hash Value: jobs theme steps run
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid "theme/example-minimal-site/verify.sh theme/example-minimal-site/target/roq"
+msgstr ""
+
+#. type: Array Element: on pull_request types
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid "opened"
+msgstr ""
+
+#. type: Array Element: on pull_request types
+#: .github/workflows/build.yml:1
+#, no-wrap
+msgid "synchronize"
 msgstr ""
 
 #. type: Hash Value: permissions contents
