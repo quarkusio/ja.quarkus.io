@@ -19,7 +19,7 @@ msgstr ""
 #: tools/releases-sync/README.md:6
 #, no-wrap
 msgid ""
-"Keeps `_data/releases.yaml` patch versions current by fetching from the GitHub API,\n"
+"Keeps `_data/releases.yaml` micro releases current by fetching from the GitHub API,\n"
 "and upcoming releases current by reading the\n"
 "[Release Planning wiki](https://github.com/quarkusio/quarkus/wiki/Release-Planning).\n"
 msgstr ""
@@ -33,7 +33,7 @@ msgstr "機能の説明"
 #. type: Bullet: '1. '
 #: tools/releases-sync/README.md:15
 #, no-wrap
-msgid "Fetches releases from GitHub API\n"
+msgid "Fetches releases from GitHub API, and the platform BOM versions from Maven Central\n"
 msgstr ""
 
 #. type: Bullet: '2. '
@@ -45,7 +45,7 @@ msgstr ""
 #. type: Bullet: '3. '
 #: tools/releases-sync/README.md:15
 #, no-wrap
-msgid "Updates `latest_patch` and `latest_patch_date` for each minor\n"
+msgid "Lists every micro release of each minor, including candidates, under `micros`\n"
 msgstr ""
 
 #. type: Bullet: '4. '
@@ -72,7 +72,7 @@ msgstr ""
 #: tools/releases-sync/README.md:22
 #, no-wrap
 msgid ""
-"Upcoming releases come from the wiki (`WikiReleasePlanning.java`). Each `## <major>.<minor> [LTS] [(Proposal)]`\n"
+"Upcoming releases come from the wiki (`io/quarkusio/releases/sync/WikiReleasePlanning.java`). Each `## <major>.<minor> [LTS] [(Proposal)]`\n"
 "heading with a \"Full Platform release ... on <date>\" bullet becomes an entry with `upcoming: true`,\n"
 "`planned_date` set to that Platform date, `lts` set from the heading, and `proposal: true` if the heading is marked `(Proposal)`. Other headings\n"
 "(e.g. `4.0 Beta1`) are ignored.\n"
@@ -102,29 +102,118 @@ msgid "Field ownership"
 msgstr ""
 
 #. type: Plain text
-#: tools/releases-sync/README.md:46
+#: tools/releases-sync/README.md:50
 #, no-wrap
 msgid ""
 "**Automated (updated by this script):**\n"
-"- `latest_patch` - Latest patch version\n"
-"- `latest_patch_date` - Date of latest patch\n"
-"- `release_date` - Date of first release in this minor (published releases only)\n"
+"- `micros` - Every micro of the minor, newest first, including candidates and betas (e.g. `3.28.0.CR1`, `4.0.0.Beta1`, which\n"
+"  upcoming releases can have too). Rewritten in full on every run (`io/quarkusio/releases/sync/Micros.java`). It is the union\n"
+"  of two sources, which don't quite line up: the GitHub releases of quarkusio/quarkus (final and pre-release), and the\n"
+"  platform BOMs (`io.quarkus.platform:quarkus-bom`) on Maven Central, which start at 2.0 and skip some X.0 core releases\n"
+"  (e.g. there is a 3.28.0.CR1 BOM but no 3.28.0 one). Each micro has:\n"
+"  - `version`\n"
+"  - `release_date` - the earlier of the GitHub publish date and the Maven Central upload date (they differ, usually\n"
+"    by a day, for a few releases). A GitHub release published more than 60 days after its tag commit (2.11.0.Final\n"
+"    was published a year late, which dated it after 2.11.1.Final) is dated from the tag commit instead, with a\n"
+"    warning. A micro dated before its `parent_release` is also warned about, as a check for any other such case\n"
+"  - `rhbq.last_in_major`, `ibm.last_in_major` - Set to `true` on the vendor's newest minor of a major stream (3.x, 2.x) once the vendor has shipped a newer major, unless a minor of that stream is already marked. It can be set by hand earlier, e.g. on the last 3.x before 4.0 is out\n"
+"  - `rhbq.eol_date`, `ibm.eol_date` - Computed from the support policy (`EnterpriseReleaseDates.computeEolDate`). One end date is kept; full support and maintenance aren't distinguished. Red Hat ([policy](https://access.redhat.com/support/policy/updates/red_hat_build_of_quarkus_notes)): a minor that is not `last_in_major` ends six months after the next minor of its major stream is released (the previous minor is in maintenance for six months); until there is a next minor, a year after its own release is a placeholder. IBM: a year after its own release. A `last_in_major` minor ends 3 years (Red Hat) or 5 years (IBM) after the vendor's first release in that major stream, but no earlier than six months after the vendor's first release of the next major: Red Hat's full support starts with a new major and ends when the next major is released, and the older one then stays in maintenance for at least six months. Red Hat's `last_in_major` minor can't be computed until the next major has a build, so until then its date is a hand-edited placeholder. Missing dates are filled in. Where a later release fixes a date, it is recomputed when that release appears and replaces the recorded one: a Red Hat minor's, when its next minor appears; a `last_in_major` minor's, when the next major appears, but that one is never shortened, since Red Hat publishes it and has extended it before (`EnterpriseReleaseDates.eolDateToRecord`). Any other existing date is kept, with a warning if it disagrees with the computed one\n"
+"  - `candidate: true` for a release candidate (`CR`, or `RC`), `beta: true` for a `Beta`, `alpha: true` for an\n"
+"    `Alpha`; worked out from the version, and left out for final releases\n"
+"  - `parent_release` - the micro it was built from (`io/quarkusio/releases/sync/Lineage.java`), see below\n"
+"  - `github_url` - its GitHub release; left out if there is none\n"
+"  - `bom_url` - its platform BOM POM on Maven Central; left out if there is none\n"
+msgstr ""
+
+#. type: Plain text
+#: tools/releases-sync/README.md:67
+#, no-wrap
+msgid ""
+"  Maven Central is read once per run (one directory listing, with the same retries and circuit breaker as the\n"
+"  enterprise repositories below). If it can't be read, the BOMs already in the data are kept and new ones are\n"
+"  added by a later run. There is no `latest_patch` field: the site works the latest final micro out from this\n"
+"  list (`Release.latestMicro()`, which skips candidates, betas and alphas)\n"
+"- `release_date` - Date of first final release in this minor (published releases only), from `micros`. Pre-releases\n"
+"  are recognised by their version (Alpha, Beta, CR, RC), as GitHub marks some of them (e.g. 3.5.0.CR1) as final\n"
 "- `rhbq.release_date`, `ibm.release_date` - When the minor first appeared in the Red Hat / IBM Maven repository (publish date of the earliest micro build of `quarkus-bom`, not an announced GA date). The provider block is created if the repository has the minor; its `eol_date` stays hand-edited. A date, once set, is never looked up or overwritten, so routine runs make no requests to these servers (the IBM one is rate limited). When a lookup is needed it uses Quarkus REST Client interfaces (`MavenRepositories`) with SmallRye Fault Tolerance: requests are sequential and paced, transient failures (429, 5xx, I/O errors) are retried twice with exponential backoff, and a circuit breaker then stops all further requests to that server for the run; the gaps are filled by a later run. An enterprise `release_date` earlier than the community one is impossible: a scraped one is ignored with a warning, and the run fails before writing if any (including hand-edited) date is inconsistent\n"
 "- `planned_date` - For upcoming releases: the planned Platform release date from the wiki\n"
 "- `upcoming` - Set for releases listed as upcoming in the wiki; removed once the release is published\n"
 "- `lts` - For upcoming releases only, taken from the wiki heading\n"
 "- `proposal` - `true` for upcoming releases marked `(Proposal)` in the wiki\n"
-"- `branched_from` - For published 3.x+ LTS releases that don't have one: the non-LTS minor (of the three below it) whose\n"
-"  branch has the most recent merge-base with the LTS branch (`BranchLineage.java`). Release order and `main` aren't used: LTS\n"
+"- `parent_release` - For published 3.x+ LTS releases that don't have one: the non-LTS minor (of the three below it) whose\n"
+"  branch has the most recent merge-base with the LTS branch (`io/quarkusio/releases/sync/BranchLineage.java`). Release order and `main` aren't used: LTS\n"
 "  policy changed over time (n-1 as parent, then concurrent n LTS / n+1 non-LTS releases) and `main` stopped being the trunk\n"
 "  from 3.38. If candidates tie the newest is used, with a warning; if there are none the field stays blank (as for 2.x).\n"
 "  Hand-edited values are never overwritten.\n"
 msgstr ""
 
-#. type: Plain text
-#: tools/releases-sync/README.md:56
+#. type: Bullet: '- '
+#: tools/releases-sync/README.md:104
 #, no-wrap
 msgid ""
+"`rhbq.micros`, `ibm.micros` - The vendor's own builds of the minor (`quarkus-bom` in its Maven repository), newest\n"
+"first, with `version`, `release_date` (when the build was published), `parent_release` and `bom_url`. A version the\n"
+"vendor rebuilt before shipping (`3.27.4.SP3-redhat-00002`, then `-00003`) is listed once, as its latest build. Rewritten\n"
+"in full on every run: each run lists both repositories (one request each), and dates any Red Hat build not in the\n"
+"data yet (one request each; IBM's listing has the dates). If a repository can't be read, the builds already in the data\n"
+"are kept. HeroDevs has no builds of its own\n"
+msgstr ""
+
+#. type: Bullet: '- '
+#: tools/releases-sync/README.md:104
+#, no-wrap
+msgid ""
+"Micro `parent_release` - The micro each micro was built from. A parent already in the data is never overwritten, so\n"
+"hand-edited values win and git is only asked once per micro:\n"
+msgstr ""
+
+#. type: Bullet: '  - '
+#: tools/releases-sync/README.md:104
+#, no-wrap
+msgid ""
+"A final, from the versions: the main line runs through the pre-releases then `X.Y.0`, `X.Y.1`, ...; four-part\n"
+"patches are a side line off it (`X.Y.Z.1` from `X.Y.Z`, `X.Y.Z.2` from `X.Y.Z.1`, and `X.Y.Z+1` from `X.Y.Z`, not\n"
+"from its patches). Git agrees: each release tag sits one `[RELEASE]` version bump off its branch\n"
+msgstr ""
+
+#. type: Bullet: '  - '
+#: tools/releases-sync/README.md:104
+#, no-wrap
+msgid ""
+"A pre-release, from git: the previous pre-release if it contains it (see below), else the earlier minors are\n"
+"searched as for a first micro. Pre-releases aren't always built on each other: 3.0's first alphas were each cut from\n"
+"a different 2.x line with the Jakarta transformation on top (`3.0.0.Alpha2` from `2.14.3.Final`, `3.0.0.Alpha3`\n"
+"and `3.0.0.Alpha4` from `2.16.0.CR1`)\n"
+msgstr ""
+
+#. type: Bullet: '  - '
+#: tools/releases-sync/README.md:104
+#, no-wrap
+msgid ""
+"The first micro of a minor (usually its first candidate): from git ancestry. Its parent is the newest micro of the\n"
+"nearest earlier minor (searching up to six) whose tag it contains, where \"contains\" means every commit of that tag\n"
+"missing from it is a `[RELEASE]` commit (GitHub compare API; a binary search, so a handful of requests per minor).\n"
+"Release order isn't used, for the same reasons as for the minor's `parent_release`: e.g. `3.40.0.CR1` descends from\n"
+"`3.39.4`, and `4.0.0.Beta1` from `3.37.0.CR1`. Left blank when no earlier micro is found (1.0), or GitHub can't be\n"
+"asked (the rest are left for a later run)\n"
+msgstr ""
+
+#. type: Bullet: '  - '
+#: tools/releases-sync/README.md:104
+#, no-wrap
+msgid ""
+"A vendor build: a service pack (`3.20.1.SP2-redhat-…`) descends from the vendor's previous build of the same\n"
+"community micro (`3.20.1.SP1-redhat-…`, or `3.20.1.redhat-…`); any other build from the community micro in its\n"
+"version (`3.20.1`, or `2.2.3.Final` for 1.x and 2.x). Which vendor fixes a rebased build carries forward can't be\n"
+"seen from outside, so the community micro is used\n"
+msgstr ""
+
+#. type: Plain text
+#: tools/releases-sync/README.md:104
+#, no-wrap
+msgid ""
+"- Vendor block `parent_release` - When not set, the community micro the vendor's first build of the minor is based on\n"
+"  (`3.20.0` for `3.20.0.redhat-00002`)\n"
 "**Manual (edit directly in releases.yaml):**\n"
 "- `policy` section - LTS cadence, support durations, descriptions\n"
 "- `support_providers` section - Commercial support providers\n"
@@ -132,18 +221,18 @@ msgid ""
 "- `lts` - Whether this is an LTS release (published releases)\n"
 "- `eol_date` - End of life date\n"
 "- `link` - Blog post link\n"
-"- `rhbq`, `ibm`, `herodevs` - Per-provider blocks; `eol_date` is hand-edited. `branched_from` (quoted, e.g. `\"3.20\"`) is the community release the vendor forked its build from, when not the release itself. `open_ended: true` means the vendor supports the release with no end date once its other support has ended (IBM after its own `eol_date`, HeroDevs Never-Ending Support after all other support)\n"
+"- `rhbq`, `ibm`, `herodevs` - Per-provider blocks; `rhbq.eol_date` of a `last_in_major` minor, until the next major has a build (the other vendor `eol_date`s are computed, see above); `last_in_major` can be set by hand too. `parent_release` (quoted, e.g. `\"3.20.1\"` or `\"3.19\"`) is the community release (micro or minor) the vendor forked its build from, when not the release itself; filled in from the vendor's builds when not set. `open_ended: true` means the vendor supports the release with no end date once its other support has ended (IBM after its own `eol_date`, HeroDevs Never-Ending Support after all other support)\n"
 "- `upcoming`, `planned_date` - Only needed as a fallback when the wiki lists nothing usable for a release (`release_date` is only for published releases)\n"
 msgstr ""
 
 #. type: Title ##
-#: tools/releases-sync/README.md:57
+#: tools/releases-sync/README.md:105
 #, no-wrap
 msgid "Tests"
 msgstr "テスト"
 
 #. type: Plain text
-#: tools/releases-sync/README.md:61
+#: tools/releases-sync/README.md:109
 #, no-wrap
 msgid ""
 "The wiki parser is tested against `test/Release-Planning.md`, a **made-up** page that imitates the wiki's layout\n"
@@ -151,21 +240,26 @@ msgid ""
 msgstr ""
 
 #. type: Fenced code block (bash)
-#: tools/releases-sync/README.md:62
+#: tools/releases-sync/README.md:110
 #, no-wrap
 msgid ""
-"cd tools/releases-sync && jbang WikiReleasePlanningTest.java\n"
-"jbang EnterpriseReleaseDatesTest.java\n"
+"cd tools/releases-sync && jbang io/quarkusio/releases/sync/WikiReleasePlanningTest.java\n"
+"jbang io/quarkusio/releases/sync/EnterpriseReleaseDatesTest.java\n"
+"jbang io/quarkusio/releases/sync/ReleasesSyncEolTest.java\n"
+"jbang io/quarkusio/releases/sync/BranchLineageTest.java\n"
+"jbang io/quarkusio/releases/sync/MicrosTest.java\n"
+"jbang io/quarkusio/releases/sync/LineageTest.java\n"
+"jbang io/quarkusio/releases/sync/ReleaseDatesTest.java\n"
 msgstr ""
 
 #. type: Title ##
-#: tools/releases-sync/README.md:67
+#: tools/releases-sync/README.md:120
 #, no-wrap
 msgid "Running locally"
 msgstr "ローカルでの実行"
 
 #. type: Fenced code block (bash)
-#: tools/releases-sync/README.md:69
+#: tools/releases-sync/README.md:122
 #, no-wrap
 msgid ""
 "# Dry run (show what would change)\n"
@@ -176,52 +270,52 @@ msgid ""
 msgstr ""
 
 #. type: Title ##
-#: tools/releases-sync/README.md:77
+#: tools/releases-sync/README.md:130
 #, no-wrap
 msgid "CI"
 msgstr ""
 
 #. type: Plain text
-#: tools/releases-sync/README.md:82
+#: tools/releases-sync/README.md:135
 #, no-wrap
 msgid ""
 "The workflow at `.github/workflows/sync-releases.yml`:\n"
-"- Runs on a schedule to update patch versions\n"
+"- Runs on a schedule to update micro releases\n"
 "- Runs in dry-run mode on PRs touching `tools/releases-sync/` or the workflow itself\n"
 msgstr ""
 
 #. type: Title ##
-#: tools/releases-sync/README.md:83
+#: tools/releases-sync/README.md:136
 #, no-wrap
 msgid "Environment variables"
 msgstr "環境変数"
 
 #. type: Bullet: '- '
-#: tools/releases-sync/README.md:89
+#: tools/releases-sync/README.md:142
 #, no-wrap
-msgid "`GITHUB_TOKEN` - GitHub API token (required)\n"
+msgid "`GITHUB_TOKEN` - GitHub API token (optional, anonymous access has a lower rate limit)\n"
 msgstr ""
 
 #. type: Bullet: '- '
-#: tools/releases-sync/README.md:89
+#: tools/releases-sync/README.md:142
 #, no-wrap
 msgid "`RELEASES_ORG` - GitHub org (default: quarkusio)\n"
 msgstr ""
 
 #. type: Bullet: '- '
-#: tools/releases-sync/README.md:89
+#: tools/releases-sync/README.md:142
 #, no-wrap
 msgid "`RELEASES_REPO` - GitHub repo (default: quarkus)\n"
 msgstr ""
 
 #. type: Bullet: '- '
-#: tools/releases-sync/README.md:89
+#: tools/releases-sync/README.md:142
 #, no-wrap
 msgid "`RELEASES_INPUT` - Input file (default: _data/releases.yaml)\n"
 msgstr ""
 
 #. type: Bullet: '- '
-#: tools/releases-sync/README.md:89
+#: tools/releases-sync/README.md:142
 #, no-wrap
 msgid "`RELEASES_OUTPUT` - Output file (default: _data/releases.yaml)\n"
 msgstr ""
